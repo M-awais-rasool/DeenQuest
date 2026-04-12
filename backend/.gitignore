@@ -1,0 +1,6 @@
+build/
+uploads/
+.env
+.env.*
+!.env.example
+tmp/
