@@ -1,0 +1,111 @@
+version: '3.9'
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - gateway
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
+    env_file:
+      - .env.example
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8081
+      CORE_SERVICE_URL: http://core-service:8082
+      REDIS_HOST: redis
+      KAFKA_BROKERS: kafka:9092
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - core-service
+      - redis
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.auth
+    env_file:
+      - .env.example
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      REDIS_HOST: redis
+      KAFKA_BROKERS: kafka:9092
+      AUTH_SERVICE_URL: http://auth-service:8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+      - redis
+      - kafka
+
+  core-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.core
+    env_file:
+      - .env.example
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      KAFKA_BROKERS: kafka:9092
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mongo
+      - kafka
+
+  worker-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    env_file:
+      - .env.example
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      KAFKA_BROKERS: kafka:9092
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mongo
+      - kafka
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+volumes:
+  mongo_data:
