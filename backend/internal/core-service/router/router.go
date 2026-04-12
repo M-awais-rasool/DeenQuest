@@ -1,0 +1,26 @@
+package router
+
+import (
+	"github.com/gin-gonic/gin"
+
+	"github.com/chawais/talent-flow/backend/internal/core-service/controller"
+	"github.com/chawais/talent-flow/backend/pkg/auth"
+	"github.com/chawais/talent-flow/backend/pkg/middleware"
+)
+
+func SetupRoutes(r *gin.Engine, ctl *controller.CoreController, jwtManager *auth.JWTManager) {
+	v1 := r.Group("/api/v1")
+	v1.Use(middleware.JWTAuth(jwtManager))
+	{
+		v1.POST("/habits", ctl.CreateHabit)
+		v1.GET("/habits", ctl.ListHabits)
+		v1.POST("/habits/:id/complete", ctl.CompleteHabit)
+		v1.GET("/progress/me", ctl.GetProgress)
+		v1.POST("/reflections", ctl.AddReflection)
+		v1.GET("/achievements/me", ctl.ListAchievements)
+	}
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "service": "core-service"})
+	})
+}
