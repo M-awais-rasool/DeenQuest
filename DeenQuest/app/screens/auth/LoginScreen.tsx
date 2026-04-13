@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Mail, Lock, AlertCircle } from 'lucide-react-native';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { TactileButton } from '../../components/TactileButton';
 import { LoginRequest, useLoginMutation } from '../../store/services/api';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { AppStackParamList } from '../../navigators/navigationTypes';
 import {
   setAccessToken,
   setError,
@@ -21,7 +23,9 @@ import {
 } from '../../store/slices/mainSlice';
 import { theme } from '../../theme/themes';
 
-export const LoginScreen = () => {
+type LoginScreenProps = NativeStackScreenProps<AppStackParamList, 'Login'>;
+
+export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const dispatch = useAppDispatch();
   const [login, { isLoading, error }] = useLoginMutation();
   const { error: reduxError } = useAppSelector(state => state.main);
@@ -80,13 +84,19 @@ export const LoginScreen = () => {
         dispatch(setError(null));
       }
     } catch (err: any) {
+      const validationErrors = err?.data?.errors as string[] | undefined;
       const errorMessage =
-        err?.data?.error || 'Login failed. Please try again.';
+        err?.data?.error ||
+        validationErrors?.[0] ||
+        'Login failed. Please try again.';
       dispatch(setError(errorMessage));
     }
   };
 
-  const displayError = reduxError || (error as any)?.data?.error;
+  const displayError =
+    reduxError ||
+    (error as any)?.data?.error ||
+    ((error as any)?.data?.errors as string[] | undefined)?.[0];
 
   return (
     <ScreenWrapper>
@@ -183,9 +193,11 @@ export const LoginScreen = () => {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            New to DeenQuest? <Text style={styles.signUpText}>Sign Up</Text>
-          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+            <Text style={styles.footerText}>
+              New to DeenQuest? <Text style={styles.signUpText}>Sign Up</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </ScreenWrapper>
