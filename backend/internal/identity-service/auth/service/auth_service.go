@@ -12,7 +12,6 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/identity-service/model"
 	"github.com/chawais/talent-flow/backend/internal/identity-service/repository"
 	"github.com/chawais/talent-flow/backend/pkg/auth"
-	"github.com/chawais/talent-flow/backend/pkg/cache"
 	"github.com/chawais/talent-flow/backend/pkg/logger"
 	"github.com/chawais/talent-flow/backend/pkg/queue"
 	"github.com/google/uuid"
@@ -20,20 +19,18 @@ import (
 )
 
 var (
-	ErrEmailExists         = errors.New("email already exists")
-	ErrInvalidCredentials  = errors.New("invalid email or password")
-	ErrInvalidRefreshToken = errors.New("invalid or expired refresh token")
+	ErrEmailExists        = errors.New("email already exists")
+	ErrInvalidCredentials = errors.New("invalid email or password")
 )
 
 type AuthService struct {
 	users      repository.UserRepository
 	jwtManager *auth.JWTManager
-	redis      *cache.RedisClient
 	publisher  identitykafka.Publisher
 }
 
-func NewAuthService(users repository.UserRepository, jwtManager *auth.JWTManager, redis *cache.RedisClient, publisher identitykafka.Publisher) *AuthService {
-	return &AuthService{users: users, jwtManager: jwtManager, redis: redis, publisher: publisher}
+func NewAuthService(users repository.UserRepository, jwtManager *auth.JWTManager, publisher identitykafka.Publisher) *AuthService {
+	return &AuthService{users: users, jwtManager: jwtManager, publisher: publisher}
 }
 
 func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) (*dto.AuthResponse, error) {
@@ -69,13 +66,9 @@ func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) (*dto.
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 
-	tokenPair, err := s.jwtManager.GenerateTokenPair(newUser.ID, newUser.Email, newUser.Role)
+	accessToken, err := s.jwtManager.GenerateAccessToken(newUser.ID, newUser.Email, newUser.Role)
 	if err != nil {
-		return nil, fmt.Errorf("generate tokens: %w", err)
-	}
-
-	if err := s.redis.StoreRefreshToken(ctx, newUser.ID, tokenPair.RefreshToken, s.jwtManager.GetRefreshExpiry()); err != nil {
-		logger.Warn("failed to store refresh token", zap.Error(err), zap.String("user_id", newUser.ID))
+		return nil, fmt.Errorf("generate token: %w", err)
 	}
 
 	if s.publisher != nil {
@@ -99,8 +92,7 @@ func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) (*dto.
 			Role:       newUser.Role,
 			IsVerified: newUser.IsVerified,
 		},
-		AccessToken:  tokenPair.AccessToken,
-		RefreshToken: tokenPair.RefreshToken,
+		AccessToken: accessToken,
 	}, nil
 }
 
@@ -113,13 +105,9 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		return nil, ErrInvalidCredentials
 	}
 
-	tokenPair, err := s.jwtManager.GenerateTokenPair(u.ID, u.Email, u.Role)
+	accessToken, err := s.jwtManager.GenerateAccessToken(u.ID, u.Email, u.Role)
 	if err != nil {
-		return nil, fmt.Errorf("generate tokens: %w", err)
-	}
-
-	if err := s.redis.StoreRefreshToken(ctx, u.ID, tokenPair.RefreshToken, s.jwtManager.GetRefreshExpiry()); err != nil {
-		logger.Warn("failed to store refresh token", zap.Error(err), zap.String("user_id", u.ID))
+		return nil, fmt.Errorf("generate token: %w", err)
 	}
 
 	return &dto.AuthResponse{
@@ -129,47 +117,6 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 			Role:       u.Role,
 			IsVerified: u.IsVerified,
 		},
-		AccessToken:  tokenPair.AccessToken,
-		RefreshToken: tokenPair.RefreshToken,
+		AccessToken: accessToken,
 	}, nil
-}
-
-func (s *AuthService) RefreshToken(ctx context.Context, req *dto.RefreshRequest) (*dto.TokenResponse, error) {
-	claims, err := s.jwtManager.ValidateToken(req.RefreshToken)
-	if err != nil {
-		return nil, ErrInvalidRefreshToken
-	}
-
-	storedToken, err := s.redis.GetRefreshToken(ctx, claims.UserID)
-	if err != nil || storedToken != req.RefreshToken {
-		return nil, ErrInvalidRefreshToken
-	}
-
-	u, err := s.users.GetByID(ctx, claims.UserID)
-	if err != nil || u == nil {
-		return nil, ErrInvalidRefreshToken
-	}
-
-	accessToken, err := s.jwtManager.GenerateAccessToken(u.ID, u.Email, u.Role)
-	if err != nil {
-		return nil, fmt.Errorf("generate access token: %w", err)
-	}
-
-	refreshToken, err := s.jwtManager.GenerateRefreshToken(u.ID)
-	if err != nil {
-		return nil, fmt.Errorf("generate refresh token: %w", err)
-	}
-
-	if err := s.redis.StoreRefreshToken(ctx, u.ID, refreshToken, s.jwtManager.GetRefreshExpiry()); err != nil {
-		logger.Warn("failed to rotate refresh token", zap.Error(err), zap.String("user_id", u.ID))
-	}
-
-	return &dto.TokenResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
-}
-
-func (s *AuthService) Logout(ctx context.Context, userID string) error {
-	if err := s.redis.DeleteRefreshToken(ctx, userID); err != nil {
-		return fmt.Errorf("delete refresh token: %w", err)
-	}
-	return nil
 }

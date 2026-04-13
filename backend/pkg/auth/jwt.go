@@ -26,16 +26,12 @@ type TokenPair struct {
 }
 
 type JWTManager struct {
-	secretKey     []byte
-	accessExpiry  time.Duration
-	refreshExpiry time.Duration
+	secretKey []byte
 }
 
-func NewJWTManager(secret string, accessExpiry, refreshExpiry time.Duration) *JWTManager {
+func NewJWTManager(secret string, _, _ time.Duration) *JWTManager {
 	return &JWTManager{
-		secretKey:     []byte(secret),
-		accessExpiry:  accessExpiry,
-		refreshExpiry: refreshExpiry,
+		secretKey: []byte(secret),
 	}
 }
 
@@ -45,9 +41,8 @@ func (m *JWTManager) GenerateAccessToken(userID, email, role string) (string, er
 		Email:  email,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessExpiry)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ID:        uuid.New().String(),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			ID:       uuid.New().String(),
 		},
 	}
 
@@ -56,17 +51,7 @@ func (m *JWTManager) GenerateAccessToken(userID, email, role string) (string, er
 }
 
 func (m *JWTManager) GenerateRefreshToken(userID string) (string, error) {
-	claims := &TokenClaims{
-		UserID: userID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshExpiry)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ID:        uuid.New().String(),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(m.secretKey)
+	return m.GenerateAccessToken(userID, "", "")
 }
 
 func (m *JWTManager) GenerateTokenPair(userID, email, role string) (*TokenPair, error) {
@@ -106,8 +91,4 @@ func (m *JWTManager) ValidateToken(tokenString string) (*TokenClaims, error) {
 	}
 
 	return claims, nil
-}
-
-func (m *JWTManager) GetRefreshExpiry() time.Duration {
-	return m.refreshExpiry
 }

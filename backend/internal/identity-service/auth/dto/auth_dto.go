@@ -11,14 +11,9 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
-type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required"`
-}
-
 type AuthResponse struct {
-	User         UserResponse `json:"user"`
-	AccessToken  string       `json:"access_token"`
-	RefreshToken string       `json:"refresh_token"`
+	User        UserResponse `json:"user"`
+	AccessToken string       `json:"access_token"`
 }
 
 type UserResponse struct {
@@ -26,9 +21,4 @@ type UserResponse struct {
 	Email      string `json:"email"`
 	Role       string `json:"role"`
 	IsVerified bool   `json:"is_verified"`
-}
-
-type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
 }

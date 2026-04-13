@@ -21,7 +21,6 @@ import (
 	userhandler "github.com/chawais/talent-flow/backend/internal/identity-service/user/handler"
 	userservice "github.com/chawais/talent-flow/backend/internal/identity-service/user/service"
 	"github.com/chawais/talent-flow/backend/pkg/auth"
-	"github.com/chawais/talent-flow/backend/pkg/cache"
 	"github.com/chawais/talent-flow/backend/pkg/config"
 	"github.com/chawais/talent-flow/backend/pkg/logger"
 	"github.com/chawais/talent-flow/backend/pkg/middleware"
@@ -49,12 +48,6 @@ func main() {
 	}()
 	authDB := mongoClient.Database(cfg.MongoAuthDB)
 
-	redisClient, err := cache.NewRedisClient(cfg.GetRedisAddr(), cfg.RedisPassword, cfg.RedisDB)
-	if err != nil {
-		logger.Fatal(fmt.Sprintf("failed to connect Redis: %v", err))
-	}
-	defer redisClient.Close()
-
 	kafkaProducer := queue.NewKafkaProducer(cfg.GetKafkaBrokerList())
 	defer kafkaProducer.Close()
 
@@ -65,7 +58,7 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to initialize user repository: %v", err))
 	}
 
-	authSvc := authservice.NewAuthService(userRepo, jwtManager, redisClient, kafkaProducer)
+	authSvc := authservice.NewAuthService(userRepo, jwtManager, kafkaProducer)
 	userSvc := userservice.NewUserService(userRepo)
 
 	authHdl := authhandler.NewAuthHandler(authSvc)

@@ -17,8 +17,6 @@ func SetupRoutes(r *gin.Engine, authHandler *authhandler.AuthHandler, userHandle
 	{
 		authGroup.POST("/signup", authHandler.Signup)
 		authGroup.POST("/login", authHandler.Login)
-		authGroup.POST("/refresh", authHandler.RefreshToken)
-		authGroup.POST("/logout", middleware.JWTAuth(jwtManager), authHandler.Logout)
 	}
 
 	// User routes
