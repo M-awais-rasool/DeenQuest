@@ -6,44 +6,18 @@
  */
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ActivityIndicator, Text, View } from 'react-native';
-import { useEffect } from 'react';
 
 import { DemoNavigator } from './DemoNavigator';
 import type { AppStackParamList, NavigationProps } from './navigationTypes';
 import { LoginScreen } from '../screens/auth/LoginScreen';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { restoreAuth } from '../store/slices/mainSlice';
+import { useAppSelector } from '../store/hooks';
+import { SignupScreen } from '../screens/auth/SignupScreen';
 import { theme } from '../theme/themes';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack = () => {
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, isLoading } = useAppSelector(state => state.main);
-
-  useEffect(() => {
-    const bootstrapAuth = async () => {
-      try {
-        const token = await AsyncStorage.getItem('accessToken');
-        dispatch(restoreAuth({ token, user: null }));
-      } catch {
-        dispatch(restoreAuth({ token: null, user: null }));
-      }
-    };
-
-    bootstrapAuth();
-  }, [dispatch]);
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Preparing your journey...</Text>
-      </View>
-    );
-  }
+  const { isAuthenticated } = useAppSelector(state => state.main);
 
   return (
     <Stack.Navigator
@@ -59,6 +33,7 @@ const AppStack = () => {
       ) : (
         <>
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Signup" component={SignupScreen} />
         </>
       )}
     </Stack.Navigator>
@@ -67,22 +42,8 @@ const AppStack = () => {
 
 export const AppNavigator = (props: NavigationProps) => {
   return (
-    <NavigationContainer {...props} >
+    <NavigationContainer {...props}>
       <AppStack />
     </NavigationContainer>
   );
-};
-
-const styles = {
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: theme.colors.background,
-    gap: 12,
-  },
-  loadingText: {
-    color: theme.colors.textMuted,
-    fontSize: 14,
-  },
 };
