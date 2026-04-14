@@ -1,8 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthUser } from '../services/api';
+import {
+  clearPersistedAuth,
+  persistAccessToken,
+  persistAuthUser,
+  persistIsAuthenticated,
+} from '../storage/authStorage';
 
-interface MainState {
+export interface MainState {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: AuthUser | null;
@@ -24,20 +29,18 @@ const mainSlice = createSlice({
   reducers: {
     setIsAuthenticated: (state, action: PayloadAction<boolean>) => {
       state.isAuthenticated = action.payload;
+      persistIsAuthenticated(action.payload);
     },
     setIsLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
     setUser: (state, action: PayloadAction<AuthUser | null>) => {
       state.user = action.payload;
+      persistAuthUser(action.payload);
     },
     setAccessToken: (state, action: PayloadAction<string | null>) => {
       state.accessToken = action.payload;
-      if (action.payload) {
-        AsyncStorage.setItem('accessToken', action.payload);
-      } else {
-        AsyncStorage.removeItem('accessToken');
-      }
+      persistAccessToken(action.payload);
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
@@ -47,9 +50,12 @@ const mainSlice = createSlice({
       state.user = null;
       state.accessToken = null;
       state.error = null;
-      AsyncStorage.removeItem('accessToken');
+      clearPersistedAuth();
     },
-    restoreAuth: (state, action: PayloadAction<{ token: string | null; user: AuthUser | null }>) => {
+    restoreAuth: (
+      state,
+      action: PayloadAction<{ token: string | null; user: AuthUser | null }>,
+    ) => {
       if (action.payload.token) {
         state.isAuthenticated = true;
         state.accessToken = action.payload.token;
@@ -58,6 +64,7 @@ const mainSlice = createSlice({
         state.isAuthenticated = false;
         state.accessToken = null;
         state.user = null;
+        clearPersistedAuth();
       }
       state.isLoading = false;
     },
