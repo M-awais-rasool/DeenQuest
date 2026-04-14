@@ -19,21 +19,28 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
+func bindAndValidate[T any](c *gin.Context, req *T) bool {
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.BadRequest(c, "Invalid request body")
+		return false
+	}
+
+	if err := validator.Validate(req); err != nil {
+		validationErrors := validator.FormatValidationErrors(err)
+		c.JSON(400, gin.H{"success": false, "errors": validationErrors})
+		return false
+	}
+
+	return true
+}
+
 func (h *AuthHandler) Signup(c *gin.Context) {
 	var req dto.SignupRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request body")
+	if !bindAndValidate(c, &req) {
 		return
 	}
 
-	if err := validator.Validate(&req); err != nil {
-		errors := validator.FormatValidationErrors(err)
-		c.JSON(400, gin.H{"success": false, "errors": errors})
-		return
-	}
-
-	result, err := h.authService.Signup(c.Request.Context(), &req)
-	if err != nil {
+	if err := h.authService.Signup(c.Request.Context(), &req); err != nil {
 		if errors.Is(err, service.ErrEmailExists) {
 			response.BadRequest(c, "Email already exists")
 			return
@@ -42,19 +49,12 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	response.Created(c, "User created successfully", result)
+	response.Created(c, "User created successfully", nil)
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request body")
-		return
-	}
-
-	if err := validator.Validate(&req); err != nil {
-		errors := validator.FormatValidationErrors(err)
-		c.JSON(400, gin.H{"success": false, "errors": errors})
+	if !bindAndValidate(c, &req) {
 		return
 	}
 

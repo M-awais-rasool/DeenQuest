@@ -33,18 +33,18 @@ func NewAuthService(users repository.UserRepository, jwtManager *auth.JWTManager
 	return &AuthService{users: users, jwtManager: jwtManager, publisher: publisher}
 }
 
-func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) (*dto.AuthResponse, error) {
+func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) error {
 	existing, err := s.users.GetByEmail(ctx, strings.ToLower(req.Email))
 	if err != nil {
-		return nil, fmt.Errorf("check email: %w", err)
+		return fmt.Errorf("check email: %w", err)
 	}
 	if existing != nil {
-		return nil, ErrEmailExists
+		return ErrEmailExists
 	}
 
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
-		return nil, fmt.Errorf("hash password: %w", err)
+		return fmt.Errorf("hash password: %w", err)
 	}
 
 	role := "USER"
@@ -63,12 +63,7 @@ func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) (*dto.
 		UpdatedAt:    now,
 	}
 	if err := s.users.Create(ctx, newUser); err != nil {
-		return nil, fmt.Errorf("create user: %w", err)
-	}
-
-	accessToken, err := s.jwtManager.GenerateAccessToken(newUser.ID, newUser.Email, newUser.Role)
-	if err != nil {
-		return nil, fmt.Errorf("generate token: %w", err)
+		return fmt.Errorf("create user: %w", err)
 	}
 
 	if s.publisher != nil {
@@ -85,15 +80,7 @@ func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) (*dto.
 		}
 	}
 
-	return &dto.AuthResponse{
-		User: dto.UserResponse{
-			ID:         newUser.ID,
-			Email:      newUser.Email,
-			Role:       newUser.Role,
-			IsVerified: newUser.IsVerified,
-		},
-		AccessToken: accessToken,
-	}, nil
+	return nil
 }
 
 func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.AuthResponse, error) {
