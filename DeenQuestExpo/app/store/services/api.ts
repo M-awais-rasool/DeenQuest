@@ -1,17 +1,18 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: 'http://172.16.1.63:8080',
-  prepareHeaders: async headers => {
+  baseUrl: "http://192.168.200.12:8080",
+  prepareHeaders: async (headers) => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
       if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
+        headers.set("Authorization", `Bearer ${token}`);
       }
     } catch (error) {
-      console.warn('Failed to get token from AsyncStorage', error);
+      console.warn("Failed to get token from AsyncStorage", error);
     }
     return headers;
   },
@@ -50,43 +51,40 @@ export interface APIResponse<T> {
 
 // API Service
 export const API = createApi({
-  reducerPath: 'API',
+  reducerPath: "API",
   baseQuery: baseQueryWithAuth,
-  tagTypes: [
-    'User',
-    'Auth',
-  ],
-  endpoints: builder => ({
+  tagTypes: ["User", "Auth"],
+  endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
-      query: credentials => ({
-        url: '/api/v1/auth/signup',
-        method: 'POST',
+      query: (credentials) => ({
+        url: "/api/v1/auth/signup",
+        method: "POST",
         body: credentials,
       }),
-      invalidatesTags: ['Auth'],
+      invalidatesTags: ["Auth"],
     }),
     login: builder.mutation<APIResponse<AuthResponse>, LoginRequest>({
-      query: credentials => ({
-        url: '/api/v1/auth/login',
-        method: 'POST',
+      query: (credentials) => ({
+        url: "/api/v1/auth/login",
+        method: "POST",
         body: credentials,
       }),
-      invalidatesTags: ['Auth'],
+      invalidatesTags: ["Auth"],
     }),
     getProfile: builder.query<APIResponse<AuthUser>, void>({
       query: () => ({
-        url: '/api/v1/users/me',
-        method: 'GET',
+        url: "/api/v1/users/me",
+        method: "GET",
       }),
-      providesTags: ['User'],
+      providesTags: ["User"],
     }),
     updateProfile: builder.mutation<APIResponse<AuthUser>, Partial<AuthUser>>({
-      query: data => ({
-        url: '/api/v1/users/me',
-        method: 'PUT',
+      query: (data) => ({
+        url: "/api/v1/users/me",
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['User'],
+      invalidatesTags: ["User"],
     }),
   }),
 });
