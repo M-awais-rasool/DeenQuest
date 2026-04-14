@@ -6,6 +6,8 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  type StyleProp,
+  type ImageStyle,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -44,7 +46,7 @@ export const LessonScreen = ({ onBack }: { onBack: () => void }) => {
               source={{
                 uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD0KUM9Libiyq9CVL_OQ56vXysNMfFF2vkAdutU1lTCGA07l7oM-zL2d-InVgAi1SO8rhzIzQ6SR6KVNGrLSEg2p8FYG7eJoIc5Ri6fRFqD_XgVMh57Edixloc2TGy05tLBGkapgj5igXd4BFwLSYgw9vGKOxvVLPXZBukwtp-34UckTpAYtasAcSiU_zj8GdUO-QI9e9m3p941BTJvOHEbPgmSGh5uhGh3XcyzQ2LsYqwENn5ibFhokiKaO6-oeBYgi5PcSyOSTYc',
               }}
-              style={styles.heroImage}
+              style={styles.heroImage as StyleProp<ImageStyle>}
             />
             <View style={styles.playOverlay}>
               <Play

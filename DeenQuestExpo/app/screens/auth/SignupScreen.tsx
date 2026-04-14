@@ -21,8 +21,8 @@ import { TactileButton } from '../../components/TactileButton';
 import { AppStackParamList } from '../../navigators/navigationTypes';
 import { useAppDispatch } from '../../store/hooks';
 import { SignupRequest, useSignupMutation } from '../../store/services/api';
-import { setError } from '../../store/slices/mainSlice';
 import { theme } from '../../theme/themes';
+import { setError } from '../../store/slices/mainSlice';
 
 type SignupScreenProps = NativeStackScreenProps<AppStackParamList, 'Signup'>;
 
@@ -291,7 +291,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 
         <TouchableOpacity
           style={styles.footer}
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.goBack()}
         >
           <Text style={styles.footerText}>
             Already have an account?{' '}
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   backgroundOrbBottom: {
     position: 'absolute',
-    bottom: 50,
+    bottom: -45,
     left: -80,
     width: 220,
     height: 220,
@@ -345,6 +345,7 @@ const styles = StyleSheet.create({
   heroRow: {
     marginBottom: theme.spacing.lg,
     gap: 10,
+    marginLeft: 5,
   },
   heroBadge: {
     alignSelf: 'flex-start',
