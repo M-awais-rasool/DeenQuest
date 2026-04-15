@@ -12,12 +12,8 @@ func SetupRoutes(r *gin.Engine, ctl *controller.CoreController, jwtManager *auth
 	v1 := r.Group("/api/v1")
 	v1.Use(middleware.JWTAuth(jwtManager))
 	{
-		v1.POST("/habits", ctl.CreateHabit)
-		v1.GET("/habits", ctl.ListHabits)
-		v1.POST("/habits/:id/complete", ctl.CompleteHabit)
-		v1.GET("/progress/me", ctl.GetProgress)
-		v1.POST("/reflections", ctl.AddReflection)
-		v1.GET("/achievements/me", ctl.ListAchievements)
+		v1.GET("/daily-tasks", ctl.GetDailyTasks)
+		v1.POST("/daily-tasks/:id/complete", ctl.CompleteDailyTask)
 	}
 
 	r.GET("/health", func(c *gin.Context) {
