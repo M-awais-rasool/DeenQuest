@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.200.12:8080",
+  baseUrl: "http://192.168.200.57:8080",
   prepareHeaders: async (headers) => {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
@@ -49,11 +49,50 @@ export interface APIResponse<T> {
   error?: string;
 }
 
+// Daily Task Types
+export type ScreenType =
+  | "CHECKLIST"
+  | "QURAN_READER"
+  | "COUNTER"
+  | "HADITH_CARD"
+  | "QUIZ"
+  | "AUDIO_PLAYER"
+  | "REFLECTION"
+  | "TIPS"
+  | "ACTION";
+
+export type CompletionType = "button" | "auto" | "counter" | "quiz";
+export type TaskDifficulty = "easy" | "medium";
+export type TaskCategory =
+  | "salah"
+  | "quran"
+  | "dhikr"
+  | "learning"
+  | "character"
+  | "social"
+  | "reflection";
+
+export interface DailyTask {
+  id: string;
+  title: string;
+  category: TaskCategory;
+  description: string;
+  screen_type: ScreenType;
+  component: string;
+  data: Record<string, any>;
+  completion_type: CompletionType;
+  reward_xp: number;
+  difficulty: TaskDifficulty;
+  is_fixed: boolean;
+  completed: boolean;
+  completed_at?: string;
+}
+
 // API Service
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["User", "Auth"],
+  tagTypes: ["User", "Auth", "DailyTasks"],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
       query: (credentials) => ({
@@ -86,6 +125,20 @@ export const API = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+    getDailyTasks: builder.query<APIResponse<DailyTask[]>, void>({
+      query: () => ({
+        url: "/api/v1/daily-tasks",
+        method: "GET",
+      }),
+      providesTags: ["DailyTasks"],
+    }),
+    completeDailyTask: builder.mutation<APIResponse<null>, string>({
+      query: (taskId) => ({
+        url: `/api/v1/daily-tasks/${taskId}/complete`,
+        method: "POST",
+      }),
+      invalidatesTags: ["DailyTasks"],
+    }),
   }),
 });
 
@@ -95,4 +148,6 @@ export const {
   useLoginMutation,
   useGetProfileQuery,
   useUpdateProfileMutation,
+  useGetDailyTasksQuery,
+  useCompleteDailyTaskMutation,
 } = API;
