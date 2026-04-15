@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,8 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-} from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+} from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   AlertCircle,
   CheckCircle2,
@@ -15,16 +15,16 @@ import {
   Mail,
   Sparkles,
   UserPlus,
-} from 'lucide-react-native';
-import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { TactileButton } from '../../components/TactileButton';
-import { AppStackParamList } from '../../navigators/navigationTypes';
-import { useAppDispatch } from '../../store/hooks';
-import { SignupRequest, useSignupMutation } from '../../store/services/api';
-import { theme } from '../../theme/themes';
-import { setError } from '../../store/slices/mainSlice';
+} from "lucide-react-native";
+import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { TactileButton } from "../../components/TactileButton";
+import { AppStackParamList } from "../../navigators/navigationTypes";
+import { useAppDispatch } from "../../store/hooks";
+import { SignupRequest, useSignupMutation } from "../../store/services/api";
+import { theme } from "../../theme/themes";
+import { setError } from "../../store/slices/mainSlice";
 
-type SignupScreenProps = NativeStackScreenProps<AppStackParamList, 'Signup'>;
+type SignupScreenProps = NativeStackScreenProps<AppStackParamList, "Signup">;
 
 type FormErrors = {
   email: string;
@@ -34,21 +34,21 @@ type FormErrors = {
 
 const getErrorMessage = (rawError: any): string => {
   const data = rawError?.data;
-  if (!data) return 'Could not create account. Please try again.';
+  if (!data) return "Could not create account. Please try again.";
 
-  if (typeof data.error === 'string' && data.error.trim()) return data.error;
+  if (typeof data.error === "string" && data.error.trim()) return data.error;
 
   if (Array.isArray(data.errors) && data.errors.length > 0) {
     return String(data.errors[0]);
   }
 
-  if (data.errors && typeof data.errors === 'object') {
+  if (data.errors && typeof data.errors === "object") {
     const first = Object.values(data.errors)[0];
     if (Array.isArray(first) && first.length > 0) return String(first[0]);
-    if (typeof first === 'string' && first.trim()) return first;
+    if (typeof first === "string" && first.trim()) return first;
   }
 
-  return 'Could not create account. Please try again.';
+  return "Could not create account. Please try again.";
 };
 
 export const SignupScreen = ({ navigation }: SignupScreenProps) => {
@@ -56,15 +56,15 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   const [signup, { isLoading, error }] = useSignupMutation();
 
   const [form, setForm] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({
-    email: '',
-    password: '',
-    confirmPassword: '',
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -80,8 +80,8 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   );
 
   const handleChange = (field: keyof typeof form, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-    setErrors(prev => ({ ...prev, [field]: '' }));
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
     setFormError(null);
     dispatch(setError(null));
   };
@@ -89,37 +89,37 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   const validate = () => {
     let valid = true;
     const nextErrors: FormErrors = {
-      email: '',
-      password: '',
-      confirmPassword: '',
+      email: "",
+      password: "",
+      confirmPassword: "",
     };
 
     if (!form.email.trim()) {
-      nextErrors.email = 'Email is required';
+      nextErrors.email = "Email is required";
       valid = false;
     } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-      nextErrors.email = 'Use a valid email address';
+      nextErrors.email = "Use a valid email address";
       valid = false;
     }
 
     if (!form.password) {
-      nextErrors.password = 'Password is required';
+      nextErrors.password = "Password is required";
       valid = false;
     } else if (form.password.length < 8) {
-      nextErrors.password = 'Password must be at least 8 characters';
+      nextErrors.password = "Password must be at least 8 characters";
       valid = false;
     }
 
     if (!form.confirmPassword) {
-      nextErrors.confirmPassword = 'Please confirm your password';
+      nextErrors.confirmPassword = "Please confirm your password";
       valid = false;
     } else if (form.confirmPassword !== form.password) {
-      nextErrors.confirmPassword = 'Passwords do not match';
+      nextErrors.confirmPassword = "Passwords do not match";
       valid = false;
     }
 
     if (!acceptedTerms) {
-      setFormError('Please accept the terms to continue.');
+      setFormError("Please accept the terms to continue.");
       valid = false;
     }
 
@@ -134,12 +134,12 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
       const payload: SignupRequest = {
         email: form.email.trim().toLowerCase(),
         password: form.password,
-        role: 'USER',
+        role: "USER",
       };
 
       await signup(payload).unwrap();
       dispatch(setError(null));
-      navigation.replace('Login');
+      navigation.goBack();
     } catch (err: any) {
       const message = getErrorMessage(err);
       setFormError(message);
@@ -186,7 +186,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={form.email}
-                onChangeText={text => handleChange('email', text)}
+                onChangeText={(text) => handleChange("email", text)}
                 editable={!isLoading}
               />
               <Mail
@@ -209,7 +209,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
                 placeholderTextColor={theme.colors.textMuted}
                 secureTextEntry
                 value={form.password}
-                onChangeText={text => handleChange('password', text)}
+                onChangeText={(text) => handleChange("password", text)}
                 editable={!isLoading}
               />
               <Lock
@@ -235,7 +235,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
                 placeholderTextColor={theme.colors.textMuted}
                 secureTextEntry
                 value={form.confirmPassword}
-                onChangeText={text => handleChange('confirmPassword', text)}
+                onChangeText={(text) => handleChange("confirmPassword", text)}
                 editable={!isLoading}
               />
               <UserPlus
@@ -266,7 +266,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 
           <TouchableOpacity
             style={styles.termsRow}
-            onPress={() => setAcceptedTerms(prev => !prev)}
+            onPress={() => setAcceptedTerms((prev) => !prev)}
             disabled={isLoading}
             activeOpacity={0.8}
           >
@@ -283,7 +283,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
           </TouchableOpacity>
 
           <TactileButton
-            title={isLoading ? 'Creating account...' : 'Create Account'}
+            title={isLoading ? "Creating account..." : "Create Account"}
             onPress={handleSignup}
             style={styles.signupButton}
           />
@@ -294,7 +294,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.footerText}>
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Text style={styles.loginText}>Log In</Text>
           </Text>
         </TouchableOpacity>
@@ -325,22 +325,22 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xxl,
   },
   backgroundOrbTop: {
-    position: 'absolute',
+    position: "absolute",
     top: -80,
     right: -40,
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(136, 217, 130, 0.14)',
+    backgroundColor: "rgba(136, 217, 130, 0.14)",
   },
   backgroundOrbBottom: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -45,
     left: -80,
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: 'rgba(255, 219, 60, 0.11)',
+    backgroundColor: "rgba(255, 219, 60, 0.11)",
   },
   heroRow: {
     marginBottom: theme.spacing.lg,
@@ -348,9 +348,9 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   heroBadge: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     borderRadius: theme.borderRadius.full,
     backgroundColor: theme.colors.secondary,
@@ -359,16 +359,16 @@ const styles = StyleSheet.create({
   },
   heroBadgeText: {
     color: theme.colors.onSecondary,
-    fontWeight: '900',
+    fontWeight: "900",
     fontSize: 11,
     letterSpacing: 0.6,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
     lineHeight: 36,
     color: theme.colors.text,
-    fontWeight: '900',
+    fontWeight: "900",
     letterSpacing: 0.2,
   },
   subtitle: {
@@ -378,22 +378,22 @@ const styles = StyleSheet.create({
     maxWidth: 340,
   },
   formCard: {
-    backgroundColor: 'rgba(31, 31, 31, 0.82)',
-    borderColor: 'rgba(136, 217, 130, 0.2)',
+    backgroundColor: "rgba(31, 31, 31, 0.82)",
+    borderColor: "rgba(136, 217, 130, 0.2)",
     borderWidth: 1,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
     elevation: 6,
   },
   errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(208, 24, 24, 0.1)',
-    borderColor: '#d01818',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(208, 24, 24, 0.1)",
+    borderColor: "#d01818",
     borderWidth: 1,
     borderRadius: theme.borderRadius.sm,
     padding: 12,
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   errorMessage: {
-    color: '#ff8585',
+    color: "#ff8585",
     fontSize: 13,
     flex: 1,
   },
@@ -410,14 +410,14 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.textMuted,
     marginBottom: 8,
     letterSpacing: 0.4,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   inputWrapper: {
-    position: 'relative',
+    position: "relative",
   },
   input: {
     backgroundColor: theme.colors.surfaceLow,
@@ -432,15 +432,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputError: {
-    borderColor: '#d01818',
+    borderColor: "#d01818",
   },
   inputIcon: {
-    position: 'absolute',
+    position: "absolute",
     right: 14,
     top: 16,
   },
   errorText: {
-    color: '#ff8585',
+    color: "#ff8585",
     fontSize: 12,
     marginTop: 6,
   },
@@ -449,13 +449,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     padding: 12,
     borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(42, 42, 42, 0.8)',
+    backgroundColor: "rgba(42, 42, 42, 0.8)",
     borderWidth: 1,
     borderColor: theme.colors.outline,
   },
   checklistRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   checklistIcon: {
     marginRight: 8,
@@ -468,8 +468,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   termsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.lg,
   },
   checkbox: {
@@ -478,8 +478,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     borderColor: theme.colors.outline,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 10,
     backgroundColor: theme.colors.surfaceLow,
   },
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: theme.spacing.xl,
   },
   footerText: {
@@ -505,6 +505,6 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: theme.colors.primary,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
