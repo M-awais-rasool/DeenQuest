@@ -23,6 +23,7 @@ import {
   hasCompletedOnboarding as getOnboardingCompletionStatus,
   readPersistedAuth,
 } from "../store/storage/authStorage";
+import { DailyTaskDetailScreen } from "../screens/task/DailyTaskDetailScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -100,6 +101,7 @@ const AppStack = () => {
       {isAuthenticated ? (
         <>
           <Stack.Screen name="Demo" component={DemoNavigator} />
+          <Stack.Screen name="DailyTaskDetail" component={DailyTaskDetailScreen} />
         </>
       ) : (
         <>

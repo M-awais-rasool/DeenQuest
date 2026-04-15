@@ -6,6 +6,7 @@ import {
   NavigatorScreenParams,
 } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { DailyTask } from "../store/services/api";
 
 export type DemoTabParamList = {
   PathScreen: undefined;
@@ -21,6 +22,7 @@ export type AppStackParamList = {
   Login: undefined;
   Signup: undefined;
   Demo: NavigatorScreenParams<DemoTabParamList>;
+  DailyTaskDetail: { task: DailyTask };
 };
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =
