@@ -14,14 +14,18 @@ import {
   GraduationCap,
   Bolt,
   Circle,
+  Star,
+  Zap,
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Header } from "../../components/Header";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { theme } from "../../theme/themes";
-import { ProgressBar } from "../../components/ProgressBar";
-import { useGetDailyTasksQuery } from "../../store/services/api";
+import {
+  useGetDailyTasksQuery,
+  useGetProgressQuery,
+} from "../../store/services/api";
 import type { DailyTask } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 
@@ -35,84 +39,146 @@ const CATEGORY_ICONS: Record<string, { icon: typeof Flame; color: string }> = {
   reflection: { icon: Circle, color: "#FFD54F" },
 };
 
+function buildWeekDays(): string[] {
+  const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const days: string[] = [];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    days.push(i === 0 ? "Today" : labels[d.getDay()]);
+  }
+  return days;
+}
+
+const WEEK_LABELS = buildWeekDays();
+
 export const HomeScreen = () => {
-  const { data, isLoading } = useGetDailyTasksQuery();
+  const { data: tasksData, isLoading: tasksLoading } = useGetDailyTasksQuery();
+  const { data: progressData } = useGetProgressQuery();
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
-  const tasks = data?.data ?? [];
+
+  const tasks = tasksData?.data ?? [];
+  const progress = progressData?.data;
   const completedCount = tasks.filter((t) => t.completed).length;
+  const totalXP = progress?.xp ?? 0;
+  const level = progress?.level ?? 1;
+  const currentStreak = progress?.current_streak ?? 0;
+  const weeklyCompletions =
+    progress?.weekly_completions ?? new Array(7).fill(false);
 
   const handleTaskPress = (task: DailyTask) => {
     navigation.navigate("DailyTaskDetail", { task });
   };
-  
   return (
     <ScreenWrapper>
-      <Header title="DeenQuest" xp={1250} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <Header title="DeenQuest" xp={totalXP} />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Streak Card ── */}
         <View style={styles.streakCard}>
-          <View style={styles.streakHeader}>
-            <Text style={styles.greeting}>As-salamu Alaykum!</Text>
-            <Text style={styles.streakSub}>
-              Your <Text style={styles.highlight}>7-day streak</Text> is
-              glowing.
-            </Text>
+          <View style={styles.streakTopRow}>
+            <View>
+              <Text style={styles.greeting}>As-salamu Alaykum!</Text>
+              <Text style={styles.streakSub}>
+                Keep your <Text style={styles.highlight}>streak alive</Text>
+                {currentStreak > 0 ? ` — ${currentStreak} days strong!` : "!"}
+              </Text>
+            </View>
+            <View style={styles.streakBubble}>
+              <Flame
+                size={18}
+                color={theme.colors.onPrimary}
+                fill={theme.colors.onPrimary}
+              />
+              <Text style={styles.streakBubbleNumber}>{currentStreak}</Text>
+              <Text style={styles.streakBubbleLabel}>Streak</Text>
+            </View>
           </View>
 
-          <View style={styles.streakRow}>
-            <View style={styles.daysContainer}>
-              {["M", "T", "W"].map((day, i) => (
-                <View key={i} style={styles.dayItem}>
-                  <View style={styles.dayBox}>
-                    <Text style={styles.dayLabel}>{day}</Text>
-                    <CheckCircle2
-                      size={18}
-                      color={theme.colors.onSecondary}
-                      fill={theme.colors.secondary}
-                    />
+          {/* 7-day row */}
+          <View style={styles.weekRow}>
+            {WEEK_LABELS.map((label, i) => {
+              const done = weeklyCompletions[i] === true;
+              const isToday = i === 6;
+              return (
+                <View key={i} style={styles.dayCol}>
+                  <View
+                    style={[
+                      styles.dayCircle,
+                      done && styles.dayCircleDone,
+                      isToday && !done && styles.dayCircleToday,
+                    ]}
+                  >
+                    {done ? (
+                      <CheckCircle2
+                        size={16}
+                        color={theme.colors.onPrimary}
+                        fill={theme.colors.onPrimary}
+                      />
+                    ) : isToday ? (
+                      <Zap
+                        size={14}
+                        color={theme.colors.onPrimary}
+                        fill={theme.colors.onPrimary}
+                      />
+                    ) : (
+                      <View style={styles.dayDot} />
+                    )}
                   </View>
-                </View>
-              ))}
-              <View style={styles.dayItem}>
-                <View style={[styles.dayBox, styles.todayBox]}>
-                  <Text style={[styles.dayLabel, styles.todayLabel]}>
-                    Today
+                  <Text
+                    style={[styles.dayLabel, isToday && styles.dayLabelToday]}
+                  >
+                    {label}
                   </Text>
-                  <Bolt
-                    size={18}
-                    color={theme.colors.onPrimary}
-                    fill={theme.colors.onPrimary}
-                  />
                 </View>
-              </View>
-              <View style={[styles.dayItem, { opacity: 0.4 }]}>
-                <View style={[styles.dayBox, styles.futureBox]}>
-                  <Text style={styles.dayLabel}>F</Text>
-                  <View style={styles.emptyCircle} />
-                </View>
-              </View>
-            </View>
-            <View style={styles.streakCount}>
-              <Text style={styles.streakNumber}>7</Text>
-              <Text style={styles.streakUnit}>Days</Text>
-            </View>
+              );
+            })}
           </View>
+
+          {/* Level + XP bar */}
+          <View style={styles.levelRow}>
+            <View style={styles.levelBadge}>
+              <Star
+                size={12}
+                color={theme.colors.secondary}
+                fill={theme.colors.secondary}
+              />
+              <Text style={styles.levelText}>Level {level}</Text>
+            </View>
+            <Text style={styles.xpLabel}>{totalXP} XP</Text>
+          </View>
+          <View style={styles.xpBarTrack}>
+            <View
+              style={[
+                styles.xpBarFill,
+                { width: `${Math.min(((totalXP % 100) / 100) * 100, 100)}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.xpNext}>
+            {100 - (totalXP % 100)} XP to next level
+          </Text>
         </View>
 
+        {/* ── Daily Missions ── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Daily Missions</Text>
-          <View style={styles.missionCount}>
+          <View style={styles.missionCountBadge}>
             <Text style={styles.missionCountText}>
-              {completedCount}/{tasks.length} COMPLETED
+              {completedCount}/{tasks.length}
             </Text>
           </View>
         </View>
 
-        {isLoading ? (
+        {tasksLoading ? (
           <ActivityIndicator
             size="large"
             color={theme.colors.primary}
-            style={{ marginVertical: 24 }}
+            style={{ marginVertical: 32 }}
           />
         ) : (
           <View style={styles.missionList}>
@@ -130,37 +196,39 @@ export const HomeScreen = () => {
                     task.completed && styles.missionCardDone,
                   ]}
                   onPress={() => handleTaskPress(task)}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                 >
                   <View
                     style={[
-                      styles.missionIconContainer,
+                      styles.missionIcon,
                       {
                         backgroundColor: catConf.color + "18",
-                        borderColor: catConf.color + "30",
+                        borderColor: catConf.color + "35",
                       },
                     ]}
                   >
-                    <IconComp size={24} color={catConf.color} />
+                    <IconComp size={22} color={catConf.color} />
                   </View>
                   <View style={styles.missionInfo}>
-                    <Text style={styles.missionTitle}>{task.title}</Text>
-                    <Text style={styles.missionSub}>
-                      {task.description} •{" "}
-                      <Text style={styles.highlight}>+{task.reward_xp} XP</Text>
+                    <Text style={styles.missionTitle} numberOfLines={1}>
+                      {task.title}
                     </Text>
+                    <View style={styles.missionMeta}>
+                      <Text style={styles.missionCategory}>
+                        {task.category.toUpperCase()}
+                      </Text>
+                      <View style={styles.dot} />
+                      <Text style={styles.missionXP}>+{task.reward_xp} XP</Text>
+                    </View>
                   </View>
                   {task.completed ? (
-                    <View style={styles.missionCheck}>
-                      <CheckCircle2 size={24} color={theme.colors.primary} />
+                    <View style={styles.doneCheck}>
+                      <CheckCircle2 size={22} color={theme.colors.primary} />
                     </View>
                   ) : (
-                    <TouchableOpacity
-                      style={styles.startButton}
-                      onPress={() => handleTaskPress(task)}
-                    >
-                      <Text style={styles.startButtonText}>Start</Text>
-                    </TouchableOpacity>
+                    <View style={styles.startBtn}>
+                      <Text style={styles.startBtnText}>Start</Text>
+                    </View>
                   )}
                 </TouchableOpacity>
               );
@@ -168,19 +236,19 @@ export const HomeScreen = () => {
           </View>
         )}
 
+        {/* ── League Card ── */}
         <View style={styles.leagueCard}>
           <View style={styles.leagueHeader}>
-            <View style={styles.leagueBadge}>
+            <View style={styles.leaguePill}>
               <View style={styles.leagueDot} />
-              <Text style={styles.leagueBadgeText}>Emerald League</Text>
+              <Text style={styles.leaguePillText}>Emerald League</Text>
             </View>
-            <View style={styles.leagueTimer}>
+            <View>
               <Text style={styles.timerLabel}>Ends In</Text>
               <Text style={styles.timerValue}>2d 14h</Text>
             </View>
           </View>
           <Text style={styles.leagueTitle}>Weekly Battle</Text>
-
           <View style={styles.leaderboard}>
             {[
               {
@@ -193,7 +261,7 @@ export const HomeScreen = () => {
               {
                 rank: 2,
                 name: "Ahmed (You)",
-                xp: "3,250 XP",
+                xp: `${totalXP.toLocaleString()} XP`,
                 initials: "AH",
                 color: theme.colors.primary,
                 active: true,
@@ -203,30 +271,27 @@ export const HomeScreen = () => {
                 name: "Sara A.",
                 xp: "2,910 XP",
                 initials: "SA",
-                color: theme.colors.surfaceHigh,
+                color: theme.colors.surfaceBright,
               },
             ].map((user, i) => (
               <View
                 key={i}
                 style={[
-                  styles.leaderboardItem,
-                  user.active && styles.activeLeaderboardItem,
+                  styles.leaderRow,
+                  user.active && styles.leaderRowActive,
                 ]}
               >
-                <Text style={styles.rankText}>{user.rank}</Text>
+                <Text style={styles.rankText}>#{user.rank}</Text>
                 <View style={[styles.avatar, { backgroundColor: user.color }]}>
                   <Text style={styles.avatarText}>{user.initials}</Text>
                 </View>
                 <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.userXp}>{user.xp}</Text>
+                <Text style={styles.userXP}>{user.xp}</Text>
               </View>
             ))}
           </View>
-
-          <TouchableOpacity style={styles.viewLeaderboard}>
-            <Text style={styles.viewLeaderboardText}>
-              View Full Leaderboard
-            </Text>
+          <TouchableOpacity style={styles.viewAll}>
+            <Text style={styles.viewAllText}>View Full Leaderboard</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -235,194 +300,216 @@ export const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: "rgba(10, 10, 10, 0.8)",
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(53, 53, 53, 0.3)",
-  },
-  logoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  logoText: {
-    fontSize: 24,
-    fontWeight: "900",
-    color: "#FFF",
-    letterSpacing: -0.5,
-  },
-  xpBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(42, 42, 42, 0.5)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.3)",
-    gap: 8,
-  },
-  xpText: {
-    color: theme.colors.secondary,
-    fontWeight: "700",
-    fontSize: 14,
-  },
   scrollContent: {
     padding: theme.spacing.lg,
-    paddingBottom: 100,
+    paddingBottom: 120,
+    gap: 0,
   },
+
+  // ── Streak Card ──────────────────────────────────────────────────
   streakCard: {
     backgroundColor: theme.colors.surfaceLow,
     borderRadius: theme.borderRadius.xl,
-    padding: 24,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.2)",
-    marginBottom: 32,
+    borderColor: "rgba(64, 73, 61, 0.25)",
+    marginBottom: 28,
   },
-  streakHeader: {
-    marginBottom: 24,
+  streakTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 20,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "900",
     color: theme.colors.text,
   },
   streakSub: {
-    fontSize: 14,
+    fontSize: 13,
     color: theme.colors.textMuted,
     fontWeight: "500",
-    marginTop: 4,
+    marginTop: 3,
   },
   highlight: {
     color: theme.colors.primary,
     fontWeight: "700",
   },
-  streakRow: {
+  streakBubble: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderBottomWidth: 3,
+    borderBottomColor: theme.colors.primaryContainer,
+    minWidth: 60,
+  },
+  streakBubbleNumber: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: theme.colors.onPrimary,
+    lineHeight: 24,
+  },
+  streakBubbleLabel: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: theme.colors.onPrimary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    opacity: 0.8,
+  },
+
+  // 7-day row
+  weekRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  dayCol: {
+    alignItems: "center",
+    gap: 5,
+  },
+  dayCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.colors.surfaceHigh,
+    borderWidth: 1.5,
+    borderColor: theme.colors.outline,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dayCircleDone: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  dayCircleToday: {
+    backgroundColor: theme.colors.secondary,
+    borderColor: theme.colors.secondary,
+  },
+  dayDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.outline,
+  },
+  dayLabel: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: theme.colors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  dayLabelToday: {
+    color: theme.colors.secondary,
+    fontWeight: "900",
+  },
+
+  // Level / XP
+  levelRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 8,
   },
-  daysContainer: {
+  levelBadge: {
     flexDirection: "row",
-    gap: 10,
-  },
-  dayItem: {
-    alignItems: "center",
-  },
-  dayBox: {
-    width: 44,
-    height: 56,
-    backgroundColor: theme.colors.secondary,
-    borderRadius: theme.borderRadius.md,
-    justifyContent: "center",
     alignItems: "center",
     gap: 4,
-  },
-  dayLabel: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: theme.colors.onSecondary,
-    opacity: 0.5,
-    textTransform: "uppercase",
-  },
-  todayBox: {
-    backgroundColor: theme.colors.primary,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.primaryContainer,
-  },
-  todayLabel: {
-    color: theme.colors.onPrimary,
-    opacity: 1,
-  },
-  futureBox: {
-    backgroundColor: theme.colors.surfaceHigh,
+    backgroundColor: "rgba(255, 219, 60, 0.12)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.2)",
+    borderColor: "rgba(255, 219, 60, 0.25)",
   },
-  emptyCircle: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: theme.colors.outline,
+  levelText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: theme.colors.secondary,
   },
-  streakCount: {
-    alignItems: "center",
-  },
-  streakNumber: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: theme.colors.primary,
-    letterSpacing: -2,
-  },
-  streakUnit: {
-    fontSize: 10,
-    fontWeight: "900",
+  xpLabel: {
+    fontSize: 12,
+    fontWeight: "800",
     color: theme.colors.textMuted,
-    textTransform: "uppercase",
   },
+  xpBarTrack: {
+    height: 6,
+    backgroundColor: theme.colors.surfaceHigh,
+    borderRadius: 3,
+    overflow: "hidden",
+    marginBottom: 6,
+  },
+  xpBarFill: {
+    height: "100%",
+    backgroundColor: theme.colors.primary,
+    borderRadius: 3,
+  },
+  xpNext: {
+    fontSize: 11,
+    color: theme.colors.textMuted,
+    fontWeight: "600",
+    textAlign: "right",
+  },
+
+  // ── Missions ─────────────────────────────────────────────────────
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "baseline",
-    marginBottom: 16,
+    alignItems: "center",
+    marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "900",
-    color: "rgba(136, 217, 130, 0.8)",
+    color: "rgba(136, 217, 130, 0.9)",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
-  missionCount: {
+  missionCountBadge: {
     backgroundColor: theme.colors.surfaceHigh,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
   },
   missionCountText: {
     fontSize: 11,
     fontWeight: "900",
     color: theme.colors.textMuted,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   missionList: {
-    gap: 16,
-    marginBottom: 32,
+    gap: 10,
+    marginBottom: 28,
   },
   missionCard: {
     backgroundColor: theme.colors.surfaceLow,
-    padding: 16,
+    padding: 14,
     borderRadius: theme.borderRadius.md,
-    borderBottomWidth: 4,
-    borderBottomColor: "rgba(0, 0, 0, 0.4)",
+    borderBottomWidth: 3,
+    borderBottomColor: "rgba(0, 0, 0, 0.35)",
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: 14,
   },
   missionCardDone: {
-    opacity: 0.6,
+    opacity: 0.55,
   },
-  missionIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: "rgba(136, 217, 130, 0.1)",
+  missionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: theme.borderRadius.sm,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(136, 217, 130, 0.2)",
   },
   missionInfo: {
     flex: 1,
   },
   missionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
     color: theme.colors.text,
   },
@@ -430,148 +517,129 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginTop: 2,
+    marginTop: 3,
   },
-  missionTime: {
-    fontSize: 12,
-    fontWeight: "700",
+  missionCategory: {
+    fontSize: 10,
+    fontWeight: "800",
     color: theme.colors.textMuted,
+    letterSpacing: 0.5,
   },
   dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
     backgroundColor: theme.colors.outline,
   },
-  missionXp: {
-    fontSize: 12,
-    fontWeight: "700",
+  missionXP: {
+    fontSize: 11,
+    fontWeight: "800",
     color: theme.colors.primary,
   },
-  missionCheck: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(136, 217, 130, 0.2)",
-    borderWidth: 2,
+  doneCheck: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(136, 217, 130, 0.12)",
+    borderWidth: 1.5,
     borderColor: theme.colors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
-  missionSub: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: theme.colors.textMuted,
-    marginTop: 2,
-  },
-  missionProgressRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 12,
-  },
-  missionProgress: {
-    flex: 1,
-  },
-  progressText: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: theme.colors.primary,
-  },
-  startButton: {
+  startBtn: {
     backgroundColor: theme.colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
     borderBottomWidth: 3,
     borderBottomColor: theme.colors.primaryContainer,
   },
-  startButtonText: {
-    fontSize: 12,
+  startBtnText: {
+    fontSize: 11,
     fontWeight: "900",
     color: theme.colors.onPrimary,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
+
+  // ── League Card ───────────────────────────────────────────────────
   leagueCard: {
     backgroundColor: theme.colors.primaryContainer,
     borderRadius: theme.borderRadius.xl,
-    padding: 24,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   leagueHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  leagueBadge: {
+  leaguePill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    backgroundColor: "rgba(0,0,0,0.3)",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
     gap: 6,
   },
   leagueDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: theme.colors.secondary,
   },
-  leagueBadgeText: {
+  leaguePillText: {
     fontSize: 10,
     fontWeight: "900",
     color: "#FFF",
     textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  leagueTimer: {
-    alignItems: "flex-end",
+    letterSpacing: 0.8,
   },
   timerLabel: {
     fontSize: 10,
     fontWeight: "700",
-    color: "rgba(255, 255, 255, 0.6)",
+    color: "rgba(255,255,255,0.55)",
     textTransform: "uppercase",
+    textAlign: "right",
   },
   timerValue: {
     fontSize: 14,
-    fontWeight: "800",
-    color: "#FFF",
-  },
-  leagueTitle: {
-    fontSize: 24,
     fontWeight: "900",
     color: "#FFF",
-    marginBottom: 16,
+    textAlign: "right",
+  },
+  leagueTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#FFF",
+    marginBottom: 14,
   },
   leaderboard: {
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  leaderboardItem: {
+  leaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    padding: 8,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    padding: 10,
     borderRadius: 12,
-    gap: 12,
+    gap: 10,
   },
-  activeLeaderboardItem: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    transform: [{ scale: 1.03 }],
+  leaderRowActive: {
+    backgroundColor: "rgba(255,255,255,0.18)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(255,255,255,0.2)",
   },
   rankText: {
-    width: 24,
+    width: 26,
     textAlign: "center",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "900",
-    color: "rgba(255, 255, 255, 0.6)",
+    color: "rgba(255,255,255,0.55)",
   },
   avatar: {
     width: 32,
@@ -581,7 +649,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "900",
     color: theme.colors.onSecondary,
   },
@@ -591,23 +659,22 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFF",
   },
-  userXp: {
-    fontSize: 14,
+  userXP: {
+    fontSize: 13,
     fontWeight: "900",
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "rgba(255,255,255,0.9)",
   },
-  viewLeaderboard: {
-    width: "100%",
-    paddingVertical: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  viewAll: {
+    paddingVertical: 11,
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 12,
     alignItems: "center",
   },
-  viewLeaderboardText: {
-    fontSize: 12,
+  viewAllText: {
+    fontSize: 11,
     fontWeight: "900",
     color: "#FFF",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
 });

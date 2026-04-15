@@ -15,6 +15,16 @@ func NewCoreController(service *service.CoreService) *CoreController {
 	return &CoreController{service: service}
 }
 
+func (h *CoreController) GetProgress(c *gin.Context) {
+	userID := c.GetString("user_id")
+	result, err := h.service.GetUserProgress(c.Request.Context(), userID)
+	if err != nil {
+		response.InternalError(c, "failed to fetch progress")
+		return
+	}
+	response.OK(c, "progress fetched", result)
+}
+
 func (h *CoreController) GetDailyTasks(c *gin.Context) {
 	userID := c.GetString("user_id")
 	tasks, err := h.service.GetDailyTasks(c.Request.Context(), userID)
