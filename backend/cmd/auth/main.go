@@ -46,7 +46,7 @@ func main() {
 	defer func() {
 		_ = mongoClient.Disconnect(context.Background())
 	}()
-	authDB := mongoClient.Database(cfg.MongoAuthDB)
+	authDB := mongoClient.Database(cfg.MongoDB)
 
 	kafkaProducer := queue.NewKafkaProducer(cfg.GetKafkaBrokerList())
 	defer kafkaProducer.Close()

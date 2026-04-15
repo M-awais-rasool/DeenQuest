@@ -41,7 +41,7 @@ func main() {
 	}
 	defer func() { _ = mongoClient.Disconnect(context.Background()) }()
 
-	authUsers := mongoClient.Database(cfg.MongoAuthDB).Collection("users")
+	authUsers := mongoClient.Database(cfg.MongoDB).Collection("users")
 
 	rows, err := sqlDB.QueryContext(ctx, `SELECT id::text, email, password_hash, role, is_verified, created_at, updated_at FROM users`)
 	if err != nil {

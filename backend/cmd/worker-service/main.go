@@ -39,7 +39,7 @@ func main() {
 	}
 	defer func() { _ = mongoClient.Disconnect(context.Background()) }()
 
-	workerDB := mongoClient.Database(cfg.MongoWorkerDB)
+	workerDB := mongoClient.Database(cfg.MongoDB)
 	jobRepo := repository.NewJobLogRepository(workerDB)
 	consumer := worker.NewConsumer(jobRepo)
 	scheduler := worker.NewScheduler(jobRepo)

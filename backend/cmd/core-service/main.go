@@ -43,7 +43,7 @@ func main() {
 	}
 	defer func() { _ = mongoClient.Disconnect(context.Background()) }()
 
-	coreDB := mongoClient.Database(cfg.MongoCoreDB)
+	coreDB := mongoClient.Database(cfg.MongoDB)
 	repo, err := repository.NewMongoCoreRepository(coreDB)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to initialize core repository: %v", err))
@@ -55,6 +55,12 @@ func main() {
 	jwtManager := auth.NewJWTManager(cfg.JWTSecret, cfg.JWTAccessExpiry, cfg.JWTRefreshExpiry)
 	coreService := service.NewCoreService(repo, producer)
 	coreController := controller.NewCoreController(coreService)
+
+	// Seed daily task templates on startup.
+	if err := coreService.SeedDailyTasks(context.Background()); err != nil {
+		log.Fatalf("failed to seed daily tasks: %v", err)
+	}
+	logger.Info("Daily tasks seeded successfully")
 
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
