@@ -12,6 +12,8 @@ type CoreRepository interface {
 	GetStreak(ctx context.Context, userID string) (*model.Streak, error)
 	UpsertStreak(ctx context.Context, streak *model.Streak) error
 
+	GetCompletedDates(ctx context.Context, userID string, dates []string) (map[string]bool, error)
+
 	// Daily tasks
 	SeedDailyTasks(ctx context.Context, tasks []model.DailyTask) error
 	ListAllDailyTasks(ctx context.Context) ([]model.DailyTask, error)

@@ -27,6 +27,60 @@ func NewCoreService(repo repository.CoreRepository, publisher EventPublisher) *C
 	return &CoreService{repo: repo, publisher: publisher}
 }
 
+// ProgressResponse is the response type for the user's progress summary.
+type ProgressResponse struct {
+	XP                int    `json:"xp"`
+	Level             int    `json:"level"`
+	BarakahScore      int    `json:"barakah_score"`
+	CurrentStreak     int    `json:"current_streak"`
+	LongestStreak     int    `json:"longest_streak"`
+	WeeklyCompletions []bool `json:"weekly_completions"` // index 0 = 6 days ago, index 6 = today
+}
+
+// GetUserProgress returns XP, streak, and the last 7 days completion status.
+func (s *CoreService) GetUserProgress(ctx context.Context, userID string) (*ProgressResponse, error) {
+	progress, err := s.repo.GetProgress(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if progress == nil {
+		progress = &model.Progress{Level: 1}
+	}
+
+	streak, err := s.repo.GetStreak(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if streak == nil {
+		streak = &model.Streak{}
+	}
+
+	now := time.Now().UTC()
+	dates := make([]string, 7)
+	for i := 0; i < 7; i++ {
+		dates[i] = now.AddDate(0, 0, -(6 - i)).Format("2006-01-02")
+	}
+
+	completedDates, err := s.repo.GetCompletedDates(ctx, userID, dates)
+	if err != nil {
+		return nil, err
+	}
+
+	weekly := make([]bool, 7)
+	for i, d := range dates {
+		weekly[i] = completedDates[d]
+	}
+
+	return &ProgressResponse{
+		XP:                progress.TotalXP,
+		Level:             progress.Level,
+		BarakahScore:      progress.BarakahScore,
+		CurrentStreak:     streak.CurrentStreak,
+		LongestStreak:     streak.LongestStreak,
+		WeeklyCompletions: weekly,
+	}, nil
+}
+
 // SeedDailyTasks inserts/updates the master task templates into the database.
 func (s *CoreService) SeedDailyTasks(ctx context.Context) error {
 	return s.repo.SeedDailyTasks(ctx, model.SeedTasks())

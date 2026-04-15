@@ -90,6 +90,29 @@ func (r *MongoCoreRepository) UpsertStreak(ctx context.Context, streak *model.St
 	return err
 }
 
+func (r *MongoCoreRepository) GetCompletedDates(ctx context.Context, userID string, dates []string) (map[string]bool, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.userDailyTasks.Find(timeoutCtx, bson.M{
+		"user_id":   userID,
+		"date":      bson.M{"$in": dates},
+		"completed": true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	result := make(map[string]bool, len(dates))
+	for cur.Next(ctx) {
+		var ut model.UserDailyTask
+		if err := cur.Decode(&ut); err != nil {
+			return nil, err
+		}
+		result[ut.Date] = true
+	}
+	return result, cur.Err()
+}
+
 func (r *MongoCoreRepository) SeedDailyTasks(ctx context.Context, tasks []model.DailyTask) error {
 	timeoutCtx, cancel := withTimeout(ctx)
 	defer cancel()
