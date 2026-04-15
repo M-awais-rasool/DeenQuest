@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.200.57:8080",
+  baseUrl: "http://192.168.200.23:8080",
   prepareHeaders: async (headers) => {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
@@ -89,10 +89,21 @@ export interface DailyTask {
 }
 
 // API Service
+export interface UserProgress {
+  xp: number;
+  level: number;
+  barakah_score: number;
+  current_streak: number;
+  longest_streak: number;
+  /** 7 booleans: index 0 = 6 days ago, index 6 = today */
+  weekly_completions: boolean[];
+}
+
+// API Service
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["User", "Auth", "DailyTasks"],
+  tagTypes: ["User", "Auth", "DailyTasks", "Progress"],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
       query: (credentials) => ({
@@ -137,7 +148,14 @@ export const API = createApi({
         url: `/api/v1/daily-tasks/${taskId}/complete`,
         method: "POST",
       }),
-      invalidatesTags: ["DailyTasks"],
+      invalidatesTags: ["DailyTasks", "Progress"],
+    }),
+    getProgress: builder.query<APIResponse<UserProgress>, void>({
+      query: () => ({
+        url: "/api/v1/progress/me",
+        method: "GET",
+      }),
+      providesTags: ["Progress"],
     }),
   }),
 });
@@ -150,4 +168,5 @@ export const {
   useUpdateProfileMutation,
   useGetDailyTasksQuery,
   useCompleteDailyTaskMutation,
+  useGetProgressQuery,
 } = API;
