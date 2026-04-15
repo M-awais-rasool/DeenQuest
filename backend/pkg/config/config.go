@@ -22,10 +22,8 @@ type Config struct {
 	WorkerHost  string
 	WorkerPort  string
 
-	MongoURI      string
-	MongoAuthDB   string
-	MongoCoreDB   string
-	MongoWorkerDB string
+	MongoURI string
+	MongoDB  string
 
 	RedisHost     string
 	RedisPort     string
@@ -58,9 +56,7 @@ func Load() (*Config, error) {
 		WorkerHost:         getEnv("WORKER_SERVICE_HOST", "0.0.0.0"),
 		WorkerPort:         getEnv("WORKER_SERVICE_PORT", "8084"),
 		MongoURI:           getEnv("MONGO_URI", "mongodb://localhost:27017"),
-		MongoAuthDB:        getEnv("MONGO_AUTH_DB", "deenquest_auth"),
-		MongoCoreDB:        getEnv("MONGO_CORE_DB", "deenquest_core"),
-		MongoWorkerDB:      getEnv("MONGO_WORKER_DB", "deenquest_worker"),
+		MongoDB:            getEnv("MONGO_DB", "deenquest"),
 		RedisHost:          getEnv("REDIS_HOST", "localhost"),
 		RedisPort:          getEnv("REDIS_PORT", "6379"),
 		RedisPassword:      getEnv("REDIS_PASSWORD", ""),
