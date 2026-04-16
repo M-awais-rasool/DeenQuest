@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Dimensions,
   StatusBar,
+  PanResponder,
 } from "react-native";
 import { ArrowRight, Flame, Trophy, Sparkles } from "lucide-react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -17,7 +18,7 @@ import type { RootState } from "../../store/store";
 import type { MainState } from "../../store/slices/mainSlice";
 import { setOnboardingCompleted } from "../../store/storage/authStorage";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const COLORS = {
   surface: "#131313",
@@ -38,6 +39,118 @@ const FONTS = {
   body: "Plus Jakarta Sans",
 };
 
+const SWIPE_THRESHOLD = 60;
+
+// ---------------------------------------------------------------------------
+// Screen data — add new screens here, no JSX changes required elsewhere
+// ---------------------------------------------------------------------------
+interface ScreenConfig {
+  title: string;
+  titleHighlight: string;
+  description: string;
+  buttonText: string;
+  showArrow?: boolean;
+}
+
+const SCREENS: ScreenConfig[] = [
+  {
+    title: "Begin Your",
+    titleHighlight: "Sacred Journey",
+    description:
+      "Experience the beauty of Islam through a gamified, habit-building quest designed for the modern Muslim.",
+    buttonText: "Get Started",
+    showArrow: true,
+  },
+  {
+    title: "Spiritual Growth,",
+    titleHighlight: "Gamified",
+    description:
+      "Complete daily missions, maintain your streaks, and level up your spiritual life with ease and joy.",
+    buttonText: "Next Step",
+  },
+  {
+    title: "Your Personalized",
+    titleHighlight: "Path",
+    description:
+      "Whether you want to master Salah, read the Quran daily, or learn new Hadiths, we create a plan just for you.",
+    buttonText: "Find My Path",
+    showArrow: true,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Hero sections — one per screen index
+// ---------------------------------------------------------------------------
+function HeroScreen0() {
+  return (
+    <>
+      <View style={styles.imageCircle}>
+        <Image
+          source={{
+            uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuCAQRPocBP9-2EE4wvrs1expePn0jLCU4vCxN_K1W5oLgVs7SnT6Ai88-0lzMKSYR15b-Rb1CrIR0Oj4Yi-8T2Zwl_62ZiEyVoE5TLm-R--aF9PyCjEDoUS-Ec2EnnZ4H6aQ2uhKeZ26iikDbXhyGdj7nktV59iwDnR6iPDDfrLHpSaA3p2gYne8jxJx5-olqmF936aw5vJMy3Qp4sCC1YhWhm2C51J-ZmbHs2nnMwcTEqP97gwaKebqbnZjJN4G1AgiOJdfCgPCd0",
+          }}
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
+      </View>
+      <View style={styles.floatingBadge}>
+        <Text style={styles.badgeText}>1</Text>
+      </View>
+    </>
+  );
+}
+
+function HeroScreen1() {
+  return (
+    <View style={styles.visualContainer}>
+      <View style={styles.streakCard}>
+        <Flame
+          size={72}
+          color={COLORS.secondaryContainer}
+          fill={COLORS.secondaryContainer}
+        />
+        <View style={styles.streakBadge}>
+          <Text style={styles.streakBadgeText}>12 DAYS</Text>
+        </View>
+      </View>
+      <View style={styles.levelBadge}>
+        <Trophy size={40} color={COLORS.primary} fill={COLORS.primary} />
+        <Text style={styles.levelBadgeLabel}>NEW LEVEL</Text>
+      </View>
+      <View style={styles.sparkleAccent}>
+        <Sparkles size={36} color={COLORS.primary} />
+      </View>
+    </View>
+  );
+}
+
+function HeroScreen2() {
+  return (
+    <>
+      <View style={styles.imageCircle}>
+        <Image
+          source={{
+            uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0Ymacn5LPYy_OTdPgK_cuteNV6V0oMRODkiWdoUhvfJ7er5PlnxCjVmIVgTQh6kqNY0Y65fSecLtyKwFOxMGxBE5wbR9EaGBixg1o-fOTgDhCGP6zVxmYZbd7Bu-HSkH1iymctyzF2sUtw_cIbJzwfW1i9e49kUiQCSH98a57xzN74171QH6DK9BPVbOHbq6xsVmBus-WT09zhhqJWN6NUMEOLbxtoNuFuS82tPkjtR26Is3cNRIAgG0BbvVSo4FTBDgBuwzKrnI",
+          }}
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
+      </View>
+      <View style={styles.goalTag}>
+        <View style={styles.goalIcon}>
+          <Sparkles size={14} color={COLORS.primary} />
+        </View>
+        <Text style={styles.goalText}>Daily Goal</Text>
+      </View>
+    </>
+  );
+}
+
+const HERO_COMPONENTS = [HeroScreen0, HeroScreen1, HeroScreen2];
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 type OnboardingScreenProps = NativeStackScreenProps<
   AppStackParamList,
   "OnboardingScreen"
@@ -46,7 +159,7 @@ type OnboardingScreenProps = NativeStackScreenProps<
 export default function OnboardingScreen({
   navigation,
 }: OnboardingScreenProps) {
-  const [currentScreen, setCurrentScreen] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const { isAuthenticated } = useAppSelector(
     (state: RootState) => (state as RootState & { main: MainState }).main,
   );
@@ -59,250 +172,103 @@ export default function OnboardingScreen({
     });
   };
 
-  const nextScreen = () => {
-    if (currentScreen < 2) {
-      setCurrentScreen(currentScreen + 1);
-      return;
-    }
-
-    completeOnboarding();
-  };
-
-  const skip = async () => {
-    await completeOnboarding();
-  };
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 0:
-        return (
-          <View style={styles.screenContainer}>
-            <View style={styles.heroContainer}>
-              <View style={styles.imageCircle}>
-                <Image
-                  source={{
-                    uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuCAQRPocBP9-2EE4wvrs1expePn0jLCU4vCxN_K1W5oLgVs7SnT6Ai88-0lzMKSYR15b-Rb1CrIR0Oj4Yi-8T2Zwl_62ZiEyVoE5TLm-R--aF9PyCjEDoUS-Ec2EnnZ4H6aQ2uhKeZ26iikDbXhyGdj7nktV59iwDnR6iPDDfrLHpSaA3p2gYne8jxJx5-olqmF936aw5vJMy3Qp4sCC1YhWhm2C51J-ZmbHs2nnMwcTEqP97gwaKebqbnZjJN4G1AgiOJdfCgPCd0",
-                  }}
-                  style={styles.heroImage}
-                  resizeMode="cover"
-                />
-              </View>
-              <View style={styles.floatingBadge}>
-                <Text style={styles.badgeText}>1</Text>
-              </View>
-            </View>
-
-            <View style={styles.contentContainer}>
-              <Text style={styles.title}>
-                Begin Your{"\n"}
-                <Text style={styles.primaryText}>Sacred Journey</Text>
-              </Text>
-              <Text style={styles.description}>
-                Experience the beauty of Islam through a gamified,
-                habit-building quest designed for the modern Muslim.
-              </Text>
-            </View>
-
-            <View style={styles.footer}>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={nextScreen}
-              >
-                <Text style={styles.primaryButtonText}>Get Started</Text>
-                <ArrowRight
-                  size={20}
-                  color={COLORS.onPrimary}
-                  strokeWidth={3}
-                />
-              </TouchableOpacity>
-
-              <View style={styles.dotContainer}>
-                <View style={[styles.dot, styles.dotActive]} />
-                <View style={styles.dot} />
-                <View style={styles.dot} />
-              </View>
-            </View>
-          </View>
-        );
-
-      case 1:
-        return (
-          <View style={styles.screenContainer}>
-            <View style={styles.heroContainer}>
-              <View style={styles.visualContainer}>
-                {/* Main Streak Card */}
-                <View style={styles.streakCard}>
-                  <Flame
-                    size={72}
-                    color={COLORS.secondaryContainer}
-                    fill={COLORS.secondaryContainer}
-                  />
-                  <View style={styles.streakBadge}>
-                    <Text style={styles.streakBadgeText}>12 DAYS</Text>
-                  </View>
-                </View>
-
-                {/* New Level Badge */}
-                <View style={styles.levelBadge}>
-                  <Trophy
-                    size={40}
-                    color={COLORS.primary}
-                    fill={COLORS.primary}
-                  />
-                  <Text style={styles.levelBadgeLabel}>NEW LEVEL</Text>
-                </View>
-
-                {/* Sparkle Accent */}
-                <View style={styles.sparkleAccent}>
-                  <Sparkles size={36} color={COLORS.primary} />
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.contentContainer}>
-              <Text style={styles.title}>
-                Spiritual Growth,{"\n"}
-                <Text style={styles.primaryText}>Gamified</Text>
-              </Text>
-              <Text style={styles.description}>
-                Complete daily missions, maintain your streaks, and level up
-                your spiritual life with ease and joy.
-              </Text>
-            </View>
-
-            <View style={styles.footer}>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={nextScreen}
-              >
-                <Text style={styles.primaryButtonText}>Next Step</Text>
-              </TouchableOpacity>
-
-              <View style={styles.navDots}>
-                <View style={styles.navItem}>
-                  <View style={styles.navDotSmall} />
-                  <Text style={styles.navLabel}>INTRO</Text>
-                </View>
-                <View style={styles.navItem}>
-                  <View
-                    style={[
-                      styles.navDotSmall,
-                      { backgroundColor: COLORS.secondaryContainer },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.navLabel,
-                      { color: COLORS.secondaryContainer },
-                    ]}
-                  >
-                    JOURNEY
-                  </Text>
-                </View>
-                <View style={styles.navItem}>
-                  <View style={styles.navDotSmall} />
-                  <Text style={styles.navLabel}>BEGIN</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        );
-
-      case 2:
-        return (
-          <View style={styles.screenContainer}>
-            <View style={styles.heroContainer}>
-              <View style={styles.imageCircle}>
-                <Image
-                  source={{
-                    uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0Ymacn5LPYy_OTdPgK_cuteNV6V0oMRODkiWdoUhvfJ7er5PlnxCjVmIVgTQh6kqNY0Y65fSecLtyKwFOxMGxBE5wbR9EaGBixg1o-fOTgDhCGP6zVxmYZbd7Bu-HSkH1iymctyzF2sUtw_cIbJzwfW1i9e49kUiQCSH98a57xzN74171QH6DK9BPVbOHbq6xsVmBus-WT09zhhqJWN6NUMEOLbxtoNuFuS82tPkjtR26Is3cNRIAgG0BbvVSo4FTBDgBuwzKrnI",
-                  }}
-                  style={styles.heroImage}
-                  resizeMode="cover"
-                />
-              </View>
-              <View style={styles.goalTag}>
-                <View style={styles.goalIcon}>
-                  <Sparkles size={14} color={COLORS.primary} />
-                </View>
-                <Text style={styles.goalText}>Daily Goal</Text>
-              </View>
-            </View>
-
-            <View style={styles.contentContainer}>
-              <Text style={styles.title}>
-                Your Personalized{"\n"}
-                <Text style={styles.primaryText}>Path</Text>
-              </Text>
-              <Text style={styles.description}>
-                Whether you want to master Salah, read the Quran daily, or learn
-                new Hadiths, we create a plan just for you.
-              </Text>
-            </View>
-
-            <View style={styles.footer}>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={nextScreen}
-              >
-                <Text style={styles.primaryButtonText}>Find My Path</Text>
-                <ArrowRight
-                  size={20}
-                  color={COLORS.onPrimary}
-                  strokeWidth={3}
-                />
-              </TouchableOpacity>
-
-              <View style={styles.navDots}>
-                <View style={styles.navItem}>
-                  <View style={styles.navDotSmall} />
-                  <Text style={styles.navLabel}>INTRO</Text>
-                </View>
-                <View style={styles.navItem}>
-                  <View style={styles.navDotSmall} />
-                  <Text style={styles.navLabel}>JOURNEY</Text>
-                </View>
-                <View style={styles.navItem}>
-                  <View
-                    style={[
-                      styles.navDotSmall,
-                      { backgroundColor: COLORS.secondaryContainer },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.navLabel,
-                      { color: COLORS.secondaryContainer },
-                    ]}
-                  >
-                    BEGIN
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        );
-
-      default:
-        return null;
+  const goToNext = () => {
+    if (currentIndex < SCREENS.length - 1) {
+      setCurrentIndex((i) => i + 1);
+    } else {
+      completeOnboarding();
     }
   };
+
+  const goToPrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+    }
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dx) > Math.abs(gestureState.dy) &&
+        Math.abs(gestureState.dx) > 10,
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -SWIPE_THRESHOLD) {
+          // Swipe left → next
+          setCurrentIndex((i) => (i < SCREENS.length - 1 ? i + 1 : i));
+        } else if (gestureState.dx > SWIPE_THRESHOLD) {
+          // Swipe right → previous
+          setCurrentIndex((i) => (i > 0 ? i - 1 : i));
+        }
+      },
+    }),
+  ).current;
+
+  const screen = SCREENS[currentIndex];
+  const HeroComponent = HERO_COMPONENTS[currentIndex];
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
+
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.logo}>Noor Quest</Text>
-        <TouchableOpacity onPress={skip}>
+        <Text style={styles.logo}>DeenQuest</Text>
+        <TouchableOpacity onPress={completeOnboarding}>
           <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
       </View>
 
-      {renderScreen()}
+      {/* Swipeable content */}
+      <View style={styles.screenContainer} {...panResponder.panHandlers}>
+        {/* Hero */}
+        <View style={styles.heroContainer}>
+          <HeroComponent />
+        </View>
+
+        {/* Text content */}
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>
+            {screen.title}
+            {"\n"}
+            <Text style={styles.primaryText}>{screen.titleHighlight}</Text>
+          </Text>
+          <Text style={styles.description}>{screen.description}</Text>
+        </View>
+
+        {/* Footer — identical layout on every screen */}
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.primaryButton} onPress={goToNext}>
+            <Text style={styles.primaryButtonText}>{screen.buttonText}</Text>
+            {screen.showArrow && (
+              <ArrowRight size={20} color={COLORS.onPrimary} strokeWidth={3} />
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.dotContainer}>
+            {SCREENS.map((_, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => setCurrentIndex(index)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <View
+                  style={[
+                    styles.dot,
+                    index === currentIndex && styles.dotActive,
+                  ]}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -313,8 +279,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingTop: 20,
-    height: 80,
     zIndex: 10,
   },
   logo: {
@@ -419,7 +383,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 8,
-    // Chunky shadow effect
     borderBottomWidth: 4,
     borderBottomColor: "#005312",
   },
@@ -443,7 +406,7 @@ const styles = StyleSheet.create({
     width: 24,
     backgroundColor: COLORS.secondaryContainer,
   },
-  // Screen 2 specific styles
+  // Screen 2 (visual) hero styles
   visualContainer: {
     width: width * 0.8,
     height: width * 0.8,
@@ -511,7 +474,7 @@ const styles = StyleSheet.create({
     left: -16,
     width: 80,
     height: 80,
-    backgroundColor: "#2E7D32", // primary-container
+    backgroundColor: "#2E7D32",
     borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
@@ -521,32 +484,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 15,
   },
-  navDots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 32,
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  navDotSmall: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.onSurface,
-    opacity: 0.4,
-  },
-  navLabel: {
-    fontFamily: FONTS.headline,
-    fontSize: 10,
-    fontWeight: "700",
-    color: COLORS.onSurface,
-    opacity: 0.4,
-    letterSpacing: 1.5,
-  },
-  // Screen 3 specific styles
+  // Screen 3 hero styles
   goalTag: {
     position: "absolute",
     bottom: -8,
