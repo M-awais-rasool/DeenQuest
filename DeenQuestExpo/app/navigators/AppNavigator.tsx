@@ -100,7 +100,7 @@ const AppStack = () => {
     >
       {isAuthenticated ? (
         <>
-          <Stack.Screen name="Demo" component={OnboardingScreen} />
+          <Stack.Screen name="Demo" component={DemoNavigator} />
           <Stack.Screen name="DailyTaskDetail" component={DailyTaskDetailScreen} />
         </>
       ) : (
