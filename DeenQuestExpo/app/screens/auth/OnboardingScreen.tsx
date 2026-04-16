@@ -1,16 +1,17 @@
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
+  Animated,
   Dimensions,
-  StatusBar,
+  Image,
   PanResponder,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { ArrowRight, Flame, Trophy, Sparkles } from "lucide-react-native";
+import { ArrowRight, Flame, Sparkles, Trophy } from "lucide-react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { useAppSelector } from "../../store/hooks";
@@ -39,7 +40,7 @@ const FONTS = {
   body: "Plus Jakarta Sans",
 };
 
-const SWIPE_THRESHOLD = 60;
+const SWIPE_THRESHOLD = 50;
 
 // ---------------------------------------------------------------------------
 // Screen data — add new screens here, no JSX changes required elsewhere
@@ -93,9 +94,6 @@ function HeroScreen0() {
           resizeMode="cover"
         />
       </View>
-      <View style={styles.floatingBadge}>
-        <Text style={styles.badgeText}>1</Text>
-      </View>
     </>
   );
 }
@@ -103,6 +101,25 @@ function HeroScreen0() {
 function HeroScreen1() {
   return (
     <View style={styles.visualContainer}>
+      <View
+        style={{
+          width: 250,
+          height: 250,
+          borderRadius: 125,
+          position: "absolute",
+          backgroundColor: COLORS.secondaryContainer,
+        }}
+      />
+      <View
+        style={{
+          width: 230,
+          height: 230,
+          borderRadius: 125,
+          position: "absolute",
+          borderColor: COLORS.outlineVariant,
+          borderWidth: 2,
+        }}
+      />
       <View style={styles.streakCard}>
         <Flame
           size={72}
@@ -160,6 +177,33 @@ export default function OnboardingScreen({
   navigation,
 }: OnboardingScreenProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const currentIndexRef = useRef(0);
+
+  const slideX = useRef(new Animated.Value(0)).current;
+
+  const dotWidths = useRef(
+    SCREENS.map((_, i) => new Animated.Value(i === 0 ? 24 : 8)),
+  ).current;
+
+  const slideAnimations = useRef(
+    SCREENS.map((_, index) => ({
+      translateX: Animated.add(
+        new Animated.Value(index * width),
+        Animated.multiply(slideX, -1),
+      ),
+      scale: slideX.interpolate({
+        inputRange: [(index - 1) * width, index * width, (index + 1) * width],
+        outputRange: [0.88, 1, 0.88],
+        extrapolate: "clamp",
+      }),
+      opacity: slideX.interpolate({
+        inputRange: [(index - 1) * width, index * width, (index + 1) * width],
+        outputRange: [0.35, 1, 0.35],
+        extrapolate: "clamp",
+      }),
+    })),
+  ).current;
+
   const { isAuthenticated } = useAppSelector(
     (state: RootState) => (state as RootState & { main: MainState }).main,
   );
@@ -172,39 +216,62 @@ export default function OnboardingScreen({
     });
   };
 
-  const goToNext = () => {
-    if (currentIndex < SCREENS.length - 1) {
-      setCurrentIndex((i) => i + 1);
-    } else {
-      completeOnboarding();
-    }
-  };
+  const goToIndex = (newIndex: number) => {
+    currentIndexRef.current = newIndex;
+    setCurrentIndex(newIndex);
 
-  const goToPrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1);
-    }
+    Animated.spring(slideX, {
+      toValue: newIndex * width,
+      useNativeDriver: true,
+      damping: 22,
+      stiffness: 220,
+      mass: 0.8,
+    }).start();
+
+    SCREENS.forEach((_, i) => {
+      Animated.spring(dotWidths[i], {
+        toValue: i === newIndex ? 24 : 8,
+        useNativeDriver: false,
+        damping: 18,
+        stiffness: 200,
+      }).start();
+    });
   };
 
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        Math.abs(gestureState.dx) > Math.abs(gestureState.dy) &&
-        Math.abs(gestureState.dx) > 10,
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -SWIPE_THRESHOLD) {
-          // Swipe left → next
-          setCurrentIndex((i) => (i < SCREENS.length - 1 ? i + 1 : i));
-        } else if (gestureState.dx > SWIPE_THRESHOLD) {
-          // Swipe right → previous
-          setCurrentIndex((i) => (i > 0 ? i - 1 : i));
-        }
+      onMoveShouldSetPanResponder: (_, gs) =>
+        Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 10,
+
+      onPanResponderMove: (_, gs) => {
+        const idx = currentIndexRef.current;
+        const raw = idx * width - gs.dx;
+        const max = (SCREENS.length - 1) * width;
+        let clamped: number;
+        if (raw < 0) clamped = raw * 0.15;
+        else if (raw > max) clamped = max + (raw - max) * 0.15;
+        else clamped = raw;
+        slideX.setValue(clamped);
+      },
+
+      onPanResponderRelease: (_, gs) => {
+        const idx = currentIndexRef.current;
+        let newIndex = idx;
+        if (gs.dx < -SWIPE_THRESHOLD && idx < SCREENS.length - 1)
+          newIndex = idx + 1;
+        else if (gs.dx > SWIPE_THRESHOLD && idx > 0) newIndex = idx - 1;
+        goToIndex(newIndex);
       },
     }),
   ).current;
 
-  const screen = SCREENS[currentIndex];
-  const HeroComponent = HERO_COMPONENTS[currentIndex];
+  const goToNext = () => {
+    if (currentIndex < SCREENS.length - 1) {
+      goToIndex(currentIndex + 1);
+    } else {
+      completeOnboarding();
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -218,49 +285,73 @@ export default function OnboardingScreen({
         </TouchableOpacity>
       </View>
 
-      {/* Swipeable content */}
-      <View style={styles.screenContainer} {...panResponder.panHandlers}>
-        {/* Hero */}
-        <View style={styles.heroContainer}>
-          <HeroComponent />
-        </View>
+      {/* Slides — all rendered simultaneously, clipped to container */}
+      <View style={styles.slidesWrapper} {...panResponder.panHandlers}>
+        {SCREENS.map((screen, index) => {
+          const HeroComponent = HERO_COMPONENTS[index];
+          const { translateX, scale, opacity } = slideAnimations[index];
+          return (
+            <Animated.View
+              key={index}
+              style={[
+                styles.slide,
+                { transform: [{ translateX }, { scale }], opacity },
+              ]}
+            >
+              <View style={styles.heroContainer}>
+                <HeroComponent />
+              </View>
 
-        {/* Text content */}
-        <View style={styles.contentContainer}>
-          <Text style={styles.title}>
-            {screen.title}
-            {"\n"}
-            <Text style={styles.primaryText}>{screen.titleHighlight}</Text>
-          </Text>
-          <Text style={styles.description}>{screen.description}</Text>
-        </View>
+              <View style={styles.contentContainer}>
+                <Text style={styles.title}>
+                  {screen.title}
+                  {"\n"}
+                  <Text style={styles.primaryText}>
+                    {screen.titleHighlight}
+                  </Text>
+                </Text>
+                <Text style={styles.description}>{screen.description}</Text>
+              </View>
 
-        {/* Footer — identical layout on every screen */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.primaryButton} onPress={goToNext}>
-            <Text style={styles.primaryButtonText}>{screen.buttonText}</Text>
-            {screen.showArrow && (
-              <ArrowRight size={20} color={COLORS.onPrimary} strokeWidth={3} />
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.dotContainer}>
-            {SCREENS.map((_, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => setCurrentIndex(index)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <View
-                  style={[
-                    styles.dot,
-                    index === currentIndex && styles.dotActive,
-                  ]}
-                />
+              <TouchableOpacity style={styles.primaryButton} onPress={goToNext}>
+                <Text style={styles.primaryButtonText}>
+                  {screen.buttonText}
+                </Text>
+                {screen.showArrow && (
+                  <ArrowRight
+                    size={20}
+                    color={COLORS.onPrimary}
+                    strokeWidth={3}
+                  />
+                )}
               </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+            </Animated.View>
+          );
+        })}
+      </View>
+
+      {/* Dot indicator — anchored outside the slide area, always visible */}
+      <View style={styles.dotContainer}>
+        {SCREENS.map((_, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => goToIndex(index)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Animated.View
+              style={[
+                styles.dot,
+                {
+                  width: dotWidths[index],
+                  backgroundColor:
+                    index === currentIndex
+                      ? COLORS.secondaryContainer
+                      : COLORS.surfaceContainerHigh,
+                },
+              ]}
+            />
+          </TouchableOpacity>
+        ))}
       </View>
     </SafeAreaView>
   );
@@ -294,12 +385,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: COLORS.onSurface,
   },
-  screenContainer: {
+  // Clipping container for all slides
+  slidesWrapper: {
     flex: 1,
+    overflow: "hidden",
+  },
+  // Each slide fills the wrapper and is positioned absolutely
+  slide: {
+    position: "absolute",
+    width,
+    top: 0,
+    bottom: 0,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingBottom: 40,
   },
   heroContainer: {
     flex: 1,
@@ -369,11 +469,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     paddingHorizontal: 20,
   },
-  footer: {
-    width: "100%",
-    alignItems: "center",
-    gap: 32,
-  },
   primaryButton: {
     width: "100%",
     backgroundColor: COLORS.primary,
@@ -392,19 +487,18 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: COLORS.onPrimary,
   },
+  // Dots — fixed below the slides
   dotContainer: {
     flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     gap: 12,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   dot: {
-    width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.surfaceContainerHigh,
-  },
-  dotActive: {
-    width: 24,
-    backgroundColor: COLORS.secondaryContainer,
   },
   // Screen 2 (visual) hero styles
   visualContainer: {
@@ -414,8 +508,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   streakCard: {
-    width: 192,
-    height: 192,
+    width: 152,
+    height: 152,
     backgroundColor: COLORS.surfaceContainer,
     borderRadius: 32,
     justifyContent: "center",
@@ -470,8 +564,8 @@ const styles = StyleSheet.create({
   },
   sparkleAccent: {
     position: "absolute",
-    bottom: 16,
-    left: -16,
+    bottom: 36,
+    left: 16,
     width: 80,
     height: 80,
     backgroundColor: "#2E7D32",
@@ -487,8 +581,8 @@ const styles = StyleSheet.create({
   // Screen 3 hero styles
   goalTag: {
     position: "absolute",
-    bottom: -8,
-    right: -8,
+    bottom: 50,
+    right: 8,
     backgroundColor: COLORS.surfaceContainer,
     padding: 12,
     borderRadius: 16,
