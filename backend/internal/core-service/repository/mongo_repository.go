@@ -190,16 +190,24 @@ func (r *MongoCoreRepository) UpsertUserDailyTasks(ctx context.Context, assignme
 }
 
 func (r *MongoCoreRepository) CompleteUserDailyTask(ctx context.Context, userID, taskID, date string) error {
-	timeoutCtx, cancel := withTimeout(ctx)
-	defer cancel()
-	res, err := r.userDailyTasks.UpdateOne(timeoutCtx,
-		bson.M{"user_id": userID, "task_id": taskID, "date": date},
+	updateCtx, updateCancel := withTimeout(ctx)
+	defer updateCancel()
+	res, err := r.userDailyTasks.UpdateOne(updateCtx,
+		bson.M{"user_id": userID, "task_id": taskID, "date": date, "completed": false},
 		bson.M{"$set": bson.M{"completed": true, "completed_at": time.Now().UTC()}},
 	)
 	if err != nil {
 		return err
 	}
 	if res.MatchedCount == 0 {
+		checkCtx, checkCancel := withTimeout(ctx)
+		defer checkCancel()
+		count, countErr := r.userDailyTasks.CountDocuments(checkCtx,
+			bson.M{"user_id": userID, "task_id": taskID, "date": date, "completed": true},
+		)
+		if countErr == nil && count > 0 {
+			return ErrAlreadyCompleted
+		}
 		return errors.New("task assignment not found")
 	}
 	return nil

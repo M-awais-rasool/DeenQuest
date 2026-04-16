@@ -2,9 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/chawais/talent-flow/backend/internal/core-service/model"
 )
+
+// ErrAlreadyCompleted is returned when a task has already been completed for the day.
+// Callers should treat this as a no-op rather than a failure.
+var ErrAlreadyCompleted = errors.New("task already completed")
 
 type CoreRepository interface {
 	GetProgress(ctx context.Context, userID string) (*model.Progress, error)
