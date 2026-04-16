@@ -12,16 +12,21 @@ import type { DailyTask } from "../../store/services/api";
 import { useCompleteDailyTaskMutation } from "../../store/services/api";
 import { COMPONENT_MAP, XPBadge, CategoryBadge } from "./components";
 
-export function DailyTaskScreen({ task, onBack }: { task: DailyTask; onBack: () => void }) {
+export function DailyTaskScreen({
+  task,
+  onBack,
+}: {
+  task: DailyTask;
+  onBack: () => void;
+}) {
   const [completeDailyTask, { isLoading }] = useCompleteDailyTaskMutation();
 
   const handleComplete = useCallback(async () => {
     try {
       await completeDailyTask(task.id).unwrap();
-    } catch {
-      // Error handled by RTK Query
-    }
-  }, [completeDailyTask, task.id]);
+      onBack();
+    } catch {}
+  }, [completeDailyTask, task.id, onBack]);
 
   const TaskComponent = COMPONENT_MAP[task.component];
 
@@ -36,9 +41,7 @@ export function DailyTaskScreen({ task, onBack }: { task: DailyTask; onBack: () 
       <ScrollView contentContainerStyle={s.scroll}>
         <View style={s.titleRow}>
           <CategoryBadge category={task.category} />
-          <Text style={s.difficultyText}>
-            {task.difficulty.toUpperCase()}
-          </Text>
+          <Text style={s.difficultyText}>{task.difficulty.toUpperCase()}</Text>
         </View>
         <Text style={s.taskTitle}>{task.title}</Text>
         <Text style={s.taskDesc}>{task.description}</Text>
@@ -55,8 +58,6 @@ export function DailyTaskScreen({ task, onBack }: { task: DailyTask; onBack: () 
     </ScreenWrapper>
   );
 }
-
-// ─── Styles ────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
   header: {

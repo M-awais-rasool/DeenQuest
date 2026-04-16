@@ -175,6 +175,9 @@ func (s *CoreService) CompleteDailyTask(ctx context.Context, userID, taskID stri
 	today := time.Now().UTC().Format("2006-01-02")
 
 	if err := s.repo.CompleteUserDailyTask(ctx, userID, taskID, today); err != nil {
+		if errors.Is(err, repository.ErrAlreadyCompleted) {
+			return nil
+		}
 		return fmt.Errorf("complete daily task: %w", err)
 	}
 
