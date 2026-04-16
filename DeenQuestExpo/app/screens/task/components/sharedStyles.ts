@@ -117,10 +117,28 @@ export const shared = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 8,
   },
+  counterCountDone: {
+    color: theme.colors.secondary,
+  },
+  counterBarDone: {
+    backgroundColor: theme.colors.secondary,
+  },
+  counterTapBtnDone: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+    opacity: 0.6,
+  },
   counterTapText: {
     color: theme.colors.primary,
     fontSize: 20,
     fontWeight: "900",
+  },
+  counterTapTextDone: {
+    color: theme.colors.onPrimary,
+    fontSize: 28,
+  },
+  checklistItemLocked: {
+    opacity: 0.65,
   },
 
   // ── Hadith ────────────────────────────────────────────────────────
