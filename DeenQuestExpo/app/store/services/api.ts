@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.200.22:8080",
+  baseUrl: "http://192.168.200.34:8080",
   prepareHeaders: async (headers) => {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
@@ -99,11 +99,86 @@ export interface UserProgress {
   weekly_completions: boolean[];
 }
 
+// ─── Level Journey Types ───
+
+export type MiniGameType =
+  | "tap_match"
+  | "listen_choose"
+  | "drag_drop"
+  | "repeat_voice"
+  | "mcq"
+  | "memory_cards";
+
+export type LessonType =
+  | "qaida"
+  | "hadith"
+  | "dua"
+  | "quiz"
+  | "pronunciation"
+  | "manners"
+  | "revision";
+
+export type LevelDifficulty = "easy" | "medium" | "hard";
+
+export type LevelStatus = "locked" | "available" | "in_progress" | "completed";
+
+export interface Lesson {
+  type: LessonType;
+  title: string;
+  description: string;
+  screen_type: ScreenType;
+  component: string;
+  data: Record<string, any>;
+}
+
+export interface MiniGame {
+  type: MiniGameType;
+  description: string;
+  data: Record<string, any>;
+}
+
+export interface Level {
+  id: number;
+  title: string;
+  theme: string;
+  goal: string;
+  lessons: Lesson[];
+  mini_game: MiniGame;
+  xp_reward: number;
+  unlock_reward: string;
+  difficulty: LevelDifficulty;
+}
+
+export interface LevelWithStatus extends Level {
+  status: LevelStatus;
+  stars: number;
+  lessons_complete: number;
+}
+
+export interface UserLevel {
+  id: string;
+  user_id: string;
+  level_id: number;
+  stars: number;
+  lessons_complete: number;
+  mini_game_done: boolean;
+  completed: boolean;
+  completed_at?: string;
+}
+
+export interface LevelCompletionResult {
+  xp_earned: number;
+  stars: number;
+  unlock_reward: string;
+  treasure_open: boolean;
+  next_level_id: number;
+}
+
 // API Service
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["User", "Auth", "DailyTasks", "Progress"],
+  tagTypes: ["User", "Auth", "DailyTasks", "Progress", "Levels"],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
       query: (credentials) => ({
@@ -157,6 +232,46 @@ export const API = createApi({
       }),
       providesTags: ["Progress"],
     }),
+
+    // ─── Level Journey Endpoints ───
+    getLevels: builder.query<APIResponse<LevelWithStatus[]>, void>({
+      query: () => ({
+        url: "/api/v1/levels",
+        method: "GET",
+      }),
+      providesTags: ["Levels"],
+    }),
+    getLevelDetail: builder.query<APIResponse<LevelWithStatus>, number>({
+      query: (levelId) => ({
+        url: `/api/v1/levels/${levelId}`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, levelId) => [
+        { type: "Levels", id: levelId },
+      ],
+    }),
+    completeLesson: builder.mutation<
+      APIResponse<UserLevel>,
+      { levelId: number; lessonIndex: number }
+    >({
+      query: ({ levelId, lessonIndex }) => ({
+        url: `/api/v1/levels/${levelId}/lessons/complete`,
+        method: "POST",
+        body: { lesson_index: lessonIndex },
+      }),
+      invalidatesTags: ["Levels", "Progress"],
+    }),
+    completeLevel: builder.mutation<
+      APIResponse<LevelCompletionResult>,
+      { levelId: number; stars: number }
+    >({
+      query: ({ levelId, stars }) => ({
+        url: `/api/v1/levels/${levelId}/complete`,
+        method: "POST",
+        body: { stars },
+      }),
+      invalidatesTags: ["Levels", "Progress"],
+    }),
   }),
 });
 
@@ -169,4 +284,8 @@ export const {
   useGetDailyTasksQuery,
   useCompleteDailyTaskMutation,
   useGetProgressQuery,
+  useGetLevelsQuery,
+  useGetLevelDetailQuery,
+  useCompleteLessonMutation,
+  useCompleteLevelMutation,
 } = API;
