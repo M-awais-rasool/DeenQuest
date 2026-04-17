@@ -16,6 +16,8 @@ type MongoCoreRepository struct {
 	progress       *mongo.Collection
 	dailyTasks     *mongo.Collection
 	userDailyTasks *mongo.Collection
+	levels         *mongo.Collection
+	userLevels     *mongo.Collection
 }
 
 func NewMongoCoreRepository(db *mongo.Database) (*MongoCoreRepository, error) {
@@ -24,6 +26,8 @@ func NewMongoCoreRepository(db *mongo.Database) (*MongoCoreRepository, error) {
 		progress:       db.Collection("progress"),
 		dailyTasks:     db.Collection("daily_tasks"),
 		userDailyTasks: db.Collection("user_daily_tasks"),
+		levels:         db.Collection("levels"),
+		userLevels:     db.Collection("user_levels"),
 	}
 	if err := r.ensureIndexes(); err != nil {
 		return nil, err
@@ -44,6 +48,13 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	_, err = r.userDailyTasks.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "date", Value: 1}},
 		Options: options.Index().SetBackground(true),
+	})
+	if err != nil {
+		return err
+	}
+	_, err = r.userLevels.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "level_id", Value: 1}},
+		Options: options.Index().SetUnique(true),
 	})
 	return err
 }
@@ -215,4 +226,95 @@ func (r *MongoCoreRepository) CompleteUserDailyTask(ctx context.Context, userID,
 
 func withTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(ctx, 5*time.Second)
+}
+
+// ─── Level repository methods ───
+
+func (r *MongoCoreRepository) SeedLevels(ctx context.Context, levels []model.Level) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	for _, l := range levels {
+		_, err := r.levels.UpdateByID(timeoutCtx, l.ID, bson.M{"$set": l}, options.Update().SetUpsert(true))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *MongoCoreRepository) ListAllLevels(ctx context.Context) ([]model.Level, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.levels.Find(timeoutCtx, bson.M{}, options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}))
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]model.Level, 0, 20)
+	for cur.Next(ctx) {
+		var l model.Level
+		if err := cur.Decode(&l); err != nil {
+			return nil, err
+		}
+		out = append(out, l)
+	}
+	return out, cur.Err()
+}
+
+func (r *MongoCoreRepository) GetLevelByID(ctx context.Context, levelID int) (*model.Level, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	var l model.Level
+	err := r.levels.FindOne(timeoutCtx, bson.M{"_id": levelID}).Decode(&l)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &l, nil
+}
+
+func (r *MongoCoreRepository) GetUserLevels(ctx context.Context, userID string) ([]model.UserLevel, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.userLevels.Find(timeoutCtx, bson.M{"user_id": userID}, options.Find().SetSort(bson.D{{Key: "level_id", Value: 1}}))
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]model.UserLevel, 0, 20)
+	for cur.Next(ctx) {
+		var ul model.UserLevel
+		if err := cur.Decode(&ul); err != nil {
+			return nil, err
+		}
+		out = append(out, ul)
+	}
+	return out, cur.Err()
+}
+
+func (r *MongoCoreRepository) GetUserLevel(ctx context.Context, userID string, levelID int) (*model.UserLevel, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	var ul model.UserLevel
+	err := r.userLevels.FindOne(timeoutCtx, bson.M{"user_id": userID, "level_id": levelID}).Decode(&ul)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &ul, nil
+}
+
+func (r *MongoCoreRepository) UpsertUserLevel(ctx context.Context, ul *model.UserLevel) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	_, err := r.userLevels.UpdateOne(timeoutCtx,
+		bson.M{"user_id": ul.UserID, "level_id": ul.LevelID},
+		bson.M{"$set": ul},
+		options.Update().SetUpsert(true),
+	)
+	return err
 }

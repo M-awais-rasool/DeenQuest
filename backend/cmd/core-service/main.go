@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
 
 	"github.com/chawais/talent-flow/backend/internal/core-service/controller"
 	"github.com/chawais/talent-flow/backend/internal/core-service/repository"
@@ -61,6 +62,13 @@ func main() {
 		log.Fatalf("failed to seed daily tasks: %v", err)
 	}
 	logger.Info("Daily tasks seeded successfully")
+
+	// Seed level journey templates on startup (non-fatal — app runs without pre-seeding).
+	if err := coreService.SeedLevels(context.Background()); err != nil {
+		logger.Warn("failed to seed levels (will retry on next startup)", zap.Error(err))
+	} else {
+		logger.Info("Levels seeded successfully (20 levels)")
+	}
 
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)

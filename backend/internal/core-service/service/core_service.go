@@ -262,3 +262,203 @@ func (s *CoreService) bumpStreak(ctx context.Context, userID string) error {
 	}
 	return s.repo.UpsertStreak(ctx, streak)
 }
+
+// ─── Level Journey Methods ───
+
+// SeedLevels inserts/updates the 20 master level templates.
+func (s *CoreService) SeedLevels(ctx context.Context) error {
+	return s.repo.SeedLevels(ctx, model.SeedLevels())
+}
+
+// GetLevels returns all levels annotated with the user's progress status.
+func (s *CoreService) GetLevels(ctx context.Context, userID string) ([]model.LevelWithStatus, error) {
+	levels, err := s.repo.ListAllLevels(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list levels: %w", err)
+	}
+
+	userLevels, err := s.repo.GetUserLevels(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get user levels: %w", err)
+	}
+
+	ulMap := make(map[int]model.UserLevel, len(userLevels))
+	for _, ul := range userLevels {
+		ulMap[ul.LevelID] = ul
+	}
+
+	// Determine the highest completed level to figure out which levels are available.
+	highestCompleted := 0
+	for _, ul := range userLevels {
+		if ul.Completed && ul.LevelID > highestCompleted {
+			highestCompleted = ul.LevelID
+		}
+	}
+
+	results := make([]model.LevelWithStatus, 0, len(levels))
+	for _, l := range levels {
+		lws := model.LevelWithStatus{Level: l}
+		if ul, ok := ulMap[l.ID]; ok {
+			lws.Stars = ul.Stars
+			lws.LessonsComplete = ul.LessonsComplete
+			if ul.Completed {
+				lws.Status = "completed"
+			} else {
+				lws.Status = "in_progress"
+			}
+		} else if l.ID <= highestCompleted+1 {
+			lws.Status = "available"
+		} else {
+			lws.Status = "locked"
+		}
+		results = append(results, lws)
+	}
+
+	return results, nil
+}
+
+// GetLevelDetail returns a single level with the user's progress.
+func (s *CoreService) GetLevelDetail(ctx context.Context, userID string, levelID int) (*model.LevelWithStatus, error) {
+	level, err := s.repo.GetLevelByID(ctx, levelID)
+	if err != nil {
+		return nil, err
+	}
+	if level == nil {
+		return nil, errors.New("level not found")
+	}
+
+	ul, err := s.repo.GetUserLevel(ctx, userID, levelID)
+	if err != nil {
+		return nil, err
+	}
+
+	lws := &model.LevelWithStatus{Level: *level, Status: "available"}
+	if ul != nil {
+		lws.Stars = ul.Stars
+		lws.LessonsComplete = ul.LessonsComplete
+		if ul.Completed {
+			lws.Status = "completed"
+		} else {
+			lws.Status = "in_progress"
+		}
+	}
+	return lws, nil
+}
+
+// CompleteLessonInLevel marks a lesson as complete within a level.
+func (s *CoreService) CompleteLessonInLevel(ctx context.Context, userID string, levelID, lessonIndex int) (*model.UserLevel, error) {
+	level, err := s.repo.GetLevelByID(ctx, levelID)
+	if err != nil {
+		return nil, err
+	}
+	if level == nil {
+		return nil, errors.New("level not found")
+	}
+	if lessonIndex < 0 || lessonIndex >= len(level.Lessons) {
+		return nil, errors.New("invalid lesson index")
+	}
+
+	ul, err := s.repo.GetUserLevel(ctx, userID, levelID)
+	if err != nil {
+		return nil, err
+	}
+	if ul == nil {
+		ul = &model.UserLevel{
+			ID:        uuid.NewString(),
+			UserID:    userID,
+			LevelID:   levelID,
+			CreatedAt: time.Now().UTC(),
+		}
+	}
+
+	newCount := lessonIndex + 1
+	if newCount > ul.LessonsComplete {
+		ul.LessonsComplete = newCount
+	}
+
+	if err := s.repo.UpsertUserLevel(ctx, ul); err != nil {
+		return nil, err
+	}
+	return ul, nil
+}
+
+// CompleteLevel marks a level as fully completed and awards XP + rewards.
+func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID int, stars int) (*model.LevelCompletionResult, error) {
+	level, err := s.repo.GetLevelByID(ctx, levelID)
+	if err != nil {
+		return nil, err
+	}
+	if level == nil {
+		return nil, errors.New("level not found")
+	}
+
+	if stars < 1 {
+		stars = 1
+	}
+	if stars > 3 {
+		stars = 3
+	}
+
+	ul, err := s.repo.GetUserLevel(ctx, userID, levelID)
+	if err != nil {
+		return nil, err
+	}
+	if ul != nil && ul.Completed {
+		// Already completed — return existing result, no extra XP.
+		return &model.LevelCompletionResult{
+			XPEarned:     0,
+			Stars:        ul.Stars,
+			UnlockReward: level.UnlockReward,
+			TreasureOpen: false,
+			NextLevelID:  levelID + 1,
+		}, nil
+	}
+
+	if ul == nil {
+		ul = &model.UserLevel{
+			ID:        uuid.NewString(),
+			UserID:    userID,
+			LevelID:   levelID,
+			CreatedAt: time.Now().UTC(),
+		}
+	}
+
+	ul.Stars = stars
+	ul.LessonsComplete = len(level.Lessons)
+	ul.MiniGameDone = true
+	ul.Completed = true
+	ul.CompletedAt = time.Now().UTC()
+
+	if err := s.repo.UpsertUserLevel(ctx, ul); err != nil {
+		return nil, err
+	}
+
+	// Award XP scaled by stars.
+	xp := level.XPReward * stars / 2
+	if err := s.bumpProgress(ctx, userID, xp, stars*5); err != nil {
+		return nil, err
+	}
+	if err := s.bumpStreak(ctx, userID); err != nil {
+		return nil, err
+	}
+
+	if s.publisher != nil {
+		_ = s.publisher.Publish(ctx, "level.completed", queue.Event{
+			Type: "level.completed",
+			Payload: map[string]interface{}{
+				"user_id":  userID,
+				"level_id": levelID,
+				"stars":    stars,
+				"xp":       xp,
+			},
+		})
+	}
+
+	return &model.LevelCompletionResult{
+		XPEarned:     xp,
+		Stars:        stars,
+		UnlockReward: level.UnlockReward,
+		TreasureOpen: levelID%5 == 0,
+		NextLevelID:  levelID + 1,
+	}, nil
+}
