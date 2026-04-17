@@ -11,6 +11,7 @@ import { RewardsScreen } from "../screens/reward/RewardsScreen";
 import { ReflectionScreen } from "../screens/reflection/ReflectionScreen";
 import { ProfileScreen } from "../screens/profile/ProfileScreen";
 import { PathScreen } from "../screens/path/PathScreen";
+import { LevelMapScreen } from "../screens/level/LevelMapScreen";
 
 const Tab = createBottomTabNavigator<DemoTabParamList>();
 
@@ -78,7 +79,7 @@ export function DemoNavigator() {
       tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tab.Screen name="HomeScreen" component={HomeScreen} />
-      <Tab.Screen name="PathScreen" component={PathScreen} />
+      <Tab.Screen name="PathScreen" component={LevelMapScreen} />
       <Tab.Screen name="RewardsScreen" component={RewardsScreen} />
       <Tab.Screen name="ReflectionScreen" component={ReflectionScreen} />
       <Tab.Screen name="ProfileScreen" component={ProfileScreen} />

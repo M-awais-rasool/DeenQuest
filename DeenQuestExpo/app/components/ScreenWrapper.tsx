@@ -2,10 +2,10 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme/themes';
 
 interface ScreenWrapperProps {
