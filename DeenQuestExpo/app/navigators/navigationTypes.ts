@@ -23,6 +23,9 @@ export type AppStackParamList = {
   Signup: undefined;
   Demo: NavigatorScreenParams<DemoTabParamList>;
   DailyTaskDetail: { task: DailyTask };
+  LevelDetail: { levelId: number };
+  LessonPlayer: { levelId: number; startLessonIndex: number };
+  MiniGamePlayer: { levelId: number };
 };
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =

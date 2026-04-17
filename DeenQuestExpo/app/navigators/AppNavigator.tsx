@@ -24,6 +24,9 @@ import {
   readPersistedAuth,
 } from "../store/storage/authStorage";
 import { DailyTaskDetailScreen } from "../screens/task/DailyTaskDetailScreen";
+import { LevelDetailScreen } from "../screens/level/LevelDetailScreen";
+import { LessonPlayerScreen } from "../screens/level/LessonPlayerScreen";
+import { MiniGamePlayerScreen } from "../screens/level/MiniGamePlayerScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -102,6 +105,9 @@ const AppStack = () => {
         <>
           <Stack.Screen name="Demo" component={DemoNavigator} />
           <Stack.Screen name="DailyTaskDetail" component={DailyTaskDetailScreen} />
+          <Stack.Screen name="LevelDetail" component={LevelDetailScreen} />
+          <Stack.Screen name="LessonPlayer" component={LessonPlayerScreen} options={{ gestureEnabled: false }} />
+          <Stack.Screen name="MiniGamePlayer" component={MiniGamePlayerScreen} options={{ gestureEnabled: false }} />
         </>
       ) : (
         <>
