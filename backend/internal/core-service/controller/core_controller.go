@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/chawais/talent-flow/backend/internal/core-service/service"
@@ -48,4 +50,78 @@ func (h *CoreController) CompleteDailyTask(c *gin.Context) {
 		return
 	}
 	response.OK(c, "daily task completed", gin.H{"task_id": taskID})
+}
+
+// ─── Level Journey Endpoints ───
+
+func (h *CoreController) GetLevels(c *gin.Context) {
+	userID := c.GetString("user_id")
+	levels, err := h.service.GetLevels(c.Request.Context(), userID)
+	if err != nil {
+		response.InternalError(c, "failed to fetch levels")
+		return
+	}
+	response.OK(c, "levels fetched", levels)
+}
+
+func (h *CoreController) GetLevelDetail(c *gin.Context) {
+	userID := c.GetString("user_id")
+	levelID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid level id")
+		return
+	}
+	level, err := h.service.GetLevelDetail(c.Request.Context(), userID, levelID)
+	if err != nil {
+		response.InternalError(c, "failed to fetch level detail")
+		return
+	}
+	response.OK(c, "level detail fetched", level)
+}
+
+func (h *CoreController) CompleteLesson(c *gin.Context) {
+	userID := c.GetString("user_id")
+	levelID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid level id")
+		return
+	}
+
+	var body struct {
+		LessonIndex int `json:"lesson_index"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.BadRequest(c, "lesson_index is required")
+		return
+	}
+
+	ul, err := h.service.CompleteLessonInLevel(c.Request.Context(), userID, levelID, body.LessonIndex)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+	response.OK(c, "lesson completed", ul)
+}
+
+func (h *CoreController) CompleteLevel(c *gin.Context) {
+	userID := c.GetString("user_id")
+	levelID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid level id")
+		return
+	}
+
+	var body struct {
+		Stars int `json:"stars"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		body.Stars = 1
+	}
+
+	result, err := h.service.CompleteLevel(c.Request.Context(), userID, levelID, body.Stars)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+	response.OK(c, "level completed", result)
 }

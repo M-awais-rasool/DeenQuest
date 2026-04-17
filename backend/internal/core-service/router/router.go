@@ -15,6 +15,12 @@ func SetupRoutes(r *gin.Engine, ctl *controller.CoreController, jwtManager *auth
 		v1.GET("/progress/me", ctl.GetProgress)
 		v1.GET("/daily-tasks", ctl.GetDailyTasks)
 		v1.POST("/daily-tasks/:id/complete", ctl.CompleteDailyTask)
+
+		// Level journey
+		v1.GET("/levels", ctl.GetLevels)
+		v1.GET("/levels/:id", ctl.GetLevelDetail)
+		v1.POST("/levels/:id/lessons/complete", ctl.CompleteLesson)
+		v1.POST("/levels/:id/complete", ctl.CompleteLevel)
 	}
 
 	r.GET("/health", func(c *gin.Context) {
