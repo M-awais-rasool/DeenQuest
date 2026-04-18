@@ -1,11 +1,20 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
 import { Volume2, ChevronRight } from "lucide-react-native";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
-export function PronunciationComponent({ lesson, onComplete }: LessonComponentProps) {
+export function PronunciationComponent({
+  lesson,
+  onComplete,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
   const items: Array<{ arabic: string; sound: string }> = data.items ?? [];
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
@@ -35,7 +44,11 @@ export function PronunciationComponent({ lesson, onComplete }: LessonComponentPr
           <View style={s.soundRow}>
             <Volume2
               size={18}
-              color={speakingIdx === idx ? theme.colors.secondary : theme.colors.primary}
+              color={
+                speakingIdx === idx
+                  ? theme.colors.secondary
+                  : theme.colors.primary
+              }
             />
             <Text style={[s.sound, speakingIdx === idx && s.soundActive]}>
               {item.sound}

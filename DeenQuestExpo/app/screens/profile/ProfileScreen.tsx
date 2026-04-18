@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   StyleSheet,
   View,
@@ -7,7 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-} from 'react-native';
+} from "react-native";
 import {
   Flame,
   Settings,
@@ -19,32 +19,32 @@ import {
   Moon,
   HandHeart,
   Lock,
-} from 'lucide-react-native';
-import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { Header } from '../../components/Header';
-import { TactileButton } from '../../components/TactileButton';
+} from "lucide-react-native";
+import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Header } from "../../components/Header";
+import { TactileButton } from "../../components/TactileButton";
 
 export function ProfileScreen() {
-  const streakDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const completedDays = [false, false, true, true, true, 'star', false];
+  const streakDays = ["M", "T", "W", "T", "F", "S", "S"];
+  const completedDays = [false, false, true, true, true, "star", false];
 
   const achievements = [
     {
       icon: <Sparkles color="#FFDB3C" size={32} />,
-      label: 'First Khatm',
+      label: "First Khatm",
       locked: false,
     },
     {
       icon: <Moon color="#88D982" size={32} />,
-      label: 'Tahajjud Warrior',
+      label: "Tahajjud Warrior",
       locked: false,
     },
     {
       icon: <HandHeart color="#F472B6" size={32} />,
-      label: 'Giver',
+      label: "Giver",
       locked: false,
     },
-    { icon: <Lock color="#BFCABA" size={32} />, label: '???', locked: true },
+    { icon: <Lock color="#BFCABA" size={32} />, label: "???", locked: true },
   ];
 
   return (
@@ -67,7 +67,7 @@ export function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <View style={styles.avatarGradient}>
               <Image
-                source={{ uri: 'https://picsum.photos/seed/siddiq/300/300' }}
+                source={{ uri: "https://picsum.photos/seed/siddiq/300/300" }}
                 style={styles.avatar}
               />
             </View>
@@ -106,7 +106,7 @@ export function ProfileScreen() {
               style={styles.bgIcon}
             />
             <Text style={styles.statLabel}>GLOBAL RANK</Text>
-            <Text style={[styles.statValue, { color: '#FFDB3C' }]}>#241</Text>
+            <Text style={[styles.statValue, { color: "#FFDB3C" }]}>#241</Text>
             <Text style={styles.statSubtext}>Top 2% Globally</Text>
           </View>
 
@@ -143,14 +143,14 @@ export function ProfileScreen() {
                     style={[
                       styles.dayBox,
                       completedDays[i] === true && styles.dayBoxActive,
-                      completedDays[i] === 'star' && styles.dayBoxStar,
+                      completedDays[i] === "star" && styles.dayBoxStar,
                       !completedDays[i] && styles.dayBoxEmpty,
                     ]}
                   >
                     {completedDays[i] === true && (
                       <Check color="#003909" size={16} />
                     )}
-                    {completedDays[i] === 'star' && (
+                    {completedDays[i] === "star" && (
                       <Star color="#221B00" fill="#221B00" size={16} />
                     )}
                   </View>
@@ -164,13 +164,13 @@ export function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Goal Progress</Text>
           <View style={styles.goalCardContainer}>
-            <View style={[styles.goalCard, { borderLeftColor: '#88D982' }]}>
+            <View style={[styles.goalCard, { borderLeftColor: "#88D982" }]}>
               <View style={styles.goalHeader}>
                 <View>
                   <Text style={styles.goalTitle}>Read 5 Pages Daily</Text>
                   <Text style={styles.goalSubtext}>The Quranic Journey</Text>
                 </View>
-                <Text style={[styles.goalPercent, { color: '#88D982' }]}>
+                <Text style={[styles.goalPercent, { color: "#88D982" }]}>
                   80%
                 </Text>
               </View>
@@ -178,19 +178,19 @@ export function ProfileScreen() {
                 <View
                   style={[
                     styles.progressBarFill,
-                    { width: '80%', backgroundColor: '#88D982' },
+                    { width: "80%", backgroundColor: "#88D982" },
                   ]}
                 />
               </View>
             </View>
 
-            <View style={[styles.goalCard, { borderLeftColor: '#FFDB3C' }]}>
+            <View style={[styles.goalCard, { borderLeftColor: "#FFDB3C" }]}>
               <View style={styles.goalHeader}>
                 <View>
                   <Text style={styles.goalTitle}>Early Morning Dhikr</Text>
                   <Text style={styles.goalSubtext}>30 day challenge</Text>
                 </View>
-                <Text style={[styles.goalPercent, { color: '#FFDB3C' }]}>
+                <Text style={[styles.goalPercent, { color: "#FFDB3C" }]}>
                   12/30
                 </Text>
               </View>
@@ -198,7 +198,7 @@ export function ProfileScreen() {
                 <View
                   style={[
                     styles.progressBarFill,
-                    { width: '40%', backgroundColor: '#FFDB3C' },
+                    { width: "40%", backgroundColor: "#FFDB3C" },
                   ]}
                 />
               </View>
@@ -250,11 +250,11 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   avatarContainer: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 16,
   },
   avatarGradient: {
@@ -262,58 +262,58 @@ const styles = StyleSheet.create({
     height: 128,
     borderRadius: 64,
     padding: 4,
-    backgroundColor: '#88D982', // Simplified gradient for StyleSheet
+    backgroundColor: "#88D982", // Simplified gradient for StyleSheet
   },
   avatar: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 60,
     borderWidth: 4,
-    borderColor: '#131313',
+    borderColor: "#131313",
   },
   levelBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -8,
-    alignSelf: 'center',
-    backgroundColor: '#FFDB3C',
+    alignSelf: "center",
+    backgroundColor: "#FFDB3C",
     paddingHorizontal: 16,
     paddingVertical: 4,
     borderRadius: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
   },
   levelText: {
-    fontFamily: 'Lexend',
-    fontWeight: '900',
+    fontFamily: "Lexend",
+    fontWeight: "900",
     fontSize: 10,
-    color: '#221B00',
+    color: "#221B00",
     letterSpacing: 1,
   },
   nameContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
   name: {
-    fontFamily: 'Lexend',
-    fontWeight: '700',
+    fontFamily: "Lexend",
+    fontWeight: "700",
     fontSize: 32,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   title: {
-    fontFamily: 'Lexend',
-    fontWeight: '700',
+    fontFamily: "Lexend",
+    fontWeight: "700",
     fontSize: 12,
-    color: '#88D982',
+    color: "#88D982",
     letterSpacing: 3,
     marginTop: 4,
   },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "center",
+    width: "100%",
     marginTop: 24,
     gap: 12,
   },
@@ -321,136 +321,136 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     borderBottomWidth: 4,
   },
   primaryButton: {
-    backgroundColor: '#88D982',
-    borderBottomColor: '#005312',
+    backgroundColor: "#88D982",
+    borderBottomColor: "#005312",
   },
   primaryButtonText: {
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: '#003909',
+    fontFamily: "Lexend",
+    fontWeight: "700",
+    color: "#003909",
   },
   secondaryButton: {
-    backgroundColor: '#2A2A2A',
-    borderBottomColor: '#000000',
+    backgroundColor: "#2A2A2A",
+    borderBottomColor: "#000000",
   },
   buttonText: {
-    fontFamily: 'Lexend',
-    fontWeight: '700',
-    color: '#E2E2E2',
+    fontFamily: "Lexend",
+    fontWeight: "700",
+    color: "#E2E2E2",
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 16,
     marginBottom: 32,
   },
   statCard: {
     flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#1B1B1B',
+    minWidth: "45%",
+    backgroundColor: "#1B1B1B",
     padding: 24,
     borderRadius: 16,
-    position: 'relative',
-    overflow: 'hidden',
+    position: "relative",
+    overflow: "hidden",
     borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0,0,0,0.2)',
+    borderBottomColor: "rgba(0,0,0,0.2)",
   },
   bgIcon: {
-    position: 'absolute',
+    position: "absolute",
     right: -16,
     top: -16,
   },
   statLabel: {
-    fontFamily: 'Lexend',
-    fontWeight: '700',
+    fontFamily: "Lexend",
+    fontWeight: "700",
     fontSize: 10,
-    color: '#BFCABA',
+    color: "#BFCABA",
     letterSpacing: 1.5,
     marginBottom: 4,
   },
   statValue: {
-    fontFamily: 'Lexend',
-    fontWeight: '900',
+    fontFamily: "Lexend",
+    fontWeight: "900",
     fontSize: 36,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   statSubtext: {
     fontSize: 10,
-    color: '#BFCABA',
-    fontWeight: '700',
+    color: "#BFCABA",
+    fontWeight: "700",
     marginTop: 8,
   },
   streakCard: {
-    width: '100%',
-    backgroundColor: '#1F1F1F',
+    width: "100%",
+    backgroundColor: "#1F1F1F",
     padding: 24,
     borderRadius: 16,
     borderBottomWidth: 4,
-    borderBottomColor: 'rgba(0,0,0,0.2)',
+    borderBottomColor: "rgba(0,0,0,0.2)",
   },
   streakHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 24,
   },
   sectionTitle: {
-    fontFamily: 'Lexend',
-    fontWeight: '700',
+    fontFamily: "Lexend",
+    fontWeight: "700",
     fontSize: 18,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   sectionSubtext: {
     fontSize: 12,
-    color: '#BFCABA',
+    color: "#BFCABA",
   },
   streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 219, 60, 0.1)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 219, 60, 0.1)",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
   },
   streakBadgeText: {
-    fontFamily: 'Lexend',
-    fontWeight: '700',
+    fontFamily: "Lexend",
+    fontWeight: "700",
     fontSize: 14,
-    color: '#FFDB3C',
+    color: "#FFDB3C",
     marginLeft: 6,
   },
   daysGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   dayColumn: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
   },
   dayLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    color: '#BFCABA',
+    fontWeight: "700",
+    color: "#BFCABA",
   },
   dayBox: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   dayBoxActive: {
-    backgroundColor: '#88D982',
+    backgroundColor: "#88D982",
   },
   dayBoxStar: {
-    backgroundColor: '#FFDB3C',
+    backgroundColor: "#FFDB3C",
   },
   dayBoxEmpty: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: "#2A2A2A",
     opacity: 0.4,
   },
   section: {
@@ -461,51 +461,51 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   goalCard: {
-    backgroundColor: '#1F1F1F',
+    backgroundColor: "#1F1F1F",
     padding: 20,
     borderRadius: 16,
     borderLeftWidth: 4,
   },
   goalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   goalTitle: {
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
     fontSize: 16,
   },
   goalSubtext: {
     fontSize: 12,
-    color: '#BFCABA',
+    color: "#BFCABA",
   },
   goalPercent: {
-    fontFamily: 'Lexend',
-    fontWeight: '900',
+    fontFamily: "Lexend",
+    fontWeight: "900",
     fontSize: 16,
   },
   progressBarBg: {
     height: 12,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: "#2A2A2A",
     borderRadius: 6,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressBarFill: {
-    height: '100%',
+    height: "100%",
     borderRadius: 6,
   },
   sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 4,
   },
   viewAllText: {
-    color: '#88D982',
+    color: "#88D982",
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 1,
   },
   badgeScroll: {
@@ -513,70 +513,70 @@ const styles = StyleSheet.create({
   },
   badgeItem: {
     width: 80,
-    alignItems: 'center',
+    alignItems: "center",
     marginRight: 16,
   },
   badgeIconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
     marginBottom: 8,
   },
   badgeUnlocked: {
-    backgroundColor: '#2A2A2A',
-    borderColor: '#393939',
+    backgroundColor: "#2A2A2A",
+    borderColor: "#393939",
   },
   badgeLocked: {
-    backgroundColor: '#131313',
-    borderColor: '#2A2A2A',
-    borderStyle: 'dashed',
+    backgroundColor: "#131313",
+    borderColor: "#2A2A2A",
+    borderStyle: "dashed",
   },
   badgeLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    textAlign: 'center',
-    color: '#BFCABA',
+    fontWeight: "700",
+    textAlign: "center",
+    color: "#BFCABA",
   },
   bottomNav: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 32,
-    backgroundColor: '#131313',
+    backgroundColor: "#131313",
     borderTopWidth: 4,
-    borderTopColor: '#1F1F1F',
+    borderTopColor: "#1F1F1F",
   },
   navItem: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 8,
   },
   navItemActive: {
-    backgroundColor: '#1F1F1F',
+    backgroundColor: "#1F1F1F",
     borderRadius: 16,
     borderBottomWidth: 4,
-    borderBottomColor: '#88D982',
+    borderBottomColor: "#88D982",
     paddingHorizontal: 16,
   },
   navLabel: {
-    fontFamily: 'Lexend',
-    fontWeight: '900',
+    fontFamily: "Lexend",
+    fontWeight: "900",
     fontSize: 10,
-    color: '#E2E2E2',
-    textTransform: 'uppercase',
+    color: "#E2E2E2",
+    textTransform: "uppercase",
     marginTop: 4,
     opacity: 0.6,
   },
   navLabelActive: {
-    color: '#88D982',
+    color: "#88D982",
     opacity: 1,
   },
 });
