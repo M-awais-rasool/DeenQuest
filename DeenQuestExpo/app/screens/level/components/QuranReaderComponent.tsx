@@ -4,7 +4,10 @@ import { BookOpen, ChevronRight } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
-export function QuranReaderComponent({ lesson, onComplete }: LessonComponentProps) {
+export function QuranReaderComponent({
+  lesson,
+  onComplete,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
 
   return (
@@ -20,9 +23,7 @@ export function QuranReaderComponent({ lesson, onComplete }: LessonComponentProp
         {data.transliteration && (
           <Text style={s.transliteration}>{data.transliteration}</Text>
         )}
-        {data.meaning && (
-          <Text style={s.meaning}>{data.meaning}</Text>
-        )}
+        {data.meaning && <Text style={s.meaning}>{data.meaning}</Text>}
       </View>
 
       <TouchableOpacity style={s.continueBtn} onPress={onComplete}>

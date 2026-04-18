@@ -5,13 +5,25 @@ import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
-export function LetterIntroComponent({ lesson, onComplete }: LessonComponentProps) {
+export function LetterIntroComponent({
+  lesson,
+  onComplete,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
 
   // Single letter or multiple letters
-  const letters: Array<{ letter: string; name: string; transliteration?: string }> =
-    data.letters ?? [{ letter: data.letter, name: data.name, transliteration: data.transliteration }];
+  const letters: Array<{
+    letter: string;
+    name: string;
+    transliteration?: string;
+  }> = data.letters ?? [
+    {
+      letter: data.letter,
+      name: data.name,
+      transliteration: data.transliteration,
+    },
+  ];
 
   const speakLetter = useCallback((letter: string, idx: number) => {
     Speech.stop();
@@ -42,7 +54,11 @@ export function LetterIntroComponent({ lesson, onComplete }: LessonComponentProp
           <View style={s.audioRow}>
             <Volume2
               size={16}
-              color={speakingIdx === idx ? theme.colors.secondary : theme.colors.primary}
+              color={
+                speakingIdx === idx
+                  ? theme.colors.secondary
+                  : theme.colors.primary
+              }
             />
             <Text style={s.audioLabel}>Tap to hear</Text>
           </View>
