@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.200.34:8080",
+  baseUrl: "http://192.168.200.24:8080",
   prepareHeaders: async (headers) => {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
