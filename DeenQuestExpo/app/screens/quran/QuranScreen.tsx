@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-} from 'react-native';
+} from "react-native";
 import {
   Search,
   Flame,
@@ -16,65 +16,65 @@ import {
   Lock,
   Play,
   Bookmark,
-} from 'lucide-react-native';
-import { theme } from '../../theme/themes';
-import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { ProgressBar } from '../../components/ProgressBar';
+} from "lucide-react-native";
+import { theme } from "../../theme/themes";
+import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { ProgressBar } from "../../components/ProgressBar";
 
 const SURAHS = [
   {
     id: 1,
-    name: 'Al-Fatihah',
-    meaning: 'The Opening',
-    arabic: 'الفاتحة',
+    name: "Al-Fatihah",
+    meaning: "The Opening",
+    arabic: "الفاتحة",
     ayahs: 7,
     progress: 1,
-    status: 'completed',
+    status: "completed",
   },
   {
     id: 2,
-    name: 'Al-Baqarah',
-    meaning: 'The Cow',
-    arabic: 'البقرة',
+    name: "Al-Baqarah",
+    meaning: "The Cow",
+    arabic: "البقرة",
     ayahs: 286,
     progress: 0.42,
-    status: 'in-progress',
+    status: "in-progress",
   },
   {
     id: 3,
     name: "Ali 'Imran",
-    meaning: 'Family of Imran',
-    arabic: 'آل عمران',
+    meaning: "Family of Imran",
+    arabic: "آل عمران",
     ayahs: 200,
     progress: 0,
-    status: 'locked',
+    status: "locked",
   },
   {
     id: 18,
-    name: 'Al-Kahf',
-    meaning: 'The Cave',
-    arabic: 'الكهف',
+    name: "Al-Kahf",
+    meaning: "The Cave",
+    arabic: "الكهف",
     ayahs: 110,
     progress: 0.85,
-    status: 'in-progress',
+    status: "in-progress",
   },
   {
     id: 112,
-    name: 'Al-Ikhlas',
-    meaning: 'Sincerity',
-    arabic: 'الإخلاص',
+    name: "Al-Ikhlas",
+    meaning: "Sincerity",
+    arabic: "الإخلاص",
     ayahs: 4,
     progress: 1,
-    status: 'completed',
+    status: "completed",
   },
   {
     id: 36,
-    name: 'Ya-Sin',
-    meaning: 'Ya Sin',
-    arabic: 'يس',
+    name: "Ya-Sin",
+    meaning: "Ya Sin",
+    arabic: "يس",
     ayahs: 83,
     progress: 0,
-    status: 'locked',
+    status: "locked",
   },
 ];
 
@@ -86,7 +86,7 @@ export const QuranScreen = () => {
           <View style={styles.avatarContainer}>
             <Image
               source={{
-                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCnFFsBOK8cJR2UQ7LBwRoEnpC7zMcWL4UnvCGjyXyg94e9y70mr42YSNUkuXwoJKHMdGvNE5kmmNa4yZacrNENLoNsqfHTX9yG43WzjY_JNUX-mSxLD__IBFvZCNmRhV89jxEcwnABdaSkFvp3X3L9VqdPUsAmW_7ydPmfu2jxODG25JHLx0OCY3MHCYHPOIzaEYGZ8Imm5hjdMC_55sttCXAlBv-aPJNzIPWfSPzrH9kWY0saCj6evfStRz0qkkNXYmFikEss-Zs',
+                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuCnFFsBOK8cJR2UQ7LBwRoEnpC7zMcWL4UnvCGjyXyg94e9y70mr42YSNUkuXwoJKHMdGvNE5kmmNa4yZacrNENLoNsqfHTX9yG43WzjY_JNUX-mSxLD__IBFvZCNmRhV89jxEcwnABdaSkFvp3X3L9VqdPUsAmW_7ydPmfu2jxODG25JHLx0OCY3MHCYHPOIzaEYGZ8Imm5hjdMC_55sttCXAlBv-aPJNzIPWfSPzrH9kWY0saCj6evfStRz0qkkNXYmFikEss-Zs",
               }}
               style={styles.avatar}
             />
@@ -137,15 +137,15 @@ export const QuranScreen = () => {
         </View>
 
         <View style={styles.surahGrid}>
-          {SURAHS.map(surah => (
+          {SURAHS.map((surah) => (
             <TouchableOpacity
               key={surah.id}
               style={[
                 styles.surahCard,
-                surah.status === 'locked' && styles.lockedSurahCard,
+                surah.status === "locked" && styles.lockedSurahCard,
               ]}
             >
-              {surah.status === 'completed' && (
+              {surah.status === "completed" && (
                 <View style={styles.statusIcon}>
                   <Verified
                     size={20}
@@ -154,12 +154,12 @@ export const QuranScreen = () => {
                   />
                 </View>
               )}
-              {surah.status === 'locked' && (
+              {surah.status === "locked" && (
                 <View style={styles.statusIcon}>
                   <Lock size={20} color={theme.colors.textMuted} />
                 </View>
               )}
-              {surah.status === 'in-progress' && (
+              {surah.status === "in-progress" && (
                 <View style={styles.statusIcon}>
                   <BookOpen
                     size={20}
@@ -174,7 +174,7 @@ export const QuranScreen = () => {
                   <View
                     style={[
                       styles.surahNumber,
-                      surah.status === 'completed'
+                      surah.status === "completed"
                         ? styles.completedNumber
                         : styles.defaultNumber,
                     ]}
@@ -182,7 +182,7 @@ export const QuranScreen = () => {
                     <Text
                       style={[
                         styles.surahNumberText,
-                        surah.status === 'completed'
+                        surah.status === "completed"
                           ? styles.completedNumberText
                           : styles.defaultNumberText,
                       ]}
@@ -199,7 +199,7 @@ export const QuranScreen = () => {
                   <Text
                     style={[
                       styles.arabicText,
-                      surah.status === 'completed'
+                      surah.status === "completed"
                         ? styles.completedArabic
                         : styles.defaultArabic,
                     ]}
@@ -217,19 +217,19 @@ export const QuranScreen = () => {
                       styles.statusLabel,
                       {
                         color:
-                          surah.status === 'completed'
+                          surah.status === "completed"
                             ? theme.colors.primary
-                            : surah.status === 'in-progress'
-                            ? theme.colors.secondary
-                            : theme.colors.textMuted,
+                            : surah.status === "in-progress"
+                              ? theme.colors.secondary
+                              : theme.colors.textMuted,
                       },
                     ]}
                   >
-                    {surah.status === 'completed'
-                      ? 'Completed'
-                      : surah.status === 'in-progress'
-                      ? 'In Progress'
-                      : 'Locked'}
+                    {surah.status === "completed"
+                      ? "Completed"
+                      : surah.status === "in-progress"
+                        ? "In Progress"
+                        : "Locked"}
                   </Text>
                   <Text style={styles.progressPercentage}>
                     {Math.round(surah.progress * 100)}%
@@ -238,11 +238,11 @@ export const QuranScreen = () => {
                 <ProgressBar
                   progress={surah.progress}
                   color={
-                    surah.status === 'completed'
+                    surah.status === "completed"
                       ? theme.colors.primary
-                      : surah.status === 'in-progress'
-                      ? theme.colors.secondary
-                      : 'rgba(191, 202, 186, 0.2)'
+                      : surah.status === "in-progress"
+                        ? theme.colors.secondary
+                        : "rgba(191, 202, 186, 0.2)"
                   }
                   height={8}
                 />
@@ -309,17 +309,17 @@ export const QuranScreen = () => {
 
 const styles = StyleSheet.create({
   topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
-    backgroundColor: 'rgba(19, 19, 19, 0.6)',
+    backgroundColor: "rgba(19, 19, 19, 0.6)",
     zIndex: 100,
   },
   userRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   avatarContainer: {
@@ -328,32 +328,32 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 2,
     borderColor: theme.colors.secondary,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   avatar: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   logoText: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.primary,
     letterSpacing: -0.5,
   },
   streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.2)',
+    borderColor: "rgba(64, 73, 61, 0.2)",
     gap: 4,
   },
   streakText: {
     color: theme.colors.text,
-    fontWeight: '900',
+    fontWeight: "900",
     fontSize: 14,
   },
   scrollContent: {
@@ -365,11 +365,11 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   searchWrapper: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 24,
   },
   searchIcon: {
-    position: 'absolute',
+    position: "absolute",
     left: 16,
     top: 18,
     zIndex: 1,
@@ -382,12 +382,12 @@ const styles = StyleSheet.create({
     paddingRight: 16,
     borderRadius: theme.borderRadius.md,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     borderBottomWidth: 2,
     borderBottomColor: theme.colors.outline,
   },
   filterRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   filterChip: {
@@ -397,13 +397,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceHigh,
   },
   activeFilterChip: {
-    backgroundColor: 'rgba(136, 217, 130, 0.2)',
+    backgroundColor: "rgba(136, 217, 130, 0.2)",
     borderWidth: 1,
-    borderColor: 'rgba(136, 217, 130, 0.3)',
+    borderColor: "rgba(136, 217, 130, 0.3)",
   },
   filterChipText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.textMuted,
   },
   activeFilterChipText: {
@@ -417,33 +417,33 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.1)',
+    borderColor: "rgba(64, 73, 61, 0.1)",
   },
   lockedSurahCard: {
     opacity: 0.8,
   },
   statusIcon: {
-    position: 'absolute',
+    position: "absolute",
     top: 12,
     right: 12,
   },
   surahHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 24,
   },
   surahInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 16,
   },
   surahNumber: {
     width: 40,
     height: 40,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   defaultNumber: {
     backgroundColor: theme.colors.surfaceHigh,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   surahNumberText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: "900",
   },
   defaultNumberText: {
     color: theme.colors.primary,
@@ -463,22 +463,22 @@ const styles = StyleSheet.create({
   },
   surahName: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "800",
     color: theme.colors.text,
   },
   surahMeaning: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   arabicSection: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   arabicText: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 4,
   },
   defaultArabic: {
@@ -489,28 +489,28 @@ const styles = StyleSheet.create({
   },
   ayahCount: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: "800",
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   progressSection: {
     marginTop: 8,
   },
   progressLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
     marginBottom: 8,
   },
   statusLabel: {
     fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: "800",
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   progressPercentage: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
   },
   featuredSection: {
@@ -518,30 +518,30 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   reflectionCard: {
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
     borderRadius: theme.borderRadius.md,
     padding: 32,
     borderWidth: 1,
-    borderColor: 'rgba(136, 217, 130, 0.2)',
+    borderColor: "rgba(136, 217, 130, 0.2)",
   },
   reflectionBadge: {
     backgroundColor: theme.colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     marginBottom: 16,
   },
   reflectionBadgeText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: "800",
     color: theme.colors.onPrimary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   reflectionTitle: {
     fontSize: 32,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
     marginBottom: 12,
   },
@@ -556,66 +556,66 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: theme.borderRadius.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
-    alignSelf: 'flex-start',
-    shadowColor: '#005312',
+    alignSelf: "flex-start",
+    shadowColor: "#005312",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,
   },
   startRecitationText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.onPrimary,
   },
   statsCard: {
-    backgroundColor: 'rgba(255, 219, 60, 0.1)',
+    backgroundColor: "rgba(255, 219, 60, 0.1)",
     borderRadius: theme.borderRadius.md,
     padding: 32,
     borderWidth: 1,
-    borderColor: 'rgba(255, 219, 60, 0.2)',
+    borderColor: "rgba(255, 219, 60, 0.2)",
   },
   statsBadge: {
     backgroundColor: theme.colors.secondary,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     marginBottom: 16,
   },
   statsBadgeText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: "800",
     color: theme.colors.onSecondary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   statsGrid: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
     marginTop: 8,
   },
   statItem: {
     flex: 1,
-    backgroundColor: 'rgba(31, 31, 31, 0.6)',
+    backgroundColor: "rgba(31, 31, 31, 0.6)",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.1)',
+    borderColor: "rgba(64, 73, 61, 0.1)",
   },
   statLabel: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: "800",
     color: theme.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   statValue: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.secondary,
     marginTop: 4,
   },
@@ -624,11 +624,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     padding: 16,
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.1)',
+    borderColor: "rgba(64, 73, 61, 0.1)",
   },
   tipDot: {
     width: 8,
@@ -638,21 +638,21 @@ const styles = StyleSheet.create({
   },
   tipText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     color: theme.colors.text,
     flex: 1,
   },
   bookmarkFab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 100,
     right: 24,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: theme.colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

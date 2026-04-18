@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-} from 'react-native';
+} from "react-native";
 import {
   Sparkles,
   CheckCircle2,
@@ -15,10 +15,10 @@ import {
   BookOpen,
   Users,
   ChevronRight,
-} from 'lucide-react-native';
-import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { theme } from '../../theme/themes';
-import { TactileButton } from '../../components/TactileButton';
+} from "lucide-react-native";
+import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { theme } from "../../theme/themes";
+import { TactileButton } from "../../components/TactileButton";
 
 export const ReflectionScreen = () => {
   const [prayers, setPrayers] = useState({
@@ -73,7 +73,7 @@ export const ReflectionScreen = () => {
           </View>
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: '75%' }]} />
+              <View style={[styles.progressFill, { width: "75%" }]} />
             </View>
             <Text style={styles.progressLabel}>75% of Daily Goal</Text>
           </View>
@@ -86,7 +86,7 @@ export const ReflectionScreen = () => {
           </View>
           <View style={styles.prayerGrid}>
             {(Object.keys(prayers) as Array<keyof typeof prayers>).map(
-              prayer => (
+              (prayer) => (
                 <TouchableOpacity
                   key={prayer}
                   style={[
@@ -128,7 +128,7 @@ export const ReflectionScreen = () => {
               <View
                 style={[
                   styles.habitIcon,
-                  { backgroundColor: 'rgba(255, 219, 60, 0.1)' },
+                  { backgroundColor: "rgba(255, 219, 60, 0.1)" },
                 ]}
               >
                 <BookOpen size={24} color={theme.colors.secondary} />
@@ -139,7 +139,7 @@ export const ReflectionScreen = () => {
               </View>
               <Switch
                 value={habits.quran}
-                onValueChange={() => toggleHabit('quran')}
+                onValueChange={() => toggleHabit("quran")}
                 trackColor={{
                   false: theme.colors.surfaceHigh,
                   true: theme.colors.primary,
@@ -154,7 +154,7 @@ export const ReflectionScreen = () => {
               <View
                 style={[
                   styles.habitIcon,
-                  { backgroundColor: 'rgba(255, 177, 199, 0.1)' },
+                  { backgroundColor: "rgba(255, 177, 199, 0.1)" },
                 ]}
               >
                 <Heart size={24} color="#FFB1C7" />
@@ -165,7 +165,7 @@ export const ReflectionScreen = () => {
               </View>
               <Switch
                 value={habits.helped}
-                onValueChange={() => toggleHabit('helped')}
+                onValueChange={() => toggleHabit("helped")}
                 trackColor={{
                   false: theme.colors.surfaceHigh,
                   true: theme.colors.primary,
@@ -180,7 +180,7 @@ export const ReflectionScreen = () => {
               <View
                 style={[
                   styles.habitIcon,
-                  { backgroundColor: 'rgba(136, 217, 130, 0.1)' },
+                  { backgroundColor: "rgba(136, 217, 130, 0.1)" },
                 ]}
               >
                 <Users size={24} color={theme.colors.primary} />
@@ -191,7 +191,7 @@ export const ReflectionScreen = () => {
               </View>
               <Switch
                 value={habits.dhikr}
-                onValueChange={() => toggleHabit('dhikr')}
+                onValueChange={() => toggleHabit("dhikr")}
                 trackColor={{
                   false: theme.colors.surfaceHigh,
                   true: theme.colors.primary,
@@ -231,16 +231,16 @@ export const ReflectionScreen = () => {
 
 const styles = StyleSheet.create({
   topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     backgroundColor: theme.colors.background,
   },
   topBarTitle: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
   },
   historyButton: {
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   historyButtonText: {
     color: theme.colors.textMuted,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 14,
   },
   scrollContent: {
@@ -267,15 +267,15 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   summaryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   barakahBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 219, 60, 0.1)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 219, 60, 0.1)",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
@@ -283,36 +283,36 @@ const styles = StyleSheet.create({
   },
   barakahText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.secondary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   dateText: {
     fontSize: 12,
     color: theme.colors.textMuted,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
     gap: 12,
     marginBottom: 24,
   },
   scoreValue: {
     fontSize: 48,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
     letterSpacing: -2,
   },
   scoreTrend: {
-    backgroundColor: 'rgba(136, 217, 130, 0.1)',
+    backgroundColor: "rgba(136, 217, 130, 0.1)",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
   },
   trendText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.primary,
   },
   progressContainer: {
@@ -322,16 +322,16 @@ const styles = StyleSheet.create({
     height: 12,
     backgroundColor: theme.colors.surfaceHigh,
     borderRadius: 6,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
+    height: "100%",
     backgroundColor: theme.colors.primary,
     borderRadius: 6,
   },
   progressLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.textMuted,
   },
   section: {
@@ -342,9 +342,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   sectionSub: {
@@ -353,28 +353,28 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   prayerGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   prayerCard: {
-    width: '48%',
+    width: "48%",
     backgroundColor: theme.colors.surfaceLow,
     padding: 16,
     borderRadius: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.1)',
+    borderColor: "rgba(64, 73, 61, 0.1)",
   },
   activePrayerCard: {
-    backgroundColor: 'rgba(136, 217, 130, 0.05)',
-    borderColor: 'rgba(136, 217, 130, 0.2)',
+    backgroundColor: "rgba(136, 217, 130, 0.05)",
+    borderColor: "rgba(136, 217, 130, 0.2)",
   },
   prayerName: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.textMuted,
   },
   activePrayerName: {
@@ -384,8 +384,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   habitItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.surfaceLow,
     padding: 16,
     borderRadius: 12,
@@ -395,15 +395,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   habitInfo: {
     flex: 1,
   },
   habitTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
   },
   habitSub: {
@@ -415,18 +415,18 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.1)',
+    borderColor: "rgba(64, 73, 61, 0.1)",
     marginBottom: 32,
   },
   journalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   journalTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
   },
   journalPrompt: {
@@ -445,6 +445,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   saveButton: {
-    width: '100%',
+    width: "100%",
   },
 });
