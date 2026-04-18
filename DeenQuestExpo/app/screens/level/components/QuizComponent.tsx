@@ -28,9 +28,12 @@ export function QuizComponent({ lesson, onComplete }: LessonComponentProps) {
         const isRight = idx === correctIndex;
 
         let cardStyle = s.option;
-        if (hasAnswered && isThis && isCorrect) cardStyle = { ...s.option, ...s.optionCorrect };
-        else if (hasAnswered && isThis && !isCorrect) cardStyle = { ...s.option, ...s.optionWrong };
-        else if (hasAnswered && isRight) cardStyle = { ...s.option, ...s.optionReveal };
+        if (hasAnswered && isThis && isCorrect)
+          cardStyle = { ...s.option, ...s.optionCorrect };
+        else if (hasAnswered && isThis && !isCorrect)
+          cardStyle = { ...s.option, ...s.optionWrong };
+        else if (hasAnswered && isRight)
+          cardStyle = { ...s.option, ...s.optionReveal };
 
         return (
           <TouchableOpacity
@@ -65,7 +68,9 @@ export function QuizComponent({ lesson, onComplete }: LessonComponentProps) {
       })}
 
       {hasAnswered && (
-        <View style={[s.feedback, isCorrect ? s.feedbackCorrect : s.feedbackWrong]}>
+        <View
+          style={[s.feedback, isCorrect ? s.feedbackCorrect : s.feedbackWrong]}
+        >
           <Text style={s.feedbackText}>
             {isCorrect
               ? "MashaAllah! Correct! 🎉"
