@@ -1,11 +1,11 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AuthUser } from '../services/api';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AuthUser } from "../services/api";
 import {
   clearPersistedAuth,
   persistAccessToken,
   persistAuthUser,
   persistIsAuthenticated,
-} from '../storage/authStorage';
+} from "../storage/authStorage";
 
 export interface MainState {
   isAuthenticated: boolean;
@@ -24,7 +24,7 @@ const initialState: MainState = {
 };
 
 const mainSlice = createSlice({
-  name: 'main',
+  name: "main",
   initialState,
   reducers: {
     setIsAuthenticated: (state, action: PayloadAction<boolean>) => {

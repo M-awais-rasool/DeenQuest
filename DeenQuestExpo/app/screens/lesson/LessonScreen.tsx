@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   type StyleProp,
   type ImageStyle,
-} from 'react-native';
+} from "react-native";
 import {
   ChevronLeft,
   Play,
@@ -18,11 +18,11 @@ import {
   ArrowRight,
   BookOpen,
   Volume2,
-} from 'lucide-react-native';
-import { ProgressBar } from '../../components/ProgressBar';
-import { theme } from '../../theme/themes';
-import { ScreenWrapper } from '../../components/ScreenWrapper';
-import { TactileButton } from '../../components/TactileButton';
+} from "lucide-react-native";
+import { ProgressBar } from "../../components/ProgressBar";
+import { theme } from "../../theme/themes";
+import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { TactileButton } from "../../components/TactileButton";
 
 export const LessonScreen = ({ onBack }: { onBack: () => void }) => {
   return (
@@ -44,7 +44,7 @@ export const LessonScreen = ({ onBack }: { onBack: () => void }) => {
           <View style={styles.imageContainer}>
             <Image
               source={{
-                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD0KUM9Libiyq9CVL_OQ56vXysNMfFF2vkAdutU1lTCGA07l7oM-zL2d-InVgAi1SO8rhzIzQ6SR6KVNGrLSEg2p8FYG7eJoIc5Ri6fRFqD_XgVMh57Edixloc2TGy05tLBGkapgj5igXd4BFwLSYgw9vGKOxvVLPXZBukwtp-34UckTpAYtasAcSiU_zj8GdUO-QI9e9m3p941BTJvOHEbPgmSGh5uhGh3XcyzQ2LsYqwENn5ibFhokiKaO6-oeBYgi5PcSyOSTYc',
+                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuD0KUM9Libiyq9CVL_OQ56vXysNMfFF2vkAdutU1lTCGA07l7oM-zL2d-InVgAi1SO8rhzIzQ6SR6KVNGrLSEg2p8FYG7eJoIc5Ri6fRFqD_XgVMh57Edixloc2TGy05tLBGkapgj5igXd4BFwLSYgw9vGKOxvVLPXZBukwtp-34UckTpAYtasAcSiU_zj8GdUO-QI9e9m3p941BTJvOHEbPgmSGh5uhGh3XcyzQ2LsYqwENn5ibFhokiKaO6-oeBYgi5PcSyOSTYc",
               }}
               style={styles.heroImage as StyleProp<ImageStyle>}
             />
@@ -86,10 +86,10 @@ export const LessonScreen = ({ onBack }: { onBack: () => void }) => {
           <Text style={styles.sectionTitle}>What you'll learn</Text>
           <View style={styles.learningGoals}>
             {[
-              'The 13 pillars of Salah',
-              'Correct postural alignment',
+              "The 13 pillars of Salah",
+              "Correct postural alignment",
               "Spiritual presence (Khushu')",
-              'Common mistakes to avoid',
+              "Common mistakes to avoid",
             ].map((goal, i) => (
               <View key={i} style={styles.goalItem}>
                 <CheckCircle2 size={20} color={theme.colors.primary} />
@@ -173,8 +173,8 @@ export const LessonScreen = ({ onBack }: { onBack: () => void }) => {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 8,
     backgroundColor: theme.colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   progressContainer: {
     flex: 1,
@@ -194,12 +194,12 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: theme.colors.surfaceHigh,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   menuButtonText: {
     color: theme.colors.text,
-    fontWeight: '900',
+    fontWeight: "900",
     fontSize: 18,
   },
   scrollContent: {
@@ -210,66 +210,66 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   imageContainer: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 24,
-    position: 'relative',
+    position: "relative",
   },
   heroImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   playOverlay: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
+    position: "absolute",
+    top: "50%",
+    left: "50%",
     transform: [{ translateX: -32 }, { translateY: -32 }],
     width: 64,
     height: 64,
     borderRadius: 32,
     backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
   },
   badgeRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginBottom: 16,
   },
   categoryBadge: {
-    backgroundColor: 'rgba(136, 217, 130, 0.1)',
+    backgroundColor: "rgba(136, 217, 130, 0.1)",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(136, 217, 130, 0.2)',
+    borderColor: "rgba(136, 217, 130, 0.2)",
   },
   categoryText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.primary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   metaText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.textMuted,
   },
   title: {
     fontSize: 32,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
     marginBottom: 12,
   },
@@ -283,9 +283,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 16,
   },
@@ -293,13 +293,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   goalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   goalText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: theme.colors.text,
   },
   curriculumSection: {
@@ -309,18 +309,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   stepCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.surfaceLow,
     padding: 16,
     borderRadius: 16,
     gap: 16,
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.1)',
+    borderColor: "rgba(64, 73, 61, 0.1)",
   },
   activeStepCard: {
     backgroundColor: theme.colors.surface,
-    borderColor: 'rgba(136, 217, 130, 0.2)',
+    borderColor: "rgba(136, 217, 130, 0.2)",
     borderBottomWidth: 4,
     borderBottomColor: theme.colors.primary,
   },
@@ -329,15 +329,15 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 8,
     backgroundColor: theme.colors.surfaceHigh,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   activeStepNumber: {
     backgroundColor: theme.colors.primary,
   },
   stepNumberText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.textMuted,
   },
   activeStepNumberText: {
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: "800",
     color: theme.colors.text,
   },
   stepSub: {
@@ -356,22 +356,22 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
   },
   interactivePreview: {
-    backgroundColor: 'rgba(255, 219, 60, 0.05)',
+    backgroundColor: "rgba(255, 219, 60, 0.05)",
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 219, 60, 0.1)',
+    borderColor: "rgba(255, 219, 60, 0.1)",
     marginBottom: 32,
   },
   previewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     marginBottom: 12,
   },
   previewTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.secondary,
   },
   previewText: {
@@ -384,23 +384,23 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceHigh,
     paddingVertical: 12,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   previewButtonText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     padding: theme.spacing.lg,
-    backgroundColor: 'rgba(19, 19, 19, 0.8)',
+    backgroundColor: "rgba(19, 19, 19, 0.8)",
   },
   continueButton: {
-    width: '100%',
+    width: "100%",
   },
 });
