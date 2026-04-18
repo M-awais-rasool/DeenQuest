@@ -24,13 +24,7 @@ import { LESSON_COMPONENT_MAP } from "./components";
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "LessonPlayer">;
 
-function ProgressBar({
-  current,
-  total,
-}: {
-  current: number;
-  total: number;
-}) {
+function ProgressBar({ current, total }: { current: number; total: number }) {
   const progress = total > 0 ? (current + 1) / total : 0;
   return (
     <View style={s.progressBarContainer}>
