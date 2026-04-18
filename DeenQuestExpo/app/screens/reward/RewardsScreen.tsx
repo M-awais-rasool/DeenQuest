@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-} from 'react-native';
+} from "react-native";
 import {
   Trophy,
   Star,
@@ -15,57 +15,57 @@ import {
   Flame,
   Sparkles,
   ChevronRight,
-} from 'lucide-react-native';
-import { theme } from '../../theme/themes';
-import { ScreenWrapper } from '../../components/ScreenWrapper';
+} from "lucide-react-native";
+import { theme } from "../../theme/themes";
+import { ScreenWrapper } from "../../components/ScreenWrapper";
 
 const TROPHIES = [
   {
     id: 1,
-    title: 'First Prayer',
-    description: 'Completed your first prayer mission',
-    icon: '🕌',
-    status: 'unlocked',
-    date: '12 Mar 2026',
+    title: "First Prayer",
+    description: "Completed your first prayer mission",
+    icon: "🕌",
+    status: "unlocked",
+    date: "12 Mar 2026",
   },
   {
     id: 2,
-    title: '7-Day Streak',
-    description: 'Maintained a streak for 7 days',
-    icon: '🔥',
-    status: 'unlocked',
-    date: '19 Mar 2026',
+    title: "7-Day Streak",
+    description: "Maintained a streak for 7 days",
+    icon: "🔥",
+    status: "unlocked",
+    date: "19 Mar 2026",
   },
   {
     id: 3,
-    title: 'Quran Explorer',
-    description: 'Read 5 different Surahs',
-    icon: '📖',
-    status: 'unlocked',
-    date: '05 Apr 2026',
+    title: "Quran Explorer",
+    description: "Read 5 different Surahs",
+    icon: "📖",
+    status: "unlocked",
+    date: "05 Apr 2026",
   },
   {
     id: 4,
-    title: 'Early Bird',
-    description: 'Prayed Fajr on time for 3 days',
-    icon: '🌅',
-    status: 'locked',
+    title: "Early Bird",
+    description: "Prayed Fajr on time for 3 days",
+    icon: "🌅",
+    status: "locked",
     progress: 0.66,
   },
   {
     id: 5,
-    title: 'Charity Master',
-    description: 'Helped someone 10 times',
-    icon: '🤝',
-    status: 'locked',
+    title: "Charity Master",
+    description: "Helped someone 10 times",
+    icon: "🤝",
+    status: "locked",
     progress: 0.3,
   },
   {
     id: 6,
-    title: 'Knowledge Seeker',
-    description: 'Completed 5 Islamic lessons',
-    icon: '🎓',
-    status: 'locked',
+    title: "Knowledge Seeker",
+    description: "Completed 5 Islamic lessons",
+    icon: "🎓",
+    status: "locked",
     progress: 0.8,
   },
 ];
@@ -121,26 +121,26 @@ export const RewardsScreen = () => {
           </View>
 
           <View style={styles.trophyGrid}>
-            {TROPHIES.map(trophy => (
+            {TROPHIES.map((trophy) => (
               <TouchableOpacity
                 key={trophy.id}
                 style={[
                   styles.trophyCard,
-                  trophy.status === 'locked' && styles.lockedCard,
+                  trophy.status === "locked" && styles.lockedCard,
                 ]}
               >
                 <View style={styles.trophyHeader}>
                   <View
                     style={[
                       styles.iconCircle,
-                      trophy.status === 'unlocked'
+                      trophy.status === "unlocked"
                         ? styles.unlockedCircle
                         : styles.lockedCircle,
                     ]}
                   >
                     <Text style={styles.emojiIcon}>{trophy.icon}</Text>
                   </View>
-                  {trophy.status === 'unlocked' ? (
+                  {trophy.status === "unlocked" ? (
                     <Verified
                       size={20}
                       color={theme.colors.primary}
@@ -155,7 +155,7 @@ export const RewardsScreen = () => {
                   {trophy.description}
                 </Text>
 
-                {trophy.status === 'unlocked' ? (
+                {trophy.status === "unlocked" ? (
                   <Text style={styles.unlockedDate}>{trophy.date}</Text>
                 ) : (
                   <View style={styles.progressRow}>
@@ -185,7 +185,7 @@ export const RewardsScreen = () => {
           <TouchableOpacity style={styles.shopCard}>
             <Image
               source={{
-                uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD0KUM9Libiyq9CVL_OQ56vXysNMfFF2vkAdutU1lTCGA07l7oM-zL2d-InVgAi1SO8rhzIzQ6SR6KVNGrLSEg2p8FYG7eJoIc5Ri6fRFqD_XgVMh57Edixloc2TGy05tLBGkapgj5igXd4BFwLSYgw9vGKOxvVLPXZBukwtp-34UckTpAYtasAcSiU_zj8GdUO-QI9e9m3p941BTJvOHEbPgmSGh5uhGh3XcyzQ2LsYqwENn5ibFhokiKaO6-oeBYgi5PcSyOSTYc',
+                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuD0KUM9Libiyq9CVL_OQ56vXysNMfFF2vkAdutU1lTCGA07l7oM-zL2d-InVgAi1SO8rhzIzQ6SR6KVNGrLSEg2p8FYG7eJoIc5Ri6fRFqD_XgVMh57Edixloc2TGy05tLBGkapgj5igXd4BFwLSYgw9vGKOxvVLPXZBukwtp-34UckTpAYtasAcSiU_zj8GdUO-QI9e9m3p941BTJvOHEbPgmSGh5uhGh3XcyzQ2LsYqwENn5ibFhokiKaO6-oeBYgi5PcSyOSTYc",
               }}
               style={styles.shopItemImage}
             />
@@ -205,31 +205,31 @@ export const RewardsScreen = () => {
 
 const styles = StyleSheet.create({
   topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
   },
   topBarTitle: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
   },
   xpBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
     gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.2)',
+    borderColor: "rgba(64, 73, 61, 0.2)",
   },
   xpText: {
     color: theme.colors.secondary,
-    fontWeight: '900',
+    fontWeight: "900",
     fontSize: 14,
   },
   scrollContent: {
@@ -240,99 +240,99 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryContainer,
     borderRadius: theme.borderRadius.xl,
     padding: 32,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 40,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   trophyGlow: {
-    position: 'absolute',
+    position: "absolute",
     top: -50,
     width: 200,
     height: 200,
     backgroundColor: theme.colors.primary,
     borderRadius: 100,
     opacity: 0.2,
-    filter: 'blur(40px)',
+    filter: "blur(40px)",
   },
   trophyIconContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   featuredTitle: {
     fontSize: 24,
-    fontWeight: '900',
-    color: '#FFF',
-    textAlign: 'center',
+    fontWeight: "900",
+    color: "#FFF",
+    textAlign: "center",
     marginBottom: 8,
   },
   featuredSub: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.7)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.7)",
+    textAlign: "center",
     marginBottom: 24,
   },
   featuredStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
     borderRadius: 16,
     padding: 16,
     gap: 24,
   },
   statBox: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statVal: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.secondary,
   },
   statLab: {
     fontSize: 10,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.6)',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    color: "rgba(255, 255, 255, 0.6)",
+    textTransform: "uppercase",
   },
   statDivider: {
     width: 1,
     height: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   section: {
     marginBottom: 40,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   viewAll: {
     fontSize: 14,
     color: theme.colors.primary,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   trophyGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 16,
   },
   trophyCard: {
-    width: '47.5%',
+    width: "47.5%",
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.md,
     padding: 16,
@@ -343,20 +343,20 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   trophyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 16,
   },
   iconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   unlockedCircle: {
-    backgroundColor: 'rgba(136, 217, 130, 0.1)',
+    backgroundColor: "rgba(136, 217, 130, 0.1)",
   },
   lockedCircle: {
     backgroundColor: theme.colors.surfaceHigh,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   },
   trophyTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: "800",
     color: theme.colors.text,
     marginBottom: 4,
   },
@@ -378,13 +378,13 @@ const styles = StyleSheet.create({
   },
   unlockedDate: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.primary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   miniProgressBar: {
@@ -394,38 +394,38 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   miniProgressFill: {
-    height: '100%',
+    height: "100%",
     backgroundColor: theme.colors.secondary,
     borderRadius: 3,
   },
   miniProgressText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.textMuted,
   },
   rewardsShop: {
     marginTop: 16,
   },
   shopHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     marginBottom: 16,
   },
   shopTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
   },
   shopCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.surface,
     padding: 16,
     borderRadius: 16,
     gap: 16,
     borderWidth: 1,
-    borderColor: 'rgba(64, 73, 61, 0.1)',
+    borderColor: "rgba(64, 73, 61, 0.1)",
   },
   shopItemImage: {
     width: 64,
@@ -437,12 +437,12 @@ const styles = StyleSheet.create({
   },
   shopItemTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
   },
   shopItemPrice: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.secondary,
     marginTop: 4,
   },
@@ -454,8 +454,8 @@ const styles = StyleSheet.create({
   },
   buyButtonText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.text,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
 });
