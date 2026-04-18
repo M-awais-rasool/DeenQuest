@@ -162,19 +162,11 @@ export function LevelDetailScreen() {
                   {LESSON_TYPE_ICON[lesson.type] ?? "📘"}
                 </Text>
                 <View style={s.lessonInfo}>
-                  <Text
-                    style={[
-                      s.lessonTitle,
-                      isLocked && s.lessonTextLocked,
-                    ]}
-                  >
+                  <Text style={[s.lessonTitle, isLocked && s.lessonTextLocked]}>
                     {lesson.title}
                   </Text>
                   <Text
-                    style={[
-                      s.lessonDesc,
-                      isLocked && s.lessonTextLocked,
-                    ]}
+                    style={[s.lessonDesc, isLocked && s.lessonTextLocked]}
                     numberOfLines={1}
                   >
                     {lesson.description}
@@ -197,10 +189,7 @@ export function LevelDetailScreen() {
         {/* Mini Game */}
         <Text style={s.sectionTitle}>MINI GAME</Text>
         <TouchableOpacity
-          style={[
-            s.miniGameCard,
-            !allLessonsDone && s.miniGameLocked,
-          ]}
+          style={[s.miniGameCard, !allLessonsDone && s.miniGameLocked]}
           onPress={handleStartMiniGame}
           disabled={!allLessonsDone}
           activeOpacity={0.7}
@@ -214,18 +203,12 @@ export function LevelDetailScreen() {
             />
             <View style={s.miniGameInfo}>
               <Text
-                style={[
-                  s.miniGameType,
-                  !allLessonsDone && s.lessonTextLocked,
-                ]}
+                style={[s.miniGameType, !allLessonsDone && s.lessonTextLocked]}
               >
                 {level.mini_game.type.replace(/_/g, " ").toUpperCase()}
               </Text>
               <Text
-                style={[
-                  s.miniGameDesc,
-                  !allLessonsDone && s.lessonTextLocked,
-                ]}
+                style={[s.miniGameDesc, !allLessonsDone && s.lessonTextLocked]}
                 numberOfLines={2}
               >
                 {level.mini_game.description}

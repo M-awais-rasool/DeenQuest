@@ -19,7 +19,10 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "../../theme/themes";
-import { useGetLevelsQuery, useGetProgressQuery } from "../../store/services/api";
+import {
+  useGetLevelsQuery,
+  useGetProgressQuery,
+} from "../../store/services/api";
 import type { LevelWithStatus, LevelStatus } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
@@ -86,7 +89,11 @@ const StarsDisplay = memo(function StarsDisplay({
 });
 
 /* ─── Treasure badge ─── */
-const TreasureBadge = memo(function TreasureBadge({ levelId }: { levelId: number }) {
+const TreasureBadge = memo(function TreasureBadge({
+  levelId,
+}: {
+  levelId: number;
+}) {
   if (levelId % 5 !== 0) return null;
   return (
     <View style={s.treasureBadge}>
@@ -184,7 +191,9 @@ const LevelNode = memo(function LevelNode({
     >
       <View style={[s.nodeWrapper, { transform: [{ translateX: offset }] }]}>
         <Animated.View
-          style={{ transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }] }}
+          style={{
+            transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }],
+          }}
         >
           <TouchableOpacity
             onPress={onPress}

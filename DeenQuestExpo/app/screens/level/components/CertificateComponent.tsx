@@ -4,7 +4,10 @@ import { Award, ChevronRight } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
-export function CertificateComponent({ lesson, onComplete }: LessonComponentProps) {
+export function CertificateComponent({
+  lesson,
+  onComplete,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
 
   return (
