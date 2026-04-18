@@ -4,7 +4,10 @@ import { CheckCircle, Circle, ChevronRight } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
-export function PrayerChecklistComponent({ lesson, onComplete }: LessonComponentProps) {
+export function PrayerChecklistComponent({
+  lesson,
+  onComplete,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
   const steps: string[] = data.steps ?? [];
   const [checked, setChecked] = useState<Set<number>>(new Set());
@@ -48,9 +51,7 @@ export function PrayerChecklistComponent({ lesson, onComplete }: LessonComponent
         </TouchableOpacity>
       )}
 
-      {!allChecked && (
-        <Text style={s.hint}>Tap each item to check it off</Text>
-      )}
+      {!allChecked && <Text style={s.hint}>Tap each item to check it off</Text>}
     </View>
   );
 }

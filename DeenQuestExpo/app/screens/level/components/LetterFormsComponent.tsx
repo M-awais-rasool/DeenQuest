@@ -4,7 +4,10 @@ import { ChevronRight } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
-export function LetterFormsComponent({ lesson, onComplete }: LessonComponentProps) {
+export function LetterFormsComponent({
+  lesson,
+  onComplete,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
   const letter: string = data.letter ?? "";
   const forms: Record<string, string> = data.forms ?? {};

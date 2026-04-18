@@ -170,10 +170,7 @@ function TapMatchGame({
           {shuffledAnswers.map((p, idx) => (
             <TouchableOpacity
               key={idx}
-              style={[
-                s.matchCard,
-                matched.has(p.arabic) && s.matchCardDone,
-              ]}
+              style={[s.matchCard, matched.has(p.arabic) && s.matchCardDone]}
               onPress={() => handleAnswerTap(p.answer)}
               disabled={matched.has(p.arabic)}
             >
@@ -228,7 +225,9 @@ function CompletionScreen({
           <Star
             key={i}
             size={36}
-            color={i <= stars ? theme.colors.secondary : theme.colors.surfaceHigh}
+            color={
+              i <= stars ? theme.colors.secondary : theme.colors.surfaceHigh
+            }
             fill={i <= stars ? theme.colors.secondary : "transparent"}
           />
         ))}
