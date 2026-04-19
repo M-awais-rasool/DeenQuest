@@ -149,9 +149,8 @@ export function LessonPlayerScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: { backgroundColor: theme.colors.background },
   loadingContainer: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -202,7 +201,7 @@ const s = StyleSheet.create({
   },
 
   // Scroll
-  scrollView: { flex: 1 },
+  scrollView: {  },
   scrollContent: { padding: 20, paddingBottom: 40 },
 
   // Lesson content
