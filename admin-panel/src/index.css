@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-text: #1e293b;
+    --color-text-muted: #64748b;
+    --color-border: #e2e8f0;
+  }
+
+  .dark {
+    --color-bg: #080a18;
+    --color-surface: #141837;
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
+    --color-border: #1e2654;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+  }
+
+  .gradient-emerald {
+    @apply bg-gradient-to-br from-emerald-500 to-emerald-700;
+  }
+
+  .gradient-gold {
+    @apply bg-gradient-to-br from-gold-400 to-gold-600;
+  }
+
+  .gradient-navy {
+    @apply bg-gradient-to-br from-navy-700 to-navy-900;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200;
+  }
+
+  .sidebar-link:hover {
+    @apply bg-white/10;
+  }
+
+  .sidebar-link.active {
+    @apply bg-emerald-500/20 text-emerald-400;
+  }
+
+  .table-row {
+    @apply border-b border-white/5 hover:bg-white/5 transition-colors;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/20;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
