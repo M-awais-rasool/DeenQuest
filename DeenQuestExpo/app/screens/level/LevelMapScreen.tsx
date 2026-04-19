@@ -374,7 +374,6 @@ export function LevelMapScreen() {
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         ListHeaderComponent={ListHeader}
-        ListFooterComponent={<View style={{ height: 120 }} />}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews
@@ -390,7 +389,6 @@ export function LevelMapScreen() {
 
 const s = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 40,
     backgroundColor: theme.colors.background,
   },
   loadingContainer: {
