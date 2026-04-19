@@ -245,10 +245,9 @@ export function LevelDetailScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: { backgroundColor: theme.colors.background },
   scrollContent: { paddingBottom: 40 },
   loadingContainer: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
