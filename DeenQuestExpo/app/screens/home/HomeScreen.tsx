@@ -302,8 +302,6 @@ export const HomeScreen = () => {
 const styles = StyleSheet.create({
   scrollContent: {
     padding: theme.spacing.lg,
-    paddingBottom: 120,
-    gap: 0,
   },
 
   // ── Streak Card ──────────────────────────────────────────────────
