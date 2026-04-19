@@ -242,7 +242,6 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   scrollView: {
-    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 24,

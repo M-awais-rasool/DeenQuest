@@ -333,9 +333,8 @@ export function MiniGamePlayerScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: {  backgroundColor: theme.colors.background },
   loadingContainer: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -363,7 +362,7 @@ const s = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  scrollView: { flex: 1 },
+  scrollView: { },
   scrollContent: { padding: 20, paddingBottom: 40 },
 
   gameTitle: {
@@ -487,7 +486,6 @@ const s = StyleSheet.create({
 
   // Completion
   completionContainer: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 32,
