@@ -27,6 +27,9 @@ import { DailyTaskDetailScreen } from "../screens/task/DailyTaskDetailScreen";
 import { LevelDetailScreen } from "../screens/level/LevelDetailScreen";
 import { LessonPlayerScreen } from "../screens/level/LessonPlayerScreen";
 import { MiniGamePlayerScreen } from "../screens/level/MiniGamePlayerScreen";
+import { SettingsScreen } from "../screens/profile/SettingsScreen";
+import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
+import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -108,6 +111,9 @@ const AppStack = () => {
           <Stack.Screen name="LevelDetail" component={LevelDetailScreen} />
           <Stack.Screen name="LessonPlayer" component={LessonPlayerScreen} options={{ gestureEnabled: false }} />
           <Stack.Screen name="MiniGamePlayer" component={MiniGamePlayerScreen} options={{ gestureEnabled: false }} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         </>
       ) : (
         <>
