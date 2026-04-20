@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import {
   Flame,
@@ -14,7 +15,6 @@ import {
   Trophy,
   Heart,
   Check,
-  Star,
   Sparkles,
   Moon,
   HandHeart,
@@ -23,10 +23,28 @@ import {
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Header } from "../../components/Header";
 import { TactileButton } from "../../components/TactileButton";
+import { theme } from "../../theme/themes";
+import {
+  useGetProfileQuery,
+  useGetProgressQuery,
+} from "../../store/services/api";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { AppStackParamList } from "../../navigators/navigationTypes";
+
+type Nav = NativeStackNavigationProp<AppStackParamList>;
 
 export function ProfileScreen() {
+  const { data: profileData, isLoading: profileLoading } = useGetProfileQuery();
+  const { data: progressData, isLoading: progressLoading } =
+    useGetProgressQuery();
+  const navigation = useNavigation<Nav>();
+
+  const profile = profileData?.data;
+  const progress = progressData?.data;
+
+  const weeklyCompletions = progress?.weekly_completions ?? [];
   const streakDays = ["M", "T", "W", "T", "F", "S", "S"];
-  const completedDays = [false, false, true, true, true, "star", false];
 
   const achievements = [
     {
@@ -47,14 +65,34 @@ export function ProfileScreen() {
     { icon: <Lock color="#BFCABA" size={32} />, label: "???", locked: true },
   ];
 
+  if (profileLoading || progressLoading) {
+    return (
+      <ScreenWrapper>
+        <StatusBar barStyle="light-content" />
+        <Header title="DEENQUEST" xp={0} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  const displayName =
+    profile?.display_name || profile?.email?.split("@")[0] || "Explorer";
+  const userTitle = profile?.title || "SEEKER OF KNOWLEDGE";
+  const totalXP = progress?.xp ?? 0;
+  const level = progress?.level ?? 1;
+  const currentStreak = progress?.current_streak ?? 0;
+  const barakahScore = progress?.barakah_score ?? 0;
+
   return (
     <ScreenWrapper>
       <StatusBar barStyle="light-content" />
       <Header
         title="DEENQUEST"
-        xp={1250}
+        xp={totalXP}
         Icon={Settings}
-        onSettingsPress={() => {}}
+        onSettingsPress={() => navigation.navigate("Settings")}
       />
 
       <ScrollView
@@ -67,24 +105,28 @@ export function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <View style={styles.avatarGradient}>
               <Image
-                source={{ uri: "https://picsum.photos/seed/siddiq/300/300" }}
+                source={{
+                  uri:
+                    profile?.avatar_url ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=88D982&color=003909&size=300`,
+                }}
                 style={styles.avatar}
               />
             </View>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>LEVEL 12</Text>
+              <Text style={styles.levelText}>LEVEL {level}</Text>
             </View>
           </View>
 
           <View style={styles.nameContainer}>
-            <Text style={styles.name}>Siddiq</Text>
-            <Text style={styles.title}>THE TRUTHFUL ONE</Text>
+            <Text style={styles.name}>{displayName}</Text>
+            <Text style={styles.title}>{userTitle.toUpperCase()}</Text>
           </View>
 
           <View style={styles.buttonRow}>
             <TactileButton
               title="Edit Profile"
-              onPress={() => {}}
+              onPress={() => navigation.navigate("EditProfile")}
               style={styles.secondaryButton}
               textStyle={styles.buttonText}
             />
@@ -105,9 +147,11 @@ export function ProfileScreen() {
               size={80}
               style={styles.bgIcon}
             />
-            <Text style={styles.statLabel}>GLOBAL RANK</Text>
-            <Text style={[styles.statValue, { color: "#FFDB3C" }]}>#241</Text>
-            <Text style={styles.statSubtext}>Top 2% Globally</Text>
+            <Text style={styles.statLabel}>TOTAL XP</Text>
+            <Text style={[styles.statValue, { color: "#FFDB3C" }]}>
+              {totalXP >= 1000 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}
+            </Text>
+            <Text style={styles.statSubtext}>Level {level}</Text>
           </View>
 
           <View style={styles.statCard}>
@@ -116,8 +160,12 @@ export function ProfileScreen() {
               size={80}
               style={styles.bgIcon}
             />
-            <Text style={styles.statLabel}>TOTAL HASANAT</Text>
-            <Text style={styles.statValue}>14.2k</Text>
+            <Text style={styles.statLabel}>BARAKAH SCORE</Text>
+            <Text style={styles.statValue}>
+              {barakahScore >= 1000
+                ? `${(barakahScore / 1000).toFixed(1)}k`
+                : barakahScore}
+            </Text>
             <Text style={styles.statSubtext}>Points for good deeds</Text>
           </View>
 
@@ -127,35 +175,31 @@ export function ProfileScreen() {
               <View>
                 <Text style={styles.sectionTitle}>Streak History</Text>
                 <Text style={styles.sectionSubtext}>
-                  Your consistency this month
+                  Your consistency this week
                 </Text>
               </View>
               <View style={styles.streakBadge}>
                 <Flame color="#FFDB3C" fill="#FFDB3C" size={14} />
-                <Text style={styles.streakBadgeText}>18 Days</Text>
+                <Text style={styles.streakBadgeText}>{currentStreak} Days</Text>
               </View>
             </View>
             <View style={styles.daysGrid}>
-              {streakDays.map((day, i) => (
-                <View key={i} style={styles.dayColumn}>
-                  <Text style={styles.dayLabel}>{day}</Text>
-                  <View
-                    style={[
-                      styles.dayBox,
-                      completedDays[i] === true && styles.dayBoxActive,
-                      completedDays[i] === "star" && styles.dayBoxStar,
-                      !completedDays[i] && styles.dayBoxEmpty,
-                    ]}
-                  >
-                    {completedDays[i] === true && (
-                      <Check color="#003909" size={16} />
-                    )}
-                    {completedDays[i] === "star" && (
-                      <Star color="#221B00" fill="#221B00" size={16} />
-                    )}
+              {streakDays.map((day, i) => {
+                const isCompleted = weeklyCompletions[i] === true;
+                return (
+                  <View key={i} style={styles.dayColumn}>
+                    <Text style={styles.dayLabel}>{day}</Text>
+                    <View
+                      style={[
+                        styles.dayBox,
+                        isCompleted ? styles.dayBoxActive : styles.dayBoxEmpty,
+                      ]}
+                    >
+                      {isCompleted && <Check color="#003909" size={16} />}
+                    </View>
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           </View>
         </View>
@@ -241,8 +285,12 @@ export function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
+  scrollView: {},
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 32,
