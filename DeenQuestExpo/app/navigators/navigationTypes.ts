@@ -26,6 +26,9 @@ export type AppStackParamList = {
   LevelDetail: { levelId: number };
   LessonPlayer: { levelId: number; startLessonIndex: number };
   MiniGamePlayer: { levelId: number };
+  Settings: undefined;
+  EditProfile: undefined;
+  ChangePassword: undefined;
 };
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =
