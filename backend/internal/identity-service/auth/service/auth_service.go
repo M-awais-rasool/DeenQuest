@@ -99,10 +99,14 @@ func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 
 	return &dto.AuthResponse{
 		User: dto.UserResponse{
-			ID:         u.ID,
-			Email:      u.Email,
-			Role:       u.Role,
-			IsVerified: u.IsVerified,
+			ID:          u.ID,
+			Email:       u.Email,
+			Role:        u.Role,
+			DisplayName: u.DisplayName,
+			AvatarURL:   u.AvatarURL,
+			Bio:         u.Bio,
+			Title:       u.Title,
+			IsVerified:  u.IsVerified,
 		},
 		AccessToken: accessToken,
 	}, nil

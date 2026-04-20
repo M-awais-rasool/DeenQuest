@@ -66,11 +66,23 @@ func (r *MongoUserRepository) Update(ctx context.Context, user *model.User) erro
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	_, err := r.collection.UpdateByID(ctx, user.ID, bson.M{"$set": bson.M{
-		"email":       user.Email,
-		"role":        user.Role,
-		"is_verified": user.IsVerified,
-		"updated_at":  user.UpdatedAt,
+		"email":         user.Email,
+		"password_hash": user.PasswordHash,
+		"role":          user.Role,
+		"display_name":  user.DisplayName,
+		"avatar_url":    user.AvatarURL,
+		"bio":           user.Bio,
+		"title":         user.Title,
+		"is_verified":   user.IsVerified,
+		"updated_at":    user.UpdatedAt,
 	}})
+	return err
+}
+
+func (r *MongoUserRepository) Delete(ctx context.Context, id string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	return err
 }
 
