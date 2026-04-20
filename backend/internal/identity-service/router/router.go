@@ -25,6 +25,8 @@ func SetupRoutes(r *gin.Engine, authHandler *authhandler.AuthHandler, userHandle
 	{
 		userGroup.GET("/me", userHandler.GetProfile)
 		userGroup.PUT("/me", userHandler.UpdateProfile)
+		userGroup.PUT("/me/password", userHandler.ChangePassword)
+		userGroup.DELETE("/me", userHandler.DeleteAccount)
 	}
 
 	// Health check
