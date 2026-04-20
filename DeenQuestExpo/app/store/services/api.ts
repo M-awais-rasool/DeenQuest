@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.200.42:8080",
+  baseUrl: "http://172.16.1.63:8080",
   prepareHeaders: async (headers) => {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
@@ -34,7 +34,24 @@ export interface AuthUser {
   id: string;
   email: string;
   role: string;
+  display_name: string;
+  avatar_url: string;
+  bio: string;
+  title: string;
   is_verified: boolean;
+}
+
+export interface UpdateProfileRequest {
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  title?: string;
+}
+
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
 }
 
 export interface AuthResponse {
@@ -203,11 +220,25 @@ export const API = createApi({
       }),
       providesTags: ["User"],
     }),
-    updateProfile: builder.mutation<APIResponse<AuthUser>, Partial<AuthUser>>({
+    updateProfile: builder.mutation<APIResponse<AuthUser>, UpdateProfileRequest>({
       query: (data) => ({
         url: "/api/v1/users/me",
         method: "PUT",
         body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+    changePassword: builder.mutation<APIResponse<null>, ChangePasswordRequest>({
+      query: (data) => ({
+        url: "/api/v1/users/me/password",
+        method: "PUT",
+        body: data,
+      }),
+    }),
+    deleteAccount: builder.mutation<APIResponse<null>, void>({
+      query: () => ({
+        url: "/api/v1/users/me",
+        method: "DELETE",
       }),
       invalidatesTags: ["User"],
     }),
@@ -281,6 +312,8 @@ export const {
   useLoginMutation,
   useGetProfileQuery,
   useUpdateProfileMutation,
+  useChangePasswordMutation,
+  useDeleteAccountMutation,
   useGetDailyTasksQuery,
   useCompleteDailyTaskMutation,
   useGetProgressQuery,
