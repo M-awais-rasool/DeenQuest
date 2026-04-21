@@ -107,13 +107,27 @@ const AppStack = () => {
       {isAuthenticated ? (
         <>
           <Stack.Screen name="Demo" component={DemoNavigator} />
-          <Stack.Screen name="DailyTaskDetail" component={DailyTaskDetailScreen} />
+          <Stack.Screen
+            name="DailyTaskDetail"
+            component={DailyTaskDetailScreen}
+          />
           <Stack.Screen name="LevelDetail" component={LevelDetailScreen} />
-          <Stack.Screen name="LessonPlayer" component={LessonPlayerScreen} options={{ gestureEnabled: false }} />
-          <Stack.Screen name="MiniGamePlayer" component={MiniGamePlayerScreen} options={{ gestureEnabled: false }} />
+          <Stack.Screen
+            name="LessonPlayer"
+            component={LessonPlayerScreen}
+            options={{ gestureEnabled: false }}
+          />
+          <Stack.Screen
+            name="MiniGamePlayer"
+            component={MiniGamePlayerScreen}
+            options={{ gestureEnabled: false }}
+          />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+          <Stack.Screen
+            name="ChangePassword"
+            component={ChangePasswordScreen}
+          />
         </>
       ) : (
         <>
