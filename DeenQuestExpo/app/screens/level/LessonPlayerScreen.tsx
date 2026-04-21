@@ -201,7 +201,7 @@ const s = StyleSheet.create({
   },
 
   // Scroll
-  scrollView: {  },
+  scrollView: {},
   scrollContent: { padding: 20, paddingBottom: 40 },
 
   // Lesson content
