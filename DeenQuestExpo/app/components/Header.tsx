@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Flame } from 'lucide-react-native';
-import { theme } from '../theme/themes';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Flame } from "lucide-react-native";
+import { theme } from "../theme/themes";
 
 interface HeaderProps {
   title: string;
@@ -21,7 +21,7 @@ export const Header = ({ title, xp, Icon, onSettingsPress }: HeaderProps) => {
         />
         <Text style={styles.logoText}>{title}</Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <View style={styles.xpBadge}>
           <Text style={styles.xpText}>{xp.toLocaleString()} XP</Text>
         </View>
@@ -37,9 +37,9 @@ export const Header = ({ title, xp, Icon, onSettingsPress }: HeaderProps) => {
 
 const styles = StyleSheet.create({
   topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
@@ -47,15 +47,15 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.surfaceLow,
   },
   logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   logoText: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: "900",
     color: theme.colors.primary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   xpBadge: {
     backgroundColor: theme.colors.surfaceHigh,
@@ -63,13 +63,13 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     borderBottomWidth: 2,
-    borderBottomColor: 'rgba(136, 217, 130, 0.3)',
+    borderBottomColor: "rgba(136, 217, 130, 0.3)",
   },
   xpText: {
     color: theme.colors.primary,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 16,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   iconButton: {
     backgroundColor: theme.colors.surfaceHigh,
