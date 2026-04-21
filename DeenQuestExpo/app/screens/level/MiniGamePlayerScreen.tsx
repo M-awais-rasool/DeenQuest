@@ -333,7 +333,7 @@ export function MiniGamePlayerScreen() {
 }
 
 const s = StyleSheet.create({
-  container: {  backgroundColor: theme.colors.background },
+  container: { backgroundColor: theme.colors.background },
   loadingContainer: {
     justifyContent: "center",
     alignItems: "center",
@@ -362,7 +362,7 @@ const s = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
-  scrollView: { },
+  scrollView: {},
   scrollContent: { padding: 20, paddingBottom: 40 },
 
   gameTitle: {
