@@ -12,9 +12,7 @@ import {
   Star,
   Lock,
   Verified,
-  Flame,
   Sparkles,
-  ChevronRight,
 } from "lucide-react-native";
 import { theme } from "../../theme/themes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
