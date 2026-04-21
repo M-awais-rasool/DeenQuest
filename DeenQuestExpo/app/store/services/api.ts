@@ -220,7 +220,10 @@ export const API = createApi({
       }),
       providesTags: ["User"],
     }),
-    updateProfile: builder.mutation<APIResponse<AuthUser>, UpdateProfileRequest>({
+    updateProfile: builder.mutation<
+      APIResponse<AuthUser>,
+      UpdateProfileRequest
+    >({
       query: (data) => ({
         url: "/api/v1/users/me",
         method: "PUT",
