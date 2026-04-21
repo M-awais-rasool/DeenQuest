@@ -71,7 +71,11 @@ export const shared = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: 4,
   },
-  quranAyahs: { fontSize: 14, color: theme.colors.textMuted, fontWeight: "600" },
+  quranAyahs: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    fontWeight: "600",
+  },
   quranHint: {
     fontSize: 13,
     color: theme.colors.textMuted,
@@ -213,7 +217,11 @@ export const shared = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: 4,
   },
-  audioDuration: { fontSize: 14, color: theme.colors.textMuted, fontWeight: "600" },
+  audioDuration: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    fontWeight: "600",
+  },
   audioHint: {
     fontSize: 13,
     color: theme.colors.textMuted,
@@ -241,7 +249,11 @@ export const shared = StyleSheet.create({
     borderColor: theme.colors.primary,
     backgroundColor: "rgba(136, 217, 130, 0.1)",
   },
-  reflectionOptionText: { color: theme.colors.text, fontSize: 16, fontWeight: "600" },
+  reflectionOptionText: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: "600",
+  },
   reflectionSelectedText: { color: theme.colors.primary, fontWeight: "800" },
 
   // ── Tips ──────────────────────────────────────────────────────────
@@ -262,8 +274,17 @@ export const shared = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  tipBulletText: { color: theme.colors.primary, fontWeight: "900", fontSize: 14 },
-  tipText: { color: theme.colors.text, fontSize: 16, fontWeight: "600", flex: 1 },
+  tipBulletText: {
+    color: theme.colors.primary,
+    fontWeight: "900",
+    fontSize: 14,
+  },
+  tipText: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
+  },
 
   // ── Action ────────────────────────────────────────────────────────
   actionCard: {
