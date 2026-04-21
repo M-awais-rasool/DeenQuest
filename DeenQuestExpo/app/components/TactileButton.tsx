@@ -1,11 +1,11 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme/themes';
+import React from "react";
+import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { theme } from "../theme/themes";
 
 interface TactileButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
   style?: any;
   textStyle?: any;
 }
@@ -13,11 +13,11 @@ interface TactileButtonProps {
 export const TactileButton: React.FC<TactileButtonProps> = ({
   title,
   onPress,
-  variant = 'primary',
+  variant = "primary",
   style,
   textStyle,
 }) => {
-  const isPrimary = variant === 'primary';
+  const isPrimary = variant === "primary";
 
   return (
     <TouchableOpacity
@@ -47,8 +47,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: theme.borderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderBottomWidth: 4,
   },
   primaryButton: {
@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 14,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: "900",
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   primaryText: {
