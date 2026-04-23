@@ -113,7 +113,7 @@ export const shared = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "rgba(136, 217, 130, 0.15)",
+    backgroundColor: theme.colors.primary15,
     borderWidth: 3,
     borderColor: theme.colors.primary,
     justifyContent: "center",
@@ -151,7 +151,7 @@ export const shared = StyleSheet.create({
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 219, 60, 0.2)",
+    borderColor: theme.colors.secondary20,
   },
   hadithQuote: {
     fontSize: 18,
@@ -180,11 +180,11 @@ export const shared = StyleSheet.create({
   },
   quizOptionCorrect: {
     borderColor: theme.colors.primary,
-    backgroundColor: "rgba(136, 217, 130, 0.1)",
+    backgroundColor: theme.colors.primary10,
   },
   quizOptionWrong: {
-    borderColor: "#FF6B6B",
-    backgroundColor: "rgba(255, 107, 107, 0.1)",
+    borderColor: theme.colors.errorAccent,
+    backgroundColor: theme.colors.errorAccent10,
   },
   quizOptionText: { color: theme.colors.text, fontSize: 16, fontWeight: "600" },
   quizOptionTextSelected: { fontWeight: "800" },
@@ -196,7 +196,7 @@ export const shared = StyleSheet.create({
     marginTop: 8,
   },
   quizFeedbackWrong: {
-    color: "#FF6B6B",
+    color: theme.colors.errorAccent,
     fontSize: 14,
     fontWeight: "700",
     textAlign: "center",
@@ -247,7 +247,7 @@ export const shared = StyleSheet.create({
   },
   reflectionSelected: {
     borderColor: theme.colors.primary,
-    backgroundColor: "rgba(136, 217, 130, 0.1)",
+    backgroundColor: theme.colors.primary10,
   },
   reflectionOptionText: {
     color: theme.colors.text,
@@ -270,7 +270,7 @@ export const shared = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(136, 217, 130, 0.15)",
+    backgroundColor: theme.colors.primary15,
     justifyContent: "center",
     alignItems: "center",
   },

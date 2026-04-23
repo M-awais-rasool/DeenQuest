@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     gap: 8,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.2)",
+    borderColor: theme.colors.outline20,
   },
   xpText: {
     color: theme.colors.secondary,
@@ -256,30 +256,30 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: theme.colors.white10,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: theme.colors.white20,
   },
   featuredTitle: {
     fontSize: 24,
     fontWeight: "900",
-    color: "#FFF",
+    color: theme.colors.white,
     textAlign: "center",
     marginBottom: 8,
   },
   featuredSub: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.7)",
+    color: theme.colors.white70,
     textAlign: "center",
     marginBottom: 24,
   },
   featuredStats: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    backgroundColor: theme.colors.black20,
     borderRadius: 16,
     padding: 16,
     gap: 24,
@@ -295,13 +295,13 @@ const styles = StyleSheet.create({
   statLab: {
     fontSize: 10,
     fontWeight: "700",
-    color: "rgba(255, 255, 255, 0.6)",
+    color: theme.colors.white60,
     textTransform: "uppercase",
   },
   statDivider: {
     width: 1,
     height: 24,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: theme.colors.white10,
   },
   section: {
     marginBottom: 40,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   unlockedCircle: {
-    backgroundColor: "rgba(136, 217, 130, 0.1)",
+    backgroundColor: theme.colors.primary10,
   },
   lockedCircle: {
     backgroundColor: theme.colors.surfaceHigh,
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 16,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.1)",
+    borderColor: theme.colors.outline10,
   },
   shopItemImage: {
     width: 64,
