@@ -69,8 +69,8 @@ const s = StyleSheet.create({
     borderColor: theme.colors.outline,
   },
   itemDone: {
-    borderColor: "rgba(136,217,130,0.3)",
-    backgroundColor: "rgba(136,217,130,0.05)",
+      borderColor: theme.colors.primary30,
+      backgroundColor: theme.colors.primary05,
   },
   itemText: {
     fontSize: 15,

@@ -48,21 +48,25 @@ export function ProfileScreen() {
 
   const achievements = [
     {
-      icon: <Sparkles color="#FFDB3C" size={32} />,
+      icon: <Sparkles color={theme.colors.secondary} size={32} />,
       label: "First Khatm",
       locked: false,
     },
     {
-      icon: <Moon color="#88D982" size={32} />,
+      icon: <Moon color={theme.colors.primary} size={32} />,
       label: "Tahajjud Warrior",
       locked: false,
     },
     {
-      icon: <HandHeart color="#F472B6" size={32} />,
+      icon: <HandHeart color={theme.colors.magenta} size={32} />,
       label: "Giver",
       locked: false,
     },
-    { icon: <Lock color="#BFCABA" size={32} />, label: "???", locked: true },
+    {
+      icon: <Lock color={theme.colors.textMuted} size={32} />,
+      label: "???",
+      locked: true,
+    },
   ];
 
   if (profileLoading || progressLoading) {
@@ -143,12 +147,12 @@ export function ProfileScreen() {
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Trophy
-              color="rgba(255,255,255,0.05)"
+              color={theme.colors.white05}
               size={80}
               style={styles.bgIcon}
             />
             <Text style={styles.statLabel}>TOTAL XP</Text>
-            <Text style={[styles.statValue, { color: "#FFDB3C" }]}>
+            <Text style={[styles.statValue, { color: theme.colors.secondary }]}>
               {totalXP >= 1000 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}
             </Text>
             <Text style={styles.statSubtext}>Level {level}</Text>
@@ -156,7 +160,7 @@ export function ProfileScreen() {
 
           <View style={styles.statCard}>
             <Heart
-              color="rgba(255,255,255,0.05)"
+              color={theme.colors.white05}
               size={80}
               style={styles.bgIcon}
             />
@@ -179,7 +183,11 @@ export function ProfileScreen() {
                 </Text>
               </View>
               <View style={styles.streakBadge}>
-                <Flame color="#FFDB3C" fill="#FFDB3C" size={14} />
+                <Flame
+                  color={theme.colors.secondary}
+                  fill={theme.colors.secondary}
+                  size={14}
+                />
                 <Text style={styles.streakBadgeText}>{currentStreak} Days</Text>
               </View>
             </View>
@@ -195,7 +203,9 @@ export function ProfileScreen() {
                         isCompleted ? styles.dayBoxActive : styles.dayBoxEmpty,
                       ]}
                     >
-                      {isCompleted && <Check color="#003909" size={16} />}
+                      {isCompleted && (
+                        <Check color={theme.colors.onPrimary} size={16} />
+                      )}
                     </View>
                   </View>
                 );
@@ -208,13 +218,13 @@ export function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Goal Progress</Text>
           <View style={styles.goalCardContainer}>
-            <View style={[styles.goalCard, { borderLeftColor: "#88D982" }]}>
+            <View style={[styles.goalCard, { borderLeftColor: theme.colors.primary }]}>
               <View style={styles.goalHeader}>
                 <View>
                   <Text style={styles.goalTitle}>Read 5 Pages Daily</Text>
                   <Text style={styles.goalSubtext}>The Quranic Journey</Text>
                 </View>
-                <Text style={[styles.goalPercent, { color: "#88D982" }]}>
+                <Text style={[styles.goalPercent, { color: theme.colors.primary }]}>
                   80%
                 </Text>
               </View>
@@ -222,19 +232,19 @@ export function ProfileScreen() {
                 <View
                   style={[
                     styles.progressBarFill,
-                    { width: "80%", backgroundColor: "#88D982" },
+                    { width: "80%", backgroundColor: theme.colors.primary },
                   ]}
                 />
               </View>
             </View>
 
-            <View style={[styles.goalCard, { borderLeftColor: "#FFDB3C" }]}>
+            <View style={[styles.goalCard, { borderLeftColor: theme.colors.secondary }]}>
               <View style={styles.goalHeader}>
                 <View>
                   <Text style={styles.goalTitle}>Early Morning Dhikr</Text>
                   <Text style={styles.goalSubtext}>30 day challenge</Text>
                 </View>
-                <Text style={[styles.goalPercent, { color: "#FFDB3C" }]}>
+                <Text style={[styles.goalPercent, { color: theme.colors.secondary }]}>
                   12/30
                 </Text>
               </View>
@@ -242,7 +252,7 @@ export function ProfileScreen() {
                 <View
                   style={[
                     styles.progressBarFill,
-                    { width: "40%", backgroundColor: "#FFDB3C" },
+                    { width: "40%", backgroundColor: theme.colors.secondary },
                   ]}
                 />
               </View>
@@ -309,24 +319,24 @@ const styles = StyleSheet.create({
     height: 128,
     borderRadius: 64,
     padding: 4,
-    backgroundColor: "#88D982", // Simplified gradient for StyleSheet
+    backgroundColor: theme.colors.primary, // Simplified gradient for StyleSheet
   },
   avatar: {
     width: "100%",
     height: "100%",
     borderRadius: 60,
     borderWidth: 4,
-    borderColor: "#131313",
+    borderColor: theme.colors.background,
   },
   levelBadge: {
     position: "absolute",
     bottom: -8,
     alignSelf: "center",
-    backgroundColor: "#FFDB3C",
+    backgroundColor: theme.colors.secondary,
     paddingHorizontal: 16,
     paddingVertical: 4,
     borderRadius: 20,
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -336,7 +346,7 @@ const styles = StyleSheet.create({
     fontFamily: "Lexend",
     fontWeight: "900",
     fontSize: 10,
-    color: "#221B00",
+    color: theme.colors.onSecondary,
     letterSpacing: 1,
   },
   nameContainer: {
@@ -347,13 +357,13 @@ const styles = StyleSheet.create({
     fontFamily: "Lexend",
     fontWeight: "700",
     fontSize: 32,
-    color: "#FFFFFF",
+    color: theme.colors.white,
   },
   title: {
     fontFamily: "Lexend",
     fontWeight: "700",
     fontSize: 12,
-    color: "#88D982",
+    color: theme.colors.primary,
     letterSpacing: 3,
     marginTop: 4,
   },
@@ -372,22 +382,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
   },
   primaryButton: {
-    backgroundColor: "#88D982",
-    borderBottomColor: "#005312",
+    backgroundColor: theme.colors.primary,
+    borderBottomColor: theme.colors.shadowGreen,
   },
   primaryButtonText: {
     fontFamily: "Lexend",
     fontWeight: "700",
-    color: "#003909",
+    color: theme.colors.onPrimary,
   },
   secondaryButton: {
-    backgroundColor: "#2A2A2A",
-    borderBottomColor: "#000000",
+    backgroundColor: theme.colors.surfaceHigh,
+    borderBottomColor: theme.colors.black,
   },
   buttonText: {
     fontFamily: "Lexend",
     fontWeight: "700",
-    color: "#E2E2E2",
+    color: theme.colors.text,
   },
   statsGrid: {
     flexDirection: "row",
@@ -398,13 +408,13 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: "45%",
-    backgroundColor: "#1B1B1B",
+    backgroundColor: theme.colors.surfaceLow,
     padding: 24,
     borderRadius: 16,
     position: "relative",
     overflow: "hidden",
     borderBottomWidth: 4,
-    borderBottomColor: "rgba(0,0,0,0.2)",
+    borderBottomColor: theme.colors.black20,
   },
   bgIcon: {
     position: "absolute",
@@ -415,7 +425,7 @@ const styles = StyleSheet.create({
     fontFamily: "Lexend",
     fontWeight: "700",
     fontSize: 10,
-    color: "#BFCABA",
+    color: theme.colors.textMuted,
     letterSpacing: 1.5,
     marginBottom: 4,
   },
@@ -423,21 +433,21 @@ const styles = StyleSheet.create({
     fontFamily: "Lexend",
     fontWeight: "900",
     fontSize: 36,
-    color: "#FFFFFF",
+    color: theme.colors.white,
   },
   statSubtext: {
     fontSize: 10,
-    color: "#BFCABA",
+    color: theme.colors.textMuted,
     fontWeight: "700",
     marginTop: 8,
   },
   streakCard: {
     width: "100%",
-    backgroundColor: "#1F1F1F",
+    backgroundColor: theme.colors.surface,
     padding: 24,
     borderRadius: 16,
     borderBottomWidth: 4,
-    borderBottomColor: "rgba(0,0,0,0.2)",
+    borderBottomColor: theme.colors.black20,
   },
   streakHeader: {
     flexDirection: "row",
@@ -449,16 +459,16 @@ const styles = StyleSheet.create({
     fontFamily: "Lexend",
     fontWeight: "700",
     fontSize: 18,
-    color: "#FFFFFF",
+    color: theme.colors.white,
   },
   sectionSubtext: {
     fontSize: 12,
-    color: "#BFCABA",
+    color: theme.colors.textMuted,
   },
   streakBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 219, 60, 0.1)",
+    backgroundColor: theme.colors.secondary10,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
@@ -467,7 +477,7 @@ const styles = StyleSheet.create({
     fontFamily: "Lexend",
     fontWeight: "700",
     fontSize: 14,
-    color: "#FFDB3C",
+    color: theme.colors.secondary,
     marginLeft: 6,
   },
   daysGrid: {
@@ -481,7 +491,7 @@ const styles = StyleSheet.create({
   dayLabel: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#BFCABA",
+    color: theme.colors.textMuted,
   },
   dayBox: {
     width: 40,
@@ -491,13 +501,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dayBoxActive: {
-    backgroundColor: "#88D982",
+    backgroundColor: theme.colors.primary,
   },
   dayBoxStar: {
-    backgroundColor: "#FFDB3C",
+    backgroundColor: theme.colors.secondary,
   },
   dayBoxEmpty: {
-    backgroundColor: "#2A2A2A",
+    backgroundColor: theme.colors.surfaceHigh,
     opacity: 0.4,
   },
   section: {
@@ -508,7 +518,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   goalCard: {
-    backgroundColor: "#1F1F1F",
+    backgroundColor: theme.colors.surface,
     padding: 20,
     borderRadius: 16,
     borderLeftWidth: 4,
@@ -521,12 +531,12 @@ const styles = StyleSheet.create({
   },
   goalTitle: {
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: theme.colors.white,
     fontSize: 16,
   },
   goalSubtext: {
     fontSize: 12,
-    color: "#BFCABA",
+    color: theme.colors.textMuted,
   },
   goalPercent: {
     fontFamily: "Lexend",
@@ -535,7 +545,7 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 12,
-    backgroundColor: "#2A2A2A",
+    backgroundColor: theme.colors.surfaceHigh,
     borderRadius: 6,
     overflow: "hidden",
   },
@@ -550,7 +560,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   viewAllText: {
-    color: "#88D982",
+    color: theme.colors.primary,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 1,
@@ -573,19 +583,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   badgeUnlocked: {
-    backgroundColor: "#2A2A2A",
-    borderColor: "#393939",
+    backgroundColor: theme.colors.surfaceHigh,
+    borderColor: theme.colors.surfaceBright,
   },
   badgeLocked: {
-    backgroundColor: "#131313",
-    borderColor: "#2A2A2A",
+    backgroundColor: theme.colors.background,
+    borderColor: theme.colors.surfaceHigh,
     borderStyle: "dashed",
   },
   badgeLabel: {
     fontSize: 10,
     fontWeight: "700",
     textAlign: "center",
-    color: "#BFCABA",
+    color: theme.colors.textMuted,
   },
   bottomNav: {
     position: "absolute",
@@ -598,32 +608,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 32,
-    backgroundColor: "#131313",
+    backgroundColor: theme.colors.background,
     borderTopWidth: 4,
-    borderTopColor: "#1F1F1F",
+    borderTopColor: theme.colors.surface,
   },
   navItem: {
     alignItems: "center",
     padding: 8,
   },
   navItemActive: {
-    backgroundColor: "#1F1F1F",
+    backgroundColor: theme.colors.surface,
     borderRadius: 16,
     borderBottomWidth: 4,
-    borderBottomColor: "#88D982",
+    borderBottomColor: theme.colors.primary,
     paddingHorizontal: 16,
   },
   navLabel: {
     fontFamily: "Lexend",
     fontWeight: "900",
     fontSize: 10,
-    color: "#E2E2E2",
+    color: theme.colors.text,
     textTransform: "uppercase",
     marginTop: 4,
     opacity: 0.6,
   },
   navLabelActive: {
-    color: "#88D982",
+    color: theme.colors.primary,
     opacity: 1,
   },
 });
