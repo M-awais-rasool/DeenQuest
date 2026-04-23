@@ -42,13 +42,13 @@ const s = StyleSheet.create({
     padding: 32,
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "rgba(255,219,60,0.3)",
+    borderColor: theme.colors.secondary30,
   },
   iconCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(255,219,60,0.15)",
+    backgroundColor: theme.colors.secondary15,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
@@ -62,7 +62,7 @@ const s = StyleSheet.create({
   divider: {
     width: 60,
     height: 2,
-    backgroundColor: "rgba(255,219,60,0.3)",
+    backgroundColor: theme.colors.secondary30,
     marginVertical: 16,
   },
   message: {
@@ -73,7 +73,7 @@ const s = StyleSheet.create({
   },
   nextBadge: {
     marginTop: 20,
-    backgroundColor: "rgba(136,217,130,0.1)",
+    backgroundColor: theme.colors.primary10,
     borderRadius: 12,
     padding: 12,
     alignItems: "center",
@@ -101,7 +101,7 @@ const s = StyleSheet.create({
     marginTop: 24,
     gap: 6,
     borderBottomWidth: 4,
-    borderBottomColor: "#C4A800",
+    borderBottomColor: theme.colors.goldDark,
   },
   continueBtnText: {
     color: theme.colors.onSecondary,

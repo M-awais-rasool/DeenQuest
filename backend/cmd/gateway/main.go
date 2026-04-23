@@ -94,6 +94,7 @@ func setupProxyRoutes(r *gin.Engine, cfg *config.Config) {
 
 	// Core service routes
 	r.Any("/api/v1/progress/*path", createReverseProxy(cfg.CoreServiceURL))
+	r.Any("/api/v1/leaderboard", createReverseProxy(cfg.CoreServiceURL))
 	r.Any("/api/v1/daily-tasks", createReverseProxy(cfg.CoreServiceURL))
 	r.Any("/api/v1/daily-tasks/*path", createReverseProxy(cfg.CoreServiceURL))
 	r.Any("/api/v1/levels", createReverseProxy(cfg.CoreServiceURL))

@@ -36,7 +36,7 @@ const s = StyleSheet.create({
     padding: 28,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,219,60,0.2)",
+    borderColor: theme.colors.secondary20,
   },
   arabic: {
     fontSize: 32,
@@ -66,7 +66,7 @@ const s = StyleSheet.create({
   },
   contextBox: {
     marginTop: 16,
-    backgroundColor: "rgba(255,219,60,0.08)",
+    backgroundColor: theme.colors.secondary08,
     borderRadius: 10,
     padding: 12,
     width: "100%",
