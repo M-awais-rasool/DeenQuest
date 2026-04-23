@@ -242,7 +242,7 @@ export const QuranScreen = () => {
                       ? theme.colors.primary
                       : surah.status === "in-progress"
                         ? theme.colors.secondary
-                        : "rgba(191, 202, 186, 0.2)"
+                        : theme.colors.textMuted20
                   }
                   height={8}
                 />
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
-    backgroundColor: "rgba(19, 19, 19, 0.6)",
+    backgroundColor: theme.colors.background60,
     zIndex: 100,
   },
   userRow: {
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.2)",
+    borderColor: theme.colors.outline20,
     gap: 4,
   },
   streakText: {
@@ -397,9 +397,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceHigh,
   },
   activeFilterChip: {
-    backgroundColor: "rgba(136, 217, 130, 0.2)",
+    backgroundColor: theme.colors.primary20,
     borderWidth: 1,
-    borderColor: "rgba(136, 217, 130, 0.3)",
+    borderColor: theme.colors.primary30,
   },
   filterChipText: {
     fontSize: 14,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     padding: 24,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.1)",
+    borderColor: theme.colors.outline10,
   },
   lockedSurahCard: {
     opacity: 0.8,
@@ -518,11 +518,11 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   reflectionCard: {
-    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    backgroundColor: theme.colors.primaryContainer10,
     borderRadius: theme.borderRadius.md,
     padding: 32,
     borderWidth: 1,
-    borderColor: "rgba(136, 217, 130, 0.2)",
+    borderColor: theme.colors.primary20,
   },
   reflectionBadge: {
     backgroundColor: theme.colors.primary,
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     alignSelf: "flex-start",
-    shadowColor: "#005312",
+    shadowColor: theme.colors.shadowGreen,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,
@@ -572,11 +572,11 @@ const styles = StyleSheet.create({
     color: theme.colors.onPrimary,
   },
   statsCard: {
-    backgroundColor: "rgba(255, 219, 60, 0.1)",
+    backgroundColor: theme.colors.secondary10,
     borderRadius: theme.borderRadius.md,
     padding: 32,
     borderWidth: 1,
-    borderColor: "rgba(255, 219, 60, 0.2)",
+    borderColor: theme.colors.secondary20,
   },
   statsBadge: {
     backgroundColor: theme.colors.secondary,
@@ -600,11 +600,11 @@ const styles = StyleSheet.create({
   },
   statItem: {
     flex: 1,
-    backgroundColor: "rgba(31, 31, 31, 0.6)",
+    backgroundColor: theme.colors.surface60,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.1)",
+    borderColor: theme.colors.outline10,
   },
   statLabel: {
     fontSize: 10,
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.1)",
+    borderColor: theme.colors.outline10,
   },
   tipDot: {
     width: 8,
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.secondary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -16,12 +16,12 @@ export const CategoryBadge = ({ category }: { category: string }) => (
 
 const s = StyleSheet.create({
   xpBadge: {
-    backgroundColor: "rgba(255, 219, 60, 0.15)",
+    backgroundColor: theme.colors.secondary15,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(255, 219, 60, 0.3)",
+    borderColor: theme.colors.secondary30,
   },
   xpText: {
     color: theme.colors.secondary,
@@ -29,12 +29,12 @@ const s = StyleSheet.create({
     fontSize: 12,
   },
   categoryBadge: {
-    backgroundColor: "rgba(136, 217, 130, 0.15)",
+    backgroundColor: theme.colors.primary15,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "rgba(136, 217, 130, 0.3)",
+    borderColor: theme.colors.primary30,
   },
   categoryText: {
     color: theme.colors.primary,
