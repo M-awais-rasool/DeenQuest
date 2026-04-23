@@ -218,13 +218,20 @@ export function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Goal Progress</Text>
           <View style={styles.goalCardContainer}>
-            <View style={[styles.goalCard, { borderLeftColor: theme.colors.primary }]}>
+            <View
+              style={[
+                styles.goalCard,
+                { borderLeftColor: theme.colors.primary },
+              ]}
+            >
               <View style={styles.goalHeader}>
                 <View>
                   <Text style={styles.goalTitle}>Read 5 Pages Daily</Text>
                   <Text style={styles.goalSubtext}>The Quranic Journey</Text>
                 </View>
-                <Text style={[styles.goalPercent, { color: theme.colors.primary }]}>
+                <Text
+                  style={[styles.goalPercent, { color: theme.colors.primary }]}
+                >
                   80%
                 </Text>
               </View>
@@ -238,13 +245,23 @@ export function ProfileScreen() {
               </View>
             </View>
 
-            <View style={[styles.goalCard, { borderLeftColor: theme.colors.secondary }]}>
+            <View
+              style={[
+                styles.goalCard,
+                { borderLeftColor: theme.colors.secondary },
+              ]}
+            >
               <View style={styles.goalHeader}>
                 <View>
                   <Text style={styles.goalTitle}>Early Morning Dhikr</Text>
                   <Text style={styles.goalSubtext}>30 day challenge</Text>
                 </View>
-                <Text style={[styles.goalPercent, { color: theme.colors.secondary }]}>
+                <Text
+                  style={[
+                    styles.goalPercent,
+                    { color: theme.colors.secondary },
+                  ]}
+                >
                   12/30
                 </Text>
               </View>
