@@ -127,7 +127,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
         <View style={styles.formCard}>
           {displayError && (
             <View style={styles.errorContainer}>
-              <AlertCircle size={16} color="#d01818" />
+              <AlertCircle size={16} color={theme.colors.errorStrong} />
               <Text style={styles.errorMessage}>{displayError}</Text>
             </View>
           )}
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     width: 230,
     height: 230,
     borderRadius: 115,
-    backgroundColor: "rgba(136, 217, 130, 0.13)",
+    backgroundColor: theme.colors.primary13,
   },
   backgroundOrbBottom: {
     position: "absolute",
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     width: 230,
     height: 230,
     borderRadius: 115,
-    backgroundColor: "rgba(255, 219, 60, 0.1)",
+    backgroundColor: theme.colors.secondary10,
   },
   heroRow: {
     marginBottom: theme.spacing.lg,
@@ -288,12 +288,12 @@ const styles = StyleSheet.create({
     maxWidth: 340,
   },
   formCard: {
-    backgroundColor: "rgba(31, 31, 31, 0.82)",
-    borderColor: "rgba(136, 217, 130, 0.2)",
+    backgroundColor: theme.colors.surface82,
+    borderColor: theme.colors.primary20,
     borderWidth: 1,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
@@ -302,8 +302,8 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(208, 24, 24, 0.1)",
-    borderColor: "#d01818",
+    backgroundColor: theme.colors.error10,
+    borderColor: theme.colors.errorStrong,
     borderWidth: 1,
     borderRadius: theme.borderRadius.sm,
     padding: 12,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   errorMessage: {
-    color: "#ff8585",
+    color: theme.colors.errorBright,
     fontSize: 13,
     flex: 1,
   },
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputError: {
-    borderColor: "#d01818",
+    borderColor: theme.colors.errorStrong,
   },
   inputIcon: {
     position: "absolute",
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   errorText: {
-    color: "#ff8585",
+    color: theme.colors.errorBright,
     fontSize: 12,
     marginTop: 6,
   },
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: "#444",
+    backgroundColor: theme.colors.neutralMid,
   },
   dividerText: {
     fontSize: 10,

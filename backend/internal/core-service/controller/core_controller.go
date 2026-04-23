@@ -27,6 +27,31 @@ func (h *CoreController) GetProgress(c *gin.Context) {
 	response.OK(c, "progress fetched", result)
 }
 
+func (h *CoreController) GetLeaderboard(c *gin.Context) {
+	limit := 0 // 0 means return all users
+	rawLimit := c.Query("limit")
+	if rawLimit != "" {
+		parsed, err := strconv.Atoi(rawLimit)
+		if err != nil || parsed < 1 {
+			response.BadRequest(c, "limit must be a positive integer")
+			return
+		}
+		if parsed > 2000 {
+			response.BadRequest(c, "limit must be <= 2000")
+			return
+		}
+		limit = parsed
+	}
+
+	result, err := h.service.GetLeaderboard(c.Request.Context(), limit)
+	if err != nil {
+		response.InternalError(c, "failed to fetch leaderboard")
+		return
+	}
+
+	response.OK(c, "leaderboard fetched", result)
+}
+
 func (h *CoreController) GetDailyTasks(c *gin.Context) {
 	userID := c.GetString("user_id")
 	tasks, err := h.service.GetDailyTasks(c.Request.Context(), userID)

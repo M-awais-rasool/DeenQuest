@@ -8,9 +8,8 @@ import { Icon } from "../components/Icon";
 import { theme } from "../theme/themes";
 import { HomeScreen } from "../screens/home/HomeScreen";
 import { RewardsScreen } from "../screens/reward/RewardsScreen";
-import { ReflectionScreen } from "../screens/reflection/ReflectionScreen";
+import { LeaderboardScreen } from "../screens/leaderboard/LeaderboardScreen";
 import { ProfileScreen } from "../screens/profile/ProfileScreen";
-import { PathScreen } from "../screens/path/PathScreen";
 import { LevelMapScreen } from "../screens/level/LevelMapScreen";
 
 const Tab = createBottomTabNavigator<DemoTabParamList>();
@@ -19,7 +18,7 @@ const TAB_CONFIG = [
   { name: "HomeScreen", label: "HOME", icon: "home" },
   { name: "PathScreen", label: "LEARN", icon: "learn" },
   { name: "RewardsScreen", label: "REWARDS", icon: "reward" },
-  { name: "ReflectionScreen", label: "REFLECTION", icon: "reflection" },
+  { name: "LeaderboardScreen", label: "RANK", icon: "reflection" },
   { name: "ProfileScreen", label: "PROFILE", icon: "profile" },
 ] as const;
 
@@ -81,7 +80,7 @@ export function DemoNavigator() {
       <Tab.Screen name="HomeScreen" component={HomeScreen} />
       <Tab.Screen name="PathScreen" component={LevelMapScreen} />
       <Tab.Screen name="RewardsScreen" component={RewardsScreen} />
-      <Tab.Screen name="ReflectionScreen" component={ReflectionScreen} />
+      <Tab.Screen name="LeaderboardScreen" component={LeaderboardScreen} />
       <Tab.Screen name="ProfileScreen" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -109,7 +108,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   activeIconContainer: {
-    backgroundColor: "rgba(136, 217, 130, 0.1)",
+    backgroundColor: theme.colors.primary10,
     borderBottomWidth: 4,
     borderBottomColor: theme.colors.primary,
   },
