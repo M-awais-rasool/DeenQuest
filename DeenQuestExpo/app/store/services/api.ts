@@ -116,6 +116,14 @@ export interface UserProgress {
   weekly_completions: boolean[];
 }
 
+export interface LeaderboardUser {
+  rank: number;
+  user_id: string;
+  display_name?: string;
+  level: number;
+  xp: number;
+}
+
 // ─── Level Journey Types ───
 
 export type MiniGameType =
@@ -195,7 +203,7 @@ export interface LevelCompletionResult {
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["User", "Auth", "DailyTasks", "Progress", "Levels"],
+  tagTypes: ["User", "Auth", "DailyTasks", "Progress", "Levels", "Leaderboard"],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
       query: (credentials) => ({
@@ -257,7 +265,7 @@ export const API = createApi({
         url: `/api/v1/daily-tasks/${taskId}/complete`,
         method: "POST",
       }),
-      invalidatesTags: ["DailyTasks", "Progress"],
+      invalidatesTags: ["DailyTasks", "Progress", "Leaderboard"],
     }),
     getProgress: builder.query<APIResponse<UserProgress>, void>({
       query: () => ({
@@ -265,6 +273,15 @@ export const API = createApi({
         method: "GET",
       }),
       providesTags: ["Progress"],
+    }),
+    getLeaderboard: builder.query<APIResponse<LeaderboardUser[]>, { limit?: number } | undefined>({
+      query: (params) => ({
+        url: "/api/v1/leaderboard",
+        method: "GET",
+        params: params?.limit ? { limit: params.limit } : undefined,
+      }),
+      providesTags: ["Leaderboard"],
+      keepUnusedDataFor: 60,
     }),
 
     // ─── Level Journey Endpoints ───
@@ -304,7 +321,7 @@ export const API = createApi({
         method: "POST",
         body: { stars },
       }),
-      invalidatesTags: ["Levels", "Progress"],
+      invalidatesTags: ["Levels", "Progress", "Leaderboard"],
     }),
   }),
 });
@@ -320,6 +337,7 @@ export const {
   useGetDailyTasksQuery,
   useCompleteDailyTaskMutation,
   useGetProgressQuery,
+  useGetLeaderboardQuery,
   useGetLevelsQuery,
   useGetLevelDetailQuery,
   useCompleteLessonMutation,
