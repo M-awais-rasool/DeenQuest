@@ -110,14 +110,14 @@ const s = StyleSheet.create({
   },
   optionCorrect: {
     borderColor: theme.colors.primary,
-    backgroundColor: "rgba(136,217,130,0.1)",
+    backgroundColor: theme.colors.primary10,
   },
   optionWrong: {
     borderColor: theme.colors.error,
-    backgroundColor: "rgba(255,180,171,0.1)",
+    backgroundColor: theme.colors.errorSoft10,
   },
   optionReveal: {
-    borderColor: "rgba(136,217,130,0.3)",
+    borderColor: theme.colors.primary30,
   },
   optionText: {
     fontSize: 16,
@@ -133,10 +133,10 @@ const s = StyleSheet.create({
     marginTop: 8,
   },
   feedbackCorrect: {
-    backgroundColor: "rgba(136,217,130,0.1)",
+    backgroundColor: theme.colors.primary10,
   },
   feedbackWrong: {
-    backgroundColor: "rgba(255,180,171,0.1)",
+    backgroundColor: theme.colors.errorSoft10,
   },
   feedbackText: {
     fontSize: 14,
