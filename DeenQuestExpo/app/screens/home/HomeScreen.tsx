@@ -32,11 +32,11 @@ import type { AppStackParamList } from "../../navigators/navigationTypes";
 const CATEGORY_ICONS: Record<string, { icon: typeof Flame; color: string }> = {
   salah: { icon: Flame, color: theme.colors.primary },
   quran: { icon: BookOpen, color: theme.colors.secondary },
-  dhikr: { icon: Circle, color: "#B39DDB" },
-  learning: { icon: GraduationCap, color: "#FFB1C7" },
+  dhikr: { icon: Circle, color: theme.colors.lavender },
+  learning: { icon: GraduationCap, color: theme.colors.pink },
   character: { icon: Bolt, color: theme.colors.primary },
-  social: { icon: CheckCircle2, color: "#4FC3F7" },
-  reflection: { icon: Circle, color: "#FFD54F" },
+  social: { icon: CheckCircle2, color: theme.colors.cyan },
+  reflection: { icon: Circle, color: theme.colors.yellowSoft },
 };
 
 function buildWeekDays(): string[] {
@@ -236,64 +236,6 @@ export const HomeScreen = () => {
           </View>
         )}
 
-        {/* ── League Card ── */}
-        <View style={styles.leagueCard}>
-          <View style={styles.leagueHeader}>
-            <View style={styles.leaguePill}>
-              <View style={styles.leagueDot} />
-              <Text style={styles.leaguePillText}>Emerald League</Text>
-            </View>
-            <View>
-              <Text style={styles.timerLabel}>Ends In</Text>
-              <Text style={styles.timerValue}>2d 14h</Text>
-            </View>
-          </View>
-          <Text style={styles.leagueTitle}>Weekly Battle</Text>
-          <View style={styles.leaderboard}>
-            {[
-              {
-                rank: 1,
-                name: "Usman K.",
-                xp: "3,420 XP",
-                initials: "UK",
-                color: theme.colors.secondary,
-              },
-              {
-                rank: 2,
-                name: "Ahmed (You)",
-                xp: `${totalXP.toLocaleString()} XP`,
-                initials: "AH",
-                color: theme.colors.primary,
-                active: true,
-              },
-              {
-                rank: 3,
-                name: "Sara A.",
-                xp: "2,910 XP",
-                initials: "SA",
-                color: theme.colors.surfaceBright,
-              },
-            ].map((user, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.leaderRow,
-                  user.active && styles.leaderRowActive,
-                ]}
-              >
-                <Text style={styles.rankText}>#{user.rank}</Text>
-                <View style={[styles.avatar, { backgroundColor: user.color }]}>
-                  <Text style={styles.avatarText}>{user.initials}</Text>
-                </View>
-                <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.userXP}>{user.xp}</Text>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacity style={styles.viewAll}>
-            <Text style={styles.viewAllText}>View Full Leaderboard</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </ScreenWrapper>
   );
@@ -310,7 +252,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.xl,
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(64, 73, 61, 0.25)",
+    borderColor: theme.colors.outline25,
     marginBottom: 28,
   },
   streakTopRow: {
@@ -416,12 +358,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(255, 219, 60, 0.12)",
+    backgroundColor: theme.colors.secondary12,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(255, 219, 60, 0.25)",
+    borderColor: theme.colors.secondary25,
   },
   levelText: {
     fontSize: 12,
@@ -462,7 +404,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "900",
-    color: "rgba(136, 217, 130, 0.9)",
+    color: theme.colors.primary90,
     textTransform: "uppercase",
     letterSpacing: 1.2,
   },
@@ -487,7 +429,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: theme.borderRadius.md,
     borderBottomWidth: 3,
-    borderBottomColor: "rgba(0, 0, 0, 0.35)",
+    borderBottomColor: theme.colors.black35,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
@@ -538,7 +480,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "rgba(136, 217, 130, 0.12)",
+    backgroundColor: theme.colors.primary12,
     borderWidth: 1.5,
     borderColor: theme.colors.primary,
     justifyContent: "center",
@@ -560,119 +502,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
 
-  // ── League Card ───────────────────────────────────────────────────
-  leagueCard: {
-    backgroundColor: theme.colors.primaryContainer,
-    borderRadius: theme.borderRadius.xl,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-  },
-  leagueHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 20,
-  },
-  leaguePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.3)",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 999,
-    gap: 6,
-  },
-  leagueDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: theme.colors.secondary,
-  },
-  leaguePillText: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#FFF",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  timerLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "rgba(255,255,255,0.55)",
-    textTransform: "uppercase",
-    textAlign: "right",
-  },
-  timerValue: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: "#FFF",
-    textAlign: "right",
-  },
-  leagueTitle: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: "#FFF",
-    marginBottom: 14,
-  },
-  leaderboard: {
-    gap: 8,
-    marginBottom: 14,
-  },
-  leaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.08)",
-    padding: 10,
-    borderRadius: 12,
-    gap: 10,
-  },
-  leaderRowActive: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-  rankText: {
-    width: 26,
-    textAlign: "center",
-    fontSize: 13,
-    fontWeight: "900",
-    color: "rgba(255,255,255,0.55)",
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: theme.colors.onSecondary,
-  },
-  userName: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#FFF",
-  },
-  userXP: {
-    fontSize: 13,
-    fontWeight: "900",
-    color: "rgba(255,255,255,0.9)",
-  },
-  viewAll: {
-    paddingVertical: 11,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  viewAllText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: "#FFF",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
 });

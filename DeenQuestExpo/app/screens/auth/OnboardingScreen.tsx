@@ -18,21 +18,22 @@ import { useAppSelector } from "../../store/hooks";
 import type { RootState } from "../../store/store";
 import type { MainState } from "../../store/slices/mainSlice";
 import { setOnboardingCompleted } from "../../store/storage/authStorage";
+import { theme } from "../../theme/themes";
 
 const { width } = Dimensions.get("window");
 
 const COLORS = {
-  surface: "#131313",
-  surfaceContainer: "#1F1F1F",
-  surfaceContainerLow: "#1B1B1B",
-  surfaceContainerHigh: "#2A2A2A",
-  primary: "#88D982",
-  onPrimary: "#003909",
-  secondaryContainer: "#FFDB3C",
-  onSecondaryFixed: "#221B00",
-  onSurface: "#E2E2E2",
-  onSurfaceVariant: "#BFCABA",
-  outlineVariant: "#40493D",
+  surface: theme.colors.background,
+  surfaceContainer: theme.colors.surface,
+  surfaceContainerLow: theme.colors.surfaceLow,
+  surfaceContainerHigh: theme.colors.surfaceHigh,
+  primary: theme.colors.primary,
+  onPrimary: theme.colors.onPrimary,
+  secondaryContainer: theme.colors.secondary,
+  onSecondaryFixed: theme.colors.onSecondary,
+  onSurface: theme.colors.text,
+  onSurfaceVariant: theme.colors.textMuted,
+  outlineVariant: theme.colors.outline,
 };
 
 const FONTS = {
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     transform: [{ rotate: "12deg" }],
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -479,7 +480,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     borderBottomWidth: 4,
-    borderBottomColor: "#005312",
+    borderBottomColor: theme.colors.shadowGreen,
   },
   primaryButtonText: {
     fontFamily: FONTS.headline,
@@ -516,7 +517,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: COLORS.outlineVariant + "1A",
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.4,
     shadowRadius: 40,
@@ -549,7 +550,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.outlineVariant + "33",
     transform: [{ rotate: "6deg" }],
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -568,12 +569,12 @@ const styles = StyleSheet.create({
     left: 16,
     width: 80,
     height: 80,
-    backgroundColor: "#2E7D32",
+    backgroundColor: theme.colors.primaryContainer,
     borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
     transform: [{ rotate: "-12deg" }],
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 15,
@@ -591,7 +592,7 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: COLORS.outlineVariant + "33",
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
