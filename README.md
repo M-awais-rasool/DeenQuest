@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="DeenQuestExpo/assets/icons/new-logo.png" alt="DeenQuest Logo" width="110" />
+  <img src="DeenQuestExpo/assets/logo.png" alt="DeenQuest Logo" width="110" />
 </p>
 
 <h1 align="center">DeenQuest</h1>
@@ -21,12 +21,22 @@
 
 ---
 
-## Project Preview
+## App Screenshots
 
 <p align="center">
-  <img src="DeenQuestExpo/assets/icon.png" alt="DeenQuest App Icon" width="96" />
-  &nbsp;&nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/splash-icon.png" alt="DeenQuest Splash" width="240" />
+  <img src="DeenQuestExpo/assets/IMG.PNG" alt="Home — Daily Missions & Streak" width="30%" />
+  &nbsp;&nbsp;
+  <img src="DeenQuestExpo/assets/IMG-1.PNG" alt="Learn — Level Map" width="30%" />
+  &nbsp;&nbsp;
+  <img src="DeenQuestExpo/assets/IMG-2.PNG" alt="Profile — Stats & Streak History" width="30%" />
+</p>
+
+<p align="center">
+  <sub><b>Home</b> — Daily missions, streak &amp; XP progress</sub>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <sub><b>Learn</b> — Qaida level map with star milestones</sub>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <sub><b>Profile</b> — XP, Barakah score &amp; streak history</sub>
 </p>
 
 ## Why DeenQuest?
@@ -180,15 +190,15 @@ Backend docs:
 - `backend/docs/kafka-explained.md`
 - `backend/docs/daily-task-assignment.md`
 
-## Suggested Screenshot Blocks
+## Screens Overview
 
-You can add real UI screenshots later under `docs/images/` and plug them into this section:
-
-```md
-![Mobile Home](docs/images/mobile-home.png)
-![Leaderboard](docs/images/leaderboard.png)
-![Admin Dashboard](docs/images/admin-dashboard.png)
-```
+| Screen | File | Description |
+|---|---|---|
+| Home | `IMG.PNG` | Daily missions, weekly streak calendar, XP bar |
+| Learn | `IMG-1.PNG` | Phase level map with lock/unlock progression |
+| Profile | `IMG-2.PNG` | XP total, Barakah score, streak history |
+| Rewards | — | Unlocked badges and reward milestones |
+| Rank | — | Global leaderboard ranked by level then XP |
 
 ## Contributing
 
