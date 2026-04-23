@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     overflow: "hidden",
     borderBottomWidth: 4,
-    borderBottomColor: "rgba(0,0,0,0.2)",
+    borderBottomColor: theme.colors.black20,
   },
   settingsRow: {
     flexDirection: "row",

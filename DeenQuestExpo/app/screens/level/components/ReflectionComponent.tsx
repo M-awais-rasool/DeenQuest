@@ -69,7 +69,7 @@ const s = StyleSheet.create({
   },
   optionSelected: {
     borderColor: theme.colors.primary,
-    backgroundColor: "rgba(136,217,130,0.1)",
+    backgroundColor: theme.colors.primary10,
   },
   optionText: {
     fontSize: 15,
@@ -80,7 +80,7 @@ const s = StyleSheet.create({
     color: theme.colors.primary,
   },
   reflectionBox: {
-    backgroundColor: "rgba(136,217,130,0.08)",
+    backgroundColor: theme.colors.primary08,
     borderRadius: 12,
     padding: 14,
     marginTop: 8,
