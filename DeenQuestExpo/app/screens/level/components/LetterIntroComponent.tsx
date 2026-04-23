@@ -99,7 +99,7 @@ const s = StyleSheet.create({
   },
   letterCardActive: {
     borderColor: theme.colors.primary,
-    backgroundColor: "rgba(136,217,130,0.08)",
+    backgroundColor: theme.colors.primary08,
   },
   arabicLetter: {
     fontSize: 72,
@@ -129,7 +129,7 @@ const s = StyleSheet.create({
     letterSpacing: 0.3,
   },
   hintBox: {
-    backgroundColor: "rgba(136,217,130,0.08)",
+    backgroundColor: theme.colors.primary08,
     borderRadius: 12,
     padding: 14,
     marginTop: 12,

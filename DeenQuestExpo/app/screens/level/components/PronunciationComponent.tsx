@@ -78,7 +78,7 @@ const s = StyleSheet.create({
   },
   cardActive: {
     borderColor: theme.colors.primary,
-    backgroundColor: "rgba(136, 217, 130, 0.08)",
+    backgroundColor: theme.colors.primary08,
   },
   arabic: {
     fontSize: 44,

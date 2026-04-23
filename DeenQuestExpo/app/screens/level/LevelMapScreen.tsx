@@ -49,18 +49,18 @@ const STATUS_CONFIG: Record<
   available: {
     bg: theme.colors.primaryContainer,
     border: theme.colors.primary,
-    iconColor: "#fff",
+    iconColor: theme.colors.whiteSoft,
     glow: true,
   },
   in_progress: {
-    bg: "rgba(136, 217, 130, 0.25)",
+    bg: theme.colors.primary25,
     border: theme.colors.primary,
     iconColor: theme.colors.primary,
     glow: true,
   },
   completed: {
-    bg: "rgba(136, 217, 130, 0.12)",
-    border: "rgba(136, 217, 130, 0.5)",
+    bg: theme.colors.primary12,
+    border: theme.colors.primary50,
     iconColor: theme.colors.primary,
     glow: false,
   },
@@ -489,9 +489,9 @@ const s = StyleSheet.create({
     right: -6,
     bottom: -6,
     borderRadius: (NODE_SIZE + 12) / 2,
-    backgroundColor: "rgba(136, 217, 130, 0.12)",
+    backgroundColor: theme.colors.primary12,
     borderWidth: 2,
-    borderColor: "rgba(136, 217, 130, 0.25)",
+    borderColor: theme.colors.primary25,
   },
 
   /* Node circle */
@@ -502,7 +502,7 @@ const s = StyleSheet.create({
     borderWidth: 3,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 5,
@@ -552,7 +552,7 @@ const s = StyleSheet.create({
 
   /* Progress pill */
   progressPill: {
-    backgroundColor: "rgba(136, 217, 130, 0.18)",
+    backgroundColor: theme.colors.primary18,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 999,
@@ -569,10 +569,10 @@ const s = StyleSheet.create({
     position: "absolute",
     top: -4,
     right: -4,
-    backgroundColor: "rgba(255, 219, 60, 0.2)",
+    backgroundColor: theme.colors.secondary20,
     padding: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "rgba(255, 219, 60, 0.35)",
+    borderColor: theme.colors.secondary35,
   },
 });
