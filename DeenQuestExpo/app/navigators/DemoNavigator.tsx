@@ -3,8 +3,15 @@ import {
   createBottomTabNavigator,
   BottomTabBarProps,
 } from "@react-navigation/bottom-tabs";
+import {
+  Home,
+  BookOpen,
+  Trophy,
+  BarChart2,
+  User,
+  type LucideIcon,
+} from "lucide-react-native";
 import type { DemoTabParamList } from "./navigationTypes";
-import { Icon } from "../components/Icon";
 import { theme } from "../theme/themes";
 import { HomeScreen } from "../screens/home/HomeScreen";
 import { RewardsScreen } from "../screens/reward/RewardsScreen";
@@ -14,13 +21,17 @@ import { LevelMapScreen } from "../screens/level/LevelMapScreen";
 
 const Tab = createBottomTabNavigator<DemoTabParamList>();
 
-const TAB_CONFIG = [
-  { name: "HomeScreen", label: "HOME", icon: "home" },
-  { name: "PathScreen", label: "LEARN", icon: "learn" },
-  { name: "RewardsScreen", label: "REWARDS", icon: "reward" },
-  { name: "LeaderboardScreen", label: "RANK", icon: "reflection" },
-  { name: "ProfileScreen", label: "PROFILE", icon: "profile" },
-] as const;
+const TAB_CONFIG: {
+  name: keyof DemoTabParamList;
+  label: string;
+  icon: LucideIcon;
+}[] = [
+  { name: "HomeScreen", label: "HOME", icon: Home },
+  { name: "PathScreen", label: "LEARN", icon: BookOpen },
+  { name: "RewardsScreen", label: "REWARDS", icon: Trophy },
+  { name: "LeaderboardScreen", label: "RANK", icon: BarChart2 },
+  { name: "ProfileScreen", label: "PROFILE", icon: User },
+];
 
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   return (
@@ -28,6 +39,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
         const tabConf = TAB_CONFIG.find((t) => t.name === route.name);
+        const TabIcon = tabConf?.icon ?? Home;
 
         const onPress = () => {
           const event = navigation.emit({
@@ -52,8 +64,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                 isFocused && styles.activeIconContainer,
               ]}
             >
-              <Icon
-                icon={tabConf?.icon ?? "home"}
+              <TabIcon
                 size={24}
                 color={
                   isFocused ? theme.colors.primary : theme.colors.textMuted
