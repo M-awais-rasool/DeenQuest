@@ -109,10 +109,10 @@ export function LevelDetailScreen() {
                 {
                   backgroundColor:
                     level.difficulty === "easy"
-                      ? "rgba(136,217,130,0.15)"
+                      ? theme.colors.primary15
                       : level.difficulty === "medium"
-                        ? "rgba(255,219,60,0.15)"
-                        : "rgba(255,138,101,0.15)",
+                        ? theme.colors.secondary15
+                        : theme.colors.warning15,
                 },
               ]}
             >
@@ -125,7 +125,7 @@ export function LevelDetailScreen() {
                         ? theme.colors.primary
                         : level.difficulty === "medium"
                           ? theme.colors.secondary
-                          : "#FF8A65",
+                          : theme.colors.warning,
                   },
                 ]}
               >
@@ -312,7 +312,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(255,219,60,0.15)",
+    backgroundColor: theme.colors.secondary15,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
@@ -358,8 +358,8 @@ const s = StyleSheet.create({
     borderColor: theme.colors.outline,
   },
   lessonDone: {
-    borderColor: "rgba(136,217,130,0.3)",
-    backgroundColor: "rgba(136,217,130,0.05)",
+    borderColor: theme.colors.primary30,
+    backgroundColor: theme.colors.primary05,
   },
   lessonCurrent: {
     borderColor: theme.colors.primary,
@@ -395,11 +395,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginHorizontal: 16,
-    backgroundColor: "rgba(255,219,60,0.08)",
+    backgroundColor: theme.colors.secondary08,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,219,60,0.2)",
+    borderColor: theme.colors.secondary20,
   },
   miniGameLocked: { opacity: 0.5 },
   miniGameLeft: {
@@ -428,11 +428,11 @@ const s = StyleSheet.create({
     gap: 10,
     marginHorizontal: 16,
     marginTop: 16,
-    backgroundColor: "rgba(255,219,60,0.1)",
+    backgroundColor: theme.colors.secondary10,
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "rgba(255,219,60,0.25)",
+    borderColor: theme.colors.secondary25,
   },
   treasureText: {
     color: theme.colors.secondary,

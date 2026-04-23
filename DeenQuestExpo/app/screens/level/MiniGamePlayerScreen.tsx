@@ -391,11 +391,11 @@ const s = StyleSheet.create({
   },
   gameOptionCorrect: {
     borderColor: theme.colors.primary,
-    backgroundColor: "rgba(136,217,130,0.1)",
+    backgroundColor: theme.colors.primary10,
   },
   gameOptionWrong: {
     borderColor: theme.colors.error,
-    backgroundColor: "rgba(255,180,171,0.1)",
+    backgroundColor: theme.colors.errorSoft10,
   },
   gameOptionText: {
     fontSize: 16,
