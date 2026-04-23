@@ -110,7 +110,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.heroRow}>
           <Image
-            source={require("../../../assets/icons/new-logo.png")}
+            source={require("../../../assets/login-logo.png")}
             style={{ width: 100, height: 100 }}
           />
           <View style={styles.heroBadge}>
