@@ -37,6 +37,13 @@ type ProgressResponse struct {
 	WeeklyCompletions []bool `json:"weekly_completions"` // index 0 = 6 days ago, index 6 = today
 }
 
+type LeaderboardEntry struct {
+	Rank   int    `json:"rank"`
+	UserID string `json:"user_id"`
+	Level  int    `json:"level"`
+	XP     int    `json:"xp"`
+}
+
 // GetUserProgress returns XP, streak, and the last 7 days completion status.
 func (s *CoreService) GetUserProgress(ctx context.Context, userID string) (*ProgressResponse, error) {
 	progress, err := s.repo.GetProgress(ctx, userID)
@@ -79,6 +86,29 @@ func (s *CoreService) GetUserProgress(ctx context.Context, userID string) (*Prog
 		LongestStreak:     streak.LongestStreak,
 		WeeklyCompletions: weekly,
 	}, nil
+}
+
+func (s *CoreService) GetLeaderboard(ctx context.Context, limit int) ([]LeaderboardEntry, error) {
+	rows, err := s.repo.ListLeaderboardProgress(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]LeaderboardEntry, 0, len(rows))
+	for i, row := range rows {
+		level := row.Level
+		if level < 1 {
+			level = 1
+		}
+		result = append(result, LeaderboardEntry{
+			Rank:   i + 1,
+			UserID: row.UserID,
+			Level:  level,
+			XP:     row.TotalXP,
+		})
+	}
+
+	return result, nil
 }
 
 // SeedDailyTasks inserts/updates the master task templates into the database.

@@ -13,7 +13,7 @@ export type DemoTabParamList = {
   HomeScreen: undefined;
   ProfileScreen: undefined;
   RewardsScreen: undefined;
-  ReflectionScreen: undefined;
+  LeaderboardScreen: undefined;
 };
 
 export type AppStackParamList = {

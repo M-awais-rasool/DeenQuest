@@ -41,6 +41,13 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	if err != nil {
 		return err
 	}
+	_, err = r.progress.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "level", Value: -1}, {Key: "total_xp", Value: -1}},
+		Options: options.Index().SetBackground(true),
+	})
+	if err != nil {
+		return err
+	}
 	_, err = r.streaks.Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "user_id", Value: 1}}, Options: options.Index().SetUnique(true)})
 	if err != nil {
 		return err
@@ -78,6 +85,35 @@ func (r *MongoCoreRepository) UpsertProgress(ctx context.Context, progress *mode
 	defer cancel()
 	_, err := r.progress.UpdateOne(timeoutCtx, bson.M{"user_id": progress.UserID}, bson.M{"$set": progress}, options.Update().SetUpsert(true))
 	return err
+}
+
+func (r *MongoCoreRepository) ListLeaderboardProgress(ctx context.Context, limit int) ([]model.Progress, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	findOptions := options.Find().
+		SetSort(bson.D{{Key: "level", Value: -1}, {Key: "total_xp", Value: -1}}).
+		SetProjection(bson.M{"_id": 0, "user_id": 1, "level": 1, "total_xp": 1})
+
+	if limit > 0 {
+		findOptions.SetLimit(int64(limit))
+	}
+
+	cur, err := r.progress.Find(timeoutCtx, bson.M{}, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	out := make([]model.Progress, 0)
+	for cur.Next(ctx) {
+		var p model.Progress
+		if err := cur.Decode(&p); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, cur.Err()
 }
 
 func (r *MongoCoreRepository) GetStreak(ctx context.Context, userID string) (*model.Streak, error) {

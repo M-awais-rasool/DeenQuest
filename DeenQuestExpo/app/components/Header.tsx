@@ -27,7 +27,7 @@ export const Header = ({ title, xp, Icon, onSettingsPress }: HeaderProps) => {
         </View>
         {Icon && (
           <TouchableOpacity style={styles.iconButton} onPress={onSettingsPress}>
-            <Icon color="#E2E2E2" size={20} />
+            <Icon color={theme.colors.text} size={20} />
           </TouchableOpacity>
         )}
       </View>
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     borderBottomWidth: 2,
-    borderBottomColor: "rgba(136, 217, 130, 0.3)",
+    borderBottomColor: theme.colors.primary30,
   },
   xpText: {
     color: theme.colors.primary,

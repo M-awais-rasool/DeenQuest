@@ -13,6 +13,7 @@ func SetupRoutes(r *gin.Engine, ctl *controller.CoreController, jwtManager *auth
 	v1.Use(middleware.JWTAuth(jwtManager))
 	{
 		v1.GET("/progress/me", ctl.GetProgress)
+		v1.GET("/leaderboard", ctl.GetLeaderboard)
 		v1.GET("/daily-tasks", ctl.GetDailyTasks)
 		v1.POST("/daily-tasks/:id/complete", ctl.CompleteDailyTask)
 
