@@ -1,459 +1,231 @@
-import React from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
+  ActivityIndicator,
+  Animated,
+  Easing,
+  FlatList,
   StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
+  Text,
+  Vibration,
+  View,
 } from "react-native";
-import {
-  Trophy,
-  Star,
-  Lock,
-  Verified,
-  Sparkles,
-} from "lucide-react-native";
+import { Sparkles, Star } from "lucide-react-native";
 import { theme } from "../../theme/themes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import {
+  useGetRewardsQuery,
+  useGetProgressQuery,
+  type NewlyGrantedReward,
+  type RewardWithStatus,
+} from "../../store/services/api";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { clearPendingRewardUnlocks } from "../../store/slices/mainSlice";
+import { RewardCard } from "./components/RewardCard";
+import { StatsHeader } from "./components/StatsHeader";
+import { UnlockModal } from "./components/UnlockModal";
 
-const TROPHIES = [
-  {
-    id: 1,
-    title: "First Prayer",
-    description: "Completed your first prayer mission",
-    icon: "🕌",
-    status: "unlocked",
-    date: "12 Mar 2026",
-  },
-  {
-    id: 2,
-    title: "7-Day Streak",
-    description: "Maintained a streak for 7 days",
-    icon: "🔥",
-    status: "unlocked",
-    date: "19 Mar 2026",
-  },
-  {
-    id: 3,
-    title: "Quran Explorer",
-    description: "Read 5 different Surahs",
-    icon: "📖",
-    status: "unlocked",
-    date: "05 Apr 2026",
-  },
-  {
-    id: 4,
-    title: "Early Bird",
-    description: "Prayed Fajr on time for 3 days",
-    icon: "🌅",
-    status: "locked",
-    progress: 0.66,
-  },
-  {
-    id: 5,
-    title: "Charity Master",
-    description: "Helped someone 10 times",
-    icon: "🤝",
-    status: "locked",
-    progress: 0.3,
-  },
-  {
-    id: 6,
-    title: "Knowledge Seeker",
-    description: "Completed 5 Islamic lessons",
-    icon: "🎓",
-    status: "locked",
-    progress: 0.8,
-  },
-];
+export function RewardsScreen() {
+  const dispatch = useAppDispatch();
+  const pendingUnlocks = useAppSelector(
+    (state) => state.main.pendingRewardUnlocks,
+  );
 
-export const RewardsScreen = () => {
+  const { data: rewardsRes, isLoading: rewardsLoading } = useGetRewardsQuery();
+  const { data: progressRes } = useGetProgressQuery();
+
+  const rewards: RewardWithStatus[] = rewardsRes?.data ?? [];
+  const xp: number = progressRes?.data?.xp ?? 0;
+
+  const [activeUnlock, setActiveUnlock] = useState<NewlyGrantedReward | null>(
+    null,
+  );
+  const popAnim = useRef(new Animated.Value(0.75)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const ringAnim = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    if (pendingUnlocks.length === 0 || activeUnlock) return;
+    const toShow = pendingUnlocks[pendingUnlocks.length - 1];
+    dispatch(clearPendingRewardUnlocks());
+    setActiveUnlock(toShow);
+    Vibration.vibrate([0, 60, 40, 110]);
+    popAnim.setValue(0.75);
+    fadeAnim.setValue(0);
+    ringAnim.setValue(0.5);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 240,
+        useNativeDriver: true,
+      }),
+      Animated.spring(popAnim, {
+        toValue: 1,
+        friction: 6,
+        tension: 130,
+        useNativeDriver: true,
+      }),
+      Animated.timing(ringAnim, {
+        toValue: 1.35,
+        duration: 900,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingUnlocks]);
+
+  const closeModal = useCallback(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 160,
+      useNativeDriver: true,
+    }).start(() => setActiveUnlock(null));
+  }, [fadeAnim]);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: RewardWithStatus; index: number }) => (
+      <RewardCard reward={item} index={index} />
+    ),
+    [],
+  );
+
+  const keyExtractor = useCallback((item: RewardWithStatus) => item.id, []);
+
+  const ListHeader = (
+    <>
+      <StatsHeader rewards={rewards} xp={xp} />
+      <View style={s.sectionHeader}>
+        <Sparkles size={18} color={theme.colors.secondary} />
+        <Text style={s.sectionTitle}>Milestones</Text>
+        <Text style={s.sectionCount}>
+          {rewards.filter((r) => r.unlocked).length}/{rewards.length}
+        </Text>
+      </View>
+    </>
+  );
+
+  const ListEmpty = rewardsLoading ? (
+    <View style={s.loadingWrap}>
+      <ActivityIndicator size="large" color={theme.colors.secondary} />
+      <Text style={s.loadingText}>Loading rewards...</Text>
+    </View>
+  ) : (
+    <View style={s.emptyWrap}>
+      <Text style={s.emptyText}>No rewards found.</Text>
+    </View>
+  );
+
   return (
     <ScreenWrapper>
-      <View style={styles.topBar}>
-        <Text style={styles.topBarTitle}>Your Trophies</Text>
-        <View style={styles.xpBadge}>
+      <View style={s.topBar}>
+        <Text style={s.topBarTitle}>Rewards</Text>
+        <View style={s.xpBadge}>
           <Star
-            size={16}
+            size={15}
             color={theme.colors.secondary}
             fill={theme.colors.secondary}
           />
-          <Text style={styles.xpText}>1,250</Text>
+          <Text style={s.xpText}>{xp.toLocaleString()} XP</Text>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity style={styles.featuredTrophy}>
-          <View style={styles.trophyGlow} />
-          <View style={styles.trophyIconContainer}>
-            <Trophy
-              size={64}
-              color={theme.colors.secondary}
-              fill={theme.colors.secondary}
-            />
-          </View>
-          <Text style={styles.featuredTitle}>Master of Consistency</Text>
-          <Text style={styles.featuredSub}>
-            You're in the top 5% of users this month!
-          </Text>
-          <View style={styles.featuredStats}>
-            <View style={styles.statBox}>
-              <Text style={styles.statVal}>12</Text>
-              <Text style={styles.statLab}>Unlocked</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text style={styles.statVal}>45</Text>
-              <Text style={styles.statLab}>Total</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+      <FlatList
+        data={rewards}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={ListHeader}
+        ListEmptyComponent={ListEmpty}
+        contentContainerStyle={s.listContent}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        removeClippedSubviews={false}
+      />
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Milestones</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAll}>View All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.trophyGrid}>
-            {TROPHIES.map((trophy) => (
-              <TouchableOpacity
-                key={trophy.id}
-                style={[
-                  styles.trophyCard,
-                  trophy.status === "locked" && styles.lockedCard,
-                ]}
-              >
-                <View style={styles.trophyHeader}>
-                  <View
-                    style={[
-                      styles.iconCircle,
-                      trophy.status === "unlocked"
-                        ? styles.unlockedCircle
-                        : styles.lockedCircle,
-                    ]}
-                  >
-                    <Text style={styles.emojiIcon}>{trophy.icon}</Text>
-                  </View>
-                  {trophy.status === "unlocked" ? (
-                    <Verified
-                      size={20}
-                      color={theme.colors.primary}
-                      fill={theme.colors.primary}
-                    />
-                  ) : (
-                    <Lock size={20} color={theme.colors.textMuted} />
-                  )}
-                </View>
-                <Text style={styles.trophyTitle}>{trophy.title}</Text>
-                <Text style={styles.trophyDesc} numberOfLines={2}>
-                  {trophy.description}
-                </Text>
-
-                {trophy.status === "unlocked" ? (
-                  <Text style={styles.unlockedDate}>{trophy.date}</Text>
-                ) : (
-                  <View style={styles.progressRow}>
-                    <View style={styles.miniProgressBar}>
-                      <View
-                        style={[
-                          styles.miniProgressFill,
-                          { width: `${(trophy.progress || 0) * 100}%` },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.miniProgressText}>
-                      {Math.round((trophy.progress || 0) * 100)}%
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.rewardsShop}>
-          <View style={styles.shopHeader}>
-            <Sparkles size={24} color={theme.colors.secondary} />
-            <Text style={styles.shopTitle}>Rewards Shop</Text>
-          </View>
-          <TouchableOpacity style={styles.shopCard}>
-            <Image
-              source={{
-                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuD0KUM9Libiyq9CVL_OQ56vXysNMfFF2vkAdutU1lTCGA07l7oM-zL2d-InVgAi1SO8rhzIzQ6SR6KVNGrLSEg2p8FYG7eJoIc5Ri6fRFqD_XgVMh57Edixloc2TGy05tLBGkapgj5igXd4BFwLSYgw9vGKOxvVLPXZBukwtp-34UckTpAYtasAcSiU_zj8GdUO-QI9e9m3p941BTJvOHEbPgmSGh5uhGh3XcyzQ2LsYqwENn5ibFhokiKaO6-oeBYgi5PcSyOSTYc",
-              }}
-              style={styles.shopItemImage}
-            />
-            <View style={styles.shopItemInfo}>
-              <Text style={styles.shopItemTitle}>Exclusive Avatar Frame</Text>
-              <Text style={styles.shopItemPrice}>500 XP</Text>
-            </View>
-            <TouchableOpacity style={styles.buyButton}>
-              <Text style={styles.buyButtonText}>Unlock</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      {activeUnlock && (
+        <UnlockModal
+          reward={activeUnlock}
+          fadeAnim={fadeAnim}
+          popAnim={popAnim}
+          ringAnim={ringAnim}
+          onClose={closeModal}
+        />
+      )}
     </ScreenWrapper>
   );
-};
+}
 
-const styles = StyleSheet.create({
+
+const s = StyleSheet.create({
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.md,
   },
   topBarTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "900",
     color: theme.colors.text,
   },
   xpBadge: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 6,
     backgroundColor: theme.colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 999,
-    gap: 8,
+    borderRadius: theme.borderRadius.full,
     borderWidth: 1,
     borderColor: theme.colors.outline20,
   },
   xpText: {
     color: theme.colors.secondary,
     fontWeight: "900",
-    fontSize: 14,
+    fontSize: 13,
   },
-  scrollContent: {
-    padding: theme.spacing.lg,
+  listContent: {
+    paddingHorizontal: theme.spacing.lg,
     paddingBottom: 120,
-  },
-  featuredTrophy: {
-    backgroundColor: theme.colors.primaryContainer,
-    borderRadius: theme.borderRadius.xl,
-    padding: 32,
-    alignItems: "center",
-    marginBottom: 40,
-    overflow: "hidden",
-  },
-  trophyGlow: {
-    position: "absolute",
-    top: -50,
-    width: 200,
-    height: 200,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 100,
-    opacity: 0.2,
-    filter: "blur(40px)",
-  },
-  trophyIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: theme.colors.white10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: theme.colors.white20,
-  },
-  featuredTitle: {
-    fontSize: 24,
-    fontWeight: "900",
-    color: theme.colors.white,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  featuredSub: {
-    fontSize: 14,
-    color: theme.colors.white70,
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  featuredStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.black20,
-    borderRadius: 16,
-    padding: 16,
-    gap: 24,
-  },
-  statBox: {
-    alignItems: "center",
-  },
-  statVal: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: theme.colors.secondary,
-  },
-  statLab: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: theme.colors.white60,
-    textTransform: "uppercase",
-  },
-  statDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: theme.colors.white10,
-  },
-  section: {
-    marginBottom: 40,
+    gap: 14,
   },
   sectionHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    gap: 8,
+    marginTop: 6,
+    marginBottom: 2,
   },
   sectionTitle: {
-    fontSize: 18,
+    flex: 1,
+    fontSize: 16,
     fontWeight: "900",
     color: theme.colors.text,
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-  viewAll: {
-    fontSize: 14,
-    color: theme.colors.primary,
-    fontWeight: "700",
-  },
-  trophyGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
-  },
-  trophyCard: {
-    width: "47.5%",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    padding: 16,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.outline,
-  },
-  lockedCard: {
-    opacity: 0.6,
-  },
-  trophyHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 16,
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  unlockedCircle: {
-    backgroundColor: theme.colors.primary10,
-  },
-  lockedCircle: {
-    backgroundColor: theme.colors.surfaceHigh,
-  },
-  emojiIcon: {
-    fontSize: 24,
-  },
-  trophyTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  trophyDesc: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-    lineHeight: 16,
-    marginBottom: 12,
-  },
-  unlockedDate: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: theme.colors.primary,
-    textTransform: "uppercase",
-  },
-  progressRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  miniProgressBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 3,
-  },
-  miniProgressFill: {
-    height: "100%",
-    backgroundColor: theme.colors.secondary,
-    borderRadius: 3,
-  },
-  miniProgressText: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: theme.colors.textMuted,
-  },
-  rewardsShop: {
-    marginTop: 16,
-  },
-  shopHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 16,
-  },
-  shopTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: theme.colors.text,
-  },
-  shopCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.surface,
-    padding: 16,
-    borderRadius: 16,
-    gap: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.outline10,
-  },
-  shopItemImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 12,
-  },
-  shopItemInfo: {
-    flex: 1,
-  },
-  shopItemTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: theme.colors.text,
-  },
-  shopItemPrice: {
-    fontSize: 14,
+  sectionCount: {
+    fontSize: 13,
     fontWeight: "900",
     color: theme.colors.secondary,
-    marginTop: 4,
   },
-  buyButton: {
-    backgroundColor: theme.colors.surfaceHigh,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+  loadingWrap: {
+    alignItems: "center",
+    gap: 12,
+    paddingTop: 40,
   },
-  buyButtonText: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: theme.colors.text,
-    textTransform: "uppercase",
+  loadingText: {
+    color: theme.colors.textMuted,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingTop: 32,
+  },
+  emptyText: {
+    color: theme.colors.textMuted,
+    fontSize: 14,
   },
 });
