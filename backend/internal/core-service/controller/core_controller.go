@@ -150,3 +150,13 @@ func (h *CoreController) CompleteLevel(c *gin.Context) {
 	}
 	response.OK(c, "level completed", result)
 }
+
+func (h *CoreController) GetRewards(c *gin.Context) {
+	userID := c.GetString("user_id")
+	rewards, err := h.service.GetRewards(c.Request.Context(), userID)
+	if err != nil {
+		response.InternalError(c, "failed to fetch rewards")
+		return
+	}
+	response.OK(c, "rewards fetched", rewards)
+}
