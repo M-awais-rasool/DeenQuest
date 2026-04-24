@@ -18,6 +18,8 @@ import {
 import type { MiniGame } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { useAppDispatch } from "../../store/hooks";
+import { setPendingRewardUnlocks } from "../../store/slices/mainSlice";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "MiniGamePlayer">;
@@ -248,6 +250,7 @@ export function MiniGamePlayerScreen() {
   const { data: res } = useGetLevelDetailQuery(levelId);
   const level = res?.data;
   const [completeLevel] = useCompleteLevelMutation();
+  const dispatch = useAppDispatch();
 
   const [result, setResult] = useState<{
     stars: number;
@@ -262,12 +265,16 @@ export function MiniGamePlayerScreen() {
           levelId: level.id,
           stars,
         }).unwrap();
+        const newRewards = res.data?.new_rewards ?? [];
+        if (newRewards.length > 0) {
+          dispatch(setPendingRewardUnlocks(newRewards));
+        }
         setResult({ stars, xpEarned: res.data?.xp_earned ?? level.xp_reward });
       } catch {
         setResult({ stars, xpEarned: level.xp_reward });
       }
     },
-    [level, completeLevel],
+    [level, completeLevel, dispatch],
   );
 
   const handleDone = useCallback(() => {
