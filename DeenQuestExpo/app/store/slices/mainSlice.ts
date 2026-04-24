@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { AuthUser } from "../services/api";
+import { AuthUser, NewlyGrantedReward } from "../services/api";
 import {
   clearPersistedAuth,
   persistAccessToken,
@@ -13,6 +13,8 @@ export interface MainState {
   user: AuthUser | null;
   accessToken: string | null;
   error: string | null;
+  /** Rewards granted by the last level completion — cleared after the celebration overlay is shown. */
+  pendingRewardUnlocks: NewlyGrantedReward[];
 }
 
 const initialState: MainState = {
@@ -21,6 +23,7 @@ const initialState: MainState = {
   user: null,
   accessToken: null,
   error: null,
+  pendingRewardUnlocks: [],
 };
 
 const mainSlice = createSlice({
@@ -50,6 +53,7 @@ const mainSlice = createSlice({
       state.user = null;
       state.accessToken = null;
       state.error = null;
+      state.pendingRewardUnlocks = [];
       clearPersistedAuth();
     },
     restoreAuth: (
@@ -68,6 +72,12 @@ const mainSlice = createSlice({
       }
       state.isLoading = false;
     },
+    setPendingRewardUnlocks: (state, action: PayloadAction<NewlyGrantedReward[]>) => {
+      state.pendingRewardUnlocks = action.payload;
+    },
+    clearPendingRewardUnlocks: (state) => {
+      state.pendingRewardUnlocks = [];
+    },
   },
 });
 
@@ -79,6 +89,8 @@ export const {
   setError,
   logout,
   restoreAuth,
+  setPendingRewardUnlocks,
+  clearPendingRewardUnlocks,
 } = mainSlice.actions;
 
 export default mainSlice.reducer;

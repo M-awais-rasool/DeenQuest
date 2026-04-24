@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://172.16.1.63:8080",
+  baseUrl: "http://192.168.200.60:8080",
   prepareHeaders: async (headers) => {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
@@ -197,13 +197,47 @@ export interface LevelCompletionResult {
   unlock_reward: string;
   treasure_open: boolean;
   next_level_id: number;
+  new_rewards: NewlyGrantedReward[];
+}
+
+// ─── Reward Types ───
+
+export type RewardTrigger = "levels_completed" | "xp" | "streak_days";
+export type RewardRarity = "rare" | "epic" | "legendary";
+export type RewardIcon = "crown" | "flame" | "gem" | "trophy" | "zap";
+
+/** A reward as returned by GET /api/v1/rewards — includes the user's live status. */
+export interface RewardWithStatus {
+  id: string;
+  title: string;
+  description: string;
+  icon: RewardIcon;
+  rarity: RewardRarity;
+  trigger: RewardTrigger;
+  required: number;
+  xp_bonus: number;
+  sort_order: number;
+  unlocked: boolean;
+  unlocked_at?: string;
+  current: number;   // user's current metric value
+  progress: number;  // 0.0–1.0
+}
+
+/** Minimal reward snapshot returned inside LevelCompletionResult.new_rewards. */
+export interface NewlyGrantedReward {
+  id: string;
+  title: string;
+  description: string;
+  icon: RewardIcon;
+  rarity: RewardRarity;
+  xp_bonus: number;
 }
 
 // API Service
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["User", "Auth", "DailyTasks", "Progress", "Levels", "Leaderboard"],
+  tagTypes: ["User", "Auth", "DailyTasks", "Progress", "Levels", "Leaderboard", "Rewards"],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
       query: (credentials) => ({
@@ -321,7 +355,13 @@ export const API = createApi({
         method: "POST",
         body: { stars },
       }),
-      invalidatesTags: ["Levels", "Progress", "Leaderboard"],
+      invalidatesTags: ["Levels", "Progress", "Leaderboard", "Rewards"],
+    }),
+
+    // ─── Rewards ───
+    getRewards: builder.query<APIResponse<RewardWithStatus[]>, void>({
+      query: () => ({ url: "/api/v1/rewards", method: "GET" }),
+      providesTags: ["Rewards"],
     }),
   }),
 });
@@ -342,4 +382,5 @@ export const {
   useGetLevelDetailQuery,
   useCompleteLessonMutation,
   useCompleteLevelMutation,
+  useGetRewardsQuery,
 } = API;
