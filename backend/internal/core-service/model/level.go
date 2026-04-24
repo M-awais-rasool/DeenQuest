@@ -89,9 +89,10 @@ type LevelWithStatus struct {
 
 // LevelCompletionResult is returned when a user completes a level.
 type LevelCompletionResult struct {
-	XPEarned     int    `json:"xp_earned"`
-	Stars        int    `json:"stars"`
-	UnlockReward string `json:"unlock_reward"`
-	TreasureOpen bool   `json:"treasure_open"` // true every 5 levels
-	NextLevelID  int    `json:"next_level_id"`
+	XPEarned     int      `json:"xp_earned"`
+	Stars        int      `json:"stars"`
+	UnlockReward string   `json:"unlock_reward"`
+	TreasureOpen bool     `json:"treasure_open"` // true every 5 levels
+	NextLevelID  int      `json:"next_level_id"`
+	NewRewards   []Reward `json:"new_rewards"` // rewards granted by this completion
 }

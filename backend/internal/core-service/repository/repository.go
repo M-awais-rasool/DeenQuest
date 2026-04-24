@@ -35,4 +35,10 @@ type CoreRepository interface {
 	GetUserLevels(ctx context.Context, userID string) ([]model.UserLevel, error)
 	GetUserLevel(ctx context.Context, userID string, levelID int) (*model.UserLevel, error)
 	UpsertUserLevel(ctx context.Context, ul *model.UserLevel) error
+
+	// Rewards
+	SeedRewards(ctx context.Context, rewards []model.Reward) error
+	ListAllRewards(ctx context.Context) ([]model.Reward, error)
+	GetUserRewards(ctx context.Context, userID string) ([]model.UserReward, error)
+	GrantUserReward(ctx context.Context, ur *model.UserReward) error
 }
