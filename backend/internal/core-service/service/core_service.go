@@ -300,6 +300,151 @@ func (s *CoreService) SeedLevels(ctx context.Context) error {
 	return s.repo.SeedLevels(ctx, model.SeedLevels())
 }
 
+// SeedRewards inserts/updates the master reward definitions.
+func (s *CoreService) SeedRewards(ctx context.Context) error {
+	return s.repo.SeedRewards(ctx, model.SeedRewards())
+}
+
+// GetRewards returns all rewards annotated with the user's unlock status and progress.
+func (s *CoreService) GetRewards(ctx context.Context, userID string) ([]model.RewardWithStatus, error) {
+	allRewards, err := s.repo.ListAllRewards(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list rewards: %w", err)
+	}
+
+	userRewards, err := s.repo.GetUserRewards(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get user rewards: %w", err)
+	}
+	grantedMap := make(map[string]model.UserReward, len(userRewards))
+	for _, ur := range userRewards {
+		grantedMap[ur.RewardID] = ur
+	}
+
+	completedLevels, xp, streakDays, err := s.getUserMetrics(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]model.RewardWithStatus, 0, len(allRewards))
+	for _, rw := range allRewards {
+		rws := model.RewardWithStatus{Reward: rw}
+		current := metricValue(rw.Trigger, completedLevels, xp, streakDays)
+		rws.Current = current
+		rws.Progress = progressRatio(current, rw.Required)
+		if ur, ok := grantedMap[rw.ID]; ok {
+			rws.Unlocked = true
+			t := ur.UnlockedAt
+			rws.UnlockedAt = &t
+		}
+		result = append(result, rws)
+	}
+	return result, nil
+}
+
+// checkAndGrantRewards evaluates all reward definitions against the user's current
+// metrics and grants any that are newly eligible. Returns the list of newly granted rewards.
+func (s *CoreService) checkAndGrantRewards(ctx context.Context, userID string) ([]model.Reward, error) {
+	allRewards, err := s.repo.ListAllRewards(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list rewards: %w", err)
+	}
+	if len(allRewards) == 0 {
+		return nil, nil
+	}
+
+	userRewards, err := s.repo.GetUserRewards(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get user rewards: %w", err)
+	}
+	granted := make(map[string]struct{}, len(userRewards))
+	for _, ur := range userRewards {
+		granted[ur.RewardID] = struct{}{}
+	}
+
+	completedLevels, xp, streakDays, err := s.getUserMetrics(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var newlyGranted []model.Reward
+	for _, rw := range allRewards {
+		if _, already := granted[rw.ID]; already {
+			continue
+		}
+		current := metricValue(rw.Trigger, completedLevels, xp, streakDays)
+		if current >= rw.Required {
+			ur := &model.UserReward{
+				ID:         uuid.NewString(),
+				UserID:     userID,
+				RewardID:   rw.ID,
+				UnlockedAt: time.Now().UTC(),
+			}
+			if err := s.repo.GrantUserReward(ctx, ur); err != nil {
+				return nil, fmt.Errorf("grant reward %s: %w", rw.ID, err)
+			}
+			newlyGranted = append(newlyGranted, rw)
+		}
+	}
+	return newlyGranted, nil
+}
+
+// getUserMetrics fetches completed-levels count, total XP, and current streak for a user.
+func (s *CoreService) getUserMetrics(ctx context.Context, userID string) (completedLevels, xp, streakDays int, err error) {
+	userLevels, err := s.repo.GetUserLevels(ctx, userID)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("get user levels: %w", err)
+	}
+	for _, ul := range userLevels {
+		if ul.Completed {
+			completedLevels++
+		}
+	}
+
+	progress, err := s.repo.GetProgress(ctx, userID)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("get progress: %w", err)
+	}
+	if progress != nil {
+		xp = progress.TotalXP
+	}
+
+	streak, err := s.repo.GetStreak(ctx, userID)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("get streak: %w", err)
+	}
+	if streak != nil {
+		streakDays = streak.CurrentStreak
+	}
+	return completedLevels, xp, streakDays, nil
+}
+
+// metricValue resolves the correct user metric for a given reward trigger.
+func metricValue(trigger model.RewardTrigger, completedLevels, xp, streakDays int) int {
+	switch trigger {
+	case model.TriggerLevelsCompleted:
+		return completedLevels
+	case model.TriggerXP:
+		return xp
+	case model.TriggerStreakDays:
+		return streakDays
+	default:
+		return 0
+	}
+}
+
+// progressRatio returns a 0.0–1.0 ratio clamped to 1.
+func progressRatio(current, required int) float64 {
+	if required <= 0 {
+		return 1.0
+	}
+	ratio := float64(current) / float64(required)
+	if ratio > 1.0 {
+		return 1.0
+	}
+	return ratio
+}
+
 // GetLevels returns all levels annotated with the user's progress status.
 func (s *CoreService) GetLevels(ctx context.Context, userID string) ([]model.LevelWithStatus, error) {
 	levels, err := s.repo.ListAllLevels(ctx)
@@ -472,6 +617,13 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 		return nil, err
 	}
 
+	// Check and auto-grant any newly eligible rewards.
+	newRewards, err := s.checkAndGrantRewards(ctx, userID)
+	if err != nil {
+		// Non-fatal: log but don't fail the completion.
+		newRewards = nil
+	}
+
 	if s.publisher != nil {
 		_ = s.publisher.Publish(ctx, "level.completed", queue.Event{
 			Type: "level.completed",
@@ -484,11 +636,15 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 		})
 	}
 
+	if newRewards == nil {
+		newRewards = []model.Reward{}
+	}
 	return &model.LevelCompletionResult{
 		XPEarned:     xp,
 		Stars:        stars,
 		UnlockReward: level.UnlockReward,
 		TreasureOpen: levelID%5 == 0,
 		NextLevelID:  levelID + 1,
+		NewRewards:   newRewards,
 	}, nil
 }

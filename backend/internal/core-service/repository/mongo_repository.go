@@ -18,6 +18,8 @@ type MongoCoreRepository struct {
 	userDailyTasks *mongo.Collection
 	levels         *mongo.Collection
 	userLevels     *mongo.Collection
+	rewards        *mongo.Collection
+	userRewards    *mongo.Collection
 }
 
 func NewMongoCoreRepository(db *mongo.Database) (*MongoCoreRepository, error) {
@@ -28,6 +30,8 @@ func NewMongoCoreRepository(db *mongo.Database) (*MongoCoreRepository, error) {
 		userDailyTasks: db.Collection("user_daily_tasks"),
 		levels:         db.Collection("levels"),
 		userLevels:     db.Collection("user_levels"),
+		rewards:        db.Collection("rewards"),
+		userRewards:    db.Collection("user_rewards"),
 	}
 	if err := r.ensureIndexes(); err != nil {
 		return nil, err
@@ -61,6 +65,13 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	}
 	_, err = r.userLevels.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "level_id", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		return err
+	}
+	_, err = r.userRewards.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "reward_id", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	})
 	return err
@@ -350,6 +361,71 @@ func (r *MongoCoreRepository) UpsertUserLevel(ctx context.Context, ul *model.Use
 	_, err := r.userLevels.UpdateOne(timeoutCtx,
 		bson.M{"user_id": ul.UserID, "level_id": ul.LevelID},
 		bson.M{"$set": ul},
+		options.Update().SetUpsert(true),
+	)
+	return err
+}
+
+// ─── Reward repository methods ───
+
+func (r *MongoCoreRepository) SeedRewards(ctx context.Context, rewards []model.Reward) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	for _, rw := range rewards {
+		_, err := r.rewards.UpdateByID(timeoutCtx, rw.ID, bson.M{"$set": rw}, options.Update().SetUpsert(true))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *MongoCoreRepository) ListAllRewards(ctx context.Context) ([]model.Reward, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.rewards.Find(timeoutCtx, bson.M{}, options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}}))
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]model.Reward, 0, 10)
+	for cur.Next(ctx) {
+		var rw model.Reward
+		if err := cur.Decode(&rw); err != nil {
+			return nil, err
+		}
+		out = append(out, rw)
+	}
+	return out, cur.Err()
+}
+
+func (r *MongoCoreRepository) GetUserRewards(ctx context.Context, userID string) ([]model.UserReward, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.userRewards.Find(timeoutCtx, bson.M{"user_id": userID})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]model.UserReward, 0, 10)
+	for cur.Next(ctx) {
+		var ur model.UserReward
+		if err := cur.Decode(&ur); err != nil {
+			return nil, err
+		}
+		out = append(out, ur)
+	}
+	return out, cur.Err()
+}
+
+// GrantUserReward inserts a user-reward record only if it doesn't already exist (idempotent).
+func (r *MongoCoreRepository) GrantUserReward(ctx context.Context, ur *model.UserReward) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	_, err := r.userRewards.UpdateOne(
+		timeoutCtx,
+		bson.M{"user_id": ur.UserID, "reward_id": ur.RewardID},
+		bson.M{"$setOnInsert": ur},
 		options.Update().SetUpsert(true),
 	)
 	return err

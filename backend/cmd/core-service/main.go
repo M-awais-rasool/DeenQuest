@@ -70,6 +70,13 @@ func main() {
 		logger.Info("Levels seeded successfully (20 levels)")
 	}
 
+	// Seed reward definitions on startup.
+	if err := coreService.SeedRewards(context.Background()); err != nil {
+		logger.Warn("failed to seed rewards (will retry on next startup)", zap.Error(err))
+	} else {
+		logger.Info("Rewards seeded successfully")
+	}
+
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
