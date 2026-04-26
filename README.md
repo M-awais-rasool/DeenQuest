@@ -24,17 +24,21 @@
 ## App Screenshots
 
 <p align="center">
-  <img src="DeenQuestExpo/assets/IMG.PNG" alt="Home — Daily Missions & Streak" width="30%" />
+  <img src="DeenQuestExpo/assets/IMG.PNG" alt="Home — Daily Missions & Streak" width="22%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-1.PNG" alt="Learn — Level Map" width="30%" />
+  <img src="DeenQuestExpo/assets/IMG-1.PNG" alt="Learn — Level Map" width="22%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-2.PNG" alt="Profile — Stats & Streak History" width="30%" />
+  <img src="DeenQuestExpo/assets/IMG-3.PNG" alt="Rewards — Reward Vault & Milestones" width="22%" />
+  &nbsp;&nbsp;
+  <img src="DeenQuestExpo/assets/IMG-2.PNG" alt="Profile — Stats & Streak History" width="22%" />
 </p>
 
 <p align="center">
   <sub><b>Home</b> — Daily missions, streak &amp; XP progress</sub>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <sub><b>Learn</b> — Qaida level map with star milestones</sub>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <sub><b>Rewards</b> — Reward vault, milestones &amp; XP bonuses</sub>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <sub><b>Profile</b> — XP, Barakah score &amp; streak history</sub>
 </p>
@@ -196,8 +200,8 @@ Backend docs:
 |---|---|---|
 | Home | `IMG.PNG` | Daily missions, weekly streak calendar, XP bar |
 | Learn | `IMG-1.PNG` | Phase level map with lock/unlock progression |
+| Rewards | `IMG-3.PNG` | Reward vault, milestone progress, and unlockable achievements |
 | Profile | `IMG-2.PNG` | XP total, Barakah score, streak history |
-| Rewards | — | Unlocked badges and reward milestones |
 | Rank | — | Global leaderboard ranked by level then XP |
 
 ## Contributing
