@@ -187,7 +187,6 @@ const s = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: theme.spacing.lg,
-    paddingBottom: 120,
     gap: 14,
   },
   sectionHeader: {
