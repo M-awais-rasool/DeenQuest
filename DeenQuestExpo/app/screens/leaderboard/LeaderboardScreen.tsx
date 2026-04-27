@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
 import { Crown, Star, Zap } from "lucide-react-native";
 import { Header } from "../../components/Header";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 import { useAppSelector } from "../../store/hooks";
 import { useGetLeaderboardQuery, useGetProgressQuery } from "../../store/services/api";
 import type { RootState } from "../../store/store";
@@ -81,10 +81,7 @@ export function LeaderboardScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading leaderboard...</Text>
-        </View>
+        <Loader />
       ) : (
         <FlatList
           data={rows}

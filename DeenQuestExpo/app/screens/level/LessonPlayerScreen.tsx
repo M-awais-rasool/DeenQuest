@@ -19,6 +19,7 @@ import {
 import type { Lesson } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 import { LESSON_COMPONENT_MAP } from "./components";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -116,9 +117,7 @@ export function LessonPlayerScreen() {
   if (!level) {
     return (
       <ScreenWrapper>
-        <View style={s.loadingContainer}>
-          <Text style={s.loadingText}>Loading...</Text>
-        </View>
+        <Loader fullScreen />
       </ScreenWrapper>
     );
   }

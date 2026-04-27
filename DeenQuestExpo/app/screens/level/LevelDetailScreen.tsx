@@ -22,6 +22,7 @@ import { theme } from "../../theme/themes";
 import { useGetLevelDetailQuery } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "LevelDetail">;
@@ -63,9 +64,7 @@ export function LevelDetailScreen() {
   if (isLoading || !level) {
     return (
       <ScreenWrapper>
-        <View style={s.loadingContainer}>
-          <Text style={s.loadingText}>Loading level...</Text>
-        </View>
+        <Loader fullScreen />
       </ScreenWrapper>
     );
   }
