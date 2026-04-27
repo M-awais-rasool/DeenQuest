@@ -6,7 +6,6 @@
  */
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 
 import { DemoNavigator } from "./DemoNavigator";
@@ -18,6 +17,7 @@ import type { RootState } from "../store/store";
 import type { MainState } from "../store/slices/mainSlice";
 import { theme } from "../theme/themes";
 import { restoreAuth } from "../store/slices/mainSlice";
+import { Loader } from "../components/Loader";
 import OnboardingScreen from "../screens/auth/OnboardingScreen";
 import {
   hasCompletedOnboarding as getOnboardingCompletionStatus,
@@ -83,11 +83,7 @@ const AppStack = () => {
   }, [dispatch]);
 
   if (isLoading || hasCompletedOnboarding === null) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
+    return <Loader fullScreen />;
   }
 
   const initialRouteName = hasCompletedOnboarding
@@ -147,12 +143,3 @@ export const AppNavigator = (props: NavigationProps) => {
     </NavigationContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.background,
-  },
-});

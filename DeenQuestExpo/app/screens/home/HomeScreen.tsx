@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
 import {
   Flame,
@@ -21,6 +20,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Header } from "../../components/Header";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 import { theme } from "../../theme/themes";
 import {
   useGetDailyTasksQuery,
@@ -175,11 +175,7 @@ export const HomeScreen = () => {
         </View>
 
         {tasksLoading ? (
-          <ActivityIndicator
-            size="large"
-            color={theme.colors.primary}
-            style={{ marginVertical: 32 }}
-          />
+          <Loader />
         ) : (
           <View style={styles.missionList}>
             {tasks.map((task) => {
