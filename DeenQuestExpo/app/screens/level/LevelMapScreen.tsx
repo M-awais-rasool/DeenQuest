@@ -26,6 +26,7 @@ import {
 import type { LevelWithStatus, LevelStatus } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const NODE_SIZE = 64;
@@ -360,9 +361,7 @@ export function LevelMapScreen() {
   if (levelsLoading) {
     return (
       <ScreenWrapper>
-        <View style={s.loadingContainer}>
-          <Text style={s.loadingText}>Loading your journey...</Text>
-        </View>
+        <Loader fullScreen />
       </ScreenWrapper>
     );
   }
