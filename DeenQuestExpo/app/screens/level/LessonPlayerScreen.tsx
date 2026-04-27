@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ScrollView,
   Animated,
 } from "react-native";
-import { ArrowLeft, X, ChevronRight } from "lucide-react-native";
+import { X, ChevronRight } from "lucide-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
@@ -27,10 +27,25 @@ type Route = RouteProp<AppStackParamList, "LessonPlayer">;
 
 function ProgressBar({ current, total }: { current: number; total: number }) {
   const progress = total > 0 ? (current + 1) / total : 0;
+  const widthAnim = useRef(new Animated.Value(progress)).current;
+
+  useEffect(() => {
+    Animated.timing(widthAnim, {
+      toValue: progress,
+      duration: 350,
+      useNativeDriver: false,
+    }).start();
+  }, [progress, widthAnim]);
+
+  const animatedWidth = widthAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
+
   return (
     <View style={s.progressBarContainer}>
       <View style={s.progressBarBg}>
-        <View style={[s.progressBarFill, { width: `${progress * 100}%` }]} />
+        <Animated.View style={[s.progressBarFill, { width: animatedWidth }]} />
       </View>
       <Text style={s.progressBarText}>
         {current + 1} / {total}
@@ -39,7 +54,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
   );
 }
 
-function LessonRenderer({
+const LessonRenderer = memo(function LessonRenderer({
   lesson,
   onComplete,
 }: {
@@ -49,7 +64,6 @@ function LessonRenderer({
   const Component = LESSON_COMPONENT_MAP[lesson.component];
 
   if (!Component) {
-    // Fallback for unmapped components — render as generic card
     return (
       <View style={s.lessonContent}>
         <Text style={s.lessonTitle}>{lesson.title}</Text>
@@ -77,7 +91,7 @@ function LessonRenderer({
       <Component lesson={lesson} onComplete={onComplete} />
     </View>
   );
-}
+});
 
 export function LessonPlayerScreen() {
   const navigation = useNavigation<Nav>();
@@ -90,25 +104,36 @@ export function LessonPlayerScreen() {
 
   const [currentIndex, setCurrentIndex] = useState(startLessonIndex);
 
-  const handleComplete = useCallback(async () => {
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scrollRef = useRef<ScrollView>(null);
+
+  const handleComplete = useCallback(() => {
     if (!level) return;
 
-    try {
-      await completeLesson({
-        levelId: level.id,
-        lessonIndex: currentIndex,
-      }).unwrap();
-    } catch {
-      // Continue even if API fails — we don't want to block the UX
-    }
+    completeLesson({ levelId: level.id, lessonIndex: currentIndex }).catch(
+      () => {},
+    );
 
-    if (currentIndex < level.lessons.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      // All lessons done — go to mini game
-      navigation.replace("MiniGamePlayer", { levelId: level.id });
-    }
-  }, [level, currentIndex, completeLesson, navigation]);
+    const isLast = currentIndex >= level.lessons.length - 1;
+
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 120,
+      useNativeDriver: true,
+    }).start(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+      if (isLast) {
+        navigation.replace("MiniGamePlayer", { levelId: level.id });
+      } else {
+        setCurrentIndex((prev) => prev + 1);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      }
+    });
+  }, [level, currentIndex, completeLesson, navigation, fadeAnim]);
 
   const handleClose = useCallback(() => {
     navigation.goBack();
@@ -135,13 +160,16 @@ export function LessonPlayerScreen() {
           <ProgressBar current={currentIndex} total={level.lessons.length} />
         </View>
 
-        <ScrollView
-          style={s.scrollView}
-          contentContainerStyle={s.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <LessonRenderer lesson={lesson} onComplete={handleComplete} />
-        </ScrollView>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <ScrollView
+            ref={scrollRef}
+            style={s.scrollView}
+            contentContainerStyle={s.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <LessonRenderer lesson={lesson} onComplete={handleComplete} />
+          </ScrollView>
+        </Animated.View>
       </View>
     </ScreenWrapper>
   );
