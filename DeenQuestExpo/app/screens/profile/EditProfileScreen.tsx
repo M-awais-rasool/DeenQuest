@@ -7,10 +7,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 import { TactileButton } from "../../components/TactileButton";
 import { theme } from "../../theme/themes";
 import {
@@ -68,9 +68,7 @@ export function EditProfileScreen({ navigation }: Props) {
   if (isLoadingProfile) {
     return (
       <ScreenWrapper>
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
+        <Loader fullScreen />
       </ScreenWrapper>
     );
   }

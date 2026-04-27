@@ -18,6 +18,7 @@ import {
 } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 import { MCQGame } from "./components/MCQGame";
 import { TapMatchGame } from "./components/TapMatchGame";
 import { FallbackGame } from "./components/FallbackGame";
@@ -94,9 +95,7 @@ export function MiniGamePlayerScreen() {
   if (!level) {
     return (
       <ScreenWrapper>
-        <View style={s.loadingContainer}>
-          <Text style={s.loadingText}>Loading...</Text>
-        </View>
+        <Loader fullScreen />
       </ScreenWrapper>
     );
   }
@@ -157,7 +156,6 @@ export function MiniGamePlayerScreen() {
 const s = StyleSheet.create({
   container: { backgroundColor: theme.colors.background },
   loadingContainer: { justifyContent: "center", alignItems: "center" },
-  loadingText: { color: theme.colors.textMuted, fontSize: 16 },
 
   topBar: {
     flexDirection: "row",

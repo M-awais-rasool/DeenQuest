@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Easing,
   FlatList,
@@ -12,6 +11,7 @@ import {
 import { Sparkles, Star } from "lucide-react-native";
 import { theme } from "../../theme/themes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 import {
   useGetRewardsQuery,
   useGetProgressQuery,
@@ -105,10 +105,7 @@ export function RewardsScreen() {
   );
 
   const ListEmpty = rewardsLoading ? (
-    <View style={s.loadingWrap}>
-      <ActivityIndicator size="large" color={theme.colors.secondary} />
-      <Text style={s.loadingText}>Loading rewards...</Text>
-    </View>
+    <Loader />
   ) : (
     <View style={s.emptyWrap}>
       <Text style={s.emptyText}>No rewards found.</Text>

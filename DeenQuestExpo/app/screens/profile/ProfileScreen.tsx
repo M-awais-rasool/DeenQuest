@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  ActivityIndicator,
 } from "react-native";
 import {
   Flame,
@@ -21,6 +20,7 @@ import {
   Lock,
 } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 import { Header } from "../../components/Header";
 import { TactileButton } from "../../components/TactileButton";
 import { theme } from "../../theme/themes";
@@ -72,11 +72,7 @@ export function ProfileScreen() {
   if (profileLoading || progressLoading) {
     return (
       <ScreenWrapper>
-        <StatusBar barStyle="light-content" />
-        <Header title="DEENQUEST" xp={0} />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
+        <Loader fullScreen />
       </ScreenWrapper>
     );
   }
