@@ -8,6 +8,7 @@ import {
   Easing,
 } from "react-native";
 import { Star, Trophy, Gift, ChevronRight } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
 import { theme } from "../../../theme/themes";
 
 export function CompletionScreen({
@@ -39,11 +40,35 @@ export function CompletionScreen({
   const doneBtnTranslateY = useRef(new Animated.Value(12)).current;
 
   const [displayXP, setDisplayXP] = useState(0);
+  const starHapticFired = useRef([false, false, false]);
 
   useEffect(() => {
-    const listenerId = xpCounterAnim.addListener(({ value }) =>
-      setDisplayXP(Math.round(value)),
+    let lastHapticTime = 0;
+    const HAPTIC_INTERVAL_MS = 85;
+
+    const starAnims = [star0Scale, star1Scale, star2Scale];
+    const starListenerIds = starAnims.map((anim, i) =>
+      anim.addListener(({ value }) => {
+        if (!starHapticFired.current[i] && value > 0.7) {
+          starHapticFired.current[i] = true;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+      }),
     );
+
+    const listenerId = xpCounterAnim.addListener(({ value }) => {
+      setDisplayXP(Math.round(value));
+
+      const now = Date.now();
+      if (
+        value > 0 &&
+        value < xpEarned &&
+        now - lastHapticTime > HAPTIC_INTERVAL_MS
+      ) {
+        lastHapticTime = now;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    });
 
     Animated.sequence([
       // Trophy spring entrance
@@ -119,7 +144,11 @@ export function CompletionScreen({
           useNativeDriver: true,
         }),
       ]),
-    ]).start();
+    ]).start(({ finished }) => {
+      if (finished) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    });
 
     // Trophy sway loop
     Animated.loop(
@@ -158,7 +187,10 @@ export function CompletionScreen({
       ).start();
     }
 
-    return () => xpCounterAnim.removeListener(listenerId);
+    return () => {
+      xpCounterAnim.removeListener(listenerId);
+      starAnims.forEach((anim, i) => anim.removeListener(starListenerIds[i]));
+    };
   }, []);
 
   const trophyRotateDeg = trophyRotate.interpolate({
