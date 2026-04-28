@@ -200,6 +200,33 @@ export interface LevelCompletionResult {
   new_rewards: NewlyGrantedReward[];
 }
 
+// ─── Recitation Types ───
+
+export type WordStatus = 'correct' | 'wrong' | 'missing' | 'extra';
+
+export interface RecitationWordResult {
+  text: string;
+  status: WordStatus;
+  confidence: number;
+}
+
+export interface RecitationCheckResult {
+  score: number;        // 0–100
+  stars: number;        // 1–3
+  words: RecitationWordResult[];
+  message: string;
+  xp_earned: number;
+  transcript: string;
+  attempt_num: number;
+}
+
+export interface CheckRecitationRequest {
+  levelId: number;
+  lessonIndex: number;
+  audioUri: string;
+  audioMimeType?: string;
+}
+
 // ─── Reward Types ───
 
 export type RewardTrigger = "levels_completed" | "xp" | "streak_days";
@@ -237,7 +264,7 @@ export interface NewlyGrantedReward {
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["User", "Auth", "DailyTasks", "Progress", "Levels", "Leaderboard", "Rewards"],
+  tagTypes: ["User", "Auth", "DailyTasks", "Progress", "Levels", "Leaderboard", "Rewards", "Recitation"],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
       query: (credentials) => ({
@@ -358,6 +385,34 @@ export const API = createApi({
       invalidatesTags: ["Levels", "Progress", "Leaderboard", "Rewards"],
     }),
 
+    // ─── Recitation ───
+    checkRecitation: builder.mutation<
+      APIResponse<RecitationCheckResult>,
+      CheckRecitationRequest
+    >({
+      queryFn: async (
+        { levelId, lessonIndex, audioUri, audioMimeType = 'audio/m4a' },
+        _api,
+        _extraOptions,
+        baseQuery,
+      ) => {
+        const formData = new FormData();
+        formData.append('level_id', String(levelId));
+        formData.append('lesson_index', String(lessonIndex));
+        (formData as any).append('audio', {
+          uri: audioUri,
+          type: audioMimeType,
+          name: `recitation_${Date.now()}.m4a`,
+        });
+        return baseQuery({
+          url: '/api/v1/recitation/check',
+          method: 'POST',
+          body: formData,
+        }) as any;
+      },
+      invalidatesTags: ['Progress'],
+    }),
+
     // ─── Rewards ───
     getRewards: builder.query<APIResponse<RewardWithStatus[]>, void>({
       query: () => ({ url: "/api/v1/rewards", method: "GET" }),
@@ -383,4 +438,5 @@ export const {
   useCompleteLessonMutation,
   useCompleteLevelMutation,
   useGetRewardsQuery,
+  useCheckRecitationMutation,
 } = API;
