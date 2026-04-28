@@ -57,6 +57,11 @@ func main() {
 	coreService := service.NewCoreService(repo, producer)
 	coreController := controller.NewCoreController(coreService)
 
+	// Recitation: Whisper microservice URL from env (WHISPER_URL)
+	recitationService := service.NewRecitationService(repo, cfg.WhisperURL)
+	recitationController := controller.NewRecitationController(recitationService)
+	logger.Info("Recitation service initialized", zap.String("whisper_url", cfg.WhisperURL))
+
 	// Seed daily task templates on startup.
 	if err := coreService.SeedDailyTasks(context.Background()); err != nil {
 		log.Fatalf("failed to seed daily tasks: %v", err)
@@ -85,7 +90,7 @@ func main() {
 	r.Use(middleware.Recovery())
 	r.Use(middleware.RequestLogger())
 	r.Use(middleware.CORS(cfg.AllowedOrigins()))
-	router.SetupRoutes(r, coreController, jwtManager)
+	router.SetupRoutes(r, coreController, recitationController, jwtManager)
 
 	addr := fmt.Sprintf("%s:%s", cfg.CoreHost, cfg.CorePort)
 	srv := &http.Server{Addr: addr, Handler: r}
