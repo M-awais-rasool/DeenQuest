@@ -38,6 +38,7 @@ type Config struct {
 
 	AuthServiceURL string
 	CoreServiceURL string
+	WhisperURL     string
 
 	CORSAllowedOrigins string
 }
@@ -65,6 +66,7 @@ func Load() (*Config, error) {
 		JWTSecret:          getEnv("JWT_SECRET", "change-me-in-production"),
 		AuthServiceURL:     getEnv("AUTH_SERVICE_URL", "http://auth-service:8082"),
 		CoreServiceURL:     getEnv("CORE_SERVICE_URL", "http://core-service:8083"),
+		WhisperURL:         getEnv("WHISPER_URL", "http://localhost:8001"),
 		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
 	}
 

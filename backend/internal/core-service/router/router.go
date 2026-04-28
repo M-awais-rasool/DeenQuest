@@ -8,7 +8,7 @@ import (
 	"github.com/chawais/talent-flow/backend/pkg/middleware"
 )
 
-func SetupRoutes(r *gin.Engine, ctl *controller.CoreController, jwtManager *auth.JWTManager) {
+func SetupRoutes(r *gin.Engine, ctl *controller.CoreController, recCtl *controller.RecitationController, jwtManager *auth.JWTManager) {
 	v1 := r.Group("/api/v1")
 	v1.Use(middleware.JWTAuth(jwtManager))
 	{
@@ -25,6 +25,10 @@ func SetupRoutes(r *gin.Engine, ctl *controller.CoreController, jwtManager *auth
 
 		// Rewards
 		v1.GET("/rewards", ctl.GetRewards)
+
+		// Quran recitation — arabic text is read from the level's lesson data,
+		// no separate ayah collection needed.
+		v1.POST("/recitation/check", recCtl.CheckRecitation)
 	}
 
 	r.GET("/health", func(c *gin.Context) {

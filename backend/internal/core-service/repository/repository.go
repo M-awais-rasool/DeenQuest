@@ -41,4 +41,8 @@ type CoreRepository interface {
 	ListAllRewards(ctx context.Context) ([]model.Reward, error)
 	GetUserRewards(ctx context.Context, userID string) ([]model.UserReward, error)
 	GrantUserReward(ctx context.Context, ur *model.UserReward) error
+
+	// Recitation — keyed by level_id + lesson_index (no separate ayah collection)
+	SaveRecitationAttempt(ctx context.Context, attempt *model.RecitationAttempt) error
+	CountUserRecitationAttempts(ctx context.Context, userID string, levelID, lessonIndex int) (int, error)
 }

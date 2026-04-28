@@ -12,26 +12,28 @@ import (
 )
 
 type MongoCoreRepository struct {
-	streaks        *mongo.Collection
-	progress       *mongo.Collection
-	dailyTasks     *mongo.Collection
-	userDailyTasks *mongo.Collection
-	levels         *mongo.Collection
-	userLevels     *mongo.Collection
-	rewards        *mongo.Collection
-	userRewards    *mongo.Collection
+	streaks            *mongo.Collection
+	progress           *mongo.Collection
+	dailyTasks         *mongo.Collection
+	userDailyTasks     *mongo.Collection
+	levels             *mongo.Collection
+	userLevels         *mongo.Collection
+	rewards            *mongo.Collection
+	userRewards        *mongo.Collection
+	recitationAttempts *mongo.Collection
 }
 
 func NewMongoCoreRepository(db *mongo.Database) (*MongoCoreRepository, error) {
 	r := &MongoCoreRepository{
-		streaks:        db.Collection("streaks"),
-		progress:       db.Collection("progress"),
-		dailyTasks:     db.Collection("daily_tasks"),
-		userDailyTasks: db.Collection("user_daily_tasks"),
-		levels:         db.Collection("levels"),
-		userLevels:     db.Collection("user_levels"),
-		rewards:        db.Collection("rewards"),
-		userRewards:    db.Collection("user_rewards"),
+		streaks:            db.Collection("streaks"),
+		progress:           db.Collection("progress"),
+		dailyTasks:         db.Collection("daily_tasks"),
+		userDailyTasks:     db.Collection("user_daily_tasks"),
+		levels:             db.Collection("levels"),
+		userLevels:         db.Collection("user_levels"),
+		rewards:            db.Collection("rewards"),
+		userRewards:        db.Collection("user_rewards"),
+		recitationAttempts: db.Collection("recitation_attempts"),
 	}
 	if err := r.ensureIndexes(); err != nil {
 		return nil, err
@@ -73,6 +75,14 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	_, err = r.userRewards.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "reward_id", Value: 1}},
 		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		return err
+	}
+	// Recitation attempts: fast lookup per user + level + lesson
+	_, err = r.recitationAttempts.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "level_id", Value: 1}, {Key: "lesson_index", Value: 1}, {Key: "created_at", Value: -1}},
+		Options: options.Index().SetBackground(true),
 	})
 	return err
 }
@@ -429,4 +439,25 @@ func (r *MongoCoreRepository) GrantUserReward(ctx context.Context, ur *model.Use
 		options.Update().SetUpsert(true),
 	)
 	return err
+}
+
+// ─── Recitation repository methods ───
+// Attempts are keyed by (user_id, level_id, lesson_index) — no separate ayah collection.
+
+func (r *MongoCoreRepository) SaveRecitationAttempt(ctx context.Context, attempt *model.RecitationAttempt) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	_, err := r.recitationAttempts.InsertOne(timeoutCtx, attempt)
+	return err
+}
+
+func (r *MongoCoreRepository) CountUserRecitationAttempts(ctx context.Context, userID string, levelID, lessonIndex int) (int, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	n, err := r.recitationAttempts.CountDocuments(timeoutCtx, bson.M{
+		"user_id":      userID,
+		"level_id":     levelID,
+		"lesson_index": lessonIndex,
+	})
+	return int(n), err
 }
