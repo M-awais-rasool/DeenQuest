@@ -3,33 +3,69 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { useRecitation, RecitationPanel } from "./recitation";
 
-export function DuaCardComponent({ lesson, onComplete }: LessonComponentProps) {
+export function DuaCardComponent({
+  lesson,
+  onComplete,
+  levelId,
+  lessonIndex,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
+  const arabicText = (data.arabic as string) ?? "";
+
+  // Recitation available when levelId/lessonIndex are present and there is Arabic text
+  const hasRecitation = levelId != null && lessonIndex != null && !!arabicText;
+
+  const rec = useRecitation(arabicText, levelId, lessonIndex);
 
   return (
-    <View>
+    <View style={s.root}>
+      {/* ── Dua card ─────────────────────────────────────────────────────── */}
       <View style={s.card}>
-        <Text style={s.arabic}>{data.arabic}</Text>
+        <Text style={s.arabic}>{arabicText}</Text>
         <View style={s.divider} />
-        <Text style={s.transliteration}>{data.transliteration}</Text>
-        <Text style={s.meaning}>{data.meaning}</Text>
-        {data.context && (
+        {data.transliteration ? (
+          <Text style={s.transliteration}>{data.transliteration}</Text>
+        ) : null}
+        {data.meaning ? <Text style={s.meaning}>{data.meaning}</Text> : null}
+        {data.context ? (
           <View style={s.contextBox}>
             <Text style={s.contextText}>{data.context}</Text>
           </View>
-        )}
+        ) : null}
       </View>
 
-      <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
-        <Text style={s.continueBtnText}>I'VE LEARNED THIS</Text>
-        <ChevronRight size={18} color={theme.colors.onPrimary} />
-      </TouchableOpacity>
+      {/* ── Recitation panel (secondary / gold variant) ───────────────────── */}
+      {hasRecitation && <RecitationPanel {...rec} variant="secondary" />}
+
+      {/* CONTINUE — unlocked only after recitation is done */}
+      {(!hasRecitation || rec.hasResult) && (
+        <TouchableOpacity
+          style={s.continueBtn}
+          onPress={onComplete}
+          activeOpacity={0.8}
+        >
+          <Text style={s.continueBtnText}>I'VE LEARNED THIS</Text>
+          <ChevronRight size={18} color={theme.colors.onPrimary} />
+        </TouchableOpacity>
+      )}
+
+      {/* Locked hint while recitation is pending */}
+      {hasRecitation && !rec.hasResult && (
+        <View style={s.lockedHint}>
+          <Text style={s.lockedHintText}>
+            Complete your recitation to continue
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
+  root: { gap: 16 },
+
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: 20,
@@ -44,6 +80,7 @@ const s = StyleSheet.create({
     textAlign: "center",
     lineHeight: 48,
     marginBottom: 16,
+    writingDirection: "rtl",
   },
   divider: {
     width: 40,
@@ -77,6 +114,7 @@ const s = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
   },
+
   continueBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -84,15 +122,26 @@ const s = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     paddingVertical: 16,
     borderRadius: 16,
-    marginTop: 24,
     gap: 6,
     borderBottomWidth: 4,
     borderBottomColor: theme.colors.primaryContainer,
+    shadowColor: theme.colors.shadowGreen,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
   },
   continueBtnText: {
     color: theme.colors.onPrimary,
     fontWeight: "900",
     fontSize: 16,
     letterSpacing: 1,
+  },
+
+  lockedHint: { alignItems: "center", paddingVertical: 8 },
+  lockedHintText: {
+    color: theme.colors.textMuted,
+    fontSize: 12,
+    fontStyle: "italic",
   },
 });

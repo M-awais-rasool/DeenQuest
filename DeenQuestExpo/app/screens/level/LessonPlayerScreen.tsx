@@ -57,9 +57,13 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
 const LessonRenderer = memo(function LessonRenderer({
   lesson,
   onComplete,
+  levelId,
+  lessonIndex,
 }: {
   lesson: Lesson;
   onComplete: () => void;
+  levelId: number;
+  lessonIndex: number;
 }) {
   const Component = LESSON_COMPONENT_MAP[lesson.component];
 
@@ -88,7 +92,12 @@ const LessonRenderer = memo(function LessonRenderer({
     <View style={s.lessonContent}>
       <Text style={s.lessonTitle}>{lesson.title}</Text>
       <Text style={s.lessonDescription}>{lesson.description}</Text>
-      <Component lesson={lesson} onComplete={onComplete} />
+      <Component
+        lesson={lesson}
+        onComplete={onComplete}
+        levelId={levelId}
+        lessonIndex={lessonIndex}
+      />
     </View>
   );
 });
@@ -167,7 +176,12 @@ export function LessonPlayerScreen() {
             contentContainerStyle={s.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <LessonRenderer lesson={lesson} onComplete={handleComplete} />
+            <LessonRenderer
+              lesson={lesson}
+              onComplete={handleComplete}
+              levelId={levelId}
+              lessonIndex={currentIndex}
+            />
           </ScrollView>
         </Animated.View>
       </View>
