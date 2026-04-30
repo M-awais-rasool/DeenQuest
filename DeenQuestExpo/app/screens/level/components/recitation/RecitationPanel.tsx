@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,10 +16,7 @@ import {
   Sparkles,
 } from "lucide-react-native";
 import { theme } from "../../../../theme/themes";
-import type {
-  RecitationCheckResult,
-  RecitationWordResult,
-} from "../../../../store/services/api";
+import type { RecitationWordResult } from "../../../../store/services/api";
 import type { UseRecitationReturn } from "./useRecitation";
 
 // ─── Variant colours ──────────────────────────────────────────────────────────
@@ -60,7 +57,11 @@ const WORD_BG: Record<string, string> = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-export function StarRow({ stars }: { stars: number }) {
+export const StarRow = React.memo(function StarRow({
+  stars,
+}: {
+  stars: number;
+}) {
   return (
     <View style={s.starRow}>
       {[1, 2, 3].map((n) => (
@@ -74,9 +75,13 @@ export function StarRow({ stars }: { stars: number }) {
       ))}
     </View>
   );
-}
+});
 
-export function ScoreBadge({ score }: { score: number }) {
+export const ScoreBadge = React.memo(function ScoreBadge({
+  score,
+}: {
+  score: number;
+}) {
   const color =
     score >= 90
       ? theme.colors.primary
@@ -89,9 +94,13 @@ export function ScoreBadge({ score }: { score: number }) {
       <Text style={[s.scorePct, { color }]}>%</Text>
     </View>
   );
-}
+});
 
-export function WordChip({ word }: { word: RecitationWordResult }) {
+export const WordChip = React.memo(function WordChip({
+  word,
+}: {
+  word: RecitationWordResult;
+}) {
   const color = WORD_COLOR[word.status] ?? theme.colors.textMuted;
   const bg = WORD_BG[word.status] ?? "transparent";
   return (
@@ -104,9 +113,13 @@ export function WordChip({ word }: { word: RecitationWordResult }) {
       </Text>
     </View>
   );
-}
+});
 
-export function WordLegend({ showExtra = true }: { showExtra?: boolean }) {
+export const WordLegend = React.memo(function WordLegend({
+  showExtra = true,
+}: {
+  showExtra?: boolean;
+}) {
   const items = [
     { label: "Correct", color: theme.colors.primary },
     { label: "Wrong", color: theme.colors.errorBright },
@@ -123,9 +136,13 @@ export function WordLegend({ showExtra = true }: { showExtra?: boolean }) {
       ))}
     </View>
   );
-}
+});
 
-export function PulsingRing({ active }: { active: boolean }) {
+export const PulsingRing = React.memo(function PulsingRing({
+  active,
+}: {
+  active: boolean;
+}) {
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -173,7 +190,36 @@ export function PulsingRing({ active }: { active: boolean }) {
       style={[s.pulseRing, { transform: [{ scale }], opacity }]}
     />
   );
-}
+});
+
+const WordBreakdown = React.memo(function WordBreakdown({
+  words,
+}: {
+  words: RecitationWordResult[];
+}) {
+  const originalWords = words.filter((w) => w.status !== "extra");
+  const extraWords = words.filter((w) => w.status === "extra");
+  return (
+    <>
+      <WordLegend showExtra={extraWords.length > 0} />
+      <View style={s.wordGrid}>
+        {originalWords.map((w, i) => (
+          <WordChip key={`orig-${i}`} word={w} />
+        ))}
+      </View>
+      {extraWords.length > 0 && (
+        <View style={s.extraSection}>
+          <Text style={s.extraLabel}>Extra words spoken</Text>
+          <View style={s.wordRow}>
+            {extraWords.map((w, i) => (
+              <WordChip key={`extra-${i}`} word={w} />
+            ))}
+          </View>
+        </View>
+      )}
+    </>
+  );
+});
 
 // ─── RecitationPanel ──────────────────────────────────────────────────────────
 
@@ -185,7 +231,7 @@ export interface RecitationPanelProps extends UseRecitationReturn {
  * Drop-in recitation panel.  Pass the return value of useRecitation() as props.
  * Use variant="primary" (default) for Quran text, "secondary" for Dua text.
  */
-export function RecitationPanel({
+export const RecitationPanel = React.memo(function RecitationPanel({
   result,
   isPlaying,
   isRecording,
@@ -197,7 +243,7 @@ export function RecitationPanel({
   handleRetry,
   variant = "primary",
 }: RecitationPanelProps) {
-  const accent = getAccent(variant);
+  const accent = useMemo(() => getAccent(variant), [variant]);
 
   return (
     <View style={[s.recitationSection, { borderColor: accent.border20 }]}>
@@ -275,13 +321,13 @@ export function RecitationPanel({
               >
                 {isProcessing ? (
                   <ActivityIndicator
-                    size="large"
+                    size="small"
                     color={theme.colors.background}
                   />
                 ) : isRecording ? (
-                  <MicOff size={30} color={theme.colors.background} />
+                  <MicOff size={24} color={theme.colors.background} />
                 ) : (
-                  <Mic size={30} color={theme.colors.background} />
+                  <Mic size={24} color={theme.colors.background} />
                 )}
               </TouchableOpacity>
               <Text style={s.recordLabel}>
@@ -339,38 +385,7 @@ export function RecitationPanel({
           </View>
 
           {/* Word breakdown — original Ayah words in fixed sequence */}
-          {(() => {
-            const originalWords = result.words.filter(
-              (w) => w.status !== "extra",
-            );
-            const extraWords = result.words.filter(
-              (w) => w.status === "extra",
-            );
-            return (
-              <>
-                <WordLegend showExtra={extraWords.length > 0} />
-
-                {/* Original Ayah words in their correct sequence */}
-                <View style={s.wordGrid}>
-                  {originalWords.map((w, i) => (
-                    <WordChip key={`orig-${i}`} word={w} />
-                  ))}
-                </View>
-
-                {/* Extra words spoken — shown separately */}
-                {extraWords.length > 0 && (
-                  <View style={s.extraSection}>
-                    <Text style={s.extraLabel}>Extra words spoken</Text>
-                    <View style={s.wordRow}>
-                      {extraWords.map((w, i) => (
-                        <WordChip key={`extra-${i}`} word={w} />
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </>
-            );
-          })()}
+          <WordBreakdown words={result.words} />
 
           {/* Transcript */}
           {result.transcript ? (
@@ -395,7 +410,7 @@ export function RecitationPanel({
       )}
     </View>
   );
-}
+});
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
@@ -480,9 +495,9 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   recordBtn: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: "center",
     alignItems: "center",
     shadowOffset: { width: 0, height: 4 },

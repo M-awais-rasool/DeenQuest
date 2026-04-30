@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Animated, Platform, Alert } from "react-native";
 import * as Speech from "expo-speech";
 import * as Haptics from "expo-haptics";
+import { Audio } from "expo-av";
 import { useCheckRecitationMutation } from "../../../../store/services/api";
 import type { RecitationCheckResult } from "../../../../store/services/api";
 
@@ -35,7 +36,7 @@ export function useRecitation(
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [result, setResult] = useState<RecitationCheckResult | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const recordingRef = useRef<any>(null);
+  const recordingRef = useRef<Audio.Recording | null>(null);
   const resultAnim = useRef(new Animated.Value(0)).current;
 
   const [checkRecitation] = useCheckRecitationMutation();
@@ -73,15 +74,33 @@ export function useRecitation(
       setIsPlaying(false);
       return;
     }
+    if (!arabicText) return;
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+      });
+    } catch {
+      // Non-fatal — proceed with speech even if session reset fails.
+    }
+
     setIsPlaying(true);
     Speech.speak(arabicText, {
       language: "ar",
       rate: 0.75,
       pitch: 1,
       onDone: () => setIsPlaying(false),
-      onError: () => setIsPlaying(false),
       onStopped: () => setIsPlaying(false),
+      onError: () => {
+        setIsPlaying(false);
+        Alert.alert(
+          "Audio Unavailable",
+          "No Arabic voice found. Go to Settings → Accessibility → Spoken Content → Voices and download an Arabic voice.",
+        );
+      },
     });
   }, [isPlaying, arabicText]);
 
@@ -100,9 +119,10 @@ export function useRecitation(
         return;
       }
 
-      // @ts-ignore – available after: npx expo install expo-av
-      const { Audio } = await import("expo-av");
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+      });
 
       const res = await checkRecitation({
         levelId: levelId!,
@@ -139,8 +159,6 @@ export function useRecitation(
     }
     if (recordingState !== "idle") return;
     try {
-      // @ts-ignore – available after: npx expo install expo-av
-      const { Audio } = await import("expo-av");
       const { status } = await Audio.requestPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
@@ -160,17 +178,10 @@ export function useRecitation(
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setRecordingState("recording");
     } catch (err: any) {
-      if (err?.message?.includes("Cannot find module")) {
-        Alert.alert(
-          "Package Missing",
-          "Run: npx expo install expo-av, then rebuild.",
-        );
-      } else {
-        Alert.alert(
-          "Recording Error",
-          err?.message ?? "Could not start recording.",
-        );
-      }
+      Alert.alert(
+        "Recording Error",
+        err?.message ?? "Could not start recording.",
+      );
     }
   }, [recordingState, handleStopAndSubmit]);
 
