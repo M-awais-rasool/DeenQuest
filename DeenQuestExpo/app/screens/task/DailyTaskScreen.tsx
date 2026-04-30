@@ -10,7 +10,7 @@ import { theme } from "../../theme/themes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import type { DailyTask } from "../../store/services/api";
 import { useCompleteDailyTaskMutation } from "../../store/services/api";
-import { COMPONENT_MAP, XPBadge, CategoryBadge } from "./components";
+import { BlockRenderer, XPBadge, CategoryBadge } from "../../components/task";
 
 export function DailyTaskScreen({
   task,
@@ -28,8 +28,6 @@ export function DailyTaskScreen({
     } catch {}
   }, [completeDailyTask, task.id, onBack]);
 
-  const TaskComponent = COMPONENT_MAP[task.component];
-
   return (
     <ScreenWrapper>
       <View style={s.header}>
@@ -45,15 +43,11 @@ export function DailyTaskScreen({
         </View>
         <Text style={s.taskTitle}>{task.title}</Text>
         <Text style={s.taskDesc}>{task.description}</Text>
-        {TaskComponent ? (
-          <TaskComponent
-            task={task}
-            onComplete={handleComplete}
-            loading={isLoading}
-          />
-        ) : (
-          <Text style={s.fallback}>Unknown task type</Text>
-        )}
+        <BlockRenderer
+          task={task}
+          onComplete={handleComplete}
+          loading={isLoading}
+        />
       </ScrollView>
     </ScreenWrapper>
   );
@@ -92,10 +86,5 @@ const s = StyleSheet.create({
     fontWeight: "800",
     color: theme.colors.textMuted,
     letterSpacing: 1,
-  },
-  fallback: {
-    color: theme.colors.textMuted,
-    textAlign: "center",
-    marginTop: 40,
   },
 });

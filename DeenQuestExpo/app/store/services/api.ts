@@ -66,19 +66,32 @@ export interface APIResponse<T> {
   error?: string;
 }
 
-// Daily Task Types
-export type ScreenType =
-  | "CHECKLIST"
-  | "QURAN_READER"
-  | "COUNTER"
-  | "HADITH_CARD"
-  | "QUIZ"
-  | "AUDIO_PLAYER"
-  | "REFLECTION"
-  | "TIPS"
-  | "ACTION";
+// ─── Daily Task / Block Types ───
 
-export type CompletionType = "button" | "auto" | "counter" | "quiz";
+export type BlockType =
+  | "TextBlock"
+  | "AyahBlock"
+  | "HadithBlock"
+  | "CounterBlock"
+  | "QuizBlock"
+  | "AudioBlock"
+  | "ChecklistBlock"
+  | "FlashCardBlock"
+  | "DragDropBlock"
+  | "MatchBlock"
+  | "ImageBlock"
+  | "VideoBlock"
+  | "VoicePracticeBlock";
+
+export interface Block {
+  type: BlockType;
+  content: Record<string, any>;
+}
+
+/** "auto"   → block auto-completes on interaction (counter, checklist)
+ *  "button" → show a complete button immediately
+ *  "quiz"   → show complete button after user selects an option */
+export type CompletionType = "button" | "auto" | "quiz";
 export type TaskDifficulty = "easy" | "medium";
 export type TaskCategory =
   | "salah"
@@ -94,9 +107,7 @@ export interface DailyTask {
   title: string;
   category: TaskCategory;
   description: string;
-  screen_type: ScreenType;
-  component: string;
-  data: Record<string, any>;
+  blocks: Block[];
   completion_type: CompletionType;
   reward_xp: number;
   difficulty: TaskDifficulty;
@@ -146,6 +157,18 @@ export type LessonType =
 export type LevelDifficulty = "easy" | "medium" | "hard";
 
 export type LevelStatus = "locked" | "available" | "in_progress" | "completed";
+
+// ScreenType is used by the Level/Lesson system (not by daily tasks).
+export type ScreenType =
+  | "CHECKLIST"
+  | "QURAN_READER"
+  | "COUNTER"
+  | "HADITH_CARD"
+  | "QUIZ"
+  | "AUDIO_PLAYER"
+  | "REFLECTION"
+  | "TIPS"
+  | "ACTION";
 
 export interface Lesson {
   type: LessonType;
