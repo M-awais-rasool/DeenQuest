@@ -135,7 +135,10 @@ func (s *RecitationService) CheckRecitation(
 	)
 
 	// ── 2. Transcribe via Whisper ─────────────────────────────────────────────
-	transcript, err := s.callWhisper(ctx, audioData, audioFilename)
+	// Pass the expected Arabic text as initial_prompt so Whisper's beam search
+	// is seeded toward the correct vocabulary — dramatically reduces
+	// hallucinations on short Quran/dua clips.
+	transcript, err := s.callWhisper(ctx, audioData, audioFilename, arabicText)
 	if err != nil {
 		logger.Error("Whisper call failed", zap.Error(err))
 		return nil, fmt.Errorf("transcription service unavailable: %w", err)
@@ -205,14 +208,18 @@ func (s *RecitationService) CheckRecitation(
 
 // callWhisper forwards the audio bytes to the Python Whisper service as
 // multipart/form-data and returns the transcription response.
+// prompt should be the expected Arabic text so Whisper can use it as an
+// initial_prompt to reduce hallucinations on short Arabic recordings.
 func (s *RecitationService) callWhisper(
 	ctx context.Context,
 	audioData []byte,
 	filename string,
+	prompt string,
 ) (*whisperResponse, error) {
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
 
+	// Audio file field
 	fw, err := mw.CreateFormFile("audio", filename)
 	if err != nil {
 		return nil, fmt.Errorf("create form file: %w", err)
@@ -220,6 +227,18 @@ func (s *RecitationService) callWhisper(
 	if _, err := fw.Write(audioData); err != nil {
 		return nil, fmt.Errorf("write audio: %w", err)
 	}
+
+	// Optional initial_prompt field — improves STT accuracy for known text.
+	if prompt != "" {
+		pf, err := mw.CreateFormField("initial_prompt")
+		if err != nil {
+			return nil, fmt.Errorf("create prompt field: %w", err)
+		}
+		if _, err := pf.Write([]byte(prompt)); err != nil {
+			return nil, fmt.Errorf("write prompt: %w", err)
+		}
+	}
+
 	if err := mw.Close(); err != nil {
 		return nil, fmt.Errorf("close multipart writer: %w", err)
 	}

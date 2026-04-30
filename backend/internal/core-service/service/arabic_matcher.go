@@ -136,20 +136,12 @@ func levenshtein(a, b []rune) int {
 	return dp[la*stride+lb]
 }
 
-// wordDistance returns the Levenshtein distance between two Arabic words
-// after normalization. Words are compared at the rune level.
-func wordDistance(a, b string) int {
-	ra := []rune(NormalizeArabic(a))
-	rb := []rune(NormalizeArabic(b))
-	return levenshtein(ra, rb)
-}
-
 // ─────────────────────────────────────────────
 // Word-Level Comparison
 // ─────────────────────────────────────────────
 
-// toleranceForWord determines the max edit distance allowed for a word to be
-// considered "correct". Longer words allow a bit more variation.
+// toleranceForWord returns the maximum Levenshtein edits allowed for a word
+// to be considered correctly recited. Scales with word length.
 func toleranceForWord(word string) int {
 	l := len([]rune(word))
 	switch {
@@ -162,28 +154,195 @@ func toleranceForWord(word string) int {
 	}
 }
 
-// matchResult carries the outcome of matching one expected word.
-type matchResult struct {
-	spokenWord string
-	distance   int
-	found      bool
+// ─────────────────────────────────────────────
+// Wagner-Fischer Word-Sequence Alignment
+// ─────────────────────────────────────────────
+
+// gapPenalty is the DP cost of an unmatched word (missing or extra).
+// Keeping it at 0.75 means a substitution (max cost 1.0) is always
+// cheaper than a delete+insert pair (cost 1.5), so the aligner
+// aggressively maps words — correct behaviour for recitation checking.
+const gapPenalty = 0.75
+
+// wordSimilarity returns a normalised Levenshtein ratio in [0, 1]
+// between two pre-normalised Arabic word strings.
+// 0 = identical, 1 = completely different.
+func wordSimilarity(a, b string) float64 {
+	ra, rb := []rune(a), []rune(b)
+	la, lb := len(ra), len(rb)
+	if la == 0 && lb == 0 {
+		return 0
+	}
+	maxLen := la
+	if lb > maxLen {
+		maxLen = lb
+	}
+	return float64(levenshtein(ra, rb)) / float64(maxLen)
 }
 
-// findBestSpokenMatch finds the closest token in spokenTokens to expectedWord.
-// It returns the best candidate and its edit distance.
-// used marks tokens that have already been claimed by a previous match.
-func findBestSpokenMatch(expectedWord string, spokenTokens []string, used []bool) matchResult {
-	best := matchResult{distance: 9999}
-	for i, tok := range spokenTokens {
-		if used[i] {
-			continue
-		}
-		d := wordDistance(expectedWord, tok)
-		if d < best.distance {
-			best = matchResult{spokenWord: tok, distance: d, found: true}
+// DP operation codes used during backtrace.
+const (
+	opMatch  = 0 // align expected[i] with spoken[j]
+	opDelete = 1 // expected[i] not spoken → missing
+	opInsert = 2 // spoken[j] not expected → extra
+)
+
+// dpCell stores the minimum alignment cost and the operation that produced it.
+type dpCell struct {
+	cost float64
+	op   int
+}
+
+// alignSequences runs Wagner-Fischer DP to find the globally optimal alignment
+// between expected and spoken word sequences, then backtracks to produce
+// per-word recitation results.
+//
+// Why DP instead of greedy:
+//
+//	The greedy left-to-right approach steals tokens for early words even when
+//	a later expected word is a far better match.  DP considers all alignments
+//	simultaneously and picks the globally cheapest one, correctly handling
+//	skipped words, insertions, and reorderings introduced by STT errors.
+//
+// Output ordering:
+//
+//	Expected words appear first in their original sequence (correct/wrong/missing).
+//	Extra spoken words are appended at the end for separate UI rendering.
+func alignSequences(expected, spoken []string) ([]model.WordResult, int) {
+	E, S := len(expected), len(spoken)
+
+	// Pre-normalise once — avoids repeated work in the O(E×S) inner loop.
+	expNorm := make([]string, E)
+	for i, w := range expected {
+		expNorm[i] = NormalizeArabic(w)
+	}
+	spkNorm := make([]string, S)
+	for i, w := range spoken {
+		spkNorm[i] = NormalizeArabic(w)
+	}
+
+	// ── DP table ─────────────────────────────────────────────────────────────
+	// dp[i][j] = optimal cost to align expected[0..i-1] with spoken[0..j-1].
+	dp := make([][]dpCell, E+1)
+	for i := range dp {
+		dp[i] = make([]dpCell, S+1)
+	}
+	for i := 1; i <= E; i++ {
+		dp[i][0] = dpCell{float64(i) * gapPenalty, opDelete}
+	}
+	for j := 1; j <= S; j++ {
+		dp[0][j] = dpCell{float64(j) * gapPenalty, opInsert}
+	}
+
+	for i := 1; i <= E; i++ {
+		for j := 1; j <= S; j++ {
+			sim := wordSimilarity(expNorm[i-1], spkNorm[j-1])
+			matchCost := dp[i-1][j-1].cost + sim
+			delCost := dp[i-1][j].cost + gapPenalty
+			insCost := dp[i][j-1].cost + gapPenalty
+
+			switch {
+			case matchCost <= delCost && matchCost <= insCost:
+				dp[i][j] = dpCell{matchCost, opMatch}
+			case delCost <= insCost:
+				dp[i][j] = dpCell{delCost, opDelete}
+			default:
+				dp[i][j] = dpCell{insCost, opInsert}
+			}
 		}
 	}
-	return best
+
+	// ── Backtrace ─────────────────────────────────────────────────────────────
+	type pair struct {
+		expIdx int
+		spkIdx int
+		sim    float64
+		op     int
+	}
+
+	rawPairs := make([]pair, 0, E+S)
+	i, j := E, S
+	for i > 0 || j > 0 {
+		switch {
+		case i == 0:
+			rawPairs = append(rawPairs, pair{-1, j - 1, 0, opInsert})
+			j--
+		case j == 0:
+			rawPairs = append(rawPairs, pair{i - 1, -1, 0, opDelete})
+			i--
+		default:
+			switch dp[i][j].op {
+			case opMatch:
+				rawPairs = append(rawPairs, pair{
+					i - 1, j - 1,
+					wordSimilarity(expNorm[i-1], spkNorm[j-1]),
+					opMatch,
+				})
+				i--
+				j--
+			case opDelete:
+				rawPairs = append(rawPairs, pair{i - 1, -1, 0, opDelete})
+				i--
+			case opInsert:
+				rawPairs = append(rawPairs, pair{-1, j - 1, 0, opInsert})
+				j--
+			}
+		}
+	}
+
+	// Backtrace yields pairs in reverse; flip to natural reading order.
+	for l, r := 0, len(rawPairs)-1; l < r; l, r = l+1, r-1 {
+		rawPairs[l], rawPairs[r] = rawPairs[r], rawPairs[l]
+	}
+
+	// ── Classify & build result slices ────────────────────────────────────────
+	origResults := make([]model.WordResult, 0, E)
+	extraResults := make([]model.WordResult, 0)
+	correctCount := 0
+
+	for _, p := range rawPairs {
+		switch p.op {
+		case opMatch:
+			expLen := len([]rune(expNorm[p.expIdx]))
+			if expLen == 0 {
+				expLen = 1
+			}
+			// Convert absolute-edit tolerance to a similarity ratio so it is
+			// directly comparable to the [0,1] output of wordSimilarity.
+			threshold := float64(toleranceForWord(expNorm[p.expIdx])) / float64(expLen)
+			if p.sim <= threshold {
+				origResults = append(origResults, model.WordResult{
+					Text:       expected[p.expIdx],
+					Status:     model.WordCorrect,
+					Confidence: 1.0 - p.sim,
+				})
+				correctCount++
+			} else {
+				// Aligned but too dissimilar — display original word as wrong.
+				origResults = append(origResults, model.WordResult{
+					Text:       expected[p.expIdx],
+					Status:     model.WordWrong,
+					Confidence: 0,
+				})
+			}
+		case opDelete:
+			origResults = append(origResults, model.WordResult{
+				Text:       expected[p.expIdx],
+				Status:     model.WordMissing,
+				Confidence: 0,
+			})
+		case opInsert:
+			extraResults = append(extraResults, model.WordResult{
+				Text:       spoken[p.spkIdx],
+				Status:     model.WordExtra,
+				Confidence: 0,
+			})
+		}
+	}
+
+	// Original words first (Ayah sequence preserved), extras appended —
+	// matches the frontend split rendering in RecitationPanel.
+	return append(origResults, extraResults...), correctCount
 }
 
 // ─────────────────────────────────────────────
@@ -191,93 +350,21 @@ func findBestSpokenMatch(expectedWord string, spokenTokens []string, used []bool
 // ─────────────────────────────────────────────
 
 // CompareRecitation aligns the expected ayah words against the Whisper transcript
-// and returns per-word results plus an overall accuracy score (0–100).
+// using Wagner-Fischer DP sequence alignment and returns per-word results plus
+// an overall accuracy score (0–100).
 //
-// Algorithm:
-//  1. Normalize both strings and tokenize.
-//  2. Greedy left-to-right matching: for each expected word find the nearest
-//     un-claimed spoken token. If distance ≤ tolerance → correct, else → wrong.
-//     Unmatched expected words → missing. Leftover spoken tokens → extra.
-//  3. Score = (correct / expectedCount) × 100.
+// The Ayah words are always returned in their original order. Extra words
+// spoken by the user are appended after the Ayah words.
 func CompareRecitation(expectedText, transcript string) ([]model.WordResult, int) {
 	expectedTokens := TokenizeArabic(expectedText)
 	spokenTokens := TokenizeArabic(transcript)
 
-	used := make([]bool, len(spokenTokens))
-	results := make([]model.WordResult, 0, len(expectedTokens))
-	correctCount := 0
-
-	for _, expWord := range expectedTokens {
-		best := findBestSpokenMatch(expWord, spokenTokens, used)
-		tol := toleranceForWord(expWord)
-
-		if !best.found {
-			// No spoken words left at all
-			results = append(results, model.WordResult{
-				Text:       expWord,
-				Status:     model.WordMissing,
-				Confidence: 0,
-			})
-			continue
-		}
-
-		if best.distance <= tol {
-			// Mark the matched spoken token as used
-			for i, tok := range spokenTokens {
-				if !used[i] && tok == best.spokenWord {
-					used[i] = true
-					break
-				}
-			}
-			expLen := float64(len([]rune(expWord)))
-			confidence := 1.0 - float64(best.distance)/expLen
-			if confidence < 0 {
-				confidence = 0
-			}
-			results = append(results, model.WordResult{
-				Text:       expWord,
-				Status:     model.WordCorrect,
-				Confidence: confidence,
-			})
-			correctCount++
-		} else if best.distance <= tol*2 {
-			// Close but not good enough — mark as wrong (learner can improve)
-			for i, tok := range spokenTokens {
-				if !used[i] && tok == best.spokenWord {
-					used[i] = true
-					break
-				}
-			}
-			results = append(results, model.WordResult{
-				Text:       expWord,
-				Status:     model.WordWrong,
-				Confidence: 0,
-			})
-		} else {
-			// No reasonable match found
-			results = append(results, model.WordResult{
-				Text:   expWord,
-				Status: model.WordMissing,
-			})
-		}
+	if len(expectedTokens) == 0 {
+		return nil, 0
 	}
 
-	// Leftover spoken words that were never claimed → extra
-	for i, tok := range spokenTokens {
-		if !used[i] {
-			results = append(results, model.WordResult{
-				Text:       tok,
-				Status:     model.WordExtra,
-				Confidence: 0,
-			})
-		}
-	}
-
-	score := 0
-	if len(expectedTokens) > 0 {
-		score = (correctCount * 100) / len(expectedTokens)
-	}
-
+	results, correctCount := alignSequences(expectedTokens, spokenTokens)
+	score := (correctCount * 100) / len(expectedTokens)
 	return results, score
 }
 
