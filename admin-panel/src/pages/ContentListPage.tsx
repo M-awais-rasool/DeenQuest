@@ -1,96 +1,102 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { PlusIcon, DocumentDuplicateIcon, EyeIcon, EyeSlashIcon, TrashIcon } from '@heroicons/react/24/outline'
-import api from '../lib/api'
-import DataTable from '../components/DataTable'
-import { StatusBadge, DifficultyBadge } from '../components/Badges'
-import type { Content, ContentType, ContentListResponse } from '../types'
-import toast from 'react-hot-toast'
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  PlusIcon,
+  DocumentDuplicateIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import api from "../lib/api";
+import DataTable from "../components/DataTable";
+import { StatusBadge, DifficultyBadge } from "../components/Badges";
+import type { Content, ContentType, ContentListResponse } from "../types";
+import toast from "react-hot-toast";
 
 interface Props {
-  type: ContentType
+  type: ContentType;
 }
 
 export default function ContentListPage({ type }: Props) {
-  const [data, setData] = useState<ContentListResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const navigate = useNavigate()
+  const [data, setData] = useState<ContentListResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const navigate = useNavigate();
 
   const fetchContent = () => {
-    setLoading(true)
+    setLoading(true);
     const params = new URLSearchParams({
       type,
       page: String(page),
-      per_page: '20',
-    })
-    if (search) params.set('search', search)
-    if (statusFilter) params.set('status', statusFilter)
+      per_page: "20",
+    });
+    if (search) params.set("search", search);
+    if (statusFilter) params.set("status", statusFilter);
 
     api
       .get(`/admin/content?${params}`)
       .then((res) => setData(res.data.data))
-      .catch(() => toast.error('Failed to load content'))
-      .finally(() => setLoading(false))
-  }
+      .catch(() => toast.error("Failed to load content"))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    fetchContent()
-  }, [type, page, statusFilter])
+    fetchContent();
+  }, [type, page, statusFilter]);
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    setPage(1)
-    fetchContent()
-  }
+    e.preventDefault();
+    setPage(1);
+    fetchContent();
+  };
 
   const handlePublish = (id: string) => {
     api
       .post(`/admin/content/${id}/publish`)
       .then(() => {
-        toast.success('Published!')
-        fetchContent()
+        toast.success("Published!");
+        fetchContent();
       })
-      .catch(() => toast.error('Failed to publish'))
-  }
+      .catch(() => toast.error("Failed to publish"));
+  };
 
   const handleUnpublish = (id: string) => {
     api
       .post(`/admin/content/${id}/unpublish`)
       .then(() => {
-        toast.success('Unpublished')
-        fetchContent()
+        toast.success("Unpublished");
+        fetchContent();
       })
-      .catch(() => toast.error('Failed to unpublish'))
-  }
+      .catch(() => toast.error("Failed to unpublish"));
+  };
 
   const handleClone = (id: string, title: string) => {
     api
       .post(`/admin/content/${id}/clone`, { new_title: `${title} (Copy)` })
       .then(() => {
-        toast.success('Cloned!')
-        fetchContent()
+        toast.success("Cloned!");
+        fetchContent();
       })
-      .catch(() => toast.error('Failed to clone'))
-  }
+      .catch(() => toast.error("Failed to clone"));
+  };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Are you sure you want to delete this content?')) return
+    if (!confirm("Are you sure you want to delete this content?")) return;
     api
       .delete(`/admin/content/${id}`)
       .then(() => {
-        toast.success('Deleted')
-        fetchContent()
+        toast.success("Deleted");
+        fetchContent();
       })
-      .catch(() => toast.error('Failed to delete'))
-  }
+      .catch(() => toast.error("Failed to delete"));
+  };
 
   const columns = [
     {
-      key: 'title',
-      label: 'Title',
+      key: "title",
+      label: "Title",
       render: (item: Content) => (
         <button
           onClick={() => navigate(`/content/${item.id}`)}
@@ -101,39 +107,43 @@ export default function ContentListPage({ type }: Props) {
       ),
     },
     {
-      key: 'category',
-      label: 'Category',
+      key: "category",
+      label: "Category",
       render: (item: Content) => (
-        <span className="badge bg-white/5 text-white/60">{item.category || '—'}</span>
+        <span className="badge bg-white/5 text-white/60">
+          {item.category || "—"}
+        </span>
       ),
     },
     {
-      key: 'status',
-      label: 'Status',
+      key: "status",
+      label: "Status",
       render: (item: Content) => <StatusBadge status={item.status} />,
     },
     {
-      key: 'difficulty',
-      label: 'Difficulty',
-      render: (item: Content) => <DifficultyBadge difficulty={item.difficulty} />,
+      key: "difficulty",
+      label: "Difficulty",
+      render: (item: Content) => (
+        <DifficultyBadge difficulty={item.difficulty} />
+      ),
     },
     {
-      key: 'xp_reward',
-      label: 'XP',
+      key: "xp_reward",
+      label: "XP",
       render: (item: Content) => (
         <span className="text-gold-400 font-semibold">{item.xp_reward}</span>
       ),
     },
     {
-      key: 'order',
-      label: 'Order',
+      key: "order",
+      label: "Order",
     },
     {
-      key: 'actions',
-      label: 'Actions',
+      key: "actions",
+      label: "Actions",
       render: (item: Content) => (
         <div className="flex items-center gap-1">
-          {item.status === 'draft' ? (
+          {item.status === "draft" ? (
             <button
               onClick={() => handlePublish(item.id)}
               className="p-1.5 rounded-lg hover:bg-emerald-500/20 text-emerald-400"
@@ -167,9 +177,9 @@ export default function ContentListPage({ type }: Props) {
         </div>
       ),
     },
-  ]
+  ];
 
-  const label = type === 'task' ? 'Tasks' : 'Levels'
+  const label = type === "task" ? "Tasks" : "Levels";
 
   return (
     <div className="space-y-6">
@@ -184,7 +194,8 @@ export default function ContentListPage({ type }: Props) {
           onClick={() => navigate(`/content/new?type=${type}`)}
           className="btn-primary flex items-center gap-2"
         >
-          <PlusIcon className="w-5 h-5" /> New {type === 'task' ? 'Task' : 'Level'}
+          <PlusIcon className="w-5 h-5" /> New{" "}
+          {type === "task" ? "Task" : "Level"}
         </button>
       </div>
 
@@ -202,8 +213,8 @@ export default function ContentListPage({ type }: Props) {
         <select
           value={statusFilter}
           onChange={(e) => {
-            setStatusFilter(e.target.value)
-            setPage(1)
+            setStatusFilter(e.target.value);
+            setPage(1);
           }}
           className="input-field w-40 text-sm"
         >
@@ -242,5 +253,5 @@ export default function ContentListPage({ type }: Props) {
         </div>
       )}
     </div>
-  )
+  );
 }
