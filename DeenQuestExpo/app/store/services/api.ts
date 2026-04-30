@@ -225,7 +225,7 @@ export interface LevelCompletionResult {
 
 // ─── Recitation Types ───
 
-export type WordStatus = 'correct' | 'wrong' | 'missing' | 'extra';
+export type WordStatus = "correct" | "wrong" | "missing" | "extra";
 
 export interface RecitationWordResult {
   text: string;
@@ -234,8 +234,8 @@ export interface RecitationWordResult {
 }
 
 export interface RecitationCheckResult {
-  score: number;        // 0–100
-  stars: number;        // 1–3
+  score: number; // 0–100
+  stars: number; // 1–3
   words: RecitationWordResult[];
   message: string;
   xp_earned: number;
@@ -269,8 +269,8 @@ export interface RewardWithStatus {
   sort_order: number;
   unlocked: boolean;
   unlocked_at?: string;
-  current: number;   // user's current metric value
-  progress: number;  // 0.0–1.0
+  current: number; // user's current metric value
+  progress: number; // 0.0–1.0
 }
 
 /** Minimal reward snapshot returned inside LevelCompletionResult.new_rewards. */
@@ -287,7 +287,16 @@ export interface NewlyGrantedReward {
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["User", "Auth", "DailyTasks", "Progress", "Levels", "Leaderboard", "Rewards", "Recitation"],
+  tagTypes: [
+    "User",
+    "Auth",
+    "DailyTasks",
+    "Progress",
+    "Levels",
+    "Leaderboard",
+    "Rewards",
+    "Recitation",
+  ],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
       query: (credentials) => ({
@@ -358,7 +367,10 @@ export const API = createApi({
       }),
       providesTags: ["Progress"],
     }),
-    getLeaderboard: builder.query<APIResponse<LeaderboardUser[]>, { limit?: number } | undefined>({
+    getLeaderboard: builder.query<
+      APIResponse<LeaderboardUser[]>,
+      { limit?: number } | undefined
+    >({
       query: (params) => ({
         url: "/api/v1/leaderboard",
         method: "GET",
@@ -414,26 +426,26 @@ export const API = createApi({
       CheckRecitationRequest
     >({
       queryFn: async (
-        { levelId, lessonIndex, audioUri, audioMimeType = 'audio/m4a' },
+        { levelId, lessonIndex, audioUri, audioMimeType = "audio/m4a" },
         _api,
         _extraOptions,
         baseQuery,
       ) => {
         const formData = new FormData();
-        formData.append('level_id', String(levelId));
-        formData.append('lesson_index', String(lessonIndex));
-        (formData as any).append('audio', {
+        formData.append("level_id", String(levelId));
+        formData.append("lesson_index", String(lessonIndex));
+        (formData as any).append("audio", {
           uri: audioUri,
           type: audioMimeType,
           name: `recitation_${Date.now()}.m4a`,
         });
         return baseQuery({
-          url: '/api/v1/recitation/check',
-          method: 'POST',
+          url: "/api/v1/recitation/check",
+          method: "POST",
           body: formData,
         }) as any;
       },
-      invalidatesTags: ['Progress'],
+      invalidatesTags: ["Progress"],
     }),
 
     // ─── Rewards ───

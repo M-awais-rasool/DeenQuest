@@ -72,7 +72,10 @@ const mainSlice = createSlice({
       }
       state.isLoading = false;
     },
-    setPendingRewardUnlocks: (state, action: PayloadAction<NewlyGrantedReward[]>) => {
+    setPendingRewardUnlocks: (
+      state,
+      action: PayloadAction<NewlyGrantedReward[]>,
+    ) => {
       state.pendingRewardUnlocks = action.payload;
     },
     clearPendingRewardUnlocks: (state) => {
