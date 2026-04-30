@@ -185,7 +185,12 @@ func (r *MongoCoreRepository) SeedDailyTasks(ctx context.Context, tasks []model.
 	timeoutCtx, cancel := withTimeout(ctx)
 	defer cancel()
 	for _, t := range tasks {
-		_, err := r.dailyTasks.UpdateByID(timeoutCtx, t.ID, bson.M{"$set": t}, options.Update().SetUpsert(true))
+		_, err := r.dailyTasks.ReplaceOne(
+			timeoutCtx,
+			bson.M{"_id": t.ID},
+			t,
+			options.Replace().SetUpsert(true),
+		)
 		if err != nil {
 			return err
 		}

@@ -2,27 +2,12 @@ package model
 
 import "time"
 
-type ScreenType string
-
-const (
-	ScreenChecklist   ScreenType = "CHECKLIST"
-	ScreenQuranReader ScreenType = "QURAN_READER"
-	ScreenCounter     ScreenType = "COUNTER"
-	ScreenHadithCard  ScreenType = "HADITH_CARD"
-	ScreenQuiz        ScreenType = "QUIZ"
-	ScreenAudioPlayer ScreenType = "AUDIO_PLAYER"
-	ScreenReflection  ScreenType = "REFLECTION"
-	ScreenTips        ScreenType = "TIPS"
-	ScreenAction      ScreenType = "ACTION"
-)
-
 type CompletionType string
 
 const (
-	CompletionButton  CompletionType = "button"
-	CompletionAuto    CompletionType = "auto"
-	CompletionCounter CompletionType = "counter"
-	CompletionQuiz    CompletionType = "quiz"
+	CompletionButton CompletionType = "button"
+	CompletionAuto   CompletionType = "auto"
+	CompletionQuiz   CompletionType = "quiz"
 )
 
 type Difficulty string
@@ -45,18 +30,18 @@ const (
 )
 
 // DailyTask is the master template for a task. These are seeded and never user-specific.
+// A task is composed of an ordered list of Blocks; the frontend renders each block in
+// sequence without needing a dedicated component per task type.
 type DailyTask struct {
 	ID             string         `bson:"_id" json:"id"`
 	Title          string         `bson:"title" json:"title"`
 	Category       TaskCategory   `bson:"category" json:"category"`
 	Description    string         `bson:"description" json:"description"`
-	ScreenType     ScreenType     `bson:"screen_type" json:"screen_type"`
-	Component      string         `bson:"component" json:"component"`
-	Data           map[string]any `bson:"data" json:"data"`
+	Blocks         []Block        `bson:"blocks" json:"blocks"`
 	CompletionType CompletionType `bson:"completion_type" json:"completion_type"`
 	RewardXP       int            `bson:"reward_xp" json:"reward_xp"`
 	Difficulty     Difficulty     `bson:"difficulty" json:"difficulty"`
-	IsFixed        bool           `bson:"is_fixed" json:"is_fixed"` // Fajr is always fixed
+	IsFixed        bool           `bson:"is_fixed" json:"is_fixed"` // Fajr is always included
 }
 
 // UserDailyTask tracks a user's assignment and completion for a specific day.

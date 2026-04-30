@@ -2,6 +2,22 @@ package model
 
 import "time"
 
+// ScreenType is used by the Lesson system to identify its screen layout.
+// Daily tasks no longer use ScreenType — they use []Block instead.
+type ScreenType string
+
+const (
+	ScreenChecklist   ScreenType = "CHECKLIST"
+	ScreenQuranReader ScreenType = "QURAN_READER"
+	ScreenCounter     ScreenType = "COUNTER"
+	ScreenHadithCard  ScreenType = "HADITH_CARD"
+	ScreenQuiz        ScreenType = "QUIZ"
+	ScreenAudioPlayer ScreenType = "AUDIO_PLAYER"
+	ScreenReflection  ScreenType = "REFLECTION"
+	ScreenTips        ScreenType = "TIPS"
+	ScreenAction      ScreenType = "ACTION"
+)
+
 // MiniGameType defines the kind of interactive game in a level.
 type MiniGameType string
 
