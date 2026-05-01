@@ -7,6 +7,7 @@
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "deenquest",
     "splash": {
       "image": "./assets/logo.png",
       "resizeMode": "contain",
