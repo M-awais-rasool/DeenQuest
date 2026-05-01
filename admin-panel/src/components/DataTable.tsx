@@ -1,28 +1,28 @@
 interface Column<T> {
-  key: string
-  label: string
-  render?: (item: T) => React.ReactNode
+  key: string;
+  label: string;
+  render?: (item: T) => React.ReactNode;
 }
 
 interface DataTableProps<T> {
-  columns: Column<T>[]
-  data: T[]
-  loading?: boolean
-  emptyMessage?: string
+  columns: Column<T>[];
+  data: T[];
+  loading?: boolean;
+  emptyMessage?: string;
 }
 
 export default function DataTable<T extends object>({
   columns,
   data,
   loading,
-  emptyMessage = 'No data found',
+  emptyMessage = "No data found",
 }: DataTableProps<T>) {
   if (loading) {
     return (
       <div className="glass-card p-12 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
-    )
+    );
   }
 
   return (
@@ -55,8 +55,15 @@ export default function DataTable<T extends object>({
               data.map((item, idx) => (
                 <tr key={idx} className="table-row">
                   {columns.map((col) => (
-                    <td key={col.key} className="px-6 py-4 text-sm text-white/80">
-                      {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}
+                    <td
+                      key={col.key}
+                      className="px-6 py-4 text-sm text-white/80"
+                    >
+                      {col.render
+                        ? col.render(item)
+                        : String(
+                            (item as Record<string, unknown>)[col.key] ?? "",
+                          )}
                     </td>
                   ))}
                 </tr>
@@ -66,5 +73,5 @@ export default function DataTable<T extends object>({
         </table>
       </div>
     </div>
-  )
+  );
 }
