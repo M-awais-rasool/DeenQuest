@@ -19,7 +19,10 @@ func SetupRoutes(r *gin.Engine, authHandler *authhandler.AuthHandler, userHandle
 		authGroup.POST("/login", authHandler.Login)
 	}
 
-	// User routes
+	// Public user routes (no auth)
+	v1.GET("/users/:id/public", userHandler.GetPublicProfile)
+
+	// User routes (authenticated)
 	userGroup := v1.Group("/users")
 	userGroup.Use(middleware.JWTAuth(jwtManager))
 	{

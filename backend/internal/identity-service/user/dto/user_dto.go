@@ -26,3 +26,12 @@ type UserProfileResponse struct {
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
 }
+
+// PublicUserResponse contains only the fields safe to expose without authentication.
+type PublicUserResponse struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"display_name"`
+	AvatarURL   string `json:"avatar_url"`
+	Bio         string `json:"bio"`
+	Title       string `json:"title"`
+}

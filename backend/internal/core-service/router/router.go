@@ -10,6 +10,10 @@ import (
 
 func SetupRoutes(r *gin.Engine, ctl *controller.CoreController, recCtl *controller.RecitationController, jwtManager *auth.JWTManager) {
 	v1 := r.Group("/api/v1")
+
+	// Public routes (no auth)
+	v1.GET("/progress/user/:id", ctl.GetPublicProgress)
+
 	v1.Use(middleware.JWTAuth(jwtManager))
 	{
 		v1.GET("/progress/me", ctl.GetProgress)

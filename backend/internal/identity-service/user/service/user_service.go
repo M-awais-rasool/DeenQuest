@@ -108,6 +108,23 @@ func (s *UserService) ChangePassword(ctx context.Context, userID string, req *dt
 	return nil
 }
 
+func (s *UserService) GetPublicProfile(ctx context.Context, userID string) (*dto.PublicUserResponse, error) {
+	u, err := s.users.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get user: %w", err)
+	}
+	if u == nil {
+		return nil, ErrUserNotFound
+	}
+	return &dto.PublicUserResponse{
+		ID:          u.ID,
+		DisplayName: u.DisplayName,
+		AvatarURL:   u.AvatarURL,
+		Bio:         u.Bio,
+		Title:       u.Title,
+	}, nil
+}
+
 func (s *UserService) DeleteAccount(ctx context.Context, userID string) error {
 	u, err := s.users.GetByID(ctx, userID)
 	if err != nil {

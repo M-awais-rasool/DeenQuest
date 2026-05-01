@@ -37,6 +37,14 @@ type ProgressResponse struct {
 	WeeklyCompletions []bool `json:"weekly_completions"` // index 0 = 6 days ago, index 6 = today
 }
 
+// PublicProgressResponse contains only the fields safe to expose without authentication.
+type PublicProgressResponse struct {
+	XP            int `json:"xp"`
+	Level         int `json:"level"`
+	BarakahScore  int `json:"barakah_score"`
+	CurrentStreak int `json:"current_streak"`
+}
+
 type LeaderboardEntry struct {
 	Rank   int    `json:"rank"`
 	UserID string `json:"user_id"`
@@ -85,6 +93,33 @@ func (s *CoreService) GetUserProgress(ctx context.Context, userID string) (*Prog
 		CurrentStreak:     streak.CurrentStreak,
 		LongestStreak:     streak.LongestStreak,
 		WeeklyCompletions: weekly,
+	}, nil
+}
+
+// GetPublicProgress returns the subset of progress data that is safe to show publicly.
+func (s *CoreService) GetPublicProgress(ctx context.Context, userID string) (*PublicProgressResponse, error) {
+	progress, err := s.repo.GetProgress(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if progress == nil {
+		progress = &model.Progress{Level: 1}
+	}
+
+	streak, err := s.repo.GetStreak(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	currentStreak := 0
+	if streak != nil {
+		currentStreak = streak.CurrentStreak
+	}
+
+	return &PublicProgressResponse{
+		XP:            progress.TotalXP,
+		Level:         progress.Level,
+		BarakahScore:  progress.BarakahScore,
+		CurrentStreak: currentStreak,
 	}, nil
 }
 
