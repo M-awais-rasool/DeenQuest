@@ -27,6 +27,20 @@ func (h *CoreController) GetProgress(c *gin.Context) {
 	response.OK(c, "progress fetched", result)
 }
 
+func (h *CoreController) GetPublicProgress(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		response.BadRequest(c, "user id is required")
+		return
+	}
+	result, err := h.service.GetPublicProgress(c.Request.Context(), userID)
+	if err != nil {
+		response.InternalError(c, "failed to fetch progress")
+		return
+	}
+	response.OK(c, "public progress fetched", result)
+}
+
 func (h *CoreController) GetLeaderboard(c *gin.Context) {
 	limit := 0 // 0 means return all users
 	rawLimit := c.Query("limit")

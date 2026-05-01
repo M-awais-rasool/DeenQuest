@@ -107,6 +107,26 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	response.OK(c, "Password changed successfully", nil)
 }
 
+func (h *UserHandler) GetPublicProfile(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		response.BadRequest(c, "User ID is required")
+		return
+	}
+
+	result, err := h.userService.GetPublicProfile(c.Request.Context(), userID)
+	if err != nil {
+		if errors.Is(err, service.ErrUserNotFound) {
+			response.NotFound(c, "User not found")
+			return
+		}
+		response.InternalError(c, "Failed to get profile")
+		return
+	}
+
+	response.OK(c, "Public profile retrieved", result)
+}
+
 func (h *UserHandler) DeleteAccount(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
