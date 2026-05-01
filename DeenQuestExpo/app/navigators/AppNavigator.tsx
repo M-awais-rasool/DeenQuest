@@ -7,6 +7,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
+import type { LinkingOptions } from "@react-navigation/native";
 
 import { DemoNavigator } from "./DemoNavigator";
 import type { AppStackParamList, NavigationProps } from "./navigationTypes";
@@ -30,8 +31,27 @@ import { MiniGamePlayerScreen } from "../screens/level/MiniGamePlayerScreen";
 import { SettingsScreen } from "../screens/profile/SettingsScreen";
 import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
+import { PublicProfileScreen } from "../screens/profile/PublicProfileScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
+
+/** Deep linking configuration — maps URLs to screens.
+ *  URL scheme: deenquest://
+ *  Profile share link: deenquest://profile/<userId>
+ */
+const linking: LinkingOptions<AppStackParamList> = {
+  prefixes: ["deenquest://"],
+  config: {
+    screens: {
+      Demo: {
+        screens: {
+          ProfileScreen: "my-profile",
+        },
+      },
+      PublicProfile: "profile/:userId",
+    },
+  },
+};
 
 const AppStack = () => {
   const dispatch = useAppDispatch();
@@ -124,6 +144,10 @@ const AppStack = () => {
             name="ChangePassword"
             component={ChangePasswordScreen}
           />
+          <Stack.Screen
+            name="PublicProfile"
+            component={PublicProfileScreen}
+          />
         </>
       ) : (
         <>
@@ -138,7 +162,7 @@ const AppStack = () => {
 
 export const AppNavigator = (props: NavigationProps) => {
   return (
-    <NavigationContainer {...props}>
+    <NavigationContainer linking={linking} {...props}>
       <AppStack />
     </NavigationContainer>
   );
