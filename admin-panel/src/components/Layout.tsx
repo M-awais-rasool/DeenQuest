@@ -1,5 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   HomeIcon,
   ClipboardDocumentListIcon,
@@ -11,36 +11,40 @@ import {
   ArrowRightStartOnRectangleIcon,
   Cog6ToothIcon,
   MoonIcon,
-} from '@heroicons/react/24/outline'
-import { type ReactNode, useState } from 'react'
+} from "@heroicons/react/24/outline";
+import { type ReactNode, useState } from "react";
 
 const navItems = [
-  { label: 'Dashboard', path: '/', icon: HomeIcon },
-  { label: 'Tasks', path: '/tasks', icon: ClipboardDocumentListIcon },
-  { label: 'Levels', path: '/levels', icon: MapIcon },
-  { label: 'Themes', path: '/themes', icon: SwatchIcon },
-  { label: 'Rewards', path: '/rewards', icon: GiftIcon },
-  { label: 'Events', path: '/events', icon: CalendarDaysIcon },
-  { label: 'Audit Logs', path: '/audit-logs', icon: ClipboardDocumentCheckIcon },
-  { label: 'Settings', path: '/settings', icon: Cog6ToothIcon },
-]
+  { label: "Dashboard", path: "/", icon: HomeIcon },
+  { label: "Tasks", path: "/tasks", icon: ClipboardDocumentListIcon },
+  { label: "Levels", path: "/levels", icon: MapIcon },
+  { label: "Themes", path: "/themes", icon: SwatchIcon },
+  { label: "Rewards", path: "/rewards", icon: GiftIcon },
+  { label: "Events", path: "/events", icon: CalendarDaysIcon },
+  {
+    label: "Audit Logs",
+    path: "/audit-logs",
+    icon: ClipboardDocumentCheckIcon,
+  },
+  { label: "Settings", path: "/settings", icon: Cog6ToothIcon },
+];
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-  const [collapsed, setCollapsed] = useState(false)
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+    logout();
+    navigate("/login");
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside
         className={`${
-          collapsed ? 'w-20' : 'w-64'
+          collapsed ? "w-20" : "w-64"
         } flex flex-col bg-navy-900/50 border-r border-white/5 backdrop-blur-xl transition-all duration-300`}
       >
         {/* Logo */}
@@ -66,9 +70,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.path === '/'}
+              end={item.path === "/"}
               className={({ isActive }) =>
-                `sidebar-link ${isActive ? 'active' : 'text-white/60'}`
+                `sidebar-link ${isActive ? "active" : "text-white/60"}`
               }
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -102,9 +106,11 @@ export default function Layout({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-10 flex items-center justify-between px-8 py-4 bg-navy-950/80 backdrop-blur-xl border-b border-white/5">
           <div>
             <h2 className="text-lg font-semibold text-white/90">
-              Welcome back, {user?.email?.split('@')[0] ?? 'Admin'}
+              Welcome back, {user?.email?.split("@")[0] ?? "Admin"}
             </h2>
-            <p className="text-xs text-white/40">Manage your DeenQuest content</p>
+            <p className="text-xs text-white/40">
+              Manage your DeenQuest content
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <input
@@ -113,7 +119,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               className="input-field w-64 text-sm py-2"
             />
             <div className="w-9 h-9 rounded-full gradient-emerald flex items-center justify-center text-sm font-bold shadow-lg shadow-emerald-500/20">
-              {user?.email?.[0]?.toUpperCase() ?? 'A'}
+              {user?.email?.[0]?.toUpperCase() ?? "A"}
             </div>
           </div>
         </header>
@@ -122,5 +128,5 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div className="p-8">{children}</div>
       </main>
     </div>
-  )
+  );
 }
