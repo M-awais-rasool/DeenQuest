@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://172.16.1.63:8080",
+  baseUrl: "http://192.168.200.10:8080",
   prepareHeaders: async (headers) => {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
@@ -52,6 +52,21 @@ export interface UpdateProfileRequest {
 export interface ChangePasswordRequest {
   current_password: string;
   new_password: string;
+}
+
+export interface PublicProfileData {
+  id: string;
+  display_name: string;
+  avatar_url?: string;
+  bio?: string;
+  title?: string;
+}
+
+export interface PublicProgressData {
+  xp: number;
+  level: number;
+  barakah_score: number;
+  current_streak: number;
 }
 
 export interface AuthResponse {
@@ -321,6 +336,18 @@ export const API = createApi({
       }),
       providesTags: ["User"],
     }),
+    getPublicProfile: builder.query<APIResponse<PublicProfileData>, string>({
+      query: (userId) => ({
+        url: `/api/v1/users/${userId}/public`,
+        method: "GET",
+      }),
+    }),
+    getPublicProgress: builder.query<APIResponse<PublicProgressData>, string>({
+      query: (userId) => ({
+        url: `/api/v1/progress/user/${userId}`,
+        method: "GET",
+      }),
+    }),
     updateProfile: builder.mutation<
       APIResponse<AuthUser>,
       UpdateProfileRequest
@@ -461,6 +488,8 @@ export const {
   useSignupMutation,
   useLoginMutation,
   useGetProfileQuery,
+  useGetPublicProfileQuery,
+  useGetPublicProgressQuery,
   useUpdateProfileMutation,
   useChangePasswordMutation,
   useDeleteAccountMutation,
