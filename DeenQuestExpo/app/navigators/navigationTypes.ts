@@ -29,6 +29,7 @@ export type AppStackParamList = {
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
+  PublicProfile: { userId: string };
 };
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =

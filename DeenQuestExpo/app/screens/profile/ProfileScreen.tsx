@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Share,
 } from "react-native";
 import {
   Flame,
@@ -85,6 +86,25 @@ export function ProfileScreen() {
   const currentStreak = progress?.current_streak ?? 0;
   const barakahScore = progress?.barakah_score ?? 0;
 
+  const handleShareProfile = async () => {
+    if (!profile?.id) return;
+    const deepLink = `deenquest://profile/${profile.id}`;
+    const shareText = `Check out ${displayName}'s profile on DeenQuest!\n${deepLink}`;
+    try {
+      await Share.share(
+        {
+          title: `${displayName}'s DeenQuest Profile`,
+          message: shareText,
+          url: deepLink, 
+        },
+        {
+          excludedActivityTypes: [],
+        },
+      );
+    } catch {
+    }
+  };
+
   return (
     <ScreenWrapper>
       <StatusBar barStyle="light-content" />
@@ -132,7 +152,7 @@ export function ProfileScreen() {
             />
             <TactileButton
               title="Share Stats"
-              onPress={() => {}}
+              onPress={handleShareProfile}
               style={styles.primaryButton}
               textStyle={styles.primaryButtonText}
             />
