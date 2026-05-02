@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Vibration,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import * as Haptics from "expo-haptics";
 import type { BlockComponentProps } from "./types";
 import { theme } from "../../../theme/themes";
 
@@ -31,7 +26,7 @@ export const CounterBlock = ({
   const handleTap = () => {
     if (isDisabled || reached) return;
     setCount((c) => Math.min(c + 1, target));
-    Vibration.vibrate(20);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
