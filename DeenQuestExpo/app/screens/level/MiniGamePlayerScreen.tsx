@@ -19,11 +19,11 @@ import {
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
-import { MCQGame } from "./components/MCQGame";
-import { TapMatchGame } from "./components/TapMatchGame";
-import { FallbackGame } from "./components/FallbackGame";
-import { CompletionScreen } from "./components/CompletionScreen";
-import { RewardCelebrationModal } from "./components/RewardCelebrationModal";
+import { RewardCelebrationModal } from "../../components/level/components/RewardCelebrationModal";
+import { CompletionScreen } from "../../components/level/components/CompletionScreen";
+import { TapMatchGame } from "../../components/level/components/TapMatchGame";
+import { FallbackGame } from "../../components/level/components/FallbackGame";
+import { MCQGame } from "../../components/level/components/MCQGame";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "MiniGamePlayer">;
@@ -68,7 +68,6 @@ export function MiniGamePlayerScreen() {
     },
     [level, completeLevel],
   );
-
 
   useEffect(() => () => clearTimeout(rewardTimerRef.current), []);
 

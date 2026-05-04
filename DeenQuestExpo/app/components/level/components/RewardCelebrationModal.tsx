@@ -12,8 +12,8 @@ import {
 import { Star } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { NewlyGrantedReward } from "../../../store/services/api";
-import { RewardIcon } from "../../reward/components/RewardIcon";
-import { rarityTheme } from "../../reward/components/rarityTheme";
+import { rarityTheme } from "../../../screens/reward/components/rarityTheme";
+import { RewardIcon } from "../../../screens/reward/components/RewardIcon";
 
 const PARTICLE_COUNT = 10;
 
