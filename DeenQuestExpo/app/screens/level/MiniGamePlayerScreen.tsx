@@ -19,11 +19,11 @@ import {
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
-import { RewardCelebrationModal } from "../../components/level/components/RewardCelebrationModal";
-import { CompletionScreen } from "../../components/level/components/CompletionScreen";
-import { TapMatchGame } from "../../components/level/components/TapMatchGame";
-import { FallbackGame } from "../../components/level/components/FallbackGame";
-import { MCQGame } from "../../components/level/components/MCQGame";
+import { RewardCelebrationModal } from "../../components/level/lesson/RewardCelebrationModal";
+import { CompletionScreen } from "../../components/level/lesson/CompletionScreen";
+import { TapMatchGame } from "../../components/level/lesson/TapMatchGame";
+import { FallbackGame } from "../../components/level/lesson/FallbackGame";
+import { MCQGame } from "../../components/level/lesson/MCQGame";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "MiniGamePlayer">;
