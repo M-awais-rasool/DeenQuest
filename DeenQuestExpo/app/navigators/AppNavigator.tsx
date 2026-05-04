@@ -26,6 +26,7 @@ import {
 } from "../store/storage/authStorage";
 import { DailyTaskDetailScreen } from "../screens/task/DailyTaskDetailScreen";
 import { LevelDetailScreen } from "../screens/level/LevelDetailScreen";
+import { LevelMapScreen } from "../screens/level/LevelMapScreen";
 import { LessonPlayerScreen } from "../screens/level/LessonPlayerScreen";
 import { MiniGamePlayerScreen } from "../screens/level/MiniGamePlayerScreen";
 import { SettingsScreen } from "../screens/profile/SettingsScreen";
@@ -127,6 +128,7 @@ const AppStack = () => {
             name="DailyTaskDetail"
             component={DailyTaskDetailScreen}
           />
+          <Stack.Screen name="LevelMap" component={LevelMapScreen} />
           <Stack.Screen name="LevelDetail" component={LevelDetailScreen} />
           <Stack.Screen
             name="LessonPlayer"

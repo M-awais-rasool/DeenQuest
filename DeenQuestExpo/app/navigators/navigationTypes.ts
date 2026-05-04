@@ -23,6 +23,7 @@ export type AppStackParamList = {
   Signup: undefined;
   Demo: NavigatorScreenParams<DemoTabParamList>;
   DailyTaskDetail: { task: DailyTask };
+  LevelMap: undefined;
   LevelDetail: { levelId: number };
   LessonPlayer: { levelId: number; startLessonIndex: number };
   MiniGamePlayer: { levelId: number };

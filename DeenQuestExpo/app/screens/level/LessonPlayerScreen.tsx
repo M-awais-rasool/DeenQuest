@@ -20,7 +20,7 @@ import type { Lesson } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
-import { LESSON_COMPONENT_MAP } from "../../components/level/components";
+import { LESSON_COMPONENT_MAP } from "../../components/level/lesson";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "LessonPlayer">;

@@ -13,6 +13,7 @@ import {
   Star,
   Trophy,
   ChevronRight,
+  ChevronLeft,
   Gift,
   Sparkles,
 } from "lucide-react-native";
@@ -261,14 +262,19 @@ const LevelNode = memo(function LevelNode({
 
 /* ─── Phase Header ─── */
 const PhaseHeader = memo(function PhaseHeader() {
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   return (
     <View style={s.phaseHeader}>
+      <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+        <ChevronLeft size={20} color={theme.colors.primary} />
+        <Text style={s.backBtnText}>Courses</Text>
+      </TouchableOpacity>
       <View style={s.phaseRow}>
         <Sparkles size={18} color={theme.colors.primary} />
-        <Text style={s.phaseTitle}>Phase 2: Beginner Qaida</Text>
+        <Text style={s.phaseTitle}>Noorani Qaida</Text>
       </View>
       <Text style={s.phaseSubtitle}>
-        20 levels — Arabic alphabet to reading Quran
+        20 levels · Arabic alphabet to reading Quran
       </Text>
     </View>
   );
@@ -311,8 +317,8 @@ function SummaryStat({ value, label }: { value: string; label: string }) {
   );
 }
 
-/* ─── Main Screen ─── */
-export function LevelMapScreen() {
+/* ─── Level Map Content (embeddable, no ScreenWrapper) ─── */
+export function LevelMapContent() {
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { data: levelsRes, isLoading: levelsLoading } = useGetLevelsQuery();
@@ -358,28 +364,29 @@ export function LevelMapScreen() {
     [levels, xp],
   );
 
-  if (levelsLoading) {
-    return (
-      <ScreenWrapper>
-        <Loader fullScreen />
-      </ScreenWrapper>
-    );
-  }
+  if (levelsLoading) return <Loader fullScreen />;
 
   return (
+    <FlatList
+      data={levels}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      ListHeaderComponent={ListHeader}
+      contentContainerStyle={s.scrollContent}
+      showsVerticalScrollIndicator={false}
+      removeClippedSubviews
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={7}
+    />
+  );
+}
+
+/* ─── Main Screen (standalone, with ScreenWrapper) ─── */
+export function LevelMapScreen() {
+  return (
     <ScreenWrapper>
-      <FlatList
-        data={levels}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        ListHeaderComponent={ListHeader}
-        contentContainerStyle={s.scrollContent}
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={7}
-      />
+      <LevelMapContent />
     </ScreenWrapper>
   );
 }
@@ -389,6 +396,7 @@ export function LevelMapScreen() {
 const s = StyleSheet.create({
   scrollContent: {
     backgroundColor: theme.colors.background,
+    paddingBottom: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -398,6 +406,18 @@ const s = StyleSheet.create({
   loadingText: {
     color: theme.colors.textMuted,
     fontSize: 16,
+  },
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 14,
+    alignSelf: "flex-start",
+  },
+  backBtnText: {
+    color: theme.colors.primary,
+    fontSize: 15,
+    fontWeight: "700",
   },
 
   /* Phase header */
