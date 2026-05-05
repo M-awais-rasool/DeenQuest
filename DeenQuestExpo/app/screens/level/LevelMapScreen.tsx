@@ -382,7 +382,6 @@ export function LevelMapContent() {
   );
 }
 
-/* ─── Main Screen (standalone, with ScreenWrapper) ─── */
 export function LevelMapScreen() {
   return (
     <ScreenWrapper>

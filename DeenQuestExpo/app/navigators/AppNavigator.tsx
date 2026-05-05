@@ -146,10 +146,7 @@ const AppStack = () => {
             name="ChangePassword"
             component={ChangePasswordScreen}
           />
-          <Stack.Screen
-            name="PublicProfile"
-            component={PublicProfileScreen}
-          />
+          <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
         </>
       ) : (
         <>
