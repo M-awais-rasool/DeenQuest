@@ -17,13 +17,11 @@ type Props = {
   onPress: () => void;
 };
 
-/**
- * CourseCard renders a single course entry as a horizontal card with:
- * - A 3-D box visual on the left
- * - Title, subtitle, level count and a CTA/locked chip on the right
- * - Staggered entrance animation and a gentle pulse for the active course
- */
-export const CourseCard = memo(function CourseCard({ course, index, onPress }: Props) {
+export const CourseCard = memo(function CourseCard({
+  course,
+  index,
+  onPress,
+}: Props) {
   const isLocked = course.status === "locked";
   const isAvailable = course.status === "available";
 
@@ -55,8 +53,16 @@ export const CourseCard = memo(function CourseCard({ course, index, onPress }: P
     if (!isAvailable) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.04, duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, {
+          toValue: 1.04,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
       ]),
     );
     loop.start();
@@ -65,11 +71,18 @@ export const CourseCard = memo(function CourseCard({ course, index, onPress }: P
 
   const handlePressIn = useCallback(() => {
     if (isLocked) return;
-    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      useNativeDriver: true,
+    }).start();
   }, [isLocked, scaleAnim]);
 
   const handlePressOut = useCallback(() => {
-    Animated.spring(scaleAnim, { toValue: 1, friction: 5, useNativeDriver: true }).start();
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
   }, [scaleAnim]);
 
   return (
@@ -114,13 +127,19 @@ export const CourseCard = memo(function CourseCard({ course, index, onPress }: P
               {course.levelCount}
             </Text>
             {isAvailable ? (
-              <View style={[s.ctaChip, { backgroundColor: course.accentColor }]}>
+              <View
+                style={[s.ctaChip, { backgroundColor: course.accentColor }]}
+              >
                 <Text style={s.ctaChipText}>START</Text>
                 <ChevronRight size={11} color="#fff" strokeWidth={2.5} />
               </View>
             ) : (
               <View style={s.lockedChip}>
-                <Lock size={9} color={theme.colors.textMuted} strokeWidth={2.5} />
+                <Lock
+                  size={9}
+                  color={theme.colors.textMuted}
+                  strokeWidth={2.5}
+                />
                 <Text style={s.lockedChipText}>LOCKED</Text>
               </View>
             )}

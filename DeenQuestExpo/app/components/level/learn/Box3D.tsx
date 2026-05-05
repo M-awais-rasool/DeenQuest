@@ -7,8 +7,6 @@ import type { CourseConfig } from "./types";
 const BOX_W = 80;
 const BOX_DEPTH = 9;
 
-/** A shared animated value that never changes — used for locked nodes so
- *  no animation is running when the course is unavailable. */
 export const STATIC_ANIM = new Animated.Value(1);
 
 type Props = {
@@ -17,15 +15,11 @@ type Props = {
   pulseScale: Animated.Value;
 };
 
-/**
- * Box3D renders a faux-3D box using layered React Native Views.
- *
- * Layer order (back → front):
- *   depthBack  →  depthMid  →  face (highlight + shade + icon)
- *
- * An ambient glow ring is rendered behind everything for available courses.
- */
-export const Box3D = memo(function Box3D({ course, isLocked, pulseScale }: Props) {
+export const Box3D = memo(function Box3D({
+  course,
+  isLocked,
+  pulseScale,
+}: Props) {
   const { Icon } = course;
   const faceBg = isLocked ? theme.colors.surfaceHigh : course.accentColor;
   const depthBg = isLocked ? "#282828" : course.depthColor;

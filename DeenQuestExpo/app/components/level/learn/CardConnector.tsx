@@ -2,7 +2,6 @@ import React, { memo } from "react";
 import { View, StyleSheet } from "react-native";
 import { theme } from "../../../theme/themes";
 
-/** Three small dots that visually connect consecutive course cards. */
 export const CardConnector = memo(function CardConnector() {
   return (
     <View style={s.wrap}>

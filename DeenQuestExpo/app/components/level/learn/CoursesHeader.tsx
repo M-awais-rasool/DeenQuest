@@ -3,7 +3,6 @@ import { View, Text, StyleSheet } from "react-native";
 import { Sparkles } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 
-/** Static header displayed at the top of the Learn tab course picker. */
 export const CoursesHeader = memo(function CoursesHeader() {
   return (
     <View style={s.wrap}>
@@ -12,7 +11,9 @@ export const CoursesHeader = memo(function CoursesHeader() {
         <Text style={s.badgeText}>MY LEARNING PATH</Text>
       </View>
       <Text style={s.title}>Choose a Course</Text>
-      <Text style={s.sub}>Build your Quran knowledge, one module at a time</Text>
+      <Text style={s.sub}>
+        Build your Quran knowledge, one module at a time
+      </Text>
     </View>
   );
 });
