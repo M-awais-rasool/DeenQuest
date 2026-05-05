@@ -30,7 +30,8 @@
     "react-native-safe-area-context": "^5.7.0",
     "react-native-screens": "^4.24.0",
     "react-native-svg": "^15.15.4",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "rive-react-native": "^9.8.3"
   },
   "private": true,
   "devDependencies": {
