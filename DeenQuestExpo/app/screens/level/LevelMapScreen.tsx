@@ -17,20 +17,26 @@ import {
   Gift,
   Sparkles,
 } from "lucide-react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RouteProp } from "@react-navigation/native";
 import { theme } from "../../theme/themes";
 import {
   useGetLevelsQuery,
   useGetProgressQuery,
 } from "../../store/services/api";
-import type { LevelWithStatus, LevelStatus } from "../../store/services/api";
+import type {
+  CourseType,
+  LevelWithStatus,
+  LevelStatus,
+} from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const NODE_SIZE = 64;
+type Route = RouteProp<AppStackParamList, "LevelMap">;
 
 /* ─── S-curve offsets: smooth wave pattern ─── */
 function getNodeOffset(index: number): number {
@@ -92,11 +98,11 @@ const StarsDisplay = memo(function StarsDisplay({
 
 /* ─── Treasure badge ─── */
 const TreasureBadge = memo(function TreasureBadge({
-  levelId,
+  courseLevel,
 }: {
-  levelId: number;
+  courseLevel: number;
 }) {
-  if (levelId % 5 !== 0) return null;
+  if (courseLevel % 5 !== 0) return null;
   return (
     <View style={s.treasureBadge}>
       <Gift size={12} color={theme.colors.secondary} />
@@ -222,13 +228,13 @@ const LevelNode = memo(function LevelNode({
                 <Trophy size={22} color={config.iconColor} />
               ) : (
                 <Text style={[s.nodeNumber, { color: config.iconColor }]}>
-                  {level.id}
+                  {level.course_level || level.id}
                 </Text>
               )}
             </View>
           </TouchableOpacity>
 
-          <TreasureBadge levelId={level.id} />
+          <TreasureBadge courseLevel={level.course_level || level.id} />
         </Animated.View>
 
         {/* Info below node */}
@@ -261,21 +267,31 @@ const LevelNode = memo(function LevelNode({
 });
 
 /* ─── Phase Header ─── */
-const PhaseHeader = memo(function PhaseHeader() {
+const PhaseHeader = memo(function PhaseHeader({
+  title,
+  subtitle,
+  totalLevels,
+}: {
+  title: string;
+  subtitle: string;
+  totalLevels: number;
+}) {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   return (
     <View style={s.phaseHeader}>
-      <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={s.backBtn}
+        onPress={() => navigation.goBack()}
+        activeOpacity={0.7}
+      >
         <ChevronLeft size={20} color={theme.colors.primary} />
         <Text style={s.backBtnText}>Courses</Text>
       </TouchableOpacity>
       <View style={s.phaseRow}>
         <Sparkles size={18} color={theme.colors.primary} />
-        <Text style={s.phaseTitle}>Noorani Qaida</Text>
+        <Text style={s.phaseTitle}>{title}</Text>
       </View>
-      <Text style={s.phaseSubtitle}>
-        20 levels · Arabic alphabet to reading Quran
-      </Text>
+      <Text style={s.phaseSubtitle}>{totalLevels} levels · {subtitle}</Text>
     </View>
   );
 });
@@ -295,9 +311,12 @@ const ProgressSummary = memo(function ProgressSummary({
   return (
     <View style={s.summaryCard}>
       <View style={s.summaryRow}>
-        <SummaryStat value={`${completed}/20`} label="Levels" />
+        <SummaryStat value={`${completed}/${levels.length}`} label="Levels" />
         <View style={s.summaryDivider} />
-        <SummaryStat value={`${totalStars}/60`} label="Stars" />
+        <SummaryStat
+          value={`${totalStars}/${levels.length * 3}`}
+          label="Stars"
+        />
         <View style={s.summaryDivider} />
         <SummaryStat value={String(xp)} label="Total XP" />
       </View>
@@ -318,10 +337,20 @@ function SummaryStat({ value, label }: { value: string; label: string }) {
 }
 
 /* ─── Level Map Content (embeddable, no ScreenWrapper) ─── */
-export function LevelMapContent() {
+export function LevelMapContent({
+  courseType = "qaida",
+  courseTitle = "Noorani Qaida",
+  courseSubtitle = "Arabic alphabet to reading Quran",
+}: {
+  courseType?: CourseType;
+  courseTitle?: string;
+  courseSubtitle?: string;
+}) {
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
-  const { data: levelsRes, isLoading: levelsLoading } = useGetLevelsQuery();
+  const { data: levelsRes, isLoading: levelsLoading } = useGetLevelsQuery({
+    courseType,
+  });
   const { data: progressRes } = useGetProgressQuery();
 
   const levels: LevelWithStatus[] = useMemo(
@@ -333,9 +362,9 @@ export function LevelMapContent() {
   const handleLevelPress = useCallback(
     (level: LevelWithStatus) => {
       if (level.status === "locked") return;
-      navigation.navigate("LevelDetail", { levelId: level.id });
+      navigation.navigate("LevelDetail", { levelId: level.id, courseType });
     },
-    [navigation],
+    [courseType, navigation],
   );
 
   const renderItem = useCallback(
@@ -357,11 +386,15 @@ export function LevelMapContent() {
   const ListHeader = useMemo(
     () => (
       <>
-        <PhaseHeader />
+        <PhaseHeader
+          title={courseTitle}
+          subtitle={courseSubtitle}
+          totalLevels={levels.length}
+        />
         <ProgressSummary levels={levels} xp={xp} />
       </>
     ),
-    [levels, xp],
+    [courseTitle, courseSubtitle, levels, xp],
   );
 
   if (levelsLoading) return <Loader fullScreen />;
@@ -383,9 +416,19 @@ export function LevelMapContent() {
 }
 
 export function LevelMapScreen() {
+  const route = useRoute<Route>();
+  const courseType = route.params?.courseType ?? "qaida";
+  const courseTitle = route.params?.courseTitle ?? "Noorani Qaida";
+  const courseSubtitle =
+    route.params?.courseSubtitle ?? "Arabic alphabet to reading Quran";
+
   return (
     <ScreenWrapper>
-      <LevelMapContent />
+      <LevelMapContent
+        courseType={courseType}
+        courseTitle={courseTitle}
+        courseSubtitle={courseSubtitle}
+      />
     </ScreenWrapper>
   );
 }

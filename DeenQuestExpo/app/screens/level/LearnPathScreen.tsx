@@ -20,7 +20,12 @@ export function LearnPathScreen() {
   const handlePress = useCallback(
     (course: CourseConfig) => {
       if (course.status === "locked") return;
-      if (course.id === "qaida") navigation.navigate("LevelMap");
+      if (!course.courseType) return;
+      navigation.navigate("LevelMap", {
+        courseType: course.courseType,
+        courseTitle: course.title,
+        courseSubtitle: course.subtitle,
+      });
     },
     [navigation],
   );

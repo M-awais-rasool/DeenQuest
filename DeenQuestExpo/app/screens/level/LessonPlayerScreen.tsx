@@ -105,9 +105,9 @@ const LessonRenderer = memo(function LessonRenderer({
 export function LessonPlayerScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { levelId, startLessonIndex } = route.params;
+  const { levelId, startLessonIndex, courseType } = route.params;
 
-  const { data: res } = useGetLevelDetailQuery(levelId);
+  const { data: res } = useGetLevelDetailQuery({ levelId, courseType });
   const level = res?.data;
   const [completeLesson] = useCompleteLessonMutation();
 
@@ -119,9 +119,11 @@ export function LessonPlayerScreen() {
   const handleComplete = useCallback(() => {
     if (!level) return;
 
-    completeLesson({ levelId: level.id, lessonIndex: currentIndex }).catch(
-      () => {},
-    );
+    completeLesson({
+      levelId: level.id,
+      lessonIndex: currentIndex,
+      courseType: level.course_type ?? courseType,
+    }).catch(() => {});
 
     const isLast = currentIndex >= level.lessons.length - 1;
 
@@ -132,7 +134,10 @@ export function LessonPlayerScreen() {
     }).start(() => {
       scrollRef.current?.scrollTo({ y: 0, animated: false });
       if (isLast) {
-        navigation.replace("MiniGamePlayer", { levelId: level.id });
+        navigation.replace("MiniGamePlayer", {
+          levelId: level.id,
+          courseType: level.course_type ?? courseType,
+        });
       } else {
         setCurrentIndex((prev) => prev + 1);
         Animated.timing(fadeAnim, {
@@ -142,7 +147,7 @@ export function LessonPlayerScreen() {
         }).start();
       }
     });
-  }, [level, currentIndex, completeLesson, navigation, fadeAnim]);
+  }, [courseType, level, currentIndex, completeLesson, navigation, fadeAnim]);
 
   const handleClose = useCallback(() => {
     navigation.goBack();

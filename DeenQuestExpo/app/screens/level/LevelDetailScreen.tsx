@@ -40,9 +40,12 @@ const LESSON_TYPE_ICON: Record<string, string> = {
 export function LevelDetailScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { levelId } = route.params;
+  const { levelId, courseType } = route.params;
 
-  const { data: res, isLoading } = useGetLevelDetailQuery(levelId);
+  const { data: res, isLoading } = useGetLevelDetailQuery({
+    levelId,
+    courseType,
+  });
   const level = res?.data;
 
   const handleStartLesson = useCallback(
@@ -51,15 +54,19 @@ export function LevelDetailScreen() {
       navigation.navigate("LessonPlayer", {
         levelId: level.id,
         startLessonIndex: lessonIndex,
+        courseType: level.course_type ?? courseType,
       });
     },
-    [level, navigation],
+    [courseType, level, navigation],
   );
 
   const handleStartMiniGame = useCallback(() => {
     if (!level) return;
-    navigation.navigate("MiniGamePlayer", { levelId: level.id });
-  }, [level, navigation]);
+    navigation.navigate("MiniGamePlayer", {
+      levelId: level.id,
+      courseType: level.course_type ?? courseType,
+    });
+  }, [courseType, level, navigation]);
 
   if (isLoading || !level) {
     return (
@@ -70,7 +77,8 @@ export function LevelDetailScreen() {
   }
 
   const allLessonsDone = level.lessons_complete >= level.lessons.length;
-  const isTreasureLevel = level.id % 5 === 0;
+  const courseLevel = level.course_level || level.id;
+  const isTreasureLevel = courseLevel % 5 === 0;
 
   return (
     <ScreenWrapper>
@@ -88,7 +96,7 @@ export function LevelDetailScreen() {
             <ArrowLeft size={22} color={theme.colors.text} />
           </TouchableOpacity>
           <View style={s.headerInfo}>
-            <Text style={s.levelBadge}>LEVEL {level.id}</Text>
+            <Text style={s.levelBadge}>LEVEL {courseLevel}</Text>
             <Text style={s.levelTitle}>{level.title}</Text>
           </View>
         </View>

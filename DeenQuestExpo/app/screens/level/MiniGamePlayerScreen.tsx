@@ -31,9 +31,9 @@ type Route = RouteProp<AppStackParamList, "MiniGamePlayer">;
 export function MiniGamePlayerScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { levelId } = route.params;
+  const { levelId, courseType } = route.params;
 
-  const { data: res } = useGetLevelDetailQuery(levelId);
+  const { data: res } = useGetLevelDetailQuery({ levelId, courseType });
   const level = res?.data;
   const [completeLevel] = useCompleteLevelMutation();
 
@@ -55,6 +55,7 @@ export function MiniGamePlayerScreen() {
         const apiRes = await completeLevel({
           levelId: level.id,
           stars,
+          courseType: level.course_type ?? courseType,
         }).unwrap();
         const rewards = apiRes.data?.new_rewards ?? [];
         setResult({
@@ -66,7 +67,7 @@ export function MiniGamePlayerScreen() {
         setResult({ stars, xpEarned: level.xp_reward, rewards: [] });
       }
     },
-    [level, completeLevel],
+    [courseType, level, completeLevel],
   );
 
   useEffect(() => () => clearTimeout(rewardTimerRef.current), []);
