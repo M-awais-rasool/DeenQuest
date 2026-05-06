@@ -1,7 +1,26 @@
 package model
 
-// SeedLevels returns the complete 20-level learning journey.
+// SeedLevels returns all seeded learning journeys.
 func SeedLevels() []Level {
+	levels := withCourseDefaults(seedQaidaLevels(), CourseQaida, 0)
+	levels = append(levels, withCourseDefaults(seedTajweedLevels(), CourseTajweed, 100)...)
+	return levels
+}
+
+func withCourseDefaults(levels []Level, courseType CourseType, idOffset int) []Level {
+	for i := range levels {
+		levels[i].CourseType = courseType
+		if levels[i].CourseLevel == 0 {
+			levels[i].CourseLevel = i + 1
+		}
+		if levels[i].ID == 0 {
+			levels[i].ID = idOffset + levels[i].CourseLevel
+		}
+	}
+	return levels
+}
+
+func seedQaidaLevels() []Level {
 	return []Level{
 		// ───────── LEVELS 1-5: Very Beginner ─────────
 		{
@@ -349,6 +368,207 @@ func SeedLevels() []Level {
 				{Type: LessonRevision, Title: "Certificate Ceremony", Description: "Congratulations! You've completed the Beginner Qaida Journey!", ScreenType: ScreenAction, Component: "CertificateComponent", Data: map[string]any{"title": "Qaida Graduate", "message": "MashaAllah! You can now recognize all Arabic letters, read with harakat, understand basic tajweed, and read simple Quran ayahs. Your journey to fluent Quran reading has begun!", "next_phase": "Phase 3: Intermediate Quran Reading"}},
 			},
 			MiniGame: MiniGame{Type: GameMemoryCards, Description: "🎁 Grand Treasure Chest! Final graduation celebration challenge", Data: map[string]any{"pairs": []map[string]any{{"arabic": "بِسْمِ اللَّهِ", "english": "In the name of Allah"}, {"arabic": "الْحَمْدُ لِلَّهِ", "english": "All praise to Allah"}, {"arabic": "سُبْحَانَ اللَّهِ", "english": "Glory to Allah"}, {"arabic": "اللَّهُ أَكْبَرُ", "english": "Allah is the Greatest"}, {"arabic": "لَا إِلَٰهَ إِلَّا اللَّه", "english": "No god but Allah"}, {"arabic": "أَسْتَغْفِرُ اللَّه", "english": "I seek Allah's forgiveness"}}}},
+		},
+	}
+}
+
+func seedTajweedLevels() []Level {
+	return []Level{
+		{
+			Title:        "Makharij Foundations",
+			Theme:        "Articulation Points",
+			Goal:         "Recognize where Arabic sounds are formed before applying tajweed rules",
+			Difficulty:   LevelEasy,
+			XPReward:     120,
+			UnlockReward: "badge:tajweed_first_steps",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "What Is Makhraj?", Description: "Learn that every letter begins from a specific place in the mouth or throat", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Makhraj means the exit point of a letter", "Clear makharij make recitation easier to understand", "Tajweed begins with listening carefully before speaking", "Practice slowly before increasing speed"}}},
+				{Type: LessonPronunciation, Title: "Throat Letters", Description: "Practice the six letters that come from the throat", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "ء", "sound": "Hamzah - deepest throat stop"}, {"arabic": "ه", "sound": "Haa - soft breath from the throat"}, {"arabic": "ع", "sound": "Ain - middle throat"}, {"arabic": "ح", "sound": "Haa - airy middle throat"}, {"arabic": "غ", "sound": "Ghain - upper throat"}, {"arabic": "خ", "sound": "Khaa - upper throat"}}}},
+				{Type: LessonPronunciation, Title: "Lip Letters", Description: "Practice letters shaped by the lips", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "ب", "sound": "Baa - both lips close"}, {"arabic": "م", "sound": "Meem - both lips with nasal sound"}, {"arabic": "و", "sound": "Waaw - rounded lips"}, {"arabic": "ف", "sound": "Faa - lower lip and upper teeth"}}}},
+				{Type: LessonQuiz, Title: "Makhraj Check", Description: "Identify the correct articulation group", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "Which group contains throat letters?", "options": []string{"ب م و ف", "ء ه ع ح غ خ", "ق ك ج ش", "ل ن ر"}, "correct": 1}},
+			},
+			MiniGame: MiniGame{Type: GameTapMatch, Description: "Match each makhraj group with its place of articulation", Data: map[string]any{"pairs": []map[string]any{{"arabic": "ء ه ع ح غ خ", "english": "Throat"}, {"arabic": "ب م و ف", "english": "Lips"}, {"arabic": "ل ن ر", "english": "Tongue tip"}, {"arabic": "ق ك", "english": "Back tongue"}}}},
+		},
+		{
+			Title:        "Clear And Heavy Sounds",
+			Theme:        "Sifaat Basics",
+			Goal:         "Distinguish light letters from heavy letters in recitation",
+			Difficulty:   LevelEasy,
+			XPReward:     130,
+			UnlockReward: "badge:sifaat_listener",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Light vs Heavy", Description: "Learn the difference between thin and full-mouth sounds", ScreenType: ScreenAction, Component: "LetterIntroComponent", Data: map[string]any{"letters": []map[string]any{{"letter": "ت", "name": "Light Taa", "transliteration": "ta"}, {"letter": "ط", "name": "Heavy Taa", "transliteration": "taa"}, {"letter": "س", "name": "Light Seen", "transliteration": "sa"}, {"letter": "ص", "name": "Heavy Saad", "transliteration": "saa"}}, "audio_hint": "Heavy letters are pronounced with a fuller mouth while the tongue rises slightly."}},
+				{Type: LessonPronunciation, Title: "Tafkheem Letters", Description: "Practice the seven heavy letters", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "خُصَّ ضَغْطٍ قِظْ", "sound": "The seven heavy letters"}, {"arabic": "قَالَ", "sound": "Qaaf stays heavy"}, {"arabic": "صَبَرَ", "sound": "Saad stays heavy"}, {"arabic": "طَابَ", "sound": "Taa stays heavy"}}}},
+				{Type: LessonPronunciation, Title: "Thin Letter Practice", Description: "Contrast heavy examples with thin ones", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "تَابَ", "sound": "Taa is thin"}, {"arabic": "سَمِعَ", "sound": "Seen is thin"}, {"arabic": "دَعَا", "sound": "Daal is thin"}, {"arabic": "بَصِيرٌ", "sound": "Baa and Raa context practice"}}}},
+				{Type: LessonQuiz, Title: "Heavy Letter Quiz", Description: "Pick the heavy letter", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "Which letter is always pronounced heavy?", "options": []string{"ت", "س", "ط", "م"}, "correct": 2}},
+			},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "Choose whether each example contains a heavy or light sound", Data: map[string]any{"questions": []map[string]any{{"question": "قَالَ contains which sound?", "options": []string{"Heavy", "Light", "Silent"}, "correct": 0}, {"question": "تَابَ begins with which sound?", "options": []string{"Heavy", "Light", "Merged"}, "correct": 1}}}},
+		},
+		{
+			Title:        "Ghunnah Glow",
+			Theme:        "Nasal Sound",
+			Goal:         "Hold the nasal sound correctly for noon and meem with shaddah",
+			Difficulty:   LevelEasy,
+			XPReward:     140,
+			UnlockReward: "badge:ghunnah_keeper",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "What Is Ghunnah?", Description: "Learn the two-count nasal sound used in tajweed", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Ghunnah is a nasal sound", "It is held for two counts", "Noon with shaddah and meem with shaddah always have ghunnah", "Keep the sound smooth without rushing"}}},
+				{Type: LessonPronunciation, Title: "Noon With Shaddah", Description: "Practice clear ghunnah on noon", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "إِنَّا", "sound": "Innaa - hold the noon"}, {"arabic": "النَّاسِ", "sound": "An-naas - nasal noon"}, {"arabic": "مِنَ الْجِنَّةِ", "sound": "Jinnah - hold the noon"}}}},
+				{Type: LessonPronunciation, Title: "Meem With Shaddah", Description: "Practice clear ghunnah on meem", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "ثُمَّ", "sound": "Thumma - hold the meem"}, {"arabic": "أَمَّا", "sound": "Ammaa - nasal meem"}, {"arabic": "لَمَّا", "sound": "Lammaa - steady two counts"}}}},
+				{Type: LessonQuiz, Title: "Ghunnah Check", Description: "Identify when ghunnah is required", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "Which example has mandatory ghunnah?", "options": []string{"قَالَ", "إِنَّا", "بِسْمِ", "أَحَدْ"}, "correct": 1}},
+			},
+			MiniGame: MiniGame{Type: GameTapMatch, Description: "Match ghunnah examples with the nasal letter being held", Data: map[string]any{"pairs": []map[string]any{{"arabic": "إِنَّا", "english": "Noon ghunnah"}, {"arabic": "ثُمَّ", "english": "Meem ghunnah"}, {"arabic": "النَّاسِ", "english": "Noon ghunnah"}, {"arabic": "أَمَّا", "english": "Meem ghunnah"}}}},
+		},
+		{
+			Title:        "Qalqalah Bounce",
+			Theme:        "Echoing Letters",
+			Goal:         "Apply a clean bounce to the five qalqalah letters when they carry sukoon",
+			Difficulty:   LevelMedium,
+			XPReward:     150,
+			UnlockReward: "badge:qalqalah_spark",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Meet Qutbu Jadd", Description: "Learn the five qalqalah letters", ScreenType: ScreenAction, Component: "LetterIntroComponent", Data: map[string]any{"letter": "قُطْبُ جَدٍّ", "name": "Qalqalah Letters", "transliteration": "qutbu jadd", "audio_hint": "Qalqalah happens on ق ط ب ج د when the letter is still."}},
+				{Type: LessonPronunciation, Title: "Small Bounce", Description: "Practice qalqalah inside words", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "يَقْطَعُونَ", "sound": "Small bounce on قْ"}, {"arabic": "أَبْتَرُ", "sound": "Small bounce on بْ"}, {"arabic": "يَجْعَلُ", "sound": "Small bounce on جْ"}}}},
+				{Type: LessonPronunciation, Title: "Stopping Bounce", Description: "Practice stronger qalqalah when stopping", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "أَحَدْ", "sound": "Stop with bounce on دْ"}, {"arabic": "الْفَلَقْ", "sound": "Stop with bounce on قْ"}, {"arabic": "وَتَبْ", "sound": "Stop with bounce on بْ"}}}},
+				{Type: LessonQuiz, Title: "Qalqalah Quiz", Description: "Find the qalqalah letter", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "Which word has qalqalah when stopping?", "options": []string{"قَالَ", "أَحَدْ", "النَّاسِ", "رَحِيمِ"}, "correct": 1}},
+			},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "Choose the phrase where qalqalah should be heard", Data: map[string]any{"questions": []map[string]any{{"question": "Where is qalqalah?", "options": []string{"أَحَدْ", "رَحْمَٰنِ", "مَالِكِ"}, "correct": 0}, {"question": "Which letter bounces in الْفَلَقْ?", "options": []string{"ل", "ف", "ق"}, "correct": 2}}}},
+		},
+		{
+			Title:        "Noon Sakinah: Clear And Merge",
+			Theme:        "Izhar And Idghaam",
+			Goal:         "Apply the first two rules of noon sakinah and tanween",
+			Difficulty:   LevelMedium,
+			XPReward:     160,
+			UnlockReward: "badge:noon_sakinah_1",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Noon Sakinah Map", Description: "Understand how the next letter controls the rule", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Noon sakinah is noon with sukoon", "Tanween behaves like a hidden noon sound", "Look at the next letter to choose the rule", "The first rules are izhar and idghaam"}}},
+				{Type: LessonPronunciation, Title: "Izhar Practice", Description: "Read noon clearly before throat letters", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "مِنْ هَادٍ", "sound": "Clear noon before ه"}, {"arabic": "مِنْ عِلْمٍ", "sound": "Clear noon before ع"}, {"arabic": "سَمِيعٌ عَلِيمٌ", "sound": "Clear tanween before ع"}}}},
+				{Type: LessonPronunciation, Title: "Idghaam Practice", Description: "Merge noon into the next letter", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "مِنْ رَبِّهِمْ", "sound": "Merge into ر without ghunnah"}, {"arabic": "مِنْ مَالٍ", "sound": "Merge into م with ghunnah"}, {"arabic": "هُدًى لِّلْمُتَّقِينَ", "sound": "Merge tanween into ل"}}}},
+				{Type: LessonQuiz, Title: "Izhar Or Idghaam?", Description: "Choose the correct rule", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "What rule applies in مِنْ رَبِّهِمْ?", "options": []string{"Izhar", "Idghaam", "Qalqalah", "Madd"}, "correct": 1}},
+			},
+			MiniGame: MiniGame{Type: GameTapMatch, Description: "Match each phrase to izhar or idghaam", Data: map[string]any{"pairs": []map[string]any{{"arabic": "مِنْ هَادٍ", "english": "Izhar"}, {"arabic": "مِنْ رَبِّهِمْ", "english": "Idghaam"}, {"arabic": "مِنْ عِلْمٍ", "english": "Izhar"}, {"arabic": "مِنْ مَالٍ", "english": "Idghaam"}}}},
+		},
+		{
+			Title:        "Noon Sakinah: Hide And Flip",
+			Theme:        "Ikhfaa And Iqlab",
+			Goal:         "Practice hiding noon and flipping noon into meem before baa",
+			Difficulty:   LevelMedium,
+			XPReward:     170,
+			UnlockReward: "badge:noon_sakinah_2",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Ikhfaa Meaning", Description: "Learn how noon is hidden with ghunnah", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Ikhfaa means hiding", "The noon is not fully clear and not fully merged", "Hold a light ghunnah while preparing for the next letter", "There are fifteen ikhfaa letters"}}},
+				{Type: LessonPronunciation, Title: "Ikhfaa Examples", Description: "Practice common ikhfaa phrases", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "مِنْ شَرِّ", "sound": "Hide noon before ش"}, {"arabic": "مِنْ قَبْلُ", "sound": "Hide noon before ق"}, {"arabic": "أَنفُسِكُمْ", "sound": "Hide noon before ف"}}}},
+				{Type: LessonPronunciation, Title: "Iqlab Examples", Description: "Flip noon into a hidden meem before baa", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "مِنْ بَعْدِ", "sound": "Read with hidden meem before ب"}, {"arabic": "سَمِيعٌ بَصِيرٌ", "sound": "Tanween flips before ب"}, {"arabic": "لَنَسْفَعًا بِالنَّاصِيَةِ", "sound": "Tanween flips before ب"}}}},
+				{Type: LessonQuiz, Title: "Ikhfaa Or Iqlab?", Description: "Identify the hidden rule", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "What rule applies in مِنْ بَعْدِ?", "options": []string{"Izhar", "Idghaam", "Ikhfaa", "Iqlab"}, "correct": 3}},
+			},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "Choose the rule for each noon sakinah phrase", Data: map[string]any{"questions": []map[string]any{{"question": "مِنْ بَعْدِ", "options": []string{"Iqlab", "Izhar", "Qalqalah"}, "correct": 0}, {"question": "مِنْ شَرِّ", "options": []string{"Ikhfaa", "Idghaam", "Madd"}, "correct": 0}}}},
+		},
+		{
+			Title:        "Meem Sakinah Rules",
+			Theme:        "Meem Rules",
+			Goal:         "Apply idghaam shafawi, ikhfaa shafawi, and izhar shafawi",
+			Difficulty:   LevelMedium,
+			XPReward:     180,
+			UnlockReward: "badge:meem_master",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Three Meem Rules", Description: "Learn how meem sakinah changes before the next letter", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Before م, merge with ghunnah", "Before ب, hide with ghunnah", "Before all other letters, read meem clearly", "Keep the lips relaxed and accurate"}}},
+				{Type: LessonPronunciation, Title: "Idghaam Shafawi", Description: "Merge meem into meem", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "لَهُم مَّا", "sound": "Merge meem with ghunnah"}, {"arabic": "كَم مِّن", "sound": "Meem into meem"}, {"arabic": "عَلَيْهِم مُّؤْصَدَةٌ", "sound": "Hold the merged meem"}}}},
+				{Type: LessonPronunciation, Title: "Ikhfaa Shafawi", Description: "Hide meem before baa", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "تَرْمِيهِم بِحِجَارَةٍ", "sound": "Hide meem before ب"}, {"arabic": "هُم بِهِ", "sound": "Gentle hidden meem"}, {"arabic": "أَنتُم بِهِ", "sound": "Two-count nasal hold"}}}},
+				{Type: LessonQuiz, Title: "Meem Rule Quiz", Description: "Choose the correct meem rule", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "What rule applies when meem sakinah is followed by ب?", "options": []string{"Idghaam shafawi", "Ikhfaa shafawi", "Izhar shafawi", "Iqlab"}, "correct": 1}},
+			},
+			MiniGame: MiniGame{Type: GameTapMatch, Description: "Match each phrase to its meem sakinah rule", Data: map[string]any{"pairs": []map[string]any{{"arabic": "لَهُم مَّا", "english": "Idghaam shafawi"}, {"arabic": "هُم بِهِ", "english": "Ikhfaa shafawi"}, {"arabic": "أَمْ لَمْ", "english": "Izhar shafawi"}}}},
+		},
+		{
+			Title:        "Madd Made Simple",
+			Theme:        "Lengthening",
+			Goal:         "Read natural madd and understand how long to hold it",
+			Difficulty:   LevelMedium,
+			XPReward:     190,
+			UnlockReward: "badge:madd_reader",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Natural Madd", Description: "Meet the three natural madd letters", ScreenType: ScreenAction, Component: "LetterIntroComponent", Data: map[string]any{"letters": []map[string]any{{"letter": "ا", "name": "Alif Madd", "transliteration": "aa"}, {"letter": "و", "name": "Waaw Madd", "transliteration": "oo"}, {"letter": "ي", "name": "Yaa Madd", "transliteration": "ee"}}, "audio_hint": "Natural madd is held for two counts."}},
+				{Type: LessonPronunciation, Title: "Two-Count Practice", Description: "Practice natural madd in Quran words", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "قَالَ", "sound": "Qaa-la - two counts"}, {"arabic": "يَقُولُ", "sound": "Ya-qoo-lu - two counts"}, {"arabic": "فِيهِ", "sound": "Fee-hi - two counts"}}}},
+				{Type: LessonPronunciation, Title: "Avoid Overstretching", Description: "Keep natural madd balanced", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "الرَّحِيمِ", "sound": "Raheem - hold ي naturally"}, {"arabic": "الْعَالَمِينَ", "sound": "Aalameen - steady counts"}, {"arabic": "نُورٌ", "sound": "Noor - not too short or long"}}}},
+				{Type: LessonQuiz, Title: "Madd Count Quiz", Description: "Review the natural madd count", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "How long is natural madd held?", "options": []string{"One count", "Two counts", "Four counts", "Six counts"}, "correct": 1}},
+			},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "Pick the natural madd letter in each word", Data: map[string]any{"questions": []map[string]any{{"question": "قَالَ uses which madd letter?", "options": []string{"ا", "و", "ي"}, "correct": 0}, {"question": "فِيهِ uses which madd letter?", "options": []string{"ا", "و", "ي"}, "correct": 2}}}},
+		},
+		{
+			Title:        "Long Madd Rules",
+			Theme:        "Advanced Lengthening",
+			Goal:         "Recognize madd caused by hamzah or sukoon",
+			Difficulty:   LevelHard,
+			XPReward:     210,
+			UnlockReward: "badge:madd_explorer",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "When Madd Gets Longer", Description: "Learn why some madds are held beyond two counts", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Hamzah after a madd can lengthen it", "Sukoon after a madd can lengthen it", "Some long madds are required, others depend on the recitation style", "Listen to a teacher for exact count consistency"}}},
+				{Type: LessonPronunciation, Title: "Madd Muttasil", Description: "Practice connected madd with hamzah in the same word", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "جَاءَ", "sound": "Long madd before hamzah"}, {"arabic": "السَّمَاءِ", "sound": "Madd and hamzah in one word"}, {"arabic": "سُوءَ", "sound": "Waaw madd before hamzah"}}}},
+				{Type: LessonPronunciation, Title: "Madd Arid", Description: "Practice lengthening caused by stopping", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "الْعَالَمِينَ", "sound": "Can lengthen when stopping"}, {"arabic": "الرَّحِيمِ", "sound": "Can lengthen when stopping"}, {"arabic": "يَعْلَمُونَ", "sound": "Can lengthen when stopping"}}}},
+				{Type: LessonQuiz, Title: "Long Madd Check", Description: "Identify a reason for long madd", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "What can make madd longer than two counts?", "options": []string{"A following hamzah", "A following fathah", "A previous kasrah", "A previous noon"}, "correct": 0}},
+			},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "Identify what caused the longer madd", Data: map[string]any{"questions": []map[string]any{{"question": "جَاءَ is long because of...", "options": []string{"Hamzah", "Qalqalah", "Tanween"}, "correct": 0}, {"question": "الرَّحِيمِ can lengthen when...", "options": []string{"Starting", "Stopping", "Whispering"}, "correct": 1}}}},
+		},
+		{
+			Title:        "Rules Of Laam And Raa",
+			Theme:        "Letter Context",
+			Goal:         "Choose heavy or light pronunciation for laam in Allah and the letter raa",
+			Difficulty:   LevelHard,
+			XPReward:     220,
+			UnlockReward: "badge:laam_raa_pro",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Laam In Allah", Description: "Learn when the laam in Allah is heavy or light", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"After fathah or dammah, the laam in Allah is heavy", "After kasrah, the laam in Allah is light", "Listen for the fuller sound in Allahu and wallahi", "Keep Bismillah light because it follows kasrah"}}},
+				{Type: LessonPronunciation, Title: "Laam Practice", Description: "Practice heavy and light laam in Allah", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "اللَّهُ", "sound": "Heavy laam"}, {"arabic": "وَاللَّهِ", "sound": "Heavy laam"}, {"arabic": "بِسْمِ اللَّهِ", "sound": "Light laam after kasrah"}}}},
+				{Type: LessonPronunciation, Title: "Raa Practice", Description: "Practice heavy and light raa examples", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "رَبِّ", "sound": "Heavy raa with fathah"}, {"arabic": "رِزْقًا", "sound": "Light raa with kasrah"}, {"arabic": "الْفِرْدَوْسِ", "sound": "Light raa after kasrah"}}}},
+				{Type: LessonQuiz, Title: "Laam And Raa Quiz", Description: "Pick the correct sound quality", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "How is the laam in بِسْمِ اللَّهِ read?", "options": []string{"Heavy", "Light", "Bounced", "Merged"}, "correct": 1}},
+			},
+			MiniGame: MiniGame{Type: GameTapMatch, Description: "Match examples to heavy or light pronunciation", Data: map[string]any{"pairs": []map[string]any{{"arabic": "اللَّهُ", "english": "Heavy laam"}, {"arabic": "بِسْمِ اللَّهِ", "english": "Light laam"}, {"arabic": "رَبِّ", "english": "Heavy raa"}, {"arabic": "رِزْقًا", "english": "Light raa"}}}},
+		},
+		{
+			Title:        "Stopping With Care",
+			Theme:        "Waqf And Ibtida",
+			Goal:         "Pause cleanly and restart recitation without changing the meaning",
+			Difficulty:   LevelHard,
+			XPReward:     230,
+			UnlockReward: "badge:waqf_wise",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Why Stopping Matters", Description: "Learn the basics of waqf and ibtida", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Waqf means stopping", "Ibtida means starting again", "A good stop protects the meaning", "When stopping, final short vowels usually become still"}}},
+				{Type: LessonPronunciation, Title: "Stop On Sukoon", Description: "Practice making the final sound still when stopping", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "الرَّحِيمِ", "sound": "Stop as Ar-Raheem"}, {"arabic": "نَسْتَعِينُ", "sound": "Stop as Nasta'een"}, {"arabic": "يُوقِنُونَ", "sound": "Stop as Yoo-qinoon"}}}},
+				{Type: LessonPronunciation, Title: "Meaningful Pauses", Description: "Practice pauses from Al-Fatihah", ScreenType: ScreenQuranReader, Component: "QuranReaderComponent", Data: map[string]any{"surah": "Al-Fatihah", "text": "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ", "transliteration": "Alhamdu lillahi Rabbil 'aalameen", "meaning": "All praise is due to Allah, Lord of all the worlds"}},
+				{Type: LessonQuiz, Title: "Stopping Quiz", Description: "Review how to stop safely", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "What usually happens to a final short vowel when stopping?", "options": []string{"It becomes still", "It becomes louder", "It always becomes madd", "It becomes tanween"}, "correct": 0}},
+			},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "Choose the safest stopping behavior", Data: map[string]any{"questions": []map[string]any{{"question": "When stopping on الرَّحِيمِ, the final kasrah is...", "options": []string{"Pronounced fully", "Made still", "Changed to fathah"}, "correct": 1}, {"question": "A good stop should protect...", "options": []string{"Meaning", "Speed", "Volume"}, "correct": 0}}}},
+		},
+		{
+			Title:        "Applied Tajweed In Short Surahs",
+			Theme:        "Surah Practice",
+			Goal:         "Spot and apply multiple tajweed rules in short Quran passages",
+			Difficulty:   LevelHard,
+			XPReward:     250,
+			UnlockReward: "title:tajweed_apprentice",
+			Lessons: []Lesson{
+				{Type: LessonPronunciation, Title: "Surah Al-Ikhlas", Description: "Apply ghunnah, qalqalah, and stopping rules", ScreenType: ScreenQuranReader, Component: "QuranReaderComponent", Data: map[string]any{"surah": "Al-Ikhlas (112)", "text": "قُلْ هُوَ اللَّهُ أَحَدٌ", "transliteration": "Qul huwal laahu ahad", "meaning": "Say: He is Allah, the One"}},
+				{Type: LessonPronunciation, Title: "Surah Al-Falaq", Description: "Apply qalqalah and ikhfaa while reading", ScreenType: ScreenQuranReader, Component: "QuranReaderComponent", Data: map[string]any{"surah": "Al-Falaq (113)", "text": "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ", "transliteration": "Qul a'udhu bi Rabbil falaq", "meaning": "Say: I seek refuge in the Lord of daybreak"}},
+				{Type: LessonRevision, Title: "Find The Rule", Description: "Identify rules in short phrases", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "Which rule appears when stopping on أَحَدٌ?", "options": []string{"Qalqalah", "Iqlab", "Madd muttasil", "Ikhfaa shafawi"}, "correct": 0}},
+				{Type: LessonRevision, Title: "Practice Plan", Description: "Build a consistent tajweed practice routine", ScreenType: ScreenReflection, Component: "ReflectionComponent", Data: map[string]any{"question": "Which rule will you listen for in your next recitation?", "options": []string{"Ghunnah", "Qalqalah", "Madd", "Stopping rules"}}},
+			},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "Identify tajweed rules from short surah examples", Data: map[string]any{"questions": []map[string]any{{"question": "أَحَدْ has which rule when stopping?", "options": []string{"Qalqalah", "Izhar", "Natural madd"}, "correct": 0}, {"question": "إِنَّا begins with...", "options": []string{"Ghunnah", "Iqlab", "Ikhfaa shafawi"}, "correct": 0}}}},
+		},
+		{
+			Title:        "Tajweed Checkpoint",
+			Theme:        "Final Tajweed Assessment",
+			Goal:         "Review the core tajweed rules and earn your Tajweed certificate",
+			Difficulty:   LevelHard,
+			XPReward:     300,
+			UnlockReward: "badge:tajweed_certificate",
+			Lessons: []Lesson{
+				{Type: LessonRevision, Title: "Rule Review", Description: "Review the major rules from this course", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Start with clear makharij", "Hold ghunnah for two counts", "Bounce qalqalah letters only when still", "Use the next letter to decide noon and meem rules", "Count madd consistently"}}},
+				{Type: LessonRevision, Title: "Final Quiz 1", Description: "Check noon sakinah rules", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "What rule applies when noon sakinah is followed by ب?", "options": []string{"Izhar", "Idghaam", "Ikhfaa", "Iqlab"}, "correct": 3}},
+				{Type: LessonRevision, Title: "Final Quiz 2", Description: "Check madd and qalqalah", ScreenType: ScreenQuiz, Component: "QuizComponent", Data: map[string]any{"question": "Which letters are qalqalah letters?", "options": []string{"ق ط ب ج د", "ء ه ع ح غ خ", "ي ر م ل و ن", "ا و ي"}, "correct": 0}},
+				{Type: LessonRevision, Title: "Final Recitation", Description: "Read a short passage with careful tajweed", ScreenType: ScreenQuranReader, Component: "QuranReaderComponent", Data: map[string]any{"surah": "Al-Kawthar (108)", "text": "إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ", "transliteration": "Innaa a'taynakal kawthar", "meaning": "Indeed, We have granted you Al-Kawthar"}},
+				{Type: LessonRevision, Title: "Certificate Ceremony", Description: "Celebrate completing the Tajweed Rules course", ScreenType: ScreenAction, Component: "CertificateComponent", Data: map[string]any{"title": "Tajweed Rules Graduate", "message": "MashaAllah! You can now recognize and practice the foundations of tajweed with more confidence.", "next_phase": "Keep listening, reciting, and checking with a qualified teacher."}},
+			},
+			MiniGame: MiniGame{Type: GameMemoryCards, Description: "Grand review: match rules to examples from the Tajweed course", Data: map[string]any{"pairs": []map[string]any{{"arabic": "إِنَّا", "english": "Ghunnah"}, {"arabic": "أَحَدْ", "english": "Qalqalah"}, {"arabic": "مِنْ بَعْدِ", "english": "Iqlab"}, {"arabic": "قَالَ", "english": "Natural madd"}, {"arabic": "هُم بِهِ", "english": "Ikhfaa shafawi"}}}},
 		},
 	}
 }

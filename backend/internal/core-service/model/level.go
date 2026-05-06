@@ -2,6 +2,14 @@ package model
 
 import "time"
 
+// CourseType identifies which learning track a level belongs to.
+type CourseType string
+
+const (
+	CourseQaida   CourseType = "qaida"
+	CourseTajweed CourseType = "tajweed"
+)
+
 // ScreenType is used by the Lesson system to identify its screen layout.
 // Daily tasks no longer use ScreenType — they use []Block instead.
 type ScreenType string
@@ -72,6 +80,8 @@ type MiniGame struct {
 // Level is the master template for a single level in the learning journey.
 type Level struct {
 	ID           int             `bson:"_id" json:"id"`
+	CourseType   CourseType      `bson:"course_type" json:"course_type"`
+	CourseLevel  int             `bson:"course_level" json:"course_level"`
 	Title        string          `bson:"title" json:"title"`
 	Theme        string          `bson:"theme" json:"theme"`
 	Goal         string          `bson:"goal" json:"goal"`
@@ -84,15 +94,16 @@ type Level struct {
 
 // UserLevel tracks a user's progress through a single level.
 type UserLevel struct {
-	ID              string    `bson:"_id" json:"id"`
-	UserID          string    `bson:"user_id" json:"user_id"`
-	LevelID         int       `bson:"level_id" json:"level_id"`
-	Stars           int       `bson:"stars" json:"stars"` // 0-3
-	LessonsComplete int       `bson:"lessons_complete" json:"lessons_complete"`
-	MiniGameDone    bool      `bson:"mini_game_done" json:"mini_game_done"`
-	Completed       bool      `bson:"completed" json:"completed"`
-	CompletedAt     time.Time `bson:"completed_at,omitempty" json:"completed_at,omitempty"`
-	CreatedAt       time.Time `bson:"created_at" json:"created_at"`
+	ID              string     `bson:"_id" json:"id"`
+	UserID          string     `bson:"user_id" json:"user_id"`
+	LevelID         int        `bson:"level_id" json:"level_id"`
+	CourseType      CourseType `bson:"course_type" json:"course_type"`
+	Stars           int        `bson:"stars" json:"stars"` // 0-3
+	LessonsComplete int        `bson:"lessons_complete" json:"lessons_complete"`
+	MiniGameDone    bool       `bson:"mini_game_done" json:"mini_game_done"`
+	Completed       bool       `bson:"completed" json:"completed"`
+	CompletedAt     time.Time  `bson:"completed_at,omitempty" json:"completed_at,omitempty"`
+	CreatedAt       time.Time  `bson:"created_at" json:"created_at"`
 }
 
 // LevelWithStatus is the response type for a level with the user's progress.
@@ -110,5 +121,6 @@ type LevelCompletionResult struct {
 	UnlockReward string   `json:"unlock_reward"`
 	TreasureOpen bool     `json:"treasure_open"` // true every 5 levels
 	NextLevelID  int      `json:"next_level_id"`
+	CourseType   string   `json:"course_type"`
 	NewRewards   []Reward `json:"new_rewards"` // rewards granted by this completion
 }

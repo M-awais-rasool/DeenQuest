@@ -72,7 +72,7 @@ func main() {
 	if err := coreService.SeedLevels(context.Background()); err != nil {
 		logger.Warn("failed to seed levels (will retry on next startup)", zap.Error(err))
 	} else {
-		logger.Info("Levels seeded successfully (20 levels)")
+		logger.Info("Levels seeded successfully")
 	}
 
 	// Seed reward definitions on startup.

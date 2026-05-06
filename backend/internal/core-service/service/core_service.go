@@ -23,6 +23,11 @@ type CoreService struct {
 	publisher EventPublisher
 }
 
+var (
+	ErrLevelNotFound      = errors.New("level not found")
+	ErrInvalidLessonIndex = errors.New("invalid lesson index")
+)
+
 func NewCoreService(repo repository.CoreRepository, publisher EventPublisher) *CoreService {
 	return &CoreService{repo: repo, publisher: publisher}
 }
@@ -330,7 +335,7 @@ func (s *CoreService) bumpStreak(ctx context.Context, userID string) error {
 
 // ─── Level Journey Methods ───
 
-// SeedLevels inserts/updates the 20 master level templates.
+// SeedLevels inserts/updates the master level templates for every course.
 func (s *CoreService) SeedLevels(ctx context.Context) error {
 	return s.repo.SeedLevels(ctx, model.SeedLevels())
 }
@@ -480,14 +485,22 @@ func progressRatio(current, required int) float64 {
 	return ratio
 }
 
-// GetLevels returns all levels annotated with the user's progress status.
-func (s *CoreService) GetLevels(ctx context.Context, userID string) ([]model.LevelWithStatus, error) {
-	levels, err := s.repo.ListAllLevels(ctx)
+func levelIDs(levels []model.Level) []int {
+	ids := make([]int, 0, len(levels))
+	for _, l := range levels {
+		ids = append(ids, l.ID)
+	}
+	return ids
+}
+
+// GetLevels returns course levels annotated with the user's progress status.
+func (s *CoreService) GetLevels(ctx context.Context, userID string, courseType model.CourseType) ([]model.LevelWithStatus, error) {
+	levels, err := s.repo.ListLevelsByCourse(ctx, courseType)
 	if err != nil {
 		return nil, fmt.Errorf("list levels: %w", err)
 	}
 
-	userLevels, err := s.repo.GetUserLevels(ctx, userID)
+	userLevels, err := s.repo.GetUserLevelsByLevelIDs(ctx, userID, levelIDs(levels))
 	if err != nil {
 		return nil, fmt.Errorf("get user levels: %w", err)
 	}
@@ -497,11 +510,11 @@ func (s *CoreService) GetLevels(ctx context.Context, userID string) ([]model.Lev
 		ulMap[ul.LevelID] = ul
 	}
 
-	// Determine the highest completed level to figure out which levels are available.
-	highestCompleted := 0
-	for _, ul := range userLevels {
-		if ul.Completed && ul.LevelID > highestCompleted {
-			highestCompleted = ul.LevelID
+	// Determine the highest completed course level to unlock the next step in this course only.
+	highestCompletedCourseLevel := 0
+	for _, l := range levels {
+		if ul, ok := ulMap[l.ID]; ok && ul.Completed && l.CourseLevel > highestCompletedCourseLevel {
+			highestCompletedCourseLevel = l.CourseLevel
 		}
 	}
 
@@ -516,7 +529,7 @@ func (s *CoreService) GetLevels(ctx context.Context, userID string) ([]model.Lev
 			} else {
 				lws.Status = "in_progress"
 			}
-		} else if l.ID <= highestCompleted+1 {
+		} else if l.CourseLevel <= highestCompletedCourseLevel+1 {
 			lws.Status = "available"
 		} else {
 			lws.Status = "locked"
@@ -528,13 +541,16 @@ func (s *CoreService) GetLevels(ctx context.Context, userID string) ([]model.Lev
 }
 
 // GetLevelDetail returns a single level with the user's progress.
-func (s *CoreService) GetLevelDetail(ctx context.Context, userID string, levelID int) (*model.LevelWithStatus, error) {
+func (s *CoreService) GetLevelDetail(ctx context.Context, userID string, levelID int, courseType model.CourseType) (*model.LevelWithStatus, error) {
 	level, err := s.repo.GetLevelByID(ctx, levelID)
 	if err != nil {
 		return nil, err
 	}
 	if level == nil {
-		return nil, errors.New("level not found")
+		return nil, ErrLevelNotFound
+	}
+	if courseType != "" && level.CourseType != courseType {
+		return nil, ErrLevelNotFound
 	}
 
 	ul, err := s.repo.GetUserLevel(ctx, userID, levelID)
@@ -556,16 +572,19 @@ func (s *CoreService) GetLevelDetail(ctx context.Context, userID string, levelID
 }
 
 // CompleteLessonInLevel marks a lesson as complete within a level.
-func (s *CoreService) CompleteLessonInLevel(ctx context.Context, userID string, levelID, lessonIndex int) (*model.UserLevel, error) {
+func (s *CoreService) CompleteLessonInLevel(ctx context.Context, userID string, levelID, lessonIndex int, courseType model.CourseType) (*model.UserLevel, error) {
 	level, err := s.repo.GetLevelByID(ctx, levelID)
 	if err != nil {
 		return nil, err
 	}
 	if level == nil {
-		return nil, errors.New("level not found")
+		return nil, ErrLevelNotFound
+	}
+	if courseType != "" && level.CourseType != courseType {
+		return nil, ErrLevelNotFound
 	}
 	if lessonIndex < 0 || lessonIndex >= len(level.Lessons) {
-		return nil, errors.New("invalid lesson index")
+		return nil, ErrInvalidLessonIndex
 	}
 
 	ul, err := s.repo.GetUserLevel(ctx, userID, levelID)
@@ -574,12 +593,14 @@ func (s *CoreService) CompleteLessonInLevel(ctx context.Context, userID string, 
 	}
 	if ul == nil {
 		ul = &model.UserLevel{
-			ID:        uuid.NewString(),
-			UserID:    userID,
-			LevelID:   levelID,
-			CreatedAt: time.Now().UTC(),
+			ID:         uuid.NewString(),
+			UserID:     userID,
+			LevelID:    levelID,
+			CourseType: level.CourseType,
+			CreatedAt:  time.Now().UTC(),
 		}
 	}
+	ul.CourseType = level.CourseType
 
 	newCount := lessonIndex + 1
 	if newCount > ul.LessonsComplete {
@@ -593,13 +614,16 @@ func (s *CoreService) CompleteLessonInLevel(ctx context.Context, userID string, 
 }
 
 // CompleteLevel marks a level as fully completed and awards XP + rewards.
-func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID int, stars int) (*model.LevelCompletionResult, error) {
+func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID int, stars int, courseType model.CourseType) (*model.LevelCompletionResult, error) {
 	level, err := s.repo.GetLevelByID(ctx, levelID)
 	if err != nil {
 		return nil, err
 	}
 	if level == nil {
-		return nil, errors.New("level not found")
+		return nil, ErrLevelNotFound
+	}
+	if courseType != "" && level.CourseType != courseType {
+		return nil, ErrLevelNotFound
 	}
 
 	if stars < 1 {
@@ -615,24 +639,35 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 	}
 	if ul != nil && ul.Completed {
 		// Already completed — return existing result, no extra XP.
+		nextLevel, err := s.repo.GetNextLevelByCourseLevel(ctx, level.CourseType, level.CourseLevel)
+		if err != nil {
+			return nil, err
+		}
+		nextLevelID := 0
+		if nextLevel != nil {
+			nextLevelID = nextLevel.ID
+		}
 		return &model.LevelCompletionResult{
 			XPEarned:     0,
 			Stars:        ul.Stars,
 			UnlockReward: level.UnlockReward,
 			TreasureOpen: false,
-			NextLevelID:  levelID + 1,
+			NextLevelID:  nextLevelID,
+			CourseType:   string(level.CourseType),
 		}, nil
 	}
 
 	if ul == nil {
 		ul = &model.UserLevel{
-			ID:        uuid.NewString(),
-			UserID:    userID,
-			LevelID:   levelID,
-			CreatedAt: time.Now().UTC(),
+			ID:         uuid.NewString(),
+			UserID:     userID,
+			LevelID:    levelID,
+			CourseType: level.CourseType,
+			CreatedAt:  time.Now().UTC(),
 		}
 	}
 
+	ul.CourseType = level.CourseType
 	ul.Stars = stars
 	ul.LessonsComplete = len(level.Lessons)
 	ul.MiniGameDone = true
@@ -663,10 +698,12 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 		_ = s.publisher.Publish(ctx, "level.completed", queue.Event{
 			Type: "level.completed",
 			Payload: map[string]interface{}{
-				"user_id":  userID,
-				"level_id": levelID,
-				"stars":    stars,
-				"xp":       xp,
+				"user_id":      userID,
+				"level_id":     levelID,
+				"course_type":  string(level.CourseType),
+				"course_level": level.CourseLevel,
+				"stars":        stars,
+				"xp":           xp,
 			},
 		})
 	}
@@ -674,12 +711,21 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 	if newRewards == nil {
 		newRewards = []model.Reward{}
 	}
+	nextLevel, err := s.repo.GetNextLevelByCourseLevel(ctx, level.CourseType, level.CourseLevel)
+	if err != nil {
+		return nil, err
+	}
+	nextLevelID := 0
+	if nextLevel != nil {
+		nextLevelID = nextLevel.ID
+	}
 	return &model.LevelCompletionResult{
 		XPEarned:     xp,
 		Stars:        stars,
 		UnlockReward: level.UnlockReward,
-		TreasureOpen: levelID%5 == 0,
-		NextLevelID:  levelID + 1,
+		TreasureOpen: level.CourseLevel%5 == 0,
+		NextLevelID:  nextLevelID,
+		CourseType:   string(level.CourseType),
 		NewRewards:   newRewards,
 	}, nil
 }

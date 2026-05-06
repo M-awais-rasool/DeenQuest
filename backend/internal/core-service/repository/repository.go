@@ -30,9 +30,11 @@ type CoreRepository interface {
 
 	// Levels
 	SeedLevels(ctx context.Context, levels []model.Level) error
-	ListAllLevels(ctx context.Context) ([]model.Level, error)
+	ListLevelsByCourse(ctx context.Context, courseType model.CourseType) ([]model.Level, error)
 	GetLevelByID(ctx context.Context, levelID int) (*model.Level, error)
+	GetNextLevelByCourseLevel(ctx context.Context, courseType model.CourseType, courseLevel int) (*model.Level, error)
 	GetUserLevels(ctx context.Context, userID string) ([]model.UserLevel, error)
+	GetUserLevelsByLevelIDs(ctx context.Context, userID string, levelIDs []int) ([]model.UserLevel, error)
 	GetUserLevel(ctx context.Context, userID string, levelID int) (*model.UserLevel, error)
 	UpsertUserLevel(ctx context.Context, ul *model.UserLevel) error
 

@@ -1,10 +1,12 @@
 package controller
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/chawais/talent-flow/backend/internal/core-service/model"
 	"github.com/chawais/talent-flow/backend/internal/core-service/service"
 	"github.com/chawais/talent-flow/backend/pkg/response"
 )
@@ -93,9 +95,21 @@ func (h *CoreController) CompleteDailyTask(c *gin.Context) {
 
 // ─── Level Journey Endpoints ───
 
+func parseOptionalCourseType(raw string) (model.CourseType, bool) {
+	if raw == "" {
+		return "", true
+	}
+	return model.CourseTypeFromString(raw)
+}
+
 func (h *CoreController) GetLevels(c *gin.Context) {
 	userID := c.GetString("user_id")
-	levels, err := h.service.GetLevels(c.Request.Context(), userID)
+	courseType, ok := model.CourseTypeOrDefault(c.Query("course_type"))
+	if !ok {
+		response.BadRequest(c, "invalid course_type")
+		return
+	}
+	levels, err := h.service.GetLevels(c.Request.Context(), userID, courseType)
 	if err != nil {
 		response.InternalError(c, "failed to fetch levels")
 		return
@@ -110,8 +124,17 @@ func (h *CoreController) GetLevelDetail(c *gin.Context) {
 		response.BadRequest(c, "invalid level id")
 		return
 	}
-	level, err := h.service.GetLevelDetail(c.Request.Context(), userID, levelID)
+	courseType, ok := parseOptionalCourseType(c.Query("course_type"))
+	if !ok {
+		response.BadRequest(c, "invalid course_type")
+		return
+	}
+	level, err := h.service.GetLevelDetail(c.Request.Context(), userID, levelID, courseType)
 	if err != nil {
+		if errors.Is(err, service.ErrLevelNotFound) {
+			response.NotFound(c, "level not found")
+			return
+		}
 		response.InternalError(c, "failed to fetch level detail")
 		return
 	}
@@ -127,15 +150,34 @@ func (h *CoreController) CompleteLesson(c *gin.Context) {
 	}
 
 	var body struct {
-		LessonIndex int `json:"lesson_index"`
+		LessonIndex int    `json:"lesson_index"`
+		CourseType  string `json:"course_type"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		response.BadRequest(c, "lesson_index is required")
 		return
 	}
 
-	ul, err := h.service.CompleteLessonInLevel(c.Request.Context(), userID, levelID, body.LessonIndex)
+	rawCourseType := c.Query("course_type")
+	if rawCourseType == "" {
+		rawCourseType = body.CourseType
+	}
+	courseType, ok := parseOptionalCourseType(rawCourseType)
+	if !ok {
+		response.BadRequest(c, "invalid course_type")
+		return
+	}
+
+	ul, err := h.service.CompleteLessonInLevel(c.Request.Context(), userID, levelID, body.LessonIndex, courseType)
 	if err != nil {
+		if errors.Is(err, service.ErrLevelNotFound) {
+			response.NotFound(c, "level not found")
+			return
+		}
+		if errors.Is(err, service.ErrInvalidLessonIndex) {
+			response.BadRequest(c, "invalid lesson index")
+			return
+		}
 		response.InternalError(c, err.Error())
 		return
 	}
@@ -151,14 +193,29 @@ func (h *CoreController) CompleteLevel(c *gin.Context) {
 	}
 
 	var body struct {
-		Stars int `json:"stars"`
+		Stars      int    `json:"stars"`
+		CourseType string `json:"course_type"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		body.Stars = 1
 	}
 
-	result, err := h.service.CompleteLevel(c.Request.Context(), userID, levelID, body.Stars)
+	rawCourseType := c.Query("course_type")
+	if rawCourseType == "" {
+		rawCourseType = body.CourseType
+	}
+	courseType, ok := parseOptionalCourseType(rawCourseType)
+	if !ok {
+		response.BadRequest(c, "invalid course_type")
+		return
+	}
+
+	result, err := h.service.CompleteLevel(c.Request.Context(), userID, levelID, body.Stars, courseType)
 	if err != nil {
+		if errors.Is(err, service.ErrLevelNotFound) {
+			response.NotFound(c, "level not found")
+			return
+		}
 		response.InternalError(c, err.Error())
 		return
 	}

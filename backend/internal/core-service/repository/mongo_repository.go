@@ -72,6 +72,13 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	if err != nil {
 		return err
 	}
+	_, err = r.levels.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "course_type", Value: 1}, {Key: "course_level", Value: 1}},
+		Options: options.Index().SetBackground(true),
+	})
+	if err != nil {
+		return err
+	}
 	_, err = r.userRewards.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "reward_id", Value: 1}},
 		Options: options.Index().SetUnique(true),
@@ -304,10 +311,53 @@ func (r *MongoCoreRepository) SeedLevels(ctx context.Context, levels []model.Lev
 	return nil
 }
 
-func (r *MongoCoreRepository) ListAllLevels(ctx context.Context) ([]model.Level, error) {
+func levelCourseFilter(courseType model.CourseType) bson.M {
+	if courseType == model.CourseQaida {
+		return bson.M{
+			"$or": []bson.M{
+				{"course_type": courseType},
+				{"course_type": bson.M{"$exists": false}},
+			},
+		}
+	}
+	return bson.M{"course_type": courseType}
+}
+
+func nextCourseLevelFilter(courseType model.CourseType, courseLevel int) bson.M {
+	if courseType != model.CourseQaida {
+		return bson.M{"course_type": courseType, "course_level": bson.M{"$gt": courseLevel}}
+	}
+
+	return bson.M{
+		"$and": []bson.M{
+			levelCourseFilter(courseType),
+			{
+				"$or": []bson.M{
+					{"course_level": bson.M{"$gt": courseLevel}},
+					{"course_level": bson.M{"$exists": false}, "_id": bson.M{"$gt": courseLevel}},
+				},
+			},
+		},
+	}
+}
+
+func normalizeLevelDefaults(l *model.Level) {
+	if l.CourseType == "" {
+		l.CourseType = model.CourseQaida
+	}
+	if l.CourseLevel == 0 {
+		l.CourseLevel = l.ID
+	}
+}
+
+func (r *MongoCoreRepository) ListLevelsByCourse(ctx context.Context, courseType model.CourseType) ([]model.Level, error) {
 	timeoutCtx, cancel := withTimeout(ctx)
 	defer cancel()
-	cur, err := r.levels.Find(timeoutCtx, bson.M{}, options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}))
+	cur, err := r.levels.Find(
+		timeoutCtx,
+		levelCourseFilter(courseType),
+		options.Find().SetSort(bson.D{{Key: "course_level", Value: 1}, {Key: "_id", Value: 1}}),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -318,6 +368,7 @@ func (r *MongoCoreRepository) ListAllLevels(ctx context.Context) ([]model.Level,
 		if err := cur.Decode(&l); err != nil {
 			return nil, err
 		}
+		normalizeLevelDefaults(&l)
 		out = append(out, l)
 	}
 	return out, cur.Err()
@@ -334,6 +385,26 @@ func (r *MongoCoreRepository) GetLevelByID(ctx context.Context, levelID int) (*m
 	if err != nil {
 		return nil, err
 	}
+	normalizeLevelDefaults(&l)
+	return &l, nil
+}
+
+func (r *MongoCoreRepository) GetNextLevelByCourseLevel(ctx context.Context, courseType model.CourseType, courseLevel int) (*model.Level, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	var l model.Level
+	err := r.levels.FindOne(
+		timeoutCtx,
+		nextCourseLevelFilter(courseType, courseLevel),
+		options.FindOne().SetSort(bson.D{{Key: "course_level", Value: 1}, {Key: "_id", Value: 1}}),
+	).Decode(&l)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	normalizeLevelDefaults(&l)
 	return &l, nil
 }
 
@@ -346,6 +417,33 @@ func (r *MongoCoreRepository) GetUserLevels(ctx context.Context, userID string) 
 	}
 	defer cur.Close(ctx)
 	out := make([]model.UserLevel, 0, 20)
+	for cur.Next(ctx) {
+		var ul model.UserLevel
+		if err := cur.Decode(&ul); err != nil {
+			return nil, err
+		}
+		out = append(out, ul)
+	}
+	return out, cur.Err()
+}
+
+func (r *MongoCoreRepository) GetUserLevelsByLevelIDs(ctx context.Context, userID string, levelIDs []int) ([]model.UserLevel, error) {
+	if len(levelIDs) == 0 {
+		return []model.UserLevel{}, nil
+	}
+
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.userLevels.Find(
+		timeoutCtx,
+		bson.M{"user_id": userID, "level_id": bson.M{"$in": levelIDs}},
+		options.Find().SetSort(bson.D{{Key: "level_id", Value: 1}}),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]model.UserLevel, 0, len(levelIDs))
 	for cur.Next(ctx) {
 		var ul model.UserLevel
 		if err := cur.Decode(&ul); err != nil {
