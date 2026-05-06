@@ -1,11 +1,12 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useRef } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 import { Lock } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { CourseConfig } from "./types";
 
-const BOX_W = 80;
-const BOX_DEPTH = 9;
+const BOX_W = 74;
+const BOX_H = BOX_W;
+const BOX_DEPTH = 11;
 
 export const STATIC_ANIM = new Animated.Value(1);
 
@@ -22,99 +23,233 @@ export const Box3D = memo(function Box3D({
 }: Props) {
   const { Icon } = course;
   const faceBg = isLocked ? theme.colors.surfaceHigh : course.accentColor;
-  const depthBg = isLocked ? "#282828" : course.depthColor;
   const iconColor = isLocked ? theme.colors.textMuted : "#ffffff";
+
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const sparkleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isLocked) return;
+
+    const shimmer = Animated.loop(
+      Animated.sequence([
+        Animated.delay(3200),
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 680,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    const float = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -2.8,
+          duration: 1900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 2.8,
+          duration: 1900,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    const sparkle = Animated.loop(
+      Animated.sequence([
+        Animated.timing(sparkleAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(sparkleAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    shimmer.start();
+    float.start();
+    sparkle.start();
+
+    return () => {
+      shimmer.stop();
+      float.stop();
+      sparkle.stop();
+    };
+  }, [isLocked, shimmerAnim, floatAnim, sparkleAnim]);
+
+  const shimmerX = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-BOX_W, BOX_W * 1.5],
+  });
+
+  const sparkleOdd = sparkleAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.9, 0.15, 0.9],
+  });
+  const sparkleEven = sparkleAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.15, 0.9, 0.15],
+  });
 
   return (
     <Animated.View style={[s.outer, { transform: [{ scale: pulseScale }] }]}>
       {!isLocked && (
-        <View style={[s.glow, { backgroundColor: course.glowColor }]} />
+        <>
+          <View style={[s.glowOuter, { backgroundColor: course.glowColor }]} />
+        </>
       )}
-      <View style={[s.depthBack, { backgroundColor: depthBg }]} />
-      <View style={[s.depthMid, { backgroundColor: depthBg }]} />
+
+      {/* Main face */}
       <View style={[s.face, { backgroundColor: faceBg }]}>
-        <View style={s.highlight} />
-        <View style={s.bottomShade} />
-        <View style={s.iconArea}>
+        <View style={s.topGloss} />
+
+        {!isLocked && (
+          <>
+            <View
+              style={[s.bracketTL, { borderColor: "rgba(255,255,255,0.52)" }]}
+            />
+            <View
+              style={[s.bracketBR, { borderColor: "rgba(255,255,255,0.22)" }]}
+            />
+          </>
+        )}
+
+        <Animated.View
+          style={[
+            s.iconWrap,
+            !isLocked && { transform: [{ translateY: floatAnim }] },
+          ]}
+        >
           {isLocked ? (
-            <Lock size={28} color={iconColor} strokeWidth={2} />
+            <Lock size={28} color={iconColor} strokeWidth={2.2} />
           ) : (
-            <Icon size={34} color={iconColor} strokeWidth={1.8} />
+            <Icon size={32} color={iconColor} strokeWidth={1.7} />
           )}
-        </View>
+        </Animated.View>
       </View>
+
+      {!isLocked && (
+        <>
+          <Animated.View style={[s.sparkleA, { opacity: sparkleOdd }]} />
+          <Animated.View style={[s.sparkleB, { opacity: sparkleEven }]} />
+          <Animated.View style={[s.sparkleC, { opacity: sparkleOdd }]} />
+        </>
+      )}
     </Animated.View>
   );
 });
 
 const s = StyleSheet.create({
   outer: {
-    width: BOX_W,
-    height: BOX_W + BOX_DEPTH,
+    width: BOX_W + 6,
+    height: BOX_H + BOX_DEPTH + 8,
     flexShrink: 0,
   },
-  glow: {
+  glowOuter: {
     position: "absolute",
-    top: -14,
-    left: -14,
-    right: -14,
-    bottom: -14 + BOX_DEPTH,
-    borderRadius: (BOX_W + 28) / 2,
-    opacity: 0.55,
+    top: -15,
+    left: -15,
+    right: -8,
+    bottom: 5,
+    borderRadius: (BOX_W + 40) / 2,
+    opacity: 0.3,
   },
-  depthBack: {
+  glowCore: {
     position: "absolute",
-    top: BOX_DEPTH,
-    left: 6,
-    right: -6,
-    height: BOX_W,
-    borderRadius: 18,
-    opacity: 0.38,
-  },
-  depthMid: {
-    position: "absolute",
-    top: BOX_DEPTH / 2,
-    left: 3,
-    right: -3,
-    height: BOX_W,
-    borderRadius: 18,
-    opacity: 0.58,
+    top: -9,
+    left: -9,
+    right: -5,
+    bottom: 4,
+    borderRadius: (BOX_W + 18) / 2,
+    opacity: 0.16,
   },
   face: {
     position: "absolute",
     top: 0,
     left: 0,
-    right: 0,
-    height: BOX_W,
-    borderRadius: 18,
+    width: BOX_W,
+    height: BOX_H,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 12,
+    shadowOffset: { width: 2, height: 10 },
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    elevation: 14,
   },
-  highlight: {
+  topGloss: {
     position: "absolute",
-    top: 9,
-    left: 10,
-    right: 10,
-    height: 12,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    borderRadius: 6,
-  },
-  bottomShade: {
-    position: "absolute",
-    bottom: 0,
+    top: 0,
     left: 0,
     right: 0,
-    height: 18,
-    backgroundColor: "rgba(0,0,0,0.14)",
+    height: 30,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
   },
-  iconArea: {
+  bracketTL: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    width: 14,
+    height: 14,
+    borderTopWidth: 1.5,
+    borderLeftWidth: 1.5,
+    borderRadius: 3,
+  },
+  bracketBR: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    width: 9,
+    height: 9,
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    borderRadius: 2,
+  },
+  iconWrap: {
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 2,
+  },
+  sparkleA: {
+    position: "absolute",
+    top: 4,
+    right: 0,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.95)",
+  },
+  sparkleB: {
+    position: "absolute",
+    top: BOX_H / 3,
+    right: -2,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "rgba(255,255,255,0.7)",
+  },
+  sparkleC: {
+    position: "absolute",
+    bottom: BOX_DEPTH + 10,
+    left: 2,
+    width: 2.5,
+    height: 2.5,
+    borderRadius: 1.25,
+    backgroundColor: "rgba(255,255,255,0.6)",
   },
 });
