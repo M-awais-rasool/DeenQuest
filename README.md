@@ -117,8 +117,10 @@ Base prefix: `/api/v1`
   - `GET /leaderboard`
   - `GET /daily-tasks`
   - `POST /daily-tasks/:id/complete`
-  - `GET /levels`
-  - `POST /levels/:id/complete-lesson`
+  - `GET /levels?course_type=qaida|tajweed`
+  - `GET /levels/:id?course_type=qaida|tajweed`
+  - `POST /levels/:id/lessons/complete`
+  - `POST /levels/:id/complete`
 
 ## Quick Start
 

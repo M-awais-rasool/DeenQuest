@@ -15,12 +15,16 @@ Base: `/api/v1`
 
 Base: `/api/v1` (all JWT protected)
 
-- `POST /habits`
-- `GET /habits`
-- `POST /habits/:id/complete`
 - `GET /progress/me`
-- `POST /reflections`
-- `GET /achievements/me`
+- `GET /leaderboard`
+- `GET /daily-tasks`
+- `POST /daily-tasks/:id/complete`
+- `GET /levels?course_type=qaida|tajweed` (defaults to `qaida`)
+- `GET /levels/:id?course_type=qaida|tajweed`
+- `POST /levels/:id/lessons/complete`
+- `POST /levels/:id/complete`
+- `GET /rewards`
+- `POST /recitation/check`
 
 ## Health Checks
 
