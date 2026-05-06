@@ -89,15 +89,11 @@ export const Box3D = memo(function Box3D({
     };
   }, [isLocked, shimmerAnim, floatAnim, sparkleAnim]);
 
-  const shimmerX = shimmerAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-BOX_W, BOX_W * 1.5],
-  });
-
   const sparkleOdd = sparkleAnim.interpolate({
     inputRange: [0, 0.5, 1],
     outputRange: [0.9, 0.15, 0.9],
   });
+  
   const sparkleEven = sparkleAnim.interpolate({
     inputRange: [0, 0.5, 1],
     outputRange: [0.15, 0.9, 0.15],
