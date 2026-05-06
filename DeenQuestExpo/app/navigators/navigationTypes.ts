@@ -6,7 +6,7 @@ import {
   NavigatorScreenParams,
 } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { DailyTask } from "../store/services/api";
+import type { CourseType, DailyTask } from "../store/services/api";
 
 export type DemoTabParamList = {
   PathScreen: undefined;
@@ -23,10 +23,16 @@ export type AppStackParamList = {
   Signup: undefined;
   Demo: NavigatorScreenParams<DemoTabParamList>;
   DailyTaskDetail: { task: DailyTask };
-  LevelMap: undefined;
-  LevelDetail: { levelId: number };
-  LessonPlayer: { levelId: number; startLessonIndex: number };
-  MiniGamePlayer: { levelId: number };
+  LevelMap:
+    | { courseType?: CourseType; courseTitle?: string; courseSubtitle?: string }
+    | undefined;
+  LevelDetail: { levelId: number; courseType?: CourseType };
+  LessonPlayer: {
+    levelId: number;
+    startLessonIndex: number;
+    courseType?: CourseType;
+  };
+  MiniGamePlayer: { levelId: number; courseType?: CourseType };
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;

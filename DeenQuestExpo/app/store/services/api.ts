@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://172.16.26.179:8080",
+  baseUrl: "http://172.16.27.85:8080",
   prepareHeaders: async (headers) => {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
@@ -172,6 +172,7 @@ export type LessonType =
 export type LevelDifficulty = "easy" | "medium" | "hard";
 
 export type LevelStatus = "locked" | "available" | "in_progress" | "completed";
+export type CourseType = "qaida" | "tajweed";
 
 // ScreenType is used by the Level/Lesson system (not by daily tasks).
 export type ScreenType =
@@ -202,6 +203,8 @@ export interface MiniGame {
 
 export interface Level {
   id: number;
+  course_type: CourseType;
+  course_level: number;
   title: string;
   theme: string;
   goal: string;
@@ -222,6 +225,7 @@ export interface UserLevel {
   id: string;
   user_id: string;
   level_id: number;
+  course_type: CourseType;
   stars: number;
   lessons_complete: number;
   mini_game_done: boolean;
@@ -235,7 +239,16 @@ export interface LevelCompletionResult {
   unlock_reward: string;
   treasure_open: boolean;
   next_level_id: number;
+  course_type: CourseType;
   new_rewards: NewlyGrantedReward[];
+}
+
+export interface CourseScopedRequest {
+  courseType?: CourseType;
+}
+
+export interface LevelScopedRequest extends CourseScopedRequest {
+  levelId: number;
 }
 
 // ─── Recitation Types ───
@@ -408,41 +421,55 @@ export const API = createApi({
     }),
 
     // ─── Level Journey Endpoints ───
-    getLevels: builder.query<APIResponse<LevelWithStatus[]>, void>({
-      query: () => ({
+    getLevels: builder.query<
+      APIResponse<LevelWithStatus[]>,
+      CourseScopedRequest | undefined
+    >({
+      query: (params) => ({
         url: "/api/v1/levels",
         method: "GET",
+        params: params?.courseType
+          ? { course_type: params.courseType }
+          : undefined,
       }),
-      providesTags: ["Levels"],
+      providesTags: (_result, _error, params) => [
+        { type: "Levels", id: params?.courseType ?? "qaida" },
+      ],
     }),
-    getLevelDetail: builder.query<APIResponse<LevelWithStatus>, number>({
-      query: (levelId) => ({
+    getLevelDetail: builder.query<
+      APIResponse<LevelWithStatus>,
+      LevelScopedRequest
+    >({
+      query: ({ levelId, courseType }) => ({
         url: `/api/v1/levels/${levelId}`,
         method: "GET",
+        params: courseType ? { course_type: courseType } : undefined,
       }),
-      providesTags: (_result, _error, levelId) => [
-        { type: "Levels", id: levelId },
+      providesTags: (_result, _error, { levelId, courseType }) => [
+        { type: "Levels", id: `${courseType ?? "qaida"}:${levelId}` },
       ],
     }),
     completeLesson: builder.mutation<
       APIResponse<UserLevel>,
-      { levelId: number; lessonIndex: number }
+      { levelId: number; lessonIndex: number; courseType?: CourseType }
     >({
-      query: ({ levelId, lessonIndex }) => ({
+      query: ({ levelId, lessonIndex, courseType }) => ({
         url: `/api/v1/levels/${levelId}/lessons/complete`,
         method: "POST",
-        body: { lesson_index: lessonIndex },
+        params: courseType ? { course_type: courseType } : undefined,
+        body: { lesson_index: lessonIndex, course_type: courseType },
       }),
       invalidatesTags: ["Levels", "Progress"],
     }),
     completeLevel: builder.mutation<
       APIResponse<LevelCompletionResult>,
-      { levelId: number; stars: number }
+      { levelId: number; stars: number; courseType?: CourseType }
     >({
-      query: ({ levelId, stars }) => ({
+      query: ({ levelId, stars, courseType }) => ({
         url: `/api/v1/levels/${levelId}/complete`,
         method: "POST",
-        body: { stars },
+        params: courseType ? { course_type: courseType } : undefined,
+        body: { stars, course_type: courseType },
       }),
       invalidatesTags: ["Levels", "Progress", "Leaderboard", "Rewards"],
     }),

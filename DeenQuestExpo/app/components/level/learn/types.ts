@@ -1,9 +1,11 @@
 import type { LucideIcon } from "lucide-react-native";
+import type { CourseType } from "../../../store/services/api";
 
 export type CourseStatus = "available" | "locked";
 
 export type CourseConfig = {
   id: string;
+  courseType?: CourseType;
   title: string;
   subtitle: string;
   levelCount: string;

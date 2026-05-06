@@ -1,10 +1,17 @@
-import { BookOpen, Music2, Star, Feather, ScrollText } from "lucide-react-native";
+import {
+  BookOpen,
+  Music2,
+  Star,
+  Feather,
+  ScrollText,
+} from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { CourseConfig } from "./types";
 
 export const COURSES: CourseConfig[] = [
   {
     id: "qaida",
+    courseType: "qaida",
     title: "Noorani Qaida",
     subtitle: "Arabic Alphabet to Quran",
     levelCount: "20 Levels",
@@ -17,15 +24,16 @@ export const COURSES: CourseConfig[] = [
   },
   {
     id: "tajweed",
+    courseType: "tajweed",
     title: "Tajweed Rules",
     subtitle: "Beautiful Recitation",
-    levelCount: "Coming Soon",
+    levelCount: "13 Levels",
     accentColor: "#4FC3F7",
     depthColor: "#1876aa",
     cardTint: "rgba(79,195,247,0.10)",
     glowColor: "rgba(79,195,247,0.22)",
     Icon: Music2,
-    status: "locked",
+    status: "available",
   },
   {
     id: "memorization",
@@ -68,4 +76,5 @@ export const COURSES: CourseConfig[] = [
 /** Map from course id → navigation route name (extend as new courses unlock) */
 export const COURSE_ROUTE_MAP: Record<string, string> = {
   qaida: "LevelMap",
+  tajweed: "LevelMap",
 };
