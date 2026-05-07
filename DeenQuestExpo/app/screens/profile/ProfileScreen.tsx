@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -9,17 +9,7 @@ import {
   StatusBar,
   Share,
 } from "react-native";
-import {
-  Flame,
-  Settings,
-  Trophy,
-  Heart,
-  Check,
-  Sparkles,
-  Moon,
-  HandHeart,
-  Lock,
-} from "lucide-react-native";
+import { Flame, Settings, Trophy, Heart, Check } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { Header } from "../../components/Header";
@@ -28,49 +18,52 @@ import { theme } from "../../theme/themes";
 import {
   useGetProfileQuery,
   useGetProgressQuery,
+  useGetRewardsQuery,
+  type RewardWithStatus,
 } from "../../store/services/api";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { AppStackParamList } from "../../navigators/navigationTypes";
+import { RewardIcon } from "../reward/components/RewardIcon";
+import type { DemoTabScreenProps } from "../../navigators/navigationTypes";
 
-type Nav = NativeStackNavigationProp<AppStackParamList>;
+type Props = DemoTabScreenProps<"ProfileScreen">;
 
-export function ProfileScreen() {
+export function ProfileScreen({ navigation }: Props) {
   const { data: profileData, isLoading: profileLoading } = useGetProfileQuery();
   const { data: progressData, isLoading: progressLoading } =
     useGetProgressQuery();
-  const navigation = useNavigation<Nav>();
+  const { data: rewardsData, isLoading: rewardsLoading } = useGetRewardsQuery();
 
   const profile = profileData?.data;
   const progress = progressData?.data;
+  const rewards: RewardWithStatus[] = rewardsData?.data ?? [];
 
-  const weeklyCompletions = progress?.weekly_completions ?? [];
+  const weeklyCompletions = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, index) =>
+        progress?.weekly_completions?.[index] === true ? true : false,
+      ),
+    [progress?.weekly_completions],
+  );
+
   const streakDays = ["M", "T", "W", "T", "F", "S", "S"];
 
-  const achievements = [
-    {
-      icon: <Sparkles color={theme.colors.secondary} size={32} />,
-      label: "First Khatm",
-      locked: false,
-    },
-    {
-      icon: <Moon color={theme.colors.primary} size={32} />,
-      label: "Tahajjud Warrior",
-      locked: false,
-    },
-    {
-      icon: <HandHeart color={theme.colors.magenta} size={32} />,
-      label: "Giver",
-      locked: false,
-    },
-    {
-      icon: <Lock color={theme.colors.textMuted} size={32} />,
-      label: "???",
-      locked: true,
-    },
-  ];
+  const unlockedRewardsCount = useMemo(
+    () => rewards.filter((reward) => reward.unlocked).length,
+    [rewards],
+  );
 
-  if (profileLoading || progressLoading) {
+  const rewardsProgressPct = useMemo(
+    () => (rewards.length ? (unlockedRewardsCount / rewards.length) * 100 : 0),
+    [rewards.length, unlockedRewardsCount],
+  );
+
+  const nextReward = useMemo(
+    () => rewards.find((reward) => !reward.unlocked),
+    [rewards],
+  );
+
+  const rewardPreview = useMemo(() => rewards.slice(0, 4), [rewards]);
+
+  if (profileLoading || progressLoading || rewardsLoading) {
     return (
       <ScreenWrapper>
         <Loader fullScreen />
@@ -95,14 +88,13 @@ export function ProfileScreen() {
         {
           title: `${displayName}'s DeenQuest Profile`,
           message: shareText,
-          url: deepLink, 
+          url: deepLink,
         },
         {
           excludedActivityTypes: [],
         },
       );
-    } catch {
-    }
+    } catch {}
   };
 
   return (
@@ -230,98 +222,95 @@ export function ProfileScreen() {
           </View>
         </View>
 
-        {/* Goal Progress */}
+        {/* Rewards Summary */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Goal Progress</Text>
-          <View style={styles.goalCardContainer}>
-            <View
-              style={[
-                styles.goalCard,
-                { borderLeftColor: theme.colors.primary },
-              ]}
-            >
-              <View style={styles.goalHeader}>
-                <View>
-                  <Text style={styles.goalTitle}>Read 5 Pages Daily</Text>
-                  <Text style={styles.goalSubtext}>The Quranic Journey</Text>
-                </View>
-                <Text
-                  style={[styles.goalPercent, { color: theme.colors.primary }]}
-                >
-                  80%
-                </Text>
-              </View>
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: "80%", backgroundColor: theme.colors.primary },
-                  ]}
-                />
-              </View>
+          <View style={styles.sectionHeaderRow}>
+            <View>
+              <Text style={styles.sectionTitle}>Reward Vault</Text>
+              <Text style={styles.sectionSubtext}>
+                {unlockedRewardsCount}/{rewards.length} unlocked
+              </Text>
             </View>
-
-            <View
-              style={[
-                styles.goalCard,
-                { borderLeftColor: theme.colors.secondary },
-              ]}
+            <TouchableOpacity
+              onPress={() => navigation.navigate("RewardsScreen")}
             >
-              <View style={styles.goalHeader}>
-                <View>
-                  <Text style={styles.goalTitle}>Early Morning Dhikr</Text>
-                  <Text style={styles.goalSubtext}>30 day challenge</Text>
-                </View>
-                <Text
-                  style={[
-                    styles.goalPercent,
-                    { color: theme.colors.secondary },
-                  ]}
-                >
-                  12/30
-                </Text>
-              </View>
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: "40%", backgroundColor: theme.colors.secondary },
-                  ]}
-                />
-              </View>
-            </View>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Achievements */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>Achievements</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllText}>VIEW ALL</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.badgeScroll}
-        >
-          {achievements.map((ach, i) => (
-            <View
-              key={i}
-              style={[styles.badgeItem, ach.locked && { opacity: 0.3 }]}
-            >
+          <View style={styles.rewardSummaryCard}>
+            <View style={styles.rewardSummaryTop}>
+              <View>
+                <Text style={styles.rewardSummaryLabel}>Next milestone</Text>
+                <Text style={styles.rewardSummaryTitle}>
+                  {nextReward?.title ?? "All rewards unlocked"}
+                </Text>
+              </View>
+              <View style={styles.rewardSummaryBadge}>
+                <Trophy
+                  size={18}
+                  color={theme.colors.secondary}
+                  fill={theme.colors.secondary}
+                />
+                <Text style={styles.rewardSummaryBadgeText}>
+                  {rewards.length > 0
+                    ? `${Math.round(rewardsProgressPct)}%`
+                    : "0%"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.heroProgressTrack}>
               <View
                 style={[
-                  styles.badgeIconContainer,
-                  ach.locked ? styles.badgeLocked : styles.badgeUnlocked,
+                  styles.heroProgressFill,
+                  { width: `${Math.min(rewardsProgressPct, 100)}%` },
                 ]}
-              >
-                {ach.icon}
-              </View>
-              <Text style={styles.badgeLabel}>{ach.label}</Text>
+              />
             </View>
-          ))}
-        </ScrollView>
+            <Text style={styles.rewardProgressText}>
+              {rewards.length > 0
+                ? `${unlockedRewardsCount} of ${rewards.length} milestones completed`
+                : "No rewards available yet."}
+            </Text>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.rewardPreviewScroll}
+            >
+              {rewardPreview.map((reward) => (
+                <View
+                  key={reward.id}
+                  style={[
+                    styles.rewardPreviewPill,
+                    reward.unlocked
+                      ? styles.rewardPreviewPillActive
+                      : styles.rewardPreviewPillLocked,
+                  ]}
+                >
+                  <RewardIcon
+                    icon={reward.icon}
+                    color={
+                      reward.unlocked
+                        ? theme.colors.secondary
+                        : theme.colors.textMuted
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.rewardPreviewLabel,
+                      reward.unlocked && { color: theme.colors.secondary },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {reward.title}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
       </ScrollView>
     </ScreenWrapper>
   );
@@ -543,9 +532,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceHigh,
     opacity: 0.4,
   },
-  section: {
-    marginBottom: 32,
-  },
+  section: {},
   goalCardContainer: {
     marginTop: 16,
     gap: 12,
@@ -585,6 +572,92 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: "100%",
     borderRadius: 6,
+  },
+  rewardSummaryCard: {
+    backgroundColor: theme.colors.surface,
+    padding: 20,
+    borderRadius: 16,
+    borderBottomWidth: 4,
+    borderBottomColor: theme.colors.black20,
+    gap: 14,
+  },
+  rewardSummaryTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+  },
+  rewardSummaryLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: theme.colors.textMuted,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+  rewardSummaryTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: theme.colors.white,
+  },
+  rewardSummaryBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: theme.colors.surfaceHigh,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  rewardSummaryBadgeText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: theme.colors.secondary,
+  },
+  heroProgressTrack: {
+    width: "100%",
+    height: 8,
+    backgroundColor: theme.colors.surfaceHigh,
+    borderRadius: 6,
+    overflow: "hidden",
+    marginTop: 8,
+  },
+  heroProgressFill: {
+    height: "100%",
+    backgroundColor: theme.colors.secondary,
+    borderRadius: 6,
+  },
+  rewardProgressText: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    marginTop: 8,
+  },
+  rewardPreviewScroll: {
+    marginTop: 14,
+  },
+  rewardPreviewPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceHigh,
+    backgroundColor: theme.colors.surfaceLow,
+    marginRight: 12,
+  },
+  rewardPreviewPillActive: {
+    borderColor: theme.colors.secondary,
+  },
+  rewardPreviewPillLocked: {
+    opacity: 0.62,
+  },
+  rewardPreviewLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: theme.colors.text,
+    maxWidth: 120,
   },
   sectionHeaderRow: {
     flexDirection: "row",
