@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   },
   missionList: {
     gap: 10,
-    marginBottom: 28,
+    marginBottom: 38,
   },
   missionCard: {
     backgroundColor: theme.colors.surfaceLow,

@@ -185,6 +185,7 @@ const s = StyleSheet.create({
   listContent: {
     paddingHorizontal: theme.spacing.lg,
     gap: 14,
+    paddingBottom: 65,
   },
   sectionHeader: {
     flexDirection: "row",

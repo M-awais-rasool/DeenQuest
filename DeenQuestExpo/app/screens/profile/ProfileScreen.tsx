@@ -580,6 +580,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
     borderBottomColor: theme.colors.black20,
     gap: 14,
+    marginBottom: 20,
   },
   rewardSummaryTop: {
     flexDirection: "row",
@@ -664,6 +665,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 4,
+    marginBottom: 10,
   },
   viewAllText: {
     color: theme.colors.primary,
