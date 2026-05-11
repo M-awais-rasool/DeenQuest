@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
+  KeyboardAvoidingView,
   View,
   Text,
   TextInput,
@@ -7,6 +8,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Mail, Eye, EyeOff, AlertCircle, Sparkles } from "lucide-react-native";
@@ -26,10 +28,17 @@ import type { MainState } from "../../store/slices/mainSlice";
 import { theme } from "../../theme/themes";
 
 type LoginScreenProps = NativeStackScreenProps<AppStackParamList, "Login">;
+type LoginField = keyof LoginRequest;
 
 export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const dispatch = useAppDispatch();
   const [login, { isLoading, error }] = useLoginMutation();
+  const scrollRef = useRef<ScrollView>(null);
+  const formOffset = useRef(0);
+  const inputOffsets = useRef<Record<LoginField, number>>({
+    email: 0,
+    password: 0,
+  });
   const { error: reduxError } = useAppSelector(
     (state: RootState) => (state as RootState & { main: MainState }).main,
   );
@@ -49,6 +58,22 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
     dispatch(setError(null));
+  };
+
+  const handleInputFocus = (field: LoginField) => {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(
+          formOffset.current +
+            inputOffsets.current[field] -
+            (Platform.OS === "android"
+              ? 190 
+              : theme.spacing.lg), 
+          0,
+        ),
+        animated: true,
+      });
+    }, 180);
   };
 
   const validate = () => {
@@ -107,130 +132,167 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
       <View style={styles.backgroundOrbTop} />
       <View style={styles.backgroundOrbBottom} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.heroRow}>
-          <Image
-            source={require("../../../assets/login-logo.png")}
-            style={{ width: 100, height: 100 }}
-          />
-          <View style={styles.heroBadge}>
-            <Sparkles size={14} color={theme.colors.onSecondary} />
-            <Text style={styles.heroBadgeText}>Welcome Back</Text>
-          </View>
-          <Text style={styles.title}>Continue your DeenQuest</Text>
-          <Text style={styles.subtitle}>
-            Pick up your progress, unlock your next milestone, and stay
-            consistent today.
-          </Text>
-        </View>
-
-        <View style={styles.formCard}>
-          {displayError && (
-            <View style={styles.errorContainer}>
-              <AlertCircle size={16} color={theme.colors.errorStrong} />
-              <Text style={styles.errorMessage}>{displayError}</Text>
-            </View>
-          )}
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { marginBottom: 8 }]}>
-              Email Address
-            </Text>
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
-                placeholder="name@example.com"
-                placeholderTextColor={theme.colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={form.email}
-                onChangeText={(text) => handleChange("email", text)}
-                editable={!isLoading}
-              />
-              <Mail
-                size={20}
-                color={theme.colors.textMuted}
-                style={styles.inputIcon}
-              />
-            </View>
-            {errors.email && (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            )}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>Password</Text>
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[styles.input, errors.password && styles.inputError]}
-                placeholder="••••••••"
-                placeholderTextColor={theme.colors.textMuted}
-                secureTextEntry={!showPassword}
-                value={form.password}
-                onChangeText={(text) => handleChange("password", text)}
-                editable={!isLoading}
-              />
-              <TouchableOpacity
-                style={styles.inputIconButton}
-                onPress={() => setShowPassword((prev) => !prev)}
-                disabled={isLoading}
-              >
-                {showPassword ? (
-                  <EyeOff size={20} color={theme.colors.textMuted} />
-                ) : (
-                  <Eye size={20} color={theme.colors.textMuted} />
-                )}
-              </TouchableOpacity>
-            </View>
-            {errors.password && (
-              <Text style={styles.errorText}>{errors.password}</Text>
-            )}
-          </View>
-
-          <TactileButton
-            title={isLoading ? "Logging in..." : "Log In"}
-            onPress={handleLogin}
-            style={styles.loginButton}
-          />
-
-          <View style={styles.dividerRow}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
-            <Image
-              source={require("../../../assets/icons/google.png")}
-              style={styles.socialIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.socialText}>Continue with Google</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={styles.footer}
-          onPress={() => navigation.navigate("Signup")}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.footerText}>
-            New to DeenQuest? <Text style={styles.signUpText}>Sign Up</Text>
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <View style={styles.heroRow}>
+            <Image
+              source={require("../../../assets/login-logo.png")}
+              style={{ width: 100, height: 100 }}
+            />
+            <View style={styles.heroBadge}>
+              <Sparkles size={14} color={theme.colors.onSecondary} />
+              <Text style={styles.heroBadgeText}>Welcome Back</Text>
+            </View>
+            <Text style={styles.title}>Continue your DeenQuest</Text>
+            <Text style={styles.subtitle}>
+              Pick up your progress, unlock your next milestone, and stay
+              consistent today.
+            </Text>
+          </View>
+
+          <View
+            style={styles.formCard}
+            onLayout={(event) => {
+              formOffset.current = event.nativeEvent.layout.y;
+            }}
+          >
+            {displayError && (
+              <View style={styles.errorContainer}>
+                <AlertCircle size={16} color={theme.colors.errorStrong} />
+                <Text style={styles.errorMessage}>{displayError}</Text>
+              </View>
+            )}
+
+            <View
+              style={styles.inputGroup}
+              onLayout={(event) => {
+                inputOffsets.current.email = event.nativeEvent.layout.y;
+              }}
+            >
+              <Text style={[styles.label, { marginBottom: 8 }]}>
+                Email Address
+              </Text>
+
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, errors.email && styles.inputError]}
+                  placeholder="name@example.com"
+                  placeholderTextColor={theme.colors.textMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  selectionColor={theme.colors.primary}
+                  value={form.email}
+                  onChangeText={(text) => handleChange("email", text)}
+                  onFocus={() => handleInputFocus("email")}
+                  editable={!isLoading}
+                />
+                <Mail
+                  size={20}
+                  color={theme.colors.textMuted}
+                  style={styles.inputIcon}
+                />
+              </View>
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email}</Text>
+              )}
+            </View>
+
+            <View
+              style={styles.inputGroup}
+              onLayout={(event) => {
+                inputOffsets.current.password = event.nativeEvent.layout.y;
+              }}
+            >
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Password</Text>
+              </View>
+
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, errors.password && styles.inputError]}
+                  placeholder="••••••••"
+                  placeholderTextColor={theme.colors.textMuted}
+                  secureTextEntry={!showPassword}
+                  selectionColor={theme.colors.primary}
+                  value={form.password}
+                  onChangeText={(text) => handleChange("password", text)}
+                  onFocus={() => handleInputFocus("password")}
+                  editable={!isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.inputIconButton}
+                  onPress={() => setShowPassword((prev) => !prev)}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color={theme.colors.textMuted} />
+                  ) : (
+                    <Eye size={20} color={theme.colors.textMuted} />
+                  )}
+                </TouchableOpacity>
+              </View>
+              {errors.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
+            </View>
+
+            <TactileButton
+              title={isLoading ? "Logging in..." : "Log In"}
+              onPress={handleLogin}
+              style={styles.loginButton}
+            />
+
+            <View style={styles.dividerRow}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
+              <View style={styles.divider} />
+            </View>
+
+            <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
+              <Image
+                source={require("../../../assets/icons/google.png")}
+                style={styles.socialIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.socialText}>Continue with Google</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={styles.footer}
+            onPress={() => navigation.navigate("Signup")}
+          >
+            <Text style={styles.footerText}>
+              New to DeenQuest? <Text style={styles.signUpText}>Sign Up</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
     padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xxl + theme.spacing.xl,
   },
   backgroundOrbTop: {
     position: "absolute",
@@ -255,6 +317,7 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: "flex-start",
     marginLeft: 5,
+    marginTop: Platform.OS === "ios" ? -10 : -40,
   },
   heroBadge: {
     marginTop: -10,
@@ -351,6 +414,7 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: theme.colors.errorStrong,
+    borderBottomColor: theme.colors.errorStrong,
   },
   inputIcon: {
     position: "absolute",

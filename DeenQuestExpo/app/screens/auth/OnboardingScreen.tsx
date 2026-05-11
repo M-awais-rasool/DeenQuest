@@ -4,7 +4,6 @@ import {
   Dimensions,
   Image,
   PanResponder,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import type { RootState } from "../../store/store";
 import type { MainState } from "../../store/slices/mainSlice";
 import { setOnboardingCompleted } from "../../store/storage/authStorage";
 import { theme } from "../../theme/themes";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -80,9 +80,6 @@ const SCREENS: ScreenConfig[] = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Hero sections — one per screen index
-// ---------------------------------------------------------------------------
 function HeroScreen0() {
   return (
     <>
@@ -166,9 +163,6 @@ function HeroScreen2() {
 
 const HERO_COMPONENTS = [HeroScreen0, HeroScreen1, HeroScreen2];
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 type OnboardingScreenProps = NativeStackScreenProps<
   AppStackParamList,
   "OnboardingScreen"

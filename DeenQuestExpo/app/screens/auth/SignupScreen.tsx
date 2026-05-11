@@ -1,11 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
+  KeyboardAvoidingView,
   View,
   Text,
   TextInput,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
@@ -31,6 +33,7 @@ type FormErrors = {
   password: string;
   confirmPassword: string;
 };
+type SignupField = keyof FormErrors;
 
 const getErrorMessage = (rawError: any): string => {
   const data = rawError?.data;
@@ -54,6 +57,13 @@ const getErrorMessage = (rawError: any): string => {
 export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   const dispatch = useAppDispatch();
   const [signup, { isLoading, error }] = useSignupMutation();
+  const scrollRef = useRef<ScrollView>(null);
+  const formOffset = useRef(0);
+  const inputOffsets = useRef<Record<SignupField, number>>({
+    email: 0,
+    password: 0,
+    confirmPassword: 0,
+  });
 
   const [form, setForm] = useState({
     email: "",
@@ -84,6 +94,18 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
     setErrors((prev) => ({ ...prev, [field]: "" }));
     setFormError(null);
     dispatch(setError(null));
+  };
+
+  const handleInputFocus = (field: SignupField) => {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(
+          formOffset.current + inputOffsets.current[field] - theme.spacing.lg,
+          0,
+        ),
+        animated: true,
+      });
+    }, 180);
   };
 
   const validate = () => {
@@ -155,38 +177,67 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
       <View style={styles.backgroundOrbTop} />
       <View style={styles.backgroundOrbBottom} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.heroRow}>
-          <View style={styles.heroBadge}>
-            <Sparkles size={14} color={theme.colors.onSecondary} />
-            <Text style={styles.heroBadgeText}>New Journey</Text>
-          </View>
-          <Text style={styles.title}>Create your DeenQuest account</Text>
-          <Text style={styles.subtitle}>
-            Build daily consistency with guided milestones, reflections, and
-            rewards.
-          </Text>
-        </View>
-
-        <View style={styles.formCard}>
-          {displayError && (
-            <View style={styles.errorContainer}>
-              <AlertCircle size={16} color={theme.colors.errorStrong} />
-              <Text style={styles.errorMessage}>{displayError}</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.heroRow}>
+            <View style={styles.heroBadge}>
+              <Sparkles size={14} color={theme.colors.onSecondary} />
+              <Text style={styles.heroBadgeText}>New Journey</Text>
             </View>
-          )}
+            <Text style={styles.title}>Create your DeenQuest account</Text>
+            <Text style={styles.subtitle}>
+              Build daily consistency with guided milestones, reflections, and
+              rewards.
+            </Text>
+          </View>
 
-          <View style={styles.inputGroup}>
+          <View
+            style={styles.formCard}
+            onLayout={(event) => {
+              formOffset.current = event.nativeEvent.layout.y;
+            }}
+          >
+            {displayError && (
+              <View style={styles.errorContainer}>
+                <AlertCircle size={16} color={theme.colors.errorStrong} />
+                <Text style={styles.errorMessage}>{displayError}</Text>
+              </View>
+            )}
+
+          <View
+            style={styles.inputGroup}
+            onLayout={(event) => {
+              inputOffsets.current.email = event.nativeEvent.layout.y;
+            }}
+          >
             <Text style={styles.label}>Email Address</Text>
             <View style={styles.inputWrapper}>
               <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
+                style={[
+                  styles.input,
+                  errors.email && styles.inputError,
+                ]}
                 placeholder="name@example.com"
                 placeholderTextColor={theme.colors.textMuted}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                selectionColor={theme.colors.primary}
                 value={form.email}
                 onChangeText={(text) => handleChange("email", text)}
+                onFocus={() => handleInputFocus("email")}
                 editable={!isLoading}
               />
               <Mail
@@ -200,16 +251,26 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
             )}
           </View>
 
-          <View style={styles.inputGroup}>
+          <View
+            style={styles.inputGroup}
+            onLayout={(event) => {
+              inputOffsets.current.password = event.nativeEvent.layout.y;
+            }}
+          >
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputWrapper}>
               <TextInput
-                style={[styles.input, errors.password && styles.inputError]}
+                style={[
+                  styles.input,
+                  errors.password && styles.inputError,
+                ]}
                 placeholder="Create a secure password"
                 placeholderTextColor={theme.colors.textMuted}
                 secureTextEntry
+                selectionColor={theme.colors.primary}
                 value={form.password}
                 onChangeText={(text) => handleChange("password", text)}
+                onFocus={() => handleInputFocus("password")}
                 editable={!isLoading}
               />
               <Lock
@@ -223,7 +284,12 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
             )}
           </View>
 
-          <View style={styles.inputGroup}>
+          <View
+            style={styles.inputGroup}
+            onLayout={(event) => {
+              inputOffsets.current.confirmPassword = event.nativeEvent.layout.y;
+            }}
+          >
             <Text style={styles.label}>Confirm Password</Text>
             <View style={styles.inputWrapper}>
               <TextInput
@@ -234,8 +300,10 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
                 placeholder="Re-enter your password"
                 placeholderTextColor={theme.colors.textMuted}
                 secureTextEntry
+                selectionColor={theme.colors.primary}
                 value={form.confirmPassword}
                 onChangeText={(text) => handleChange("confirmPassword", text)}
+                onFocus={() => handleInputFocus("confirmPassword")}
                 editable={!isLoading}
               />
               <UserPlus
@@ -287,18 +355,19 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
             onPress={handleSignup}
             style={styles.signupButton}
           />
-        </View>
+          </View>
 
-        <TouchableOpacity
-          style={styles.footer}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.footerText}>
-            Already have an account?{" "}
-            <Text style={styles.loginText}>Log In</Text>
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity
+            style={styles.footer}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.footerText}>
+              Already have an account?{" "}
+              <Text style={styles.loginText}>Log In</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 };
@@ -319,10 +388,13 @@ const ChecklistItem = ({ ok, text }: { ok: boolean; text: string }) => {
 };
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
     padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xxl + theme.spacing.xl,
   },
   backgroundOrbTop: {
     position: "absolute",
@@ -346,6 +418,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     gap: 10,
     marginLeft: 5,
+    marginTop: Platform.OS === "ios" ? -10 : -20,
   },
   heroBadge: {
     alignSelf: "flex-start",
@@ -433,6 +506,7 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: theme.colors.errorStrong,
+    borderBottomColor: theme.colors.errorStrong,
   },
   inputIcon: {
     position: "absolute",
