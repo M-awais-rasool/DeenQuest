@@ -102,7 +102,7 @@ export function MiniGamePlayerScreen() {
 
   if (result) {
     return (
-      <ScreenWrapper>
+      <ScreenWrapper innerStyle={{flex: 1}}>
         <CompletionScreen
           stars={result.stars}
           xpEarned={result.xpEarned}

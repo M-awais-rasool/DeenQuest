@@ -56,7 +56,7 @@ export function LearnPathScreen() {
 
 const s = StyleSheet.create({
   content: {
-    paddingBottom: 48,
+    paddingBottom: 20,
     backgroundColor: theme.colors.background,
   },
   list: {
