@@ -44,8 +44,8 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   );
 
   const [form, setForm] = useState<LoginRequest>({
-    email: "",
-    password: "",
+    email: "awais@gmail.com",
+    password: "Helo@1234",
   });
 
   const [errors, setErrors] = useState({

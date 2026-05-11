@@ -242,7 +242,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
   },
 
-  // ── Streak Card ──────────────────────────────────────────────────
   streakCard: {
     backgroundColor: theme.colors.surfaceLow,
     borderRadius: theme.borderRadius.xl,
