@@ -5,11 +5,12 @@ import (
 
 	authhandler "github.com/chawais/talent-flow/backend/internal/identity-service/auth/handler"
 	userhandler "github.com/chawais/talent-flow/backend/internal/identity-service/user/handler"
+	notification "github.com/chawais/talent-flow/backend/internal/notification"
 	"github.com/chawais/talent-flow/backend/pkg/auth"
 	"github.com/chawais/talent-flow/backend/pkg/middleware"
 )
 
-func SetupRoutes(r *gin.Engine, authHandler *authhandler.AuthHandler, userHandler *userhandler.UserHandler, jwtManager *auth.JWTManager) {
+func SetupRoutes(r *gin.Engine, authHandler *authhandler.AuthHandler, userHandler *userhandler.UserHandler, notificationHandler *notification.Handler, jwtManager *auth.JWTManager) {
 	v1 := r.Group("/api/v1")
 
 	// Auth routes
@@ -30,6 +31,13 @@ func SetupRoutes(r *gin.Engine, authHandler *authhandler.AuthHandler, userHandle
 		userGroup.PUT("/me", userHandler.UpdateProfile)
 		userGroup.PUT("/me/password", userHandler.ChangePassword)
 		userGroup.DELETE("/me", userHandler.DeleteAccount)
+	}
+
+	notificationGroup := v1.Group("/notifications")
+	notificationGroup.Use(middleware.JWTAuth(jwtManager))
+	{
+		notificationGroup.POST("/register", notificationHandler.RegisterToken)
+		notificationGroup.POST("/unregister", notificationHandler.UnregisterToken)
 	}
 
 	// Health check

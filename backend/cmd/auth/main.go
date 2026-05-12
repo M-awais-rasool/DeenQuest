@@ -20,11 +20,12 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/identity-service/router"
 	userhandler "github.com/chawais/talent-flow/backend/internal/identity-service/user/handler"
 	userservice "github.com/chawais/talent-flow/backend/internal/identity-service/user/service"
+	notification "github.com/chawais/talent-flow/backend/internal/notification"
 	"github.com/chawais/talent-flow/backend/pkg/auth"
 	"github.com/chawais/talent-flow/backend/pkg/config"
 	"github.com/chawais/talent-flow/backend/pkg/logger"
 	"github.com/chawais/talent-flow/backend/pkg/middleware"
-	"github.com/chawais/talent-flow/backend/pkg/queue"
+	"github.com/chawais/talent-flow/backend/pkg/push"
 )
 
 func main() {
@@ -48,21 +49,24 @@ func main() {
 	}()
 	authDB := mongoClient.Database(cfg.MongoDB)
 
-	kafkaProducer := queue.NewKafkaProducer(cfg.GetKafkaBrokerList())
-	defer kafkaProducer.Close()
-
 	jwtManager := auth.NewJWTManager(cfg.JWTSecret, cfg.JWTAccessExpiry, cfg.JWTRefreshExpiry)
 
 	userRepo, err := identityrepo.NewMongoUserRepository(authDB)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to initialize user repository: %v", err))
 	}
+	notificationRepo, err := notification.NewMongoTokenRepository(authDB)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to initialize notification repository: %v", err))
+	}
 
-	authSvc := authservice.NewAuthService(userRepo, jwtManager, kafkaProducer)
+	authSvc := authservice.NewAuthService(userRepo, jwtManager)
 	userSvc := userservice.NewUserService(userRepo)
+	notificationSvc := notification.NewService(notificationRepo, push.NewExpoClient(cfg.ExpoPushURL, cfg.ExpoPushAccessToken))
 
 	authHdl := authhandler.NewAuthHandler(authSvc)
 	userHdl := userhandler.NewUserHandler(userSvc)
+	notificationHdl := notification.NewHandler(notificationSvc)
 
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -72,7 +76,7 @@ func main() {
 	r.Use(middleware.Recovery())
 	r.Use(middleware.RequestLogger())
 	r.Use(middleware.CORS(cfg.AllowedOrigins()))
-	router.SetupRoutes(r, authHdl, userHdl, jwtManager)
+	router.SetupRoutes(r, authHdl, userHdl, notificationHdl, jwtManager)
 
 	addr := fmt.Sprintf("%s:%s", cfg.AuthHost, cfg.AuthPort)
 	srv := &http.Server{Addr: addr, Handler: r}

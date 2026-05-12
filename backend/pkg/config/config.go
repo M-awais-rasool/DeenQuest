@@ -40,6 +40,9 @@ type Config struct {
 	CoreServiceURL string
 	WhisperURL     string
 
+	ExpoPushURL         string
+	ExpoPushAccessToken string
+
 	CORSAllowedOrigins string
 }
 
@@ -47,27 +50,29 @@ func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		AppEnv:             getEnv("APP_ENV", "development"),
-		GatewayHost:        getEnv("GATEWAY_HOST", "0.0.0.0"),
-		GatewayPort:        getEnv("GATEWAY_PORT", "8080"),
-		AuthHost:           getEnv("AUTH_SERVICE_HOST", "0.0.0.0"),
-		AuthPort:           getEnv("AUTH_SERVICE_PORT", "8082"),
-		CoreHost:           getEnv("CORE_SERVICE_HOST", "0.0.0.0"),
-		CorePort:           getEnv("CORE_SERVICE_PORT", "8083"),
-		WorkerHost:         getEnv("WORKER_SERVICE_HOST", "0.0.0.0"),
-		WorkerPort:         getEnv("WORKER_SERVICE_PORT", "8084"),
-		MongoURI:           getEnv("MONGO_URI", "mongodb://localhost:27017"),
-		MongoDB:            getEnv("MONGO_DB", "deenquest"),
-		RedisHost:          getEnv("REDIS_HOST", "localhost"),
-		RedisPort:          getEnv("REDIS_PORT", "6379"),
-		RedisPassword:      getEnv("REDIS_PASSWORD", ""),
-		RedisDB:            getInt("REDIS_DB", 0),
-		KafkaBrokers:       getEnv("KAFKA_BROKERS", "localhost:9092"),
-		JWTSecret:          getEnv("JWT_SECRET", "change-me-in-production"),
-		AuthServiceURL:     getEnv("AUTH_SERVICE_URL", "http://auth-service:8082"),
-		CoreServiceURL:     getEnv("CORE_SERVICE_URL", "http://core-service:8083"),
-		WhisperURL:         getEnv("WHISPER_URL", "http://localhost:8001"),
-		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
+		AppEnv:              getEnv("APP_ENV", "development"),
+		GatewayHost:         getEnv("GATEWAY_HOST", "0.0.0.0"),
+		GatewayPort:         getEnv("GATEWAY_PORT", "8080"),
+		AuthHost:            getEnv("AUTH_SERVICE_HOST", "0.0.0.0"),
+		AuthPort:            getEnv("AUTH_SERVICE_PORT", "8082"),
+		CoreHost:            getEnv("CORE_SERVICE_HOST", "0.0.0.0"),
+		CorePort:            getEnv("CORE_SERVICE_PORT", "8083"),
+		WorkerHost:          getEnv("WORKER_SERVICE_HOST", "0.0.0.0"),
+		WorkerPort:          getEnv("WORKER_SERVICE_PORT", "8084"),
+		MongoURI:            getEnv("MONGO_URI", "mongodb://localhost:27017"),
+		MongoDB:             getEnv("MONGO_DB", "deenquest"),
+		RedisHost:           getEnv("REDIS_HOST", "localhost"),
+		RedisPort:           getEnv("REDIS_PORT", "6379"),
+		RedisPassword:       getEnv("REDIS_PASSWORD", ""),
+		RedisDB:             getInt("REDIS_DB", 0),
+		KafkaBrokers:        getEnv("KAFKA_BROKERS", "localhost:9092"),
+		JWTSecret:           getEnv("JWT_SECRET", "change-me-in-production"),
+		AuthServiceURL:      getEnv("AUTH_SERVICE_URL", "http://auth-service:8082"),
+		CoreServiceURL:      getEnv("CORE_SERVICE_URL", "http://core-service:8083"),
+		WhisperURL:          getEnv("WHISPER_URL", "http://localhost:8001"),
+		ExpoPushURL:         getEnv("EXPO_PUSH_URL", "https://exp.host/--/api/v2/push/send"),
+		ExpoPushAccessToken: getEnv("EXPO_PUSH_ACCESS_TOKEN", ""),
+		CORSAllowedOrigins:  getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
 	}
 
 	var err error

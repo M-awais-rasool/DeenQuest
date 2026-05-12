@@ -91,6 +91,8 @@ func setupProxyRoutes(r *gin.Engine, cfg *config.Config) {
 	// Auth service routes
 	r.Any("/api/v1/auth/*path", createReverseProxy(cfg.AuthServiceURL))
 	r.Any("/api/v1/users/*path", createReverseProxy(cfg.AuthServiceURL))
+	r.Any("/api/v1/notifications", createReverseProxy(cfg.AuthServiceURL))
+	r.Any("/api/v1/notifications/*path", createReverseProxy(cfg.AuthServiceURL))
 
 	// Core service routes
 	r.Any("/api/v1/progress/*path", createReverseProxy(cfg.CoreServiceURL))
