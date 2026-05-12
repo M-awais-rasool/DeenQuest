@@ -1,39 +1,19 @@
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { useRef } from "react";
-import { Download, Play, Flame, Star, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Play, Flame, Star, CheckCircle2, Github, GitFork } from "lucide-react";
 import heroMockup from "@/assets/hero-mockup.png";
 import { Particles } from "./Particles";
 
 export function Hero() {
-  const ref = useRef<HTMLElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
-  const yOrb = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, -180]);
-  const yMockup = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, -120]);
-  const scaleMockup = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.4]);
-  const rotatePattern = useTransform(scrollYProgress, [0, 1], [0, 30]);
-
   return (
-    <section ref={ref} className="relative overflow-hidden pt-32 pb-24 md:pt-40 md:pb-32">
+    <section className="relative overflow-hidden pt-32 pb-24 md:pt-40 md:pb-32">
       {/* glow orbs */}
-      <motion.div
-        style={{ y: yOrb }}
-        className="pointer-events-none absolute -top-40 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-emerald-glow/30 blur-[120px] animate-glow-pulse"
-      />
-      <motion.div
-        style={{ y: yOrb }}
-        className="pointer-events-none absolute top-40 right-10 h-72 w-72 rounded-full bg-gold/15 blur-[100px]"
-      />
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-emerald-glow/30 blur-[120px] animate-glow-pulse" />
+      <div className="pointer-events-none absolute top-40 right-10 h-72 w-72 rounded-full bg-gold/15 blur-[100px]" />
 
       {/* geometric pattern */}
-      <motion.div
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.06] animate-spin-slow"
         style={{
-          rotate: rotatePattern,
           backgroundImage:
             "radial-gradient(circle at 50% 50%, var(--gold) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
@@ -66,34 +46,33 @@ export function Hero() {
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
             <a
-              href="#download"
+              href="#github"
               className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-glow to-emerald px-7 py-3.5 text-sm font-semibold text-emerald-deep shadow-[var(--shadow-glow)] transition-transform hover:scale-105"
             >
-              <Download className="h-4 w-4" />
-              Download App
+              <Github className="h-4 w-4" />
+              View on GitHub
             </a>
             <a
-              href="#how"
+              href="#github"
               className="inline-flex items-center gap-2 rounded-full glass px-7 py-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/5"
             >
-              <Play className="h-4 w-4 fill-foreground" />
-              Watch Demo
+              <GitFork className="h-4 w-4" />
+              Fork & Contribute
             </a>
           </div>
 
           <div className="mt-10 flex items-center justify-center gap-8 text-sm text-muted-foreground lg:justify-start">
-            <div><span className="text-2xl font-bold text-foreground">500K+</span><br />Active Muslims</div>
+            <div><span className="text-2xl font-bold text-foreground">100%</span><br />Open Source</div>
             <div className="h-10 w-px bg-border" />
-            <div><span className="text-2xl font-bold text-gold">4.9★</span><br />App Store</div>
+            <div><span className="text-2xl font-bold text-gold">MIT</span><br />Licensed</div>
           </div>
         </motion.div>
 
         {/* Mockup + floating cards */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.2 }}
-          style={{ y: yMockup, scale: scaleMockup, opacity }}
           className="relative mx-auto h-[560px] w-full max-w-md"
         >
           <div className="absolute inset-0 -z-10 rounded-full bg-emerald-glow/20 blur-3xl" />
