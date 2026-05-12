@@ -6,13 +6,13 @@ import { Particles } from "./Particles";
 export function Hero() {
   return (
     <section className="relative overflow-hidden pt-32 pb-24 md:pt-40 md:pb-32">
-      {/* glow orbs */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-emerald-glow/30 blur-[120px] animate-glow-pulse" />
-      <div className="pointer-events-none absolute top-40 right-10 h-72 w-72 rounded-full bg-gold/15 blur-[100px]" />
+      {/* glow orbs - static, no scale animation */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-emerald-glow/25 blur-[100px] animate-glow-pulse will-change-[opacity]" />
+      <div className="pointer-events-none absolute top-40 right-10 h-64 w-64 rounded-full bg-gold/10 blur-[80px]" />
 
-      {/* geometric pattern */}
+      {/* static geometric pattern (no spin to avoid full-section repaint) */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.06] animate-spin-slow"
+        className="pointer-events-none absolute inset-0 opacity-[0.05]"
         style={{
           backgroundImage:
             "radial-gradient(circle at 50% 50%, var(--gold) 1px, transparent 1px)",
@@ -20,7 +20,7 @@ export function Hero() {
         }}
       />
 
-      <Particles count={35} />
+      <Particles count={14} />
 
       <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 lg:grid-cols-2">
         <motion.div
@@ -46,14 +46,14 @@ export function Hero() {
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
             <a
-              href="#github"
+              href="https://github.com/M-awais-rasool/DeenQuest"
               className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-glow to-emerald px-7 py-3.5 text-sm font-semibold text-emerald-deep shadow-[var(--shadow-glow)] transition-transform hover:scale-105"
             >
               <Github className="h-4 w-4" />
               View on GitHub
             </a>
             <a
-              href="#github"
+              href="https://github.com/M-awais-rasool/DeenQuest"
               className="inline-flex items-center gap-2 rounded-full glass px-7 py-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/5"
             >
               <GitFork className="h-4 w-4" />
@@ -75,13 +75,16 @@ export function Hero() {
           transition={{ duration: 1, delay: 0.2 }}
           className="relative mx-auto h-[560px] w-full max-w-md"
         >
-          <div className="absolute inset-0 -z-10 rounded-full bg-emerald-glow/20 blur-3xl" />
+          <div className="absolute inset-0 -z-10 rounded-full bg-emerald-glow/15 blur-3xl" />
           <img
             src={heroMockup}
             alt="Nuur app — gamified Islamic learning"
             width={1024}
             height={1280}
-            className="h-full w-full object-contain animate-float drop-shadow-[0_30px_50px_rgba(0,0,0,0.5)]"
+            loading="eager"
+            decoding="async"
+            className="h-full w-full object-contain animate-float will-change-transform"
+            style={{ filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.45))" }}
           />
 
           {/* Floating XP card */}
@@ -89,7 +92,7 @@ export function Hero() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
-            className="absolute top-10 -left-4 md:-left-10 rounded-2xl glass p-4 shadow-[var(--shadow-elevated)] animate-float"
+            className="absolute top-10 -left-4 md:-left-10 rounded-2xl glass-solid p-4 shadow-[var(--shadow-elevated)] animate-float will-change-transform"
             style={{ animationDelay: "1s" }}
           >
             <div className="flex items-center gap-3">
@@ -108,7 +111,7 @@ export function Hero() {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1, duration: 0.6 }}
-            className="absolute top-1/3 -right-4 md:-right-8 rounded-2xl glass p-4 shadow-[var(--shadow-elevated)] animate-float-slow"
+            className="absolute top-1/3 -right-4 md:-right-8 rounded-2xl glass-solid p-4 shadow-[var(--shadow-elevated)] animate-float will-change-transform-slow"
           >
             <div className="flex items-center gap-3">
               <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-orange-400 to-red-500">
@@ -126,7 +129,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.2, duration: 0.6 }}
-            className="absolute -bottom-4 left-4 md:-left-6 rounded-2xl glass p-4 shadow-[var(--shadow-elevated)] animate-float"
+            className="absolute -bottom-4 left-4 md:-left-6 rounded-2xl glass-solid p-4 shadow-[var(--shadow-elevated)] animate-float will-change-transform"
             style={{ animationDelay: "2s" }}
           >
             <div className="flex items-center gap-3">

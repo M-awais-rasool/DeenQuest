@@ -28,23 +28,15 @@ export function Features() {
           subtitle="A complete spiritual companion designed to feel as engaging as your favorite game."
         />
 
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
-          className="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-        >
-          {features.map((f) => (
+        <div className="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {features.map((f, i) => (
             <motion.div
               key={f.title}
-              variants={{
-                hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
-                show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
-              }}
-              whileHover={{ y: -10, rotateX: 4, rotateY: -4 }}
-              style={{ transformPerspective: 800 }}
-              className="group relative overflow-hidden rounded-3xl glass p-6 transition-shadow duration-300 hover:shadow-[var(--shadow-glow)]"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: (i % 5) * 0.08 }}
+              className="group relative overflow-hidden rounded-3xl glass p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-[var(--shadow-glow)]"
             >
               <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-glow/0 blur-2xl transition-all duration-500 group-hover:bg-emerald-glow/30" />
               <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-emerald to-emerald-deep ring-1 ring-emerald-glow/30 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
@@ -54,7 +46,7 @@ export function Features() {
               <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

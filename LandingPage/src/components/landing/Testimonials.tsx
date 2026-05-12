@@ -20,22 +20,15 @@ export function Testimonials() {
           title={<>Stories from <span className="text-gradient-gold">our Ummah</span></>}
         />
 
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
-          className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-        >
+        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((t, i) => (
             <motion.div
               key={t.name}
-              variants={{
-                hidden: { opacity: 0, y: 50, x: i % 2 === 0 ? -20 : 20, filter: "blur(8px)" },
-                show: { opacity: 1, y: 0, x: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
-              }}
-              whileHover={{ y: -6 }}
-              className="rounded-3xl glass p-6 transition-shadow hover:shadow-[var(--shadow-glow)]"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: (i % 3) * 0.1 }}
+              className="rounded-3xl glass p-6 transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-glow)]"
             >
               <div className="flex gap-1 text-gold">
                 {Array.from({ length: 5 }).map((_, j) => (
@@ -54,7 +47,7 @@ export function Testimonials() {
               </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -50,8 +50,8 @@
     50% { transform: translateY(-18px); }
   }
   @keyframes glow-pulse {
-    0%, 100% { opacity: 0.55; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.08); }
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 0.95; }
   }
   @keyframes shimmer {
     0% { background-position: 0% 50%; }
@@ -130,8 +130,13 @@
 
 @utility glass {
   background: var(--gradient-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid oklch(1 0 0 / 0.08);
+}
+
+@utility glass-solid {
+  background: linear-gradient(160deg, oklch(0.24 0.05 165 / 0.85), oklch(0.2 0.04 165 / 0.7));
   border: 1px solid oklch(1 0 0 / 0.08);
 }
 

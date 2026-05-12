@@ -19,22 +19,16 @@ export function DailyTasks() {
           subtitle="Tap a task to begin — interactive screens guide you every step of the way."
         />
 
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
-          className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
-        >
-          {tasks.map((t) => (
+        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {tasks.map((t, i) => (
             <motion.div
               key={t.title}
-              variants={{
-                hidden: { opacity: 0, y: 60, filter: "blur(8px)" },
-                show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
-              }}
-              whileHover={{ y: -10, scale: 1.03 }}
-              className="group relative cursor-pointer overflow-hidden rounded-3xl glass p-6 transition-shadow hover:shadow-[var(--shadow-glow)]"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative cursor-pointer overflow-hidden rounded-3xl glass p-6 transition-all hover:shadow-[var(--shadow-glow)]"
             >
               <div className="flex items-start justify-between">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-emerald to-emerald-deep ring-1 ring-emerald-glow/30">
@@ -52,7 +46,7 @@ export function DailyTasks() {
               </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

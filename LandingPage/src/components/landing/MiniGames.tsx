@@ -20,21 +20,15 @@ export function MiniGames() {
           subtitle="Five addictive Islamic mini-games designed to make Arabic stick."
         />
 
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
-          className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-        >
-          {games.map((g) => (
+        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {games.map((g, i) => (
             <motion.div
               key={g.title}
-              variants={{
-                hidden: { opacity: 0, y: 60, rotate: -2, filter: "blur(10px)" },
-                show: { opacity: 1, y: 0, rotate: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
-              }}
-              whileHover={{ scale: 1.04, y: -6 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              whileHover={{ scale: 1.03 }}
               className="group relative overflow-hidden rounded-3xl glass p-8 transition-shadow hover:shadow-[var(--shadow-glow)]"
             >
               <div className={`mb-6 inline-grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${g.color} shadow-lg transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110`}>
@@ -47,7 +41,7 @@ export function MiniGames() {
               </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

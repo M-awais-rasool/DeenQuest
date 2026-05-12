@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { Github, GitFork, Star, Code2, Copy, Check, Heart, Users } from "lucide-react";
 import { useState } from "react";
 
-const REPO_URL = "https://github.com/yourusername/nuur";
-const CLONE_CMD = "git clone https://github.com/yourusername/nuur.git";
+const REPO_URL = "https://github.com/M-awais-rasool/DeenQuest";
+const CLONE_CMD = "git clone https://github.com/M-awais-rasool/DeenQuest.git";
 
 export function Download() {
   const [copied, setCopied] = useState(false);
@@ -19,10 +19,10 @@ export function Download() {
   return (
     <section id="github" className="relative py-28">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="relative overflow-hidden rounded-[2.5rem] glass p-8 md:p-14">
-          {/* glows */}
-          <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-glow/30 blur-[120px] animate-glow-pulse" />
-          <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 rounded-full bg-gold/20 blur-3xl" />
+        <div className="relative overflow-hidden rounded-[2.5rem] glass-solid p-8 md:p-14">
+          {/* glows - opacity-only animation, smaller blur radius */}
+          <div className="pointer-events-none absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-emerald-glow/25 blur-[90px] animate-glow-pulse will-change-[opacity]" />
+          <div className="pointer-events-none absolute bottom-0 right-0 h-56 w-56 rounded-full bg-gold/15 blur-[80px]" />
 
           {/* Heading */}
           <motion.div
@@ -51,7 +51,7 @@ export function Download() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="relative mx-auto mt-12 max-w-3xl rounded-3xl glass p-6 md:p-8 shadow-[var(--shadow-elevated)]"
+            className="relative mx-auto mt-12 max-w-3xl rounded-3xl glass-solid p-6 md:p-8 shadow-[var(--shadow-elevated)]"
           >
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
@@ -61,7 +61,7 @@ export function Download() {
                 <div>
                   <div className="text-xs uppercase tracking-widest text-muted-foreground">Public repository</div>
                   <a href={REPO_URL} target="_blank" rel="noreferrer" className="text-lg font-bold hover:text-gold transition-colors">
-                    yourusername / nuur
+                    M-awais-rasool / DeenQuest
                   </a>
                 </div>
               </div>
@@ -129,7 +129,7 @@ export function Download() {
               { title: "Improve content", desc: "Add duas, lessons, translations and Hadith." },
               { title: "Spread the word", desc: "Share the repo with your masjid & community." },
             ].map((c) => (
-              <div key={c.title} className="rounded-2xl glass p-5 transition-transform hover:-translate-y-1">
+              <div key={c.title} className="rounded-2xl glass-solid p-5 transition-transform hover:-translate-y-1">
                 <div className="text-sm font-semibold text-gradient-gold">{c.title}</div>
                 <p className="mt-1.5 text-sm text-muted-foreground">{c.desc}</p>
               </div>
