@@ -23,7 +23,6 @@ import (
 	"github.com/chawais/talent-flow/backend/pkg/config"
 	"github.com/chawais/talent-flow/backend/pkg/logger"
 	"github.com/chawais/talent-flow/backend/pkg/middleware"
-	"github.com/chawais/talent-flow/backend/pkg/queue"
 )
 
 func main() {
@@ -50,11 +49,8 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to initialize core repository: %v", err))
 	}
 
-	producer := queue.NewKafkaProducer(cfg.GetKafkaBrokerList())
-	defer producer.Close()
-
 	jwtManager := auth.NewJWTManager(cfg.JWTSecret, cfg.JWTAccessExpiry, cfg.JWTRefreshExpiry)
-	coreService := service.NewCoreService(repo, producer)
+	coreService := service.NewCoreService(repo)
 	coreController := controller.NewCoreController(coreService)
 
 	// Recitation: Whisper microservice URL from env (WHISPER_URL)

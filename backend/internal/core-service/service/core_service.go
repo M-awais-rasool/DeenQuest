@@ -11,16 +11,10 @@ import (
 
 	"github.com/chawais/talent-flow/backend/internal/core-service/model"
 	"github.com/chawais/talent-flow/backend/internal/core-service/repository"
-	"github.com/chawais/talent-flow/backend/pkg/queue"
 )
 
-type EventPublisher interface {
-	Publish(ctx context.Context, topic string, event queue.Event) error
-}
-
 type CoreService struct {
-	repo      repository.CoreRepository
-	publisher EventPublisher
+	repo repository.CoreRepository
 }
 
 var (
@@ -28,8 +22,8 @@ var (
 	ErrInvalidLessonIndex = errors.New("invalid lesson index")
 )
 
-func NewCoreService(repo repository.CoreRepository, publisher EventPublisher) *CoreService {
-	return &CoreService{repo: repo, publisher: publisher}
+func NewCoreService(repo repository.CoreRepository) *CoreService {
+	return &CoreService{repo: repo}
 }
 
 // ProgressResponse is the response type for the user's progress summary.
@@ -266,16 +260,6 @@ func (s *CoreService) CompleteDailyTask(ctx context.Context, userID, taskID stri
 		return err
 	}
 
-	if s.publisher != nil {
-		_ = s.publisher.Publish(ctx, "habit.completed", queue.Event{
-			Type: "daily_task.completed",
-			Payload: map[string]interface{}{
-				"user_id": userID,
-				"task_id": taskID,
-				"xp":      task.RewardXP,
-			},
-		})
-	}
 	return nil
 }
 
@@ -326,9 +310,6 @@ func (s *CoreService) bumpStreak(ctx context.Context, userID string) error {
 		}
 		streak.LastCompletedAt = now
 		streak.UpdatedAt = now
-	}
-	if s.publisher != nil {
-		_ = s.publisher.Publish(ctx, "streak.updated", queue.Event{Type: "streak.updated", Payload: streak})
 	}
 	return s.repo.UpsertStreak(ctx, streak)
 }
@@ -692,20 +673,6 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 	if err != nil {
 		// Non-fatal: log but don't fail the completion.
 		newRewards = nil
-	}
-
-	if s.publisher != nil {
-		_ = s.publisher.Publish(ctx, "level.completed", queue.Event{
-			Type: "level.completed",
-			Payload: map[string]interface{}{
-				"user_id":      userID,
-				"level_id":     levelID,
-				"course_type":  string(level.CourseType),
-				"course_level": level.CourseLevel,
-				"stars":        stars,
-				"xp":           xp,
-			},
-		})
 	}
 
 	if newRewards == nil {

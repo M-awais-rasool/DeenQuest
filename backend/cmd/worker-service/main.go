@@ -14,10 +14,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	notification "github.com/chawais/talent-flow/backend/internal/notification"
 	"github.com/chawais/talent-flow/backend/internal/worker-service/repository"
 	"github.com/chawais/talent-flow/backend/internal/worker-service/worker"
 	"github.com/chawais/talent-flow/backend/pkg/config"
 	"github.com/chawais/talent-flow/backend/pkg/logger"
+	"github.com/chawais/talent-flow/backend/pkg/push"
 	"github.com/chawais/talent-flow/backend/pkg/queue"
 )
 
@@ -41,30 +43,20 @@ func main() {
 
 	workerDB := mongoClient.Database(cfg.MongoDB)
 	jobRepo := repository.NewJobLogRepository(workerDB)
-	consumer := worker.NewConsumer(jobRepo)
+	notificationRepo, err := notification.NewMongoTokenRepository(workerDB)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to initialize notification repository: %v", err))
+	}
+	notificationService := notification.NewService(notificationRepo, push.NewExpoClient(cfg.ExpoPushURL, cfg.ExpoPushAccessToken))
+	consumer := worker.NewConsumer(jobRepo, notificationService)
 	scheduler := worker.NewScheduler(jobRepo)
 
-	userCreatedConsumer := queue.NewKafkaConsumer(cfg.GetKafkaBrokerList(), "user.created", "worker-user-created-group")
-	defer userCreatedConsumer.Close()
-	habitCompletedConsumer := queue.NewKafkaConsumer(cfg.GetKafkaBrokerList(), "habit.completed", "worker-habit-completed-group")
-	defer habitCompletedConsumer.Close()
-	streakUpdatedConsumer := queue.NewKafkaConsumer(cfg.GetKafkaBrokerList(), "streak.updated", "worker-streak-updated-group")
-	defer streakUpdatedConsumer.Close()
 	notificationSendConsumer := queue.NewKafkaConsumer(cfg.GetKafkaBrokerList(), "notification.send", "worker-notification-send-group")
 	defer notificationSendConsumer.Close()
 
 	runCtx, runCancel := context.WithCancel(context.Background())
 	defer runCancel()
 
-	go func() {
-		_ = userCreatedConsumer.Consume(runCtx, consumer.Wrap("user.created", consumer.HandleUserCreated))
-	}()
-	go func() {
-		_ = habitCompletedConsumer.Consume(runCtx, consumer.Wrap("habit.completed", consumer.HandleHabitCompleted))
-	}()
-	go func() {
-		_ = streakUpdatedConsumer.Consume(runCtx, consumer.Wrap("streak.updated", consumer.HandleStreakUpdated))
-	}()
 	go func() {
 		_ = notificationSendConsumer.Consume(runCtx, consumer.Wrap("notification.send", consumer.HandleNotificationSend))
 	}()

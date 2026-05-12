@@ -8,14 +8,10 @@ import (
 	"time"
 
 	"github.com/chawais/talent-flow/backend/internal/identity-service/auth/dto"
-	identitykafka "github.com/chawais/talent-flow/backend/internal/identity-service/kafka"
 	"github.com/chawais/talent-flow/backend/internal/identity-service/model"
 	"github.com/chawais/talent-flow/backend/internal/identity-service/repository"
 	"github.com/chawais/talent-flow/backend/pkg/auth"
-	"github.com/chawais/talent-flow/backend/pkg/logger"
-	"github.com/chawais/talent-flow/backend/pkg/queue"
 	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 var (
@@ -26,11 +22,10 @@ var (
 type AuthService struct {
 	users      repository.UserRepository
 	jwtManager *auth.JWTManager
-	publisher  identitykafka.Publisher
 }
 
-func NewAuthService(users repository.UserRepository, jwtManager *auth.JWTManager, publisher identitykafka.Publisher) *AuthService {
-	return &AuthService{users: users, jwtManager: jwtManager, publisher: publisher}
+func NewAuthService(users repository.UserRepository, jwtManager *auth.JWTManager) *AuthService {
+	return &AuthService{users: users, jwtManager: jwtManager}
 }
 
 func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) error {
@@ -64,20 +59,6 @@ func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) error 
 	}
 	if err := s.users.Create(ctx, newUser); err != nil {
 		return fmt.Errorf("create user: %w", err)
-	}
-
-	if s.publisher != nil {
-		err = s.publisher.Publish(ctx, "user.created", queue.Event{
-			Type: "user.created",
-			Payload: map[string]string{
-				"user_id": newUser.ID,
-				"email":   newUser.Email,
-				"role":    newUser.Role,
-			},
-		})
-		if err != nil {
-			logger.Warn("failed to publish user.created", zap.Error(err), zap.String("user_id", newUser.ID))
-		}
 	}
 
 	return nil
