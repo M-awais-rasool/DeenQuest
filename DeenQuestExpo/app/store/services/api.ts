@@ -5,9 +5,11 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
   baseUrl: "http://172.16.29.205:8080",
-  prepareHeaders: async (headers) => {
+  prepareHeaders: async (headers, { getState }) => {
     try {
-      const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
+      const stateToken = (getState() as any)?.main?.accessToken;
+      const token =
+        stateToken || (await AsyncStorage.getItem(STORAGE_KEYS.accessToken));
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
@@ -79,6 +81,34 @@ export interface APIResponse<T> {
   message?: string;
   data?: T;
   error?: string;
+}
+
+// ─── Notifications ───
+
+export type NotificationPlatform = "ios" | "android" | "web";
+
+export interface RegisterNotificationTokenRequest {
+  expo_push_token: string;
+  platform: NotificationPlatform;
+  device_id?: string;
+  app_version?: string;
+}
+
+export interface UnregisterNotificationTokenRequest {
+  expo_push_token: string;
+}
+
+export interface NotificationUserInfo {
+  id: string;
+  email: string;
+  role?: string;
+}
+
+export interface NotificationTokenResponse {
+  user: NotificationUserInfo;
+  expo_push_token: string;
+  platform: NotificationPlatform;
+  updated_at: string;
 }
 
 // ─── Daily Task / Block Types ───
@@ -324,6 +354,7 @@ export const API = createApi({
     "Leaderboard",
     "Rewards",
     "Recitation",
+    "Notifications",
   ],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
@@ -385,6 +416,28 @@ export const API = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["User"],
+    }),
+    registerNotificationToken: builder.mutation<
+      APIResponse<NotificationTokenResponse>,
+      RegisterNotificationTokenRequest
+    >({
+      query: (data) => ({
+        url: "/api/v1/notifications/register",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Notifications"],
+    }),
+    unregisterNotificationToken: builder.mutation<
+      APIResponse<null>,
+      UnregisterNotificationTokenRequest
+    >({
+      query: (data) => ({
+        url: "/api/v1/notifications/unregister",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Notifications"],
     }),
     getDailyTasks: builder.query<APIResponse<DailyTask[]>, void>({
       query: () => ({
@@ -520,6 +573,8 @@ export const {
   useUpdateProfileMutation,
   useChangePasswordMutation,
   useDeleteAccountMutation,
+  useRegisterNotificationTokenMutation,
+  useUnregisterNotificationTokenMutation,
   useGetDailyTasksQuery,
   useCompleteDailyTaskMutation,
   useGetProgressQuery,

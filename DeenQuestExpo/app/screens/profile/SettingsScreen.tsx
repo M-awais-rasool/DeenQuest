@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -22,9 +22,19 @@ import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { theme } from "../../theme/themes";
 import { useAppDispatch } from "../../store/hooks";
 import { logout } from "../../store/slices/mainSlice";
-import { useDeleteAccountMutation } from "../../store/services/api";
+import {
+  useDeleteAccountMutation,
+  useRegisterNotificationTokenMutation,
+  useUnregisterNotificationTokenMutation,
+} from "../../store/services/api";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
+import {
+  getExpoPushRegistrationAsync,
+  getNotificationsEnabledPreference,
+  getStoredExpoPushTokenAsync,
+  setNotificationsEnabledPreference,
+} from "../../services/notificationService";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Settings">;
 
@@ -44,7 +54,59 @@ interface SettingsSection {
 export function SettingsScreen({ navigation }: Props) {
   const dispatch = useAppDispatch();
   const [deleteAccount, { isLoading: isDeleting }] = useDeleteAccountMutation();
+  const [registerNotificationToken, { isLoading: isRegisteringToken }] =
+    useRegisterNotificationTokenMutation();
+  const [unregisterNotificationToken, { isLoading: isUnregisteringToken }] =
+    useUnregisterNotificationTokenMutation();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getNotificationsEnabledPreference().then((enabled) => {
+      if (isMounted) {
+        setNotificationsEnabled(enabled);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const unregisterCurrentToken = async () => {
+    const expoPushToken = await getStoredExpoPushTokenAsync();
+    if (!expoPushToken) return;
+
+    await unregisterNotificationToken({
+      expo_push_token: expoPushToken,
+    }).unwrap();
+  };
+
+  const handleNotificationToggle = async () => {
+    if (isRegisteringToken || isUnregisteringToken) return;
+
+    try {
+      if (notificationsEnabled) {
+        await unregisterCurrentToken();
+        await setNotificationsEnabledPreference(false);
+        setNotificationsEnabled(false);
+        return;
+      }
+
+      const result = await getExpoPushRegistrationAsync();
+      if (result.status !== "registered") {
+        Alert.alert("Notifications", result.message);
+        return;
+      }
+
+      await registerNotificationToken(result.payload).unwrap();
+      await setNotificationsEnabledPreference(true);
+      setNotificationsEnabled(true);
+    } catch {
+      Alert.alert("Notifications", "Could not update notifications right now.");
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure you want to log out?", [
@@ -52,7 +114,13 @@ export function SettingsScreen({ navigation }: Props) {
       {
         text: "Log Out",
         style: "destructive",
-        onPress: () => dispatch(logout()),
+        onPress: async () => {
+          try {
+            await unregisterCurrentToken();
+          } finally {
+            dispatch(logout());
+          }
+        },
       },
     ]);
   };
@@ -68,6 +136,7 @@ export function SettingsScreen({ navigation }: Props) {
           style: "destructive",
           onPress: async () => {
             try {
+              await unregisterCurrentToken();
               await deleteAccount().unwrap();
               dispatch(logout());
             } catch {
@@ -102,7 +171,7 @@ export function SettingsScreen({ navigation }: Props) {
           icon: <Bell color={theme.colors.text} size={20} />,
           label: "Notifications",
           value: notificationsEnabled ? "On" : "Off",
-          onPress: () => setNotificationsEnabled((prev) => !prev),
+          onPress: handleNotificationToggle,
         },
         {
           icon: <Moon color={theme.colors.text} size={20} />,
@@ -174,7 +243,11 @@ export function SettingsScreen({ navigation }: Props) {
                     itemIdx < section.items.length - 1 && styles.rowBorder,
                   ]}
                   onPress={item.onPress}
-                  disabled={isDeleting && item.label === "Delete Account"}
+                  disabled={
+                    (isDeleting && item.label === "Delete Account") ||
+                    ((isRegisteringToken || isUnregisteringToken) &&
+                      item.label === "Notifications")
+                  }
                 >
                   <View style={styles.rowLeft}>
                     {item.icon}

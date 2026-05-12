@@ -8,6 +8,14 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "deenquest",
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "default"
+        }
+      ]
+    ],
     "splash": {
       "image": "./assets/logo.png",
       "resizeMode": "contain",
