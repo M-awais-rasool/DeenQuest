@@ -103,8 +103,7 @@ POST /api/v1/daily-tasks/:taskID/complete
 1. **Mark completed**: Set `completed = true` and `completed_at = now` in `user_daily_tasks`.
 2. **Award XP**: Add the task's `reward_xp` to the user's total XP in the `progress` collection.
 3. **Update streak**: Check if the user completed tasks yesterday. If yes, increment streak. If they skipped a day, reset to 1.
-4. **Publish event**: Send a Kafka message so the worker can log it (and later do badges, notifications, etc.).
-5. **Double-complete protection**: If a task is already completed, it just returns success without awarding XP again.
+4. **Double-complete protection**: If a task is already completed, it just returns success without awarding XP again.
 
 ---
 
