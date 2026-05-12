@@ -12,7 +12,6 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { Download } from "@/components/landing/Download";
 import { Footer } from "@/components/landing/Footer";
 import { FloatingNotification } from "@/components/landing/FloatingNotification";
-import { ScrollProgress } from "@/components/landing/ScrollProgress";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -36,7 +35,6 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <main className="relative min-h-screen overflow-x-hidden">
-      <ScrollProgress />
       <Navbar />
       <Hero />
       <Features />
