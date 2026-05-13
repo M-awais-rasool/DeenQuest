@@ -50,14 +50,6 @@ func (s *Service) RegisterToken(ctx context.Context, user UserInfo, req Register
 	return tokenResponse(saved), nil
 }
 
-func (s *Service) UnregisterToken(ctx context.Context, user UserInfo, expoPushToken string) error {
-	expoPushToken = strings.TrimSpace(expoPushToken)
-	if !push.IsExpoPushToken(expoPushToken) {
-		return ErrInvalidToken
-	}
-	return s.tokens.Disable(ctx, user.ID, expoPushToken)
-}
-
 func (s *Service) SendToUser(ctx context.Context, user UserInfo, msg Message) (*push.Ticket, error) {
 	if strings.TrimSpace(msg.Title) == "" && strings.TrimSpace(msg.Body) == "" {
 		return nil, ErrBadMessage
@@ -90,6 +82,40 @@ func (s *Service) SendFromJob(ctx context.Context, payload interface{}) (*push.T
 	}
 
 	return s.SendToUser(ctx, job.User, job.Message)
+}
+
+func (s *Service) SendTestNotificationToAll(
+	ctx context.Context,
+	title string,
+	body string,
+) error {
+
+	tokens, err := s.tokens.GetAllActiveTokens(ctx)
+	if err != nil {
+		return fmt.Errorf("get tokens: %w", err)
+	}
+	
+	for _, token := range tokens {
+
+		if token.ExpoPushToken == "" {
+			continue
+		}
+
+		_, err := s.sender.Send(ctx, token.ExpoPushToken, push.Message{
+			Title: title,
+			Body:  body,
+			Data: map[string]interface{}{
+				"type": "test",
+			},
+		})
+
+		if err != nil {
+			fmt.Println("failed to send push:", err)
+			continue
+		}
+	}
+
+	return nil
 }
 
 func tokenResponse(token *UserToken) *TokenResponse {

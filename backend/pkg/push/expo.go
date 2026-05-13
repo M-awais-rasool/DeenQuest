@@ -99,6 +99,6 @@ func (c *ExpoClient) Send(ctx context.Context, expoPushToken string, msg Message
 	if len(envelope.Data) == 0 {
 		return nil, fmt.Errorf("expo push API returned no ticket")
 	}
-
+	fmt.Printf("Expo push response: %s\n", strings.TrimSpace(string(responseBody)))
 	return &envelope.Data[0], nil
 }

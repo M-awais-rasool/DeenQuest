@@ -37,7 +37,7 @@ func SetupRoutes(r *gin.Engine, authHandler *authhandler.AuthHandler, userHandle
 	notificationGroup.Use(middleware.JWTAuth(jwtManager))
 	{
 		notificationGroup.POST("/register", notificationHandler.RegisterToken)
-		notificationGroup.POST("/unregister", notificationHandler.UnregisterToken)
+		notificationGroup.POST("/test", notificationHandler.SendTestNotification)
 	}
 
 	// Health check

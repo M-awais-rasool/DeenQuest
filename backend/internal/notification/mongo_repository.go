@@ -79,16 +79,23 @@ func (r *MongoTokenRepository) GetActiveByUserID(ctx context.Context, userID str
 	return &token, nil
 }
 
-func (r *MongoTokenRepository) Disable(ctx context.Context, userID, expoPushToken string) error {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+func (r *MongoTokenRepository) GetAllActiveTokens(ctx context.Context) ([]UserToken, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	_, err := r.collection.UpdateOne(ctx, bson.M{
-		"user_id":         userID,
-		"expo_push_token": expoPushToken,
-	}, bson.M{"$set": bson.M{
-		"enabled":    false,
-		"updated_at": time.Now().UTC(),
-	}})
-	return err
+	cursor, err := r.collection.Find(ctx, bson.M{
+		"enabled": true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var tokens []UserToken
+
+	if err := cursor.All(ctx, &tokens); err != nil {
+		return nil, err
+	}
+
+	return tokens, nil
 }

@@ -41,29 +41,19 @@ func (h *Handler) RegisterToken(c *gin.Context) {
 	response.OK(c, "Notification token registered", result)
 }
 
-func (h *Handler) UnregisterToken(c *gin.Context) {
-	var req struct {
-		ExpoPushToken string `json:"expo_push_token" validate:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request body")
-		return
-	}
-	if err := validator.Validate(&req); err != nil {
-		c.JSON(400, gin.H{"success": false, "errors": validator.FormatValidationErrors(err)})
+func (h *Handler) SendTestNotification(c *gin.Context) {
+	err := h.service.SendTestNotificationToAll(
+		c.Request.Context(),
+		"Test Notification 🚀",
+		"This is a test notification from Talent Flow",
+	)
+
+	if err != nil {
+		response.InternalError(c, "Failed to send test notifications")
 		return
 	}
 
-	if err := h.service.UnregisterToken(c.Request.Context(), userFromContext(c), req.ExpoPushToken); err != nil {
-		if errors.Is(err, ErrInvalidToken) {
-			response.BadRequest(c, "Invalid Expo push token")
-			return
-		}
-		response.InternalError(c, "Failed to unregister notification token")
-		return
-	}
-
-	response.OK(c, "Notification token unregistered", nil)
+	response.OK(c, "Test notifications sent", nil)
 }
 
 func userFromContext(c *gin.Context) UserInfo {
