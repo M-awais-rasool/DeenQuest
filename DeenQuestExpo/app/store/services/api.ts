@@ -545,14 +545,6 @@ export const API = createApi({
       query: () => ({ url: "/api/v1/rewards", method: "GET" }),
       providesTags: ["Rewards"],
     }),
-    // test notification endpoint
-    testNotification: builder.mutation<APIResponse<any>, void>({
-      query: () => ({
-        url: "/api/v1/notifications/test",
-        method: "POST",
-      }),
-      invalidatesTags: ["Notifications"],
-    }),
   }),
 });
 
@@ -577,5 +569,4 @@ export const {
   useCompleteLevelMutation,
   useGetRewardsQuery,
   useCheckRecitationMutation,
-  useTestNotificationMutation,
 } = API;

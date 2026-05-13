@@ -21,7 +21,7 @@ import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { theme } from "../../theme/themes";
 import { useAppDispatch } from "../../store/hooks";
 import { logout } from "../../store/slices/mainSlice";
-import { useDeleteAccountMutation, useTestNotificationMutation } from "../../store/services/api";
+import { useDeleteAccountMutation } from "../../store/services/api";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 
@@ -43,8 +43,7 @@ interface SettingsSection {
 export function SettingsScreen({ navigation }: Props) {
   const dispatch = useAppDispatch();
   const [deleteAccount, { isLoading: isDeleting }] = useDeleteAccountMutation();
-const [testNotification, { isLoading }] =
-  useTestNotificationMutation();  
+
   const handleLogout = () => {
     Alert.alert("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
@@ -77,16 +76,7 @@ const [testNotification, { isLoading }] =
       ],
     );
   };
-  const handleSendNotification = async () => {
-    try {
-      console.log("Sending test notification...");
-      const response = await testNotification().unwrap();
 
-      console.log("SUCCESS", response);
-    } catch (error) {
-      console.log("ERROR", error);
-    }
-  };
   const sections: SettingsSection[] = [
     {
       title: "ACCOUNT",
@@ -110,7 +100,7 @@ const [testNotification, { isLoading }] =
           icon: <Moon color={theme.colors.text} size={20} />,
           label: "Theme",
           value: "Dark",
-          onPress: () => handleSendNotification(),
+          onPress: () => {},
         },
       ],
     },
