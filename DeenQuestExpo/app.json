@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "DeenQuestExpo",
-    "slug": "DeenQuestExpo",
+    "slug": "deenquestexpo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
@@ -35,6 +35,12 @@
     },
     "web": {
       "favicon": "./assets/logo.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e7b64664-fdf0-4e44-8a22-69c519ec7417"
+      }
+    },
+    "owner": "awais-rasool"
   }
 }
