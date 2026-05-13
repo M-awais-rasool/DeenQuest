@@ -1,34 +1,32 @@
 import { useEffect } from "react";
 import { useRegisterNotificationTokenMutation } from "../store/services/api";
 import { useAppSelector } from "../store/hooks";
-import {
-  addNotificationListeners,
-  getExpoPushRegistrationAsync,
-  getNotificationsEnabledPreference,
-} from "../services/notificationService";
+import { getExpoPushRegistrationAsync } from "../services/notificationService";
+import * as Notifications from "expo-notifications";
 
 export function NotificationBootstrap() {
-  const isAuthenticated = useAppSelector((state) => state.main.isAuthenticated);
-  const [registerNotificationToken] = useRegisterNotificationTokenMutation();
+  const isAuthenticated = useAppSelector(
+    (state) => state.main.isAuthenticated
+  );
 
-  useEffect(() => {
-    return addNotificationListeners();
-  }, []);
+  const [registerNotificationToken] =
+    useRegisterNotificationTokenMutation();
 
   useEffect(() => {
     let isMounted = true;
 
     const registerToken = async () => {
-      const enabled = await getNotificationsEnabledPreference();
-      if (!enabled || !isMounted) return;
+      const payload = await getExpoPushRegistrationAsync();
 
-      const result = await getExpoPushRegistrationAsync();
-      if (!isMounted || result.status !== "registered") return;
+      if (!isMounted || !payload) return;
 
       try {
-        await registerNotificationToken(result.payload).unwrap();
+        await registerNotificationToken(payload).unwrap();
       } catch (error) {
-        console.warn("Failed to register notification token", error);
+        console.warn(
+          "Failed to register notification token",
+          error
+        );
       }
     };
 
@@ -39,7 +37,34 @@ export function NotificationBootstrap() {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, registerNotificationToken]);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const receivedSubscription =
+      Notifications.addNotificationReceivedListener(
+        (notification) => {
+          console.log(
+            "Notification Received:",
+            JSON.stringify(notification, null, 2)
+          );
+        }
+      );
+
+    const responseSubscription =
+      Notifications.addNotificationResponseReceivedListener(
+        (response) => {
+          console.log(
+            "Notification Clicked:",
+            JSON.stringify(response, null, 2)
+          );
+        }
+      );
+
+    return () => {
+      receivedSubscription.remove();
+      responseSubscription.remove();
+    };
+  }, []);
 
   return null;
 }
