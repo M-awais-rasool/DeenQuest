@@ -94,10 +94,6 @@ export interface RegisterNotificationTokenRequest {
   app_version?: string;
 }
 
-export interface UnregisterNotificationTokenRequest {
-  expo_push_token: string;
-}
-
 export interface NotificationUserInfo {
   id: string;
   email: string;
@@ -428,17 +424,6 @@ export const API = createApi({
       }),
       invalidatesTags: ["Notifications"],
     }),
-    unregisterNotificationToken: builder.mutation<
-      APIResponse<null>,
-      UnregisterNotificationTokenRequest
-    >({
-      query: (data) => ({
-        url: "/api/v1/notifications/unregister",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Notifications"],
-    }),
     getDailyTasks: builder.query<APIResponse<DailyTask[]>, void>({
       query: () => ({
         url: "/api/v1/daily-tasks",
@@ -560,6 +545,14 @@ export const API = createApi({
       query: () => ({ url: "/api/v1/rewards", method: "GET" }),
       providesTags: ["Rewards"],
     }),
+    // test notification endpoint
+    testNotification: builder.mutation<APIResponse<any>, void>({
+      query: () => ({
+        url: "/api/v1/notifications/test",
+        method: "POST",
+      }),
+      invalidatesTags: ["Notifications"],
+    }),
   }),
 });
 
@@ -574,7 +567,6 @@ export const {
   useChangePasswordMutation,
   useDeleteAccountMutation,
   useRegisterNotificationTokenMutation,
-  useUnregisterNotificationTokenMutation,
   useGetDailyTasksQuery,
   useCompleteDailyTaskMutation,
   useGetProgressQuery,
@@ -585,4 +577,5 @@ export const {
   useCompleteLevelMutation,
   useGetRewardsQuery,
   useCheckRecitationMutation,
+  useTestNotificationMutation,
 } = API;
