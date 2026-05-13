@@ -128,7 +128,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
     ((error as any)?.data?.errors as string[] | undefined)?.[0];
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper innerStyle={{flex:1}}>
       <View style={styles.backgroundOrbTop} />
       <View style={styles.backgroundOrbBottom} />
 

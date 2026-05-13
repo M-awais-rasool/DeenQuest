@@ -66,9 +66,9 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   });
 
   const [form, setForm] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
+    email: "awais@gmail.com",
+    password: "Helo@1234",
+    confirmPassword: "Helo@1234",
   });
 
   const [errors, setErrors] = useState<FormErrors>({
@@ -173,7 +173,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   const displayError = formError || requestError;
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper innerStyle={{flex:1}}>
       <View style={styles.backgroundOrbTop} />
       <View style={styles.backgroundOrbBottom} />
 
