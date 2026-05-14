@@ -48,6 +48,9 @@ type Config struct {
 
 func Load() (*Config, error) {
 	_ = godotenv.Load()
+	if _, err := os.Stat(".env.local"); err == nil {
+		_ = godotenv.Overload(".env.local")
+	}
 
 	cfg := &Config{
 		AppEnv:              getEnv("APP_ENV", "development"),
