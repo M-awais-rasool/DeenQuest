@@ -1,154 +1,73 @@
-You are a senior backend engineer. We are building an Intelligent Notification System in Go using Cron Jobs, Rule Engine, and Ollama (local LLM) for message generation.
+We are building an Intelligent Inactivity Notification System in Go for an Islamic gamified learning app.
+the folder alread created so the Intelligent Notification code implement in this pace
+
+folder path
+/Users/chawais/Documents/Programming/FullStack/DeenQuest/backend/internal/ai-service/ai-notifications
 
 IMPORTANT:
-You must follow steps in order.
-Do NOT skip steps.
-Do NOT change architecture unless required.
-Each step builds on previous step.
+- Focus ONLY on inactivity notification system
+- Do NOT add other notification types
+- Do NOT create future systems
+- Keep architecture clean and scalable
+- Explain code briefly so I can understand what is happening
+- Keep implementation production-ready
+- Use clean modular architecture
 
-We already have a Notification Service that can send push notifications (FCM abstraction is ready).
+System Flow:
 
-Goal:
-Build a complete intelligent notification system that:
-- checks user activity using cron
-- decides which users need notifications
-- generates messages using Ollama
-- sends via existing notification service
+A cron job should run automatically every 10 minutes.
 
------------------------------------------
-STEP 1 — PROJECT FOLDER STRUCTURE
------------------------------------------
-
-First create a clean Go project structure:
-
-Explain briefly what each folder does.
-
-DO NOT write full code yet. Only structure + explanation.
-
------------------------------------------
-STEP 2 — CRON JOB SYSTEM
------------------------------------------
-
-Now implement cron system:
+The system should:
+1. Check database for users inactive for more than 24 hours
+2. Process users in batches (100 users at a time)
+3. Analyze user data:
+   - streak
+   - last active time
+   - completed lessons
+4. Generate personalized motivational notification message using Ollama locally
+5. Use existing notification service to send push notification
+6. Store logs for:
+   - successful notifications
+   - failed notifications
+7. Add retry mechanism if notification sending fails
 
 Requirements:
-- Use Go cron library (robfig/cron)
-- Run every 10 minutes
-- Trigger main notification cycle function: RunNotificationCycle()
 
-Include:
-- scheduler setup
-- worker initialization
-- clean separation of cron logic
+- Use Go
+- Use robfig/cron for scheduling
+- Use Ollama locally with llama3 model
+- Use localhost:11434 API for AI generation
+- Use existing expo notification service abstraction
 
-Provide clean Go code only for scheduler module.
+AI Message Rules:
 
------------------------------------------
-STEP 3 — USER ACTIVITY FETCHING SYSTEM
------------------------------------------
+- Message should be short
+- Max 1-2 sentences
+- Friendly Islamic tone
+- Motivational
+- No extreme wording
+- Personalized based on user streak and inactivity duration
 
-Now build user activity module.
+Example tone:
+“You were doing amazing 🌙 continue your Quran journey today.”
 
-Requirements:
-- Fetch users from DB
-- Get:
-  - last_active
-  - streak
-  - tasks_completed_today
-  - weak_area
-- Support batch processing (avoid loading all users at once)
+If Ollama fails:
+- fallback to predefined static motivational messages
 
-Add:
-- function: GetInactiveUsers()
-- function: GetActiveUsersWithRisk()
+Important Logic:
 
-Return structured Go code.
+- Do not send duplicate notifications repeatedly
+- Add cooldown logic
+- Skip users who already received inactivity notification recently
+- Add proper logging and error handling
 
------------------------------------------
-STEP 4 — RULE ENGINE (DECISION SYSTEM)
------------------------------------------
+Expected Output:
 
-Now build rule engine.
-
-Rules:
-
-1. If user inactive > 1 day → INACTIVITY_NOTIFICATION
-2. If streak > 3 and missed today → STREAK_WARNING
-3. If weak_area = "quran" → QURAN_REMINDER
-4. If user completed milestone → ACHIEVEMENT
-
-Output:
-- function: DecideNotificationType(user User) string
-
-Keep logic clean and extendable.
-
------------------------------------------
-STEP 5 — OLLAMA AI MESSAGE GENERATION
------------------------------------------
-
-Now integrate Ollama locally.
-
-Requirements:
-- Use llama3 or mistral model
-- Generate short push notification message
-- Max 2 sentences
-- Islamic motivational tone
-- Based on:
-  - streak
-  - weak_area
-  - notification type
-
-Create:
-- function GenerateMessage(user User, notificationType string) string
-
-Include:
-- prompt template
-- HTTP call to Ollama API (localhost:11434)
-- response parsing
-
-IMPORTANT:
-If Ollama fails, fallback to default static message.
-
------------------------------------------
-STEP 6 — NOTIFICATION SENDING SYSTEM
------------------------------------------
-
-Now connect with existing notification service.
-
-Requirements:
-- function SendNotification(userID, title, message)
-- integrate with existing service (do not rebuild FCM)
-- support batch sending
-
-Add:
-- retry mechanism
-- logging
-
------------------------------------------
-STEP 7 — MAIN WORKFLOW (ORCHESTRATION)
------------------------------------------
-
-Now create main pipeline:
-
-RunNotificationCycle():
-
-Flow:
-1. Fetch users
-2. Apply rule engine
-3. Generate message via Ollama
-4. Send notification
-5. Log result
-
-Add:
-- error handling
-- performance optimization
-- batching (100 users per batch)
-
------------------------------------------
-FINAL OUTPUT REQUIREMENT:
------------------------------------------
-
-- Clean Go code for each step
-- Modular architecture
-- Production-ready structure
-- No unnecessary explanation outside steps  
+- Complete implementation
+- Cron workflow
+- User inactivity checking
+- Ollama integration
+- Notification sending integration
+- Retry logic
+- Logging system
+- Clean explanation of how whole system works together
