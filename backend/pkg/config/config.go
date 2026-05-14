@@ -43,6 +43,9 @@ type Config struct {
 	ExpoPushURL         string
 	ExpoPushAccessToken string
 
+	// OllamaURL is the base URL for the local Ollama API (shared by any service using pkg/ollama).
+	OllamaURL string
+
 	CORSAllowedOrigins string
 }
 
@@ -75,6 +78,7 @@ func Load() (*Config, error) {
 		WhisperURL:          getEnv("WHISPER_URL", "http://localhost:8001"),
 		ExpoPushURL:         getEnv("EXPO_PUSH_URL", "https://exp.host/--/api/v2/push/send"),
 		ExpoPushAccessToken: getEnv("EXPO_PUSH_ACCESS_TOKEN", ""),
+		OllamaURL:           getEnv("OLLAMA_URL", "http://127.0.0.1:11434"),
 		CORSAllowedOrigins:  getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
 	}
 
