@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	notification "github.com/chawais/talent-flow/backend/internal/notification"
+	"github.com/chawais/talent-flow/backend/internal/notification-service"
 	"github.com/chawais/talent-flow/backend/internal/worker-service/repository"
 	"github.com/chawais/talent-flow/backend/internal/worker-service/worker"
 	"github.com/chawais/talent-flow/backend/pkg/config"

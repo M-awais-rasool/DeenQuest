@@ -5,7 +5,7 @@ import (
 
 	authhandler "github.com/chawais/talent-flow/backend/internal/identity-service/auth/handler"
 	userhandler "github.com/chawais/talent-flow/backend/internal/identity-service/user/handler"
-	notification "github.com/chawais/talent-flow/backend/internal/notification"
+	"github.com/chawais/talent-flow/backend/internal/notification-service"
 	"github.com/chawais/talent-flow/backend/pkg/auth"
 	"github.com/chawais/talent-flow/backend/pkg/middleware"
 )

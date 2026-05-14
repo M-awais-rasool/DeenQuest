@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	notification "github.com/chawais/talent-flow/backend/internal/notification"
+	"github.com/chawais/talent-flow/backend/internal/notification-service"
 	"github.com/chawais/talent-flow/backend/internal/worker-service/repository"
 	"github.com/chawais/talent-flow/backend/pkg/logger"
 	"github.com/chawais/talent-flow/backend/pkg/queue"

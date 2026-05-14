@@ -20,7 +20,7 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/identity-service/router"
 	userhandler "github.com/chawais/talent-flow/backend/internal/identity-service/user/handler"
 	userservice "github.com/chawais/talent-flow/backend/internal/identity-service/user/service"
-	notification "github.com/chawais/talent-flow/backend/internal/notification"
+	"github.com/chawais/talent-flow/backend/internal/notification-service"
 	"github.com/chawais/talent-flow/backend/pkg/auth"
 	"github.com/chawais/talent-flow/backend/pkg/config"
 	"github.com/chawais/talent-flow/backend/pkg/logger"
