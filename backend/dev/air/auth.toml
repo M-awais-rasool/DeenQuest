@@ -1,0 +1,21 @@
+# Air: auth service — from backend/: air -c dev/air/auth.toml  (or: make air-auth)
+root = "."
+tmp_dir = "tmp/air-auth"
+
+[build]
+  bin = "./tmp/air-auth/auth"
+  cmd = "go build -o ./tmp/air-auth/auth ./cmd/auth"
+  delay = 500
+  exclude_dir = ["tmp", "vendor", "whisper-service", "build", ".git", "docs", "dev/air"]
+  exclude_regex = ["_test\\.go"]
+  include_ext = ["go", "mod", "sum"]
+  send_interrupt = true
+  kill_delay = "800ms"
+  stop_on_error = true
+
+[log]
+  main_only = false
+  time = true
+
+[misc]
+  clean_on_exit = true
