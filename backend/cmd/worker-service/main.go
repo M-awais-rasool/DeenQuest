@@ -21,7 +21,6 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/worker-service/worker"
 	"github.com/chawais/talent-flow/backend/pkg/config"
 	"github.com/chawais/talent-flow/backend/pkg/logger"
-	"github.com/chawais/talent-flow/backend/pkg/ollama"
 	"github.com/chawais/talent-flow/backend/pkg/push"
 	"github.com/chawais/talent-flow/backend/pkg/queue"
 )
@@ -57,7 +56,7 @@ func main() {
 	notificationSendConsumer := queue.NewKafkaConsumer(cfg.GetKafkaBrokerList(), "notification.send", "worker-notification-send-group")
 	defer notificationSendConsumer.Close()
 
-	inactivityScheduler := initInactivityScheduler(workerDB, notificationService, cfg)
+	intelligentNotificationScheduler := initIntelligentNotificationScheduler(workerDB, notificationService)
 
 	runCtx, runCancel := context.WithCancel(context.Background())
 	defer runCancel()
@@ -69,8 +68,8 @@ func main() {
 	go scheduler.Start(runCtx)
 
 	go func() {
-		if err := inactivityScheduler.Start(runCtx); err != nil {
-			logger.Error("inactivity scheduler error", zap.Error(err))
+		if err := intelligentNotificationScheduler.Start(runCtx); err != nil {
+			logger.Error("intelligent notification scheduler error", zap.Error(err))
 		}
 	}()
 
@@ -101,18 +100,15 @@ func main() {
 	_ = srv.Shutdown(shutdownCtx)
 }
 
-func initInactivityScheduler(db *mongo.Database, notificationService *notification.Service, cfg *config.Config) *notifications.Scheduler {
+func initIntelligentNotificationScheduler(db *mongo.Database, notificationService *notification.Service) *notifications.Scheduler {
 	logRepo := notifications.NewMongoLogRepository(db)
 	userFetcher := notifications.NewUserFetcher(db)
-	ollamaClient := ollama.New(cfg.OllamaURL)
-	generator := notifications.NewMessageGenerator(ollamaClient, "llama3")
 
-	inactivityService := notifications.NewInactivityService(
+	notifService := notifications.NewNotificationService(
 		userFetcher,
-		generator,
 		logRepo,
 		notificationService,
 	)
 
-	return notifications.NewScheduler(inactivityService)
+	return notifications.NewScheduler(notifService)
 }

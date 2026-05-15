@@ -6,6 +6,6 @@ import (
 )
 
 type LogRepository interface {
-	SaveLog(ctx context.Context, log *InactivityNotificationLog) error
-	GetLastNotificationTime(ctx context.Context, userID string) (*time.Time, error)
+	SaveLog(ctx context.Context, log *NotificationLog) error
+	GetLastNotificationTime(ctx context.Context, userID string, notifType NotificationType) (*time.Time, error)
 }

@@ -11,10 +11,10 @@ import (
 
 type Scheduler struct {
 	cron    *cron.Cron
-	service *InactivityService
+	service *NotificationService
 }
 
-func NewScheduler(service *InactivityService) *Scheduler {
+func NewScheduler(service *NotificationService) *Scheduler {
 	return &Scheduler{
 		cron:    cron.New(),
 		service: service,
@@ -22,25 +22,29 @@ func NewScheduler(service *InactivityService) *Scheduler {
 }
 
 func (s *Scheduler) Start(ctx context.Context) error {
-	_, err := s.cron.AddFunc("*/10 * * * *", func() {
+	_, err := s.cron.AddFunc("*/1 * * * *", func() {
 		execCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
-		logger.Info("inactivity notification cron triggered")
-		if err := s.service.ProcessInactiveUsers(execCtx); err != nil {
-			logger.Error("inactivity notification processing failed", zap.Error(err))
+		logger.Info("intelligent notification cron triggered")
+		stats, err := s.service.ProcessAllNotifications(execCtx)
+		if err != nil {
+			logger.Error("intelligent notification processing failed", zap.Error(err))
+			return
 		}
+		logger.Info("notification batch completed",
+			zap.Int("total_users_processed", stats.TotalUsers))
 	})
 	if err != nil {
 		return err
 	}
 
 	s.cron.Start()
-	logger.Info("inactivity notification scheduler started (every 10 minutes)")
+	logger.Info("intelligent notification scheduler started (every 10 minutes)")
 
 	<-ctx.Done()
 
 	s.cron.Stop()
-	logger.Info("inactivity notification scheduler stopped")
+	logger.Info("intelligent notification scheduler stopped")
 	return nil
 }

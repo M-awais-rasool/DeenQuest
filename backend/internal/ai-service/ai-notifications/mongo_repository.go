@@ -15,16 +15,16 @@ type MongoLogRepository struct {
 }
 
 func NewMongoLogRepository(db *mongo.Database) *MongoLogRepository {
-	coll := db.Collection("inactivity_notification_logs")
+	coll := db.Collection("notification_logs")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_, _ = coll.Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys: bson.D{{Key: "user_id", Value: 1}, {Key: "created_at", Value: -1}},
+		Keys: bson.D{{Key: "user_id", Value: 1}, {Key: "notification_type", Value: 1}, {Key: "created_at", Value: -1}},
 	})
 	return &MongoLogRepository{collection: coll}
 }
 
-func (r *MongoLogRepository) SaveLog(ctx context.Context, log *InactivityNotificationLog) error {
+func (r *MongoLogRepository) SaveLog(ctx context.Context, log *NotificationLog) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -39,13 +39,17 @@ func (r *MongoLogRepository) SaveLog(ctx context.Context, log *InactivityNotific
 	return err
 }
 
-func (r *MongoLogRepository) GetLastNotificationTime(ctx context.Context, userID string) (*time.Time, error) {
+func (r *MongoLogRepository) GetLastNotificationTime(ctx context.Context, userID string, notifType NotificationType) (*time.Time, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}})
-	var log InactivityNotificationLog
-	err := r.collection.FindOne(ctx, bson.M{"user_id": userID, "status": "sent"}, opts).Decode(&log)
+	var log NotificationLog
+	err := r.collection.FindOne(ctx, bson.M{
+		"user_id":           userID,
+		"notification_type": string(notifType),
+		"status":            "sent",
+	}, opts).Decode(&log)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}

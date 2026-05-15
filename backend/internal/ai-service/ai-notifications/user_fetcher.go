@@ -6,13 +6,13 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserFetcher struct {
-	streaks    *mongo.Collection
-	tokens     *mongo.Collection
-	dailyTasks *mongo.Collection
+	streaks      *mongo.Collection
+	tokens       *mongo.Collection
+	dailyTasks   *mongo.Collection
+	progress     *mongo.Collection
 }
 
 func NewUserFetcher(db *mongo.Database) *UserFetcher {
@@ -20,146 +20,180 @@ func NewUserFetcher(db *mongo.Database) *UserFetcher {
 		streaks:    db.Collection("streaks"),
 		tokens:     db.Collection("notification_tokens"),
 		dailyTasks: db.Collection("user_daily_tasks"),
+		progress:   db.Collection("progress"),
 	}
 }
 
-func (f *UserFetcher) FetchInactiveUsers(ctx context.Context, inactivityThreshold time.Duration, limit int) ([]InactiveUser, error) {
+func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int) ([]UserContext, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	cutoff := time.Now().UTC().Add(-inactivityThreshold)
+	today := time.Now().UTC().Format("2006-01-02")
+	yesterday := time.Now().UTC().AddDate(0, 0, -1).Format("2006-01-02")
 
-	filter := bson.M{
-		"last_completed_at": bson.M{"$lt": cutoff},
-	}
-
-	opts := options.Find().SetLimit(int64(limit))
-	cursor, err := f.streaks.Find(ctx, filter, opts)
+	tokenCursor, err := f.tokens.Find(ctx, bson.M{"enabled": true})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer tokenCursor.Close(ctx)
 
-	var streaks []struct {
-		ID              string    `bson:"_id"`
-		UserID          string    `bson:"user_id"`
-		CurrentStreak   int       `bson:"current_streak"`
-		LastCompletedAt time.Time `bson:"last_completed_at"`
+	var tokenDocs []struct {
+		UserID        string `bson:"user_id"`
+		ExpoPushToken string `bson:"expo_push_token"`
 	}
-	if err := cursor.All(ctx, &streaks); err != nil {
+	if err := tokenCursor.All(ctx, &tokenDocs); err != nil {
 		return nil, err
 	}
 
-	if len(streaks) == 0 {
-		return []InactiveUser{}, nil
+	if len(tokenDocs) == 0 {
+		return []UserContext{}, nil
 	}
 
-	userIDs := make([]string, 0, len(streaks))
-	for _, s := range streaks {
-		if s.UserID != "" {
-			userIDs = append(userIDs, s.UserID)
+	userIDs := make([]string, 0, len(tokenDocs))
+	tokenMap := make(map[string]string, len(tokenDocs))
+	for _, t := range tokenDocs {
+		if t.UserID != "" {
+			userIDs = append(userIDs, t.UserID)
+			if _, exists := tokenMap[t.UserID]; !exists {
+				tokenMap[t.UserID] = t.ExpoPushToken
+			}
 		}
 	}
 
 	if len(userIDs) == 0 {
-		return []InactiveUser{}, nil
+		return []UserContext{}, nil
 	}
 
-	tokenMap, err := f.getUserTokens(ctx, userIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	lessonMap, err := f.getCompletedLessons(ctx, userIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	users := make([]InactiveUser, 0, len(streaks))
-	for _, s := range streaks {
-		if s.UserID == "" {
-			continue
-		}
-
-		token, ok := tokenMap[s.UserID]
-		if !ok || token == "" {
-			continue
-		}
-
-		users = append(users, InactiveUser{
-			UserID:           s.UserID,
-			Streak:           s.CurrentStreak,
-			LastCompletedAt:  s.LastCompletedAt,
-			CompletedLessons: lessonMap[s.UserID],
-			ExpoPushToken:    token,
-		})
-	}
-
-	return users, nil
-}
-
-func (f *UserFetcher) getUserTokens(ctx context.Context, userIDs []string) (map[string]string, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	cursor, err := f.tokens.Find(ctx, bson.M{
+	streakCursor, err := f.streaks.Find(ctx, bson.M{
 		"user_id": bson.M{"$in": userIDs},
-		"enabled": true,
 	})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer streakCursor.Close(ctx)
 
-	tokenMap := make(map[string]string)
-	for cursor.Next(ctx) {
+	streakMap := make(map[string]struct {
+		CurrentStreak int
+		LongestStreak int
+		LastCompleted time.Time
+	})
+	for streakCursor.Next(ctx) {
 		var doc struct {
-			UserID        string `bson:"user_id"`
-			ExpoPushToken string `bson:"expo_push_token"`
+			UserID        string    `bson:"user_id"`
+			CurrentStreak int       `bson:"current_streak"`
+			LongestStreak int       `bson:"longest_streak"`
+			LastCompleted time.Time `bson:"last_completed_at"`
 		}
-		if err := cursor.Decode(&doc); err != nil {
+		if err := streakCursor.Decode(&doc); err != nil {
 			continue
 		}
-		if _, exists := tokenMap[doc.UserID]; !exists {
-			tokenMap[doc.UserID] = doc.ExpoPushToken
-		}
+		streakMap[doc.UserID] = struct {
+			CurrentStreak int
+			LongestStreak int
+			LastCompleted time.Time
+		}{doc.CurrentStreak, doc.LongestStreak, doc.LastCompleted}
 	}
 
-	return tokenMap, nil
-}
-
-func (f *UserFetcher) getCompletedLessons(ctx context.Context, userIDs []string) (map[string]int, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	pipeline := []bson.M{
+	taskPipeline := []bson.M{
 		{"$match": bson.M{
-			"user_id":   bson.M{"$in": userIDs},
-			"completed": true,
+			"user_id": bson.M{"$in": userIDs},
+			"date":    bson.M{"$in": []string{today, yesterday}},
 		}},
 		{"$group": bson.M{
-			"_id":   "$user_id",
-			"count": bson.M{"$sum": 1},
+			"_id": bson.M{
+				"user_id": "$user_id",
+				"date":    "$date",
+			},
+			"total":   bson.M{"$sum": 1},
+			"done":    bson.M{"$sum": bson.M{"$cond": []interface{}{"$completed", 1, 0}}},
 		}},
 	}
 
-	cursor, err := f.dailyTasks.Aggregate(ctx, pipeline)
+	taskCursor, err := f.dailyTasks.Aggregate(ctx, taskPipeline)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer taskCursor.Close(ctx)
 
-	lessonMap := make(map[string]int)
-	for cursor.Next(ctx) {
+	type taskKey struct {
+		userID string
+		date   string
+	}
+	taskMap := make(map[taskKey]struct {
+		total int
+		done  int
+	})
+	for taskCursor.Next(ctx) {
 		var doc struct {
-			ID    string `bson:"_id"`
-			Count int    `bson:"count"`
+			ID    struct {
+				UserID string `bson:"user_id"`
+				Date   string `bson:"date"`
+			} `bson:"_id"`
+			Total int `bson:"total"`
+			Done  int `bson:"done"`
 		}
-		if err := cursor.Decode(&doc); err != nil {
+		if err := taskCursor.Decode(&doc); err != nil {
 			continue
 		}
-		lessonMap[doc.ID] = doc.Count
+		taskMap[taskKey{doc.ID.UserID, doc.ID.Date}] = struct {
+			total int
+			done  int
+		}{doc.Total, doc.Done}
 	}
 
-	return lessonMap, nil
+	rankPipeline := []bson.M{
+		{"$sort": bson.M{"total_xp": -1, "level": -1}},
+		{"$project": bson.M{"user_id": 1}},
+	}
+
+	rankCursor, err := f.progress.Aggregate(ctx, rankPipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer rankCursor.Close(ctx)
+
+	rankMap := make(map[string]int)
+	rank := 1
+	for rankCursor.Next(ctx) {
+		var doc struct {
+			UserID string `bson:"user_id"`
+		}
+		if err := rankCursor.Decode(&doc); err != nil {
+			continue
+		}
+		rankMap[doc.UserID] = rank
+		rank++
+	}
+
+	users := make([]UserContext, 0, len(userIDs))
+	for _, uid := range userIDs {
+		token, ok := tokenMap[uid]
+		if !ok || token == "" {
+			continue
+		}
+
+		streak := streakMap[uid]
+		todayKey := taskKey{uid, today}
+		yesterdayKey := taskKey{uid, yesterday}
+
+		todayTasks := taskMap[todayKey]
+		_ = taskMap[yesterdayKey]
+
+		users = append(users, UserContext{
+			UserID:          uid,
+			ExpoPushToken:   token,
+			CurrentStreak:   streak.CurrentStreak,
+			LongestStreak:   streak.LongestStreak,
+			LastCompletedAt: streak.LastCompleted,
+			TodayTasksTotal: todayTasks.total,
+			TodayTasksDone:  todayTasks.done,
+			CurrentRank:     rankMap[uid],
+		})
+	}
+
+	if limit > 0 && len(users) > limit {
+		users = users[:limit]
+	}
+
+	return users, nil
 }

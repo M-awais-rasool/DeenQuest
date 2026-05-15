@@ -15,77 +15,98 @@ type PushSender interface {
 	SendToUser(ctx context.Context, user notification.UserInfo, msg notification.Message) (*push.Ticket, error)
 }
 
-type InactivityService struct {
+type NotificationService struct {
 	userFetcher *UserFetcher
-	generator   *MessageGenerator
 	logRepo     LogRepository
 	pushSender  PushSender
+	rules       []NotificationRule
 	batchSize   int
-	cooldown    time.Duration
 	maxRetries  int
 }
 
-func NewInactivityService(
+func NewNotificationService(
 	userFetcher *UserFetcher,
-	generator *MessageGenerator,
 	logRepo LogRepository,
 	pushSender PushSender,
-) *InactivityService {
-	return &InactivityService{
+) *NotificationService {
+	return &NotificationService{
 		userFetcher: userFetcher,
-		generator:   generator,
 		logRepo:     logRepo,
 		pushSender:  pushSender,
+		rules:       BuildRules(),
 		batchSize:   100,
-		cooldown:    48 * time.Hour,
 		maxRetries:  3,
 	}
 }
 
-func (s *InactivityService) ProcessInactiveUsers(ctx context.Context) error {
-	logger.Info("starting inactivity notification processing")
+type ProcessingStats struct {
+	TotalUsers    int
+	Notifications []NotificationTypeStats
+}
 
-	var totalProcessed, totalSent, totalFailed int
+type NotificationTypeStats struct {
+	Type   NotificationType
+	Sent   int
+	Skipped int
+	Failed int
+}
 
-	for {
-		users, err := s.userFetcher.FetchInactiveUsers(ctx, 12*time.Hour, s.batchSize)
+func (s *NotificationService) ProcessAllNotifications(ctx context.Context) (*ProcessingStats, error) {
+	logger.Info("starting intelligent notification processing")
+
+	stats := &ProcessingStats{}
+	for _, rule := range s.rules {
+		stats.Notifications = append(stats.Notifications, NotificationTypeStats{Type: rule.Type})
+	}
+
+	for offset := 0; ; offset += s.batchSize {
+		users, err := s.userFetcher.FetchAllUsers(ctx, s.batchSize)
 		if err != nil {
-			return fmt.Errorf("fetch inactive users: %w", err)
+			return nil, fmt.Errorf("fetch users: %w", err)
 		}
 
 		if len(users) == 0 {
 			break
 		}
 
-		for _, user := range users {
-			shouldSkip, err := s.isOnCooldown(ctx, user.UserID)
-			if err != nil {
-				logger.Warn("failed to check cooldown, skipping user",
-					zap.String("user_id", user.UserID),
-					zap.Error(err))
-				continue
-			}
-			if shouldSkip {
-				continue
-			}
-			message, err := s.generator.GenerateMessage(ctx, user)
-			if err != nil {
-				logger.Warn("using fallback message",
-					zap.String("user_id", user.UserID),
-					zap.Error(err))
-				message = GetFallbackMessage()
-			}
+		now := time.Now().UTC()
 
-			err = s.sendWithRetry(ctx, user, message)
-			if err != nil {
-				totalFailed++
-				logger.Error("failed to send inactivity notification after retries",
-					zap.String("user_id", user.UserID),
-					zap.Error(err))
-			} else {
-				totalSent++
+		for _, user := range users {
+			stats.TotalUsers++
+
+			for i, rule := range s.rules {
+				onCooldown, err := s.isOnCooldown(ctx, user.UserID, rule.Type)
+				if err != nil {
+					logger.Warn("failed to check cooldown",
+						zap.String("user_id", user.UserID),
+						zap.String("type", string(rule.Type)),
+						zap.Error(err))
+					continue
+				}
+				if onCooldown {
+					stats.Notifications[i].Skipped++
+					continue
+				}
+
+				if !rule.Evaluate(&user, now) {
+					stats.Notifications[i].Skipped++
+					continue
+				}
+
+				title := rule.BuildTitle(&user)
+				message := rule.BuildMessage(&user)
+
+				err = s.sendWithRetry(ctx, user, rule.Type, title, message)
+				if err != nil {
+					stats.Notifications[i].Failed++
+					logger.Error("failed to send notification after retries",
+						zap.String("user_id", user.UserID),
+						zap.String("type", string(rule.Type)),
+						zap.Error(err))
+				} else {
+					stats.Notifications[i].Sent++
+				}
 			}
-			totalProcessed++
 		}
 
 		if len(users) < s.batchSize {
@@ -93,29 +114,44 @@ func (s *InactivityService) ProcessInactiveUsers(ctx context.Context) error {
 		}
 	}
 
-	logger.Info("inactivity notification processing complete",
-		zap.Int("total_processed", totalProcessed),
-		zap.Int("total_sent", totalSent),
-		zap.Int("total_failed", totalFailed))
+	for _, ns := range stats.Notifications {
+		logger.Info("notification type stats",
+			zap.String("type", string(ns.Type)),
+			zap.Int("sent", ns.Sent),
+			zap.Int("skipped", ns.Skipped),
+			zap.Int("failed", ns.Failed))
+	}
 
-	return nil
+	logger.Info("intelligent notification processing complete",
+		zap.Int("total_users", stats.TotalUsers))
+
+	return stats, nil
 }
 
-func (s *InactivityService) isOnCooldown(ctx context.Context, userID string) (bool, error) {
-	lastNotified, err := s.logRepo.GetLastNotificationTime(ctx, userID)
+func (s *NotificationService) isOnCooldown(ctx context.Context, userID string, notifType NotificationType) (bool, error) {
+	lastNotified, err := s.logRepo.GetLastNotificationTime(ctx, userID, notifType)
 	if err != nil {
 		return false, err
 	}
 	if lastNotified == nil {
 		return false, nil
 	}
-	return time.Since(*lastNotified) < s.cooldown, nil
+
+	var cooldown time.Duration
+	for _, rule := range s.rules {
+		if rule.Type == notifType {
+			cooldown = rule.Cooldown
+			break
+		}
+	}
+
+	return time.Since(*lastNotified) < cooldown, nil
 }
 
-func (s *InactivityService) sendWithRetry(ctx context.Context, user InactiveUser, message string) error {
+func (s *NotificationService) sendWithRetry(ctx context.Context, user UserContext, notifType NotificationType, title, message string) error {
 	var lastErr error
 	for attempt := 1; attempt <= s.maxRetries; attempt++ {
-		err := s.sendNotification(ctx, user, message, attempt)
+		err := s.sendNotification(ctx, user, notifType, title, message, attempt)
 		if err == nil {
 			return nil
 		}
@@ -125,6 +161,7 @@ func (s *InactivityService) sendWithRetry(ctx context.Context, user InactiveUser
 			backoff := time.Duration(1<<(attempt-1)) * time.Second
 			logger.Info("retrying notification send",
 				zap.String("user_id", user.UserID),
+				zap.String("type", string(notifType)),
 				zap.Int("attempt", attempt),
 				zap.Duration("backoff", backoff))
 			select {
@@ -138,23 +175,23 @@ func (s *InactivityService) sendWithRetry(ctx context.Context, user InactiveUser
 	return fmt.Errorf("all %d attempts failed, last error: %w", s.maxRetries, lastErr)
 }
 
-func (s *InactivityService) sendNotification(ctx context.Context, user InactiveUser, message string, attempt int) error {
+func (s *NotificationService) sendNotification(ctx context.Context, user UserContext, notifType NotificationType, title, message string, attempt int) error {
 	userInfo := notification.UserInfo{ID: user.UserID}
 	msg := notification.Message{
-		Title: "We miss you!",
+		Title: title,
 		Body:  message,
 		Data: map[string]interface{}{
-			"type": "inactivity",
+			"type": string(notifType),
 		},
 	}
 
 	_, err := s.pushSender.SendToUser(ctx, userInfo, msg)
 
-	log := &InactivityNotificationLog{
-		UserID:   user.UserID,
-		Message:  message,
-		Status:   "sent",
-		Attempts: attempt,
+	log := &NotificationLog{
+		UserID:           user.UserID,
+		NotificationType: notifType,
+		Status:           "sent",
+		Attempts:         attempt,
 	}
 	if err != nil {
 		log.Status = "failed"
@@ -164,6 +201,7 @@ func (s *InactivityService) sendNotification(ctx context.Context, user InactiveU
 	if saveErr := s.logRepo.SaveLog(ctx, log); saveErr != nil {
 		logger.Error("failed to save notification log",
 			zap.String("user_id", user.UserID),
+			zap.String("type", string(notifType)),
 			zap.Error(saveErr))
 	}
 
