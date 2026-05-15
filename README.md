@@ -80,15 +80,19 @@ flowchart LR
   W --> DB
 
   G --> R[(Redis\nRate Limiting)]
+
+  W --> N[Intelligent Notification\nSystem]
+  N --> DB
+  N --> P[Expo Push API]
 ```
 
 ## Tech Stack
 
 | Layer | Technologies |
 |---|---|
-| Mobile | React Native, Expo, TypeScript, Redux Toolkit (RTK Query), AsyncStorage |
+| Mobile | React Native, Expo, TypeScript, Redux Toolkit (RTK Query), AsyncStorage, Expo Notifications |
 | Admin | React 18, TypeScript, Vite, Tailwind CSS, Axios, Chart.js |
-| Backend | Go 1.22, Gin, JWT, MongoDB driver, Kafka, Redis |
+| Backend | Go 1.22, Gin, JWT, MongoDB driver, Kafka, Redis, Cron |
 | Infra | Docker, Docker Compose, Nginx |
 
 ## Core Features
@@ -96,9 +100,14 @@ flowchart LR
 - Authentication with JWT and refresh flow.
 - Daily tasks with completion tracking.
 - Levels, lessons, and progression rewards.
-- Leaderboard endpoint with ranking by level then XP.
+- Leaderboard ranking by level and XP.
 - Role-aware admin panel for content management.
 - Event-driven processing with Kafka and worker service.
+- Intelligent notification system with template-based push notifications:
+  - Daily task reminders for pending missions
+  - Streak warnings to protect user consistency
+  - Friday special reminders for Surah Al-Kahf
+  - Leaderboard rank improvement alerts
 
 ## API Highlights
 
@@ -121,6 +130,8 @@ Base prefix: `/api/v1`
   - `GET /levels/:id?course_type=qaida|tajweed`
   - `POST /levels/:id/lessons/complete`
   - `POST /levels/:id/complete`
+- Notifications
+  - `POST /notifications/token` — Register push notification token
 
 ## Quick Start
 
@@ -195,6 +206,27 @@ Backend docs:
 - `backend/docs/migration.md`
 - `backend/docs/kafka-explained.md`
 - `backend/docs/daily-task-assignment.md`
+- `backend/internal/ai-service/ai-notifications/README.md` — Intelligent notification system
+- `backend/internal/ai-service/ai-notifications/WORKFLOW.md` — Notification flow diagrams
+
+## Intelligent Notification System
+
+The worker service runs a cron job every 10 minutes that evaluates all users against 4 notification rules in a single pass:
+
+| Notification Type | Trigger Condition | Cooldown |
+|---|---|---|
+| Daily Task Reminder | Pending tasks + inactive > 4h | 6 hours |
+| Streak Warning | Streak > 3 days + missed today | 12 hours |
+| Friday Special | Today is Friday | 24 hours |
+| Leaderboard Update | User rank improved | 24 hours |
+
+Key design decisions:
+- **Template-based messages** — no AI dependency, instant generation, predictable tone
+- **Single-pass processing** — users fetched once, evaluated against all rules
+- **Per-type cooldowns** — each notification type tracks its own cooldown window
+- **Retry with backoff** — up to 3 attempts with exponential backoff on failure
+
+Full workflow and diagrams: [ai-notifications/README.md](backend/internal/ai-service/ai-notifications/README.md)
 
 ## Screens Overview
 
