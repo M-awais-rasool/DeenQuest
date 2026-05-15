@@ -24,7 +24,7 @@ func NewUserFetcher(db *mongo.Database) *UserFetcher {
 	}
 }
 
-func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int) ([]UserContext, error) {
+func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) ([]UserContext, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
@@ -193,6 +193,13 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int) ([]UserConte
 
 	if limit > 0 && len(users) > limit {
 		users = users[:limit]
+	}
+
+	// Apply offset for pagination
+	if offset > 0 && offset < len(users) {
+		users = users[offset:]
+	} else if offset >= len(users) {
+		return []UserContext{}, nil
 	}
 
 	return users, nil

@@ -60,7 +60,7 @@ func (s *NotificationService) ProcessAllNotifications(ctx context.Context) (*Pro
 	}
 
 	for offset := 0; ; offset += s.batchSize {
-		users, err := s.userFetcher.FetchAllUsers(ctx, s.batchSize)
+		users, err := s.userFetcher.FetchAllUsers(ctx, s.batchSize, offset)
 		if err != nil {
 			return nil, fmt.Errorf("fetch users: %w", err)
 		}
