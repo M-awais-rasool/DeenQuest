@@ -75,6 +75,12 @@ func (s *NotificationService) ProcessAllNotifications(ctx context.Context) (*Pro
 			stats.TotalUsers++
 
 			for i, rule := range s.rules {
+				hour := now.UTC().Hour()
+				if hour < rule.TimeWindow.StartHour || hour >= rule.TimeWindow.EndHour {
+					stats.Notifications[i].Skipped++
+					continue
+				}
+
 				onCooldown, err := s.isOnCooldown(ctx, user.UserID, rule.Type)
 				if err != nil {
 					logger.Warn("failed to check cooldown",

@@ -21,9 +21,15 @@ type UserContext struct {
 	TodayTasksDone     int
 }
 
+type TimeWindow struct {
+	StartHour int
+	EndHour   int
+}
+
 type NotificationRule struct {
 	Type            NotificationType
 	Cooldown        time.Duration
+	TimeWindow      TimeWindow
 	Evaluate        func(ctx *UserContext, now time.Time) bool
 	BuildMessage    func(ctx *UserContext) string
 	BuildTitle      func(ctx *UserContext) string

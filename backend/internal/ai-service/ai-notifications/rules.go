@@ -10,6 +10,7 @@ func BuildRules() []NotificationRule {
 		{
 			Type:     DailyTaskReminder,
 			Cooldown: 6 * time.Hour,
+			TimeWindow: TimeWindow{StartHour: 9, EndHour: 14},
 			Evaluate: func(ctx *UserContext, now time.Time) bool {
 				if ctx.TodayTasksTotal == 0 {
 					return false
@@ -46,6 +47,7 @@ func BuildRules() []NotificationRule {
 		{
 			Type:     StreakWarning,
 			Cooldown: 12 * time.Hour,
+			TimeWindow: TimeWindow{StartHour: 18, EndHour: 22},
 			Evaluate: func(ctx *UserContext, now time.Time) bool {
 				if ctx.CurrentStreak <= 3 {
 					return false
@@ -76,6 +78,7 @@ func BuildRules() []NotificationRule {
 		{
 			Type:     FridaySpecial,
 			Cooldown: 24 * time.Hour,
+			TimeWindow: TimeWindow{StartHour: 10, EndHour: 16},
 			Evaluate: func(ctx *UserContext, now time.Time) bool {
 				return now.Weekday() == time.Friday
 			},
