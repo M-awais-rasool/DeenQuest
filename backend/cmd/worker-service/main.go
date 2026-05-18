@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap"
 
 	notifications "github.com/chawais/talent-flow/backend/internal/ai-service/ai-notifications"
+	"github.com/chawais/talent-flow/backend/internal/ai-service/agents/learning-agent"
 	"github.com/chawais/talent-flow/backend/internal/notification-service"
 	"github.com/chawais/talent-flow/backend/internal/worker-service/repository"
 	"github.com/chawais/talent-flow/backend/internal/worker-service/worker"
@@ -58,8 +59,16 @@ func main() {
 
 	intelligentNotificationScheduler := initIntelligentNotificationScheduler(workerDB, notificationService)
 
+	learningAgent := initLearningAgent(cfg)
+
 	runCtx, runCancel := context.WithCancel(context.Background())
 	defer runCancel()
+
+	if learningAgent != nil {
+		go func() {
+			learningAgent.Start(runCtx)
+		}()
+	}
 
 	go func() {
 		_ = notificationSendConsumer.Consume(runCtx, consumer.Wrap("notification.send", consumer.HandleNotificationSend))
@@ -111,4 +120,30 @@ func initIntelligentNotificationScheduler(db *mongo.Database, notificationServic
 	)
 
 	return notifications.NewScheduler(notifService)
+}
+
+func initLearningAgent(cfg *config.Config) *learningagent.Agent {
+	agentCfg := &learningagent.Config{
+		KafkaBrokers: cfg.GetKafkaBrokerList(),
+		KafkaGroupID: "learning-agent-group",
+		MongoURI:     cfg.MongoURI,
+		MongoDB:      cfg.MongoDB,
+	}
+
+	agent, err := learningagent.New(agentCfg)
+	if err != nil {
+		logger.Warn("learning agent disabled", zap.Error(err))
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := agent.Initialize(ctx); err != nil {
+		logger.Warn("learning agent initialization failed", zap.Error(err))
+		return nil
+	}
+
+	logger.Info("learning agent initialized successfully")
+	return agent
 }
