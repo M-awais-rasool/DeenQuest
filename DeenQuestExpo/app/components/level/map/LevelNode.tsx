@@ -3,19 +3,24 @@ import { View, Text, TouchableOpacity, Animated } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Lock, Star, Trophy } from "lucide-react-native";
 import type { LevelWithStatus } from "../../../store/services/api";
-import { STATUS_CONFIG, NODE_DEPTH, getNodeOffset } from "./constants";
+import { STATUS_CONFIG, getNodeOffset } from "./constants";
 import { TreasureBadge } from "./TreasureBadge";
 import { StarsDisplay } from "./StarsDisplay";
+import { LevelPopup } from "./LevelPopup";
 import { s } from "./styles";
 
 export const LevelNode = memo(function LevelNode({
   level,
   index,
+  isSelected,
   onPress,
+  onStart,
 }: {
   level: LevelWithStatus;
   index: number;
+  isSelected: boolean;
   onPress: () => void;
+  onStart: () => void;
 }) {
   const config = STATUS_CONFIG[level.status];
   const isLocked = level.status === "locked";
@@ -108,6 +113,8 @@ export const LevelNode = memo(function LevelNode({
 
   const offset = getNodeOffset(index);
 
+  const POPUP_TOP = 90;
+
   return (
     <Animated.View
       style={[
@@ -116,25 +123,13 @@ export const LevelNode = memo(function LevelNode({
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
         },
+        isSelected && {
+          zIndex: 100,
+          elevation: 10,
+        },
       ]}
     >
       <View style={[s.nodeWrapper, { transform: [{ translateX: offset }] }]}>
-        {isAvailable && (
-          <View style={s.speechBubbleWrapper}>
-            <Animated.View
-              style={[
-                s.speechBubble,
-                {
-                  transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }],
-                },
-              ]}
-            >
-              <Text style={s.speechBubbleText}>START</Text>
-            </Animated.View>
-            <View style={s.speechBubbleTail} />
-          </View>
-        )}
-
         <Animated.View
           style={{
             transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }],
@@ -151,10 +146,7 @@ export const LevelNode = memo(function LevelNode({
             <View style={[s.nodeBase, { backgroundColor: config.baseColor }]} />
 
             <View
-              style={[
-                s.nodeBottom,
-                { backgroundColor: config.bottomBg },
-              ]}
+              style={[s.nodeBottom, { backgroundColor: config.bottomBg }]}
             />
 
             {!isLocked && progress > 0 && progress < 1 && (
@@ -175,7 +167,7 @@ export const LevelNode = memo(function LevelNode({
                 s.nodeTop,
                 {
                   backgroundColor: config.topBg,
-                  borderColor: config.borderColor,
+                  borderColor: config.topBg,
                   transform: [{ translateY: pressDepth }],
                 },
               ]}
@@ -185,7 +177,12 @@ export const LevelNode = memo(function LevelNode({
               ) : isCompleted ? (
                 <Trophy size={26} color={config.iconColor} strokeWidth={2.5} />
               ) : (
-                <Star size={30} color={config.iconColor} fill={config.iconColor} strokeWidth={0} />
+                <Star
+                  size={30}
+                  color={config.iconColor}
+                  fill={config.iconColor}
+                  strokeWidth={0}
+                />
               )}
             </Animated.View>
           </TouchableOpacity>
@@ -210,6 +207,21 @@ export const LevelNode = memo(function LevelNode({
           </View>
         )}
       </View>
+
+      {isSelected && (
+        <View
+          pointerEvents="box-none"
+          style={{
+            position: "absolute",
+            top: POPUP_TOP,
+            left: 0,
+            right: 0,
+            alignItems: "center",
+          }}
+        >
+          <LevelPopup level={level} nodeOffset={offset} onStart={onStart} />
+        </View>
+      )}
     </Animated.View>
   );
 });

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { FlatList } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -33,29 +33,44 @@ export function LevelMapContent({
   });
   const { data: progressRes } = useGetProgressQuery();
 
+  const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
+
   const levels: LevelWithStatus[] = useMemo(
     () => levelsRes?.data ?? [],
     [levelsRes],
   );
   const xp = progressRes?.data?.xp ?? 0;
 
-  const handleLevelPress = useCallback(
+  const handleNodePress = useCallback(
     (level: LevelWithStatus) => {
       if (level.status === "locked") return;
+      setSelectedLevelId((prev) => (prev === level.id ? null : level.id));
+    },
+    [],
+  );
+
+  const handleStart = useCallback(
+    (level: LevelWithStatus) => {
+      setSelectedLevelId(null);
       navigation.navigate("LevelDetail", { levelId: level.id, courseType });
     },
     [courseType, navigation],
   );
 
   const renderItem = useCallback(
-    ({ item, index }: { item: LevelWithStatus; index: number }) => (
-      <LevelNode
-        level={item}
-        index={index}
-        onPress={() => handleLevelPress(item)}
-      />
-    ),
-    [handleLevelPress],
+    ({ item, index }: { item: LevelWithStatus; index: number }) => {
+      const isSelected = selectedLevelId === item.id;
+      return (
+        <LevelNode
+          level={item}
+          index={index}
+          isSelected={isSelected}
+          onPress={() => handleNodePress(item)}
+          onStart={() => handleStart(item)}
+        />
+      );
+    },
+    [selectedLevelId, handleNodePress, handleStart],
   );
 
   const keyExtractor = useCallback(

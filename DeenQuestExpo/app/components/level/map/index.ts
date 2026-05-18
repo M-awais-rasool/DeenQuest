@@ -1,4 +1,5 @@
 export { LevelNode } from "./LevelNode";
+export { LevelPopup } from "./LevelPopup";
 export { PhaseHeader } from "./PhaseHeader";
 export { ProgressSummary } from "./ProgressSummary";
 export { SummaryStat } from "./SummaryStat";
