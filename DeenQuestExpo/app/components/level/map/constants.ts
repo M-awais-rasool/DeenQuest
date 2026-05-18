@@ -12,6 +12,12 @@ export function getNodeOffset(index: number): number {
   return Math.sin((index * Math.PI) / 3) * amplitude;
 }
 
+export const LEVEL_GREEN = "#43A047"; // Main popup bg, node border
+export const LEVEL_GREEN_LIGHT = "#66BB6A"; // 3D node top
+export const LEVEL_GREEN_DARK = "#2E7D32"; // 3D node bottom shadow
+export const LEVEL_GREEN_DEEP = "#1B5E20"; // Button text on white
+export const LEVEL_GREEN_GLOW = "rgba(67, 160, 71, 0.15)"; // Subtle node glow
+
 export const STATUS_CONFIG: Record<
   LevelStatus,
   {
@@ -32,27 +38,27 @@ export const STATUS_CONFIG: Record<
     progressColor: "transparent",
   },
   available: {
-    topBg: theme.colors.primary,
-    bottomBg: theme.colors.shadowGreen,
-    borderColor: theme.colors.primary,
-    iconColor: theme.colors.whiteSoft,
-    baseColor: theme.colors.primary15,
+    topBg: LEVEL_GREEN_LIGHT,
+    bottomBg: LEVEL_GREEN_DARK,
+    borderColor: LEVEL_GREEN,
+    iconColor: theme.colors.white,
+    baseColor: LEVEL_GREEN_GLOW,
     progressColor: theme.colors.secondary,
   },
   in_progress: {
-    topBg: theme.colors.primary,
-    bottomBg: theme.colors.shadowGreen,
-    borderColor: theme.colors.primary,
-    iconColor: theme.colors.whiteSoft,
-    baseColor: theme.colors.primary15,
+    topBg: LEVEL_GREEN_LIGHT,
+    bottomBg: LEVEL_GREEN_DARK,
+    borderColor: LEVEL_GREEN,
+    iconColor: theme.colors.white,
+    baseColor: LEVEL_GREEN_GLOW,
     progressColor: theme.colors.secondary,
   },
   completed: {
-    topBg: theme.colors.primary,
-    bottomBg: theme.colors.shadowGreen,
-    borderColor: theme.colors.primary,
-    iconColor: theme.colors.whiteSoft,
-    baseColor: theme.colors.primary15,
+    topBg: LEVEL_GREEN_LIGHT,
+    bottomBg: LEVEL_GREEN_DARK,
+    borderColor: LEVEL_GREEN,
+    iconColor: theme.colors.white,
+    baseColor: LEVEL_GREEN_GLOW,
     progressColor: theme.colors.secondary,
   },
 };
