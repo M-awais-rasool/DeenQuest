@@ -8,7 +8,6 @@ const (
 	DailyTaskReminder  NotificationType = "daily_task_reminder"
 	StreakWarning      NotificationType = "streak_warning"
 	FridaySpecial      NotificationType = "friday_special"
-	LeaderboardUpdate  NotificationType = "leaderboard_update"
 )
 
 type UserContext struct {
@@ -20,9 +19,6 @@ type UserContext struct {
 	CompletedLessons   int
 	TodayTasksTotal    int
 	TodayTasksDone     int
-	CurrentRank        int
-	PreviousRank       int
-	TopRankThreshold   int
 }
 
 type NotificationRule struct {

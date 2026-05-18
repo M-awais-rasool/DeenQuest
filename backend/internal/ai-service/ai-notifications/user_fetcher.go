@@ -12,7 +12,6 @@ type UserFetcher struct {
 	streaks      *mongo.Collection
 	tokens       *mongo.Collection
 	dailyTasks   *mongo.Collection
-	progress     *mongo.Collection
 }
 
 func NewUserFetcher(db *mongo.Database) *UserFetcher {
@@ -20,7 +19,6 @@ func NewUserFetcher(db *mongo.Database) *UserFetcher {
 		streaks:    db.Collection("streaks"),
 		tokens:     db.Collection("notification_tokens"),
 		dailyTasks: db.Collection("user_daily_tasks"),
-		progress:   db.Collection("progress"),
 	}
 }
 
@@ -141,30 +139,6 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) 
 		}{doc.Total, doc.Done}
 	}
 
-	rankPipeline := []bson.M{
-		{"$sort": bson.M{"total_xp": -1, "level": -1}},
-		{"$project": bson.M{"user_id": 1}},
-	}
-
-	rankCursor, err := f.progress.Aggregate(ctx, rankPipeline)
-	if err != nil {
-		return nil, err
-	}
-	defer rankCursor.Close(ctx)
-
-	rankMap := make(map[string]int)
-	rank := 1
-	for rankCursor.Next(ctx) {
-		var doc struct {
-			UserID string `bson:"user_id"`
-		}
-		if err := rankCursor.Decode(&doc); err != nil {
-			continue
-		}
-		rankMap[doc.UserID] = rank
-		rank++
-	}
-
 	users := make([]UserContext, 0, len(userIDs))
 	for _, uid := range userIDs {
 		token, ok := tokenMap[uid]
@@ -187,7 +161,6 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) 
 			LastCompletedAt: streak.LastCompleted,
 			TodayTasksTotal: todayTasks.total,
 			TodayTasksDone:  todayTasks.done,
-			CurrentRank:     rankMap[uid],
 		})
 	}
 

@@ -96,45 +96,7 @@ func BuildRules() []NotificationRule {
 			return msgs[int(math.Abs(float64(hashStr(ctx.UserID+"friday-msg"))))%len(msgs)]
 		},
 		},
-		{
-			Type:     LeaderboardUpdate,
-			Cooldown: 24 * time.Hour,
-			Evaluate: func(ctx *UserContext, now time.Time) bool {
-				if ctx.CurrentRank == 0 {
-					return false
-				}
-				if ctx.PreviousRank == 0 {
-					return false
-				}
-				if ctx.CurrentRank >= ctx.PreviousRank {
-					return false
-				}
-				return true
-			},
-			BuildTitle: func(ctx *UserContext) string {
-				titles := []string{
-					"New ranking achieved",
-					"Leaderboard update",
-					"You climbed up",
-				}
-				return titles[int(math.Abs(float64(hashStr(ctx.UserID+"leader"))))%len(titles)]
-			},
-			BuildMessage: func(ctx *UserContext) string {
-				if ctx.CurrentRank <= 10 {
-					return formatWithVariations(
-						"You reached Top 10 this week. Keep pushing!",
-						"Amazing! You're in the Top 10. Stay on top!",
-						"Top 10 achieved. You're among the best!",
-					)(ctx)
-				}
-				return formatWithVariations(
-					"You're now ranked #%d. Can you reach the Top 10?",
-					"Ranked #%d now. Keep earning XP to climb higher!",
-					"Your rank improved to #%d. The leaderboard awaits!",
-				)(ctx, ctx.CurrentRank)
-			},
-		},
-	}
+}
 }
 
 func formatWithVariations(variants ...string) func(ctx *UserContext, args ...int) string {
