@@ -26,7 +26,27 @@
 <p align="center">
   <img src="DeenQuestExpo/assets/IMG.PNG" alt="Home — Daily Missions & Streak" width="22%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-1.PNG" alt="Learn — Level Map" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG-5.PNG" alt="Learning Path — Choose a Course" width="22%" />
+  &nbsp;&nbsp;
+  <img src="DeenQuestExpo/assets/IMG-4.PNG" alt="Level Map — Course Progression" width="22%" />
+  &nbsp;&nbsp;
+  <img src="DeenQuestExpo/assets/IMG-8.PNG" alt="Settings — App Preferences" width="22%" />
+</p>
+
+<p align="center">
+  <sub><b>Home</b> — Daily missions, streak &amp; XP progress</sub>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <sub><b>Learning Path</b> — Choose from available courses</sub>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <sub><b>Level Map</b> — Course progression with stars</sub>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <sub><b>Settings</b> — Account, preferences &amp; app info</sub>
+</p>
+
+<p align="center">
+  <img src="DeenQuestExpo/assets/IMG-6.PNG" alt="Lesson — Arabic Letter Audio" width="22%" />
+  &nbsp;&nbsp;
+  <img src="DeenQuestExpo/assets/IMG-7.PNG" alt="Lesson — Dua with Recitation" width="22%" />
   &nbsp;&nbsp;
   <img src="DeenQuestExpo/assets/IMG-3.PNG" alt="Rewards — Reward Vault & Milestones" width="22%" />
   &nbsp;&nbsp;
@@ -34,9 +54,9 @@
 </p>
 
 <p align="center">
-  <sub><b>Home</b> — Daily missions, streak &amp; XP progress</sub>
+  <sub><b>Letter Lesson</b> — Arabic letters with audio</sub>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <sub><b>Learn</b> — Qaida level map with star milestones</sub>
+  <sub><b>Dua Lesson</b> — Recitation practice &amp; meaning</sub>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <sub><b>Rewards</b> — Reward vault, milestones &amp; XP bonuses</sub>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -233,9 +253,13 @@ Full workflow and diagrams: [ai-notifications/README.md](backend/internal/ai-ser
 | Screen | File | Description |
 |---|---|---|
 | Home | `IMG.PNG` | Daily missions, weekly streak calendar, XP bar |
-| Learn | `IMG-1.PNG` | Phase level map with lock/unlock progression |
+| Learning Path | `IMG-5.PNG` | Choose from available courses with progress tracking |
+| Level Map | `IMG-4.PNG` | Course level progression with star milestones |
+| Letter Lesson | `IMG-6.PNG` | Arabic letters with audio pronunciation |
+| Dua Lesson | `IMG-7.PNG` | Dua recitation practice with meaning and transliteration |
 | Rewards | `IMG-3.PNG` | Reward vault, milestone progress, and unlockable achievements |
 | Profile | `IMG-2.PNG` | XP total, Barakah score, streak history |
+| Settings | `IMG-8.PNG` | Account settings, preferences, and app info |
 | Rank | — | Global leaderboard ranked by level then XP |
 
 ## Contributing
