@@ -164,7 +164,7 @@ export function LessonPlayerScreen() {
   const lesson = level.lessons[currentIndex];
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper innerStyle={{ flex: 1 }}>
       <View style={s.container}>
         {/* Top bar */}
         <View style={s.topBar}>
@@ -174,12 +174,13 @@ export function LessonPlayerScreen() {
           <ProgressBar current={currentIndex} total={level.lessons.length} />
         </View>
 
-        <Animated.View style={{ opacity: fadeAnim }}>
+        <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>
           <ScrollView
             ref={scrollRef}
             style={s.scrollView}
             contentContainerStyle={s.scrollContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             <LessonRenderer
               lesson={lesson}
@@ -195,7 +196,10 @@ export function LessonPlayerScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { backgroundColor: theme.colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   loadingContainer: {
     justifyContent: "center",
     alignItems: "center",
@@ -247,8 +251,13 @@ const s = StyleSheet.create({
   },
 
   // Scroll
-  scrollView: {},
-  scrollContent: { padding: 20, paddingBottom: 40 },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 80,
+  },
 
   // Lesson content
   lessonContent: { flex: 1 },
