@@ -56,10 +56,12 @@ export function LearnPathScreen() {
 
 const s = StyleSheet.create({
   content: {
-    paddingBottom: 20,
+    paddingBottom: 32,
     backgroundColor: theme.colors.background,
   },
   list: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
+    paddingTop: 4,
+    gap: 2,
   },
 });

@@ -93,7 +93,7 @@ export const Box3D = memo(function Box3D({
     inputRange: [0, 0.5, 1],
     outputRange: [0.9, 0.15, 0.9],
   });
-  
+
   const sparkleEven = sparkleAnim.interpolate({
     inputRange: [0, 0.5, 1],
     outputRange: [0.15, 0.9, 0.15],
@@ -101,12 +101,6 @@ export const Box3D = memo(function Box3D({
 
   return (
     <Animated.View style={[s.outer, { transform: [{ scale: pulseScale }] }]}>
-      {!isLocked && (
-        <>
-          <View style={[s.glowOuter, { backgroundColor: course.glowColor }]} />
-        </>
-      )}
-
       {/* Main face */}
       <View style={[s.face, { backgroundColor: faceBg }]}>
         <View style={s.topGloss} />
