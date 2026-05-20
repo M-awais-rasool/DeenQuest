@@ -14,7 +14,7 @@ export function TapMatchGame({
   onFinish,
 }: {
   game: MiniGame;
-  onFinish: () => void;
+  onFinish: (stats: { accuracy: number }) => void;
 }) {
   const data = game.data as Record<string, any>;
   const pairs = useMemo<Array<{ arabic: string; answer: string }>>(
@@ -28,6 +28,7 @@ export function TapMatchGame({
   const [matchedCount, setMatchedCount] = useState(0);
   const [selectedArabic, setSelectedArabic] = useState<string | null>(null);
   const [matched, setMatched] = useState<Set<string>>(new Set());
+  const [attempts, setAttempts] = useState(0);
 
   const shuffledAnswers = useMemo(
     () => [...pairs].sort(() => Math.random() - 0.5),
@@ -42,13 +43,17 @@ export function TapMatchGame({
 
   const handleAnswerTap = (answer: string) => {
     if (!selectedArabic) return;
+    const newAttempts = attempts + 1;
+    setAttempts(newAttempts);
     const pair = pairs.find((p) => p.arabic === selectedArabic);
     if (pair?.answer === answer) {
       haptics.success();
       setMatched((prev) => new Set(prev).add(selectedArabic));
-      setMatchedCount((c) => c + 1);
-      if (matchedCount + 1 >= pairs.length) {
-        onFinish();
+      const newMatchedCount = matchedCount + 1;
+      setMatchedCount(newMatchedCount);
+      if (newMatchedCount >= pairs.length) {
+        const accuracy = newAttempts > 0 ? Math.round((pairs.length / newAttempts) * 100) : 100;
+        onFinish({ accuracy });
       }
     } else {
       haptics.error();

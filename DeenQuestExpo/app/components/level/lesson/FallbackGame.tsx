@@ -14,7 +14,7 @@ export function FallbackGame({
   onFinish,
 }: {
   game: MiniGame;
-  onFinish: () => void;
+  onFinish: (stats: { accuracy: number }) => void;
 }) {
   return (
     <View>
@@ -28,7 +28,7 @@ export function FallbackGame({
         style={s.nextBtn}
         onPress={() => {
           haptics.medium();
-          onFinish();
+          onFinish({ accuracy: 100 });
         }}
       >
         <Text style={s.nextBtnText}>COMPLETE</Text>

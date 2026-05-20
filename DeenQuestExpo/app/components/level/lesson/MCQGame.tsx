@@ -14,7 +14,7 @@ export function MCQGame({
   onFinish,
 }: {
   game: MiniGame;
-  onFinish: () => void;
+  onFinish: (stats: { accuracy: number }) => void;
 }) {
   const data = game.data as Record<string, any>;
   const questions: Array<{
@@ -53,7 +53,8 @@ export function MCQGame({
       setCurrentQ((c) => c + 1);
       setSelected(null);
     } else {
-      onFinish();
+      const accuracy = Math.round((score / questions.length) * 100);
+      onFinish({ accuracy });
     }
   };
 

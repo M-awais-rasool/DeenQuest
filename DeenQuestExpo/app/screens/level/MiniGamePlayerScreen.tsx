@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -15,11 +15,12 @@ import { theme } from "../../theme/themes";
 import {
   useGetLevelDetailQuery,
   useCompleteLevelMutation,
+  useGetProgressQuery,
 } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
-import { CourseCompletionScreen } from "../../components/level/lesson/CourseCompletionScreen";
+import  CourseCompletionScreen  from "../../components/level/lesson/CourseCompletionScreen";
 import { TapMatchGame } from "../../components/level/lesson/TapMatchGame";
 import { FallbackGame } from "../../components/level/lesson/FallbackGame";
 import { MCQGame } from "../../components/level/lesson/MCQGame";
@@ -33,16 +34,28 @@ export function MiniGamePlayerScreen() {
   const { levelId, courseType } = route.params;
 
   const { data: res } = useGetLevelDetailQuery({ levelId, courseType });
+  const { data: progressRes } = useGetProgressQuery();
   const level = res?.data;
   const [completeLevel] = useCompleteLevelMutation();
+  const currentTotalXP = progressRes?.data?.xp ?? 0;
+
+  const startTimeRef = useRef<number>(Date.now());
 
   const [completionResult, setCompletionResult] = useState<{
     xpEarned: number;
+    accuracy: number;
+    timeString: string;
   } | null>(null);
 
   const handleFinish = useCallback(
-    async () => {
+    async (stats: { accuracy: number }) => {
       if (!level) return;
+      const elapsedMs = Date.now() - startTimeRef.current;
+      const totalSeconds = Math.floor(elapsedMs / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const timeString = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
       try {
         const apiRes = await completeLevel({
           levelId: level.id,
@@ -50,9 +63,15 @@ export function MiniGamePlayerScreen() {
         }).unwrap();
         setCompletionResult({
           xpEarned: apiRes.data?.xp_earned ?? level.xp_reward,
+          accuracy: stats.accuracy,
+          timeString,
         });
       } catch {
-        setCompletionResult({ xpEarned: level.xp_reward });
+        setCompletionResult({
+          xpEarned: level.xp_reward,
+          accuracy: stats.accuracy,
+          timeString,
+        });
       }
     },
     [courseType, level, completeLevel],
@@ -75,6 +94,9 @@ export function MiniGamePlayerScreen() {
       <ScreenWrapper innerStyle={{ flex: 1 }}>
         <CourseCompletionScreen
           xpEarned={completionResult.xpEarned}
+          accuracy={completionResult.accuracy}
+          timeString={completionResult.timeString}
+          currentTotalXP={currentTotalXP}
           onContinue={handleContinue}
         />
       </ScreenWrapper>
