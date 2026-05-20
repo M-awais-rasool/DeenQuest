@@ -98,7 +98,6 @@ type UserLevel struct {
 	UserID          string     `bson:"user_id" json:"user_id"`
 	LevelID         int        `bson:"level_id" json:"level_id"`
 	CourseType      CourseType `bson:"course_type" json:"course_type"`
-	Stars           int        `bson:"stars" json:"stars"` // 0-3
 	LessonsComplete int        `bson:"lessons_complete" json:"lessons_complete"`
 	MiniGameDone    bool       `bson:"mini_game_done" json:"mini_game_done"`
 	Completed       bool       `bson:"completed" json:"completed"`
@@ -110,17 +109,15 @@ type UserLevel struct {
 type LevelWithStatus struct {
 	Level           `bson:",inline"`
 	Status          string `json:"status"` // "locked", "available", "in_progress", "completed"
-	Stars           int    `json:"stars"`
 	LessonsComplete int    `json:"lessons_complete"`
 }
 
 // LevelCompletionResult is returned when a user completes a level.
 type LevelCompletionResult struct {
-	XPEarned     int      `json:"xp_earned"`
-	Stars        int      `json:"stars"`
-	UnlockReward string   `json:"unlock_reward"`
-	TreasureOpen bool     `json:"treasure_open"` // true every 5 levels
-	NextLevelID  int      `json:"next_level_id"`
-	CourseType   string   `json:"course_type"`
+	XPEarned     int    `json:"xp_earned"`
+	UnlockReward string `json:"unlock_reward"`
+	TreasureOpen bool   `json:"treasure_open"` // true every 5 levels
+	NextLevelID  int    `json:"next_level_id"`
+	CourseType   string `json:"course_type"`
 	NewRewards   []Reward `json:"new_rewards"` // rewards granted by this completion
 }

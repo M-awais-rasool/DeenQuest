@@ -372,18 +372,6 @@ func CompareRecitation(expectedText, transcript string) ([]model.WordResult, int
 // Scoring Helpers
 // ─────────────────────────────────────────────
 
-// ScoreToStars converts a 0-100 score into 1-3 stars.
-func ScoreToStars(score int) int {
-	switch {
-	case score >= 90:
-		return 3
-	case score >= 65:
-		return 2
-	default:
-		return 1
-	}
-}
-
 // ScoreToFeedback returns an encouraging Duolingo-style message.
 func ScoreToFeedback(score int) string {
 	switch {

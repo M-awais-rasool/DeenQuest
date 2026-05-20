@@ -28,7 +28,6 @@ type RecitationAttempt struct {
 	LevelID     int          `bson:"level_id" json:"level_id"`
 	LessonIndex int          `bson:"lesson_index" json:"lesson_index"`
 	Score       int          `bson:"score" json:"score"` // 0–100
-	Stars       int          `bson:"stars" json:"stars"` // 1–3
 	Words       []WordResult `bson:"words" json:"words"`
 	XPEarned    int          `bson:"xp_earned" json:"xp_earned"`
 	Transcript  string       `bson:"transcript" json:"transcript"` // raw Whisper output
@@ -39,7 +38,6 @@ type RecitationAttempt struct {
 // RecitationCheckResult is the API response for POST /recitation/check.
 type RecitationCheckResult struct {
 	Score      int          `json:"score"`      // 0–100 percentage correct
-	Stars      int          `json:"stars"`      // 1–3
 	Words      []WordResult `json:"words"`      // per-word breakdown
 	Message    string       `json:"message"`    // encouraging feedback
 	XPEarned   int          `json:"xp_earned"`  // XP awarded this attempt

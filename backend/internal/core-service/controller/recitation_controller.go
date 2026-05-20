@@ -111,7 +111,6 @@ func (h *RecitationController) CheckRecitation(c *gin.Context) {
 		zap.Int("level_id", levelID),
 		zap.Int("lesson_index", lessonIndex),
 		zap.Int("score", result.Score),
-		zap.Int("stars", result.Stars),
 		zap.Int("xp_earned", result.XPEarned),
 	)
 

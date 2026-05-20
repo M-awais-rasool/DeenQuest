@@ -108,7 +108,6 @@ func (s *RecitationService) CheckRecitation(
 	}
 
 	words, score := CompareRecitation(arabicText, transcript.Text)
-	stars := ScoreToStars(score)
 	message := ScoreToFeedback(score)
 	xpEarned := ScoreToXP(score, baseXP)
 
@@ -124,7 +123,6 @@ func (s *RecitationService) CheckRecitation(
 		LevelID:     levelID,
 		LessonIndex: lessonIndex,
 		Score:       score,
-		Stars:       stars,
 		Words:       words,
 		XPEarned:    xpEarned,
 		Transcript:  transcript.Text,
@@ -143,7 +141,6 @@ func (s *RecitationService) CheckRecitation(
 
 	return &model.RecitationCheckResult{
 		Score:      score,
-		Stars:      stars,
 		Words:      words,
 		Message:    message,
 		XPEarned:   xpEarned,

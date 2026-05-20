@@ -43,6 +43,8 @@ func NewMongoCoreRepository(db *mongo.Database) (*MongoCoreRepository, error) {
 
 func (r *MongoCoreRepository) ensureIndexes() error {
 	ctx := context.Background()
+
+	// Progress collection
 	_, err := r.progress.Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "user_id", Value: 1}}, Options: options.Index().SetUnique(true)})
 	if err != nil {
 		return err
@@ -54,10 +56,14 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	if err != nil {
 		return err
 	}
+
+	// Streaks collection
 	_, err = r.streaks.Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.D{{Key: "user_id", Value: 1}}, Options: options.Index().SetUnique(true)})
 	if err != nil {
 		return err
 	}
+
+	// User daily tasks collection
 	_, err = r.userDailyTasks.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "date", Value: 1}},
 		Options: options.Index().SetBackground(true),
@@ -65,6 +71,8 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	if err != nil {
 		return err
 	}
+
+	// User levels collection - compound indexes for efficient course-level queries
 	_, err = r.userLevels.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "level_id", Value: 1}},
 		Options: options.Index().SetUnique(true),
@@ -72,6 +80,16 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	if err != nil {
 		return err
 	}
+	// Index for querying user levels by course type (for course progress aggregation)
+	_, err = r.userLevels.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "course_type", Value: 1}, {Key: "completed", Value: 1}},
+		Options: options.Index().SetBackground(true),
+	})
+	if err != nil {
+		return err
+	}
+
+	// Levels collection
 	_, err = r.levels.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "course_type", Value: 1}, {Key: "course_level", Value: 1}},
 		Options: options.Index().SetBackground(true),
@@ -79,6 +97,8 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	if err != nil {
 		return err
 	}
+
+	// User rewards collection
 	_, err = r.userRewards.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "reward_id", Value: 1}},
 		Options: options.Index().SetUnique(true),
@@ -86,12 +106,17 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	if err != nil {
 		return err
 	}
+
 	// Recitation attempts: fast lookup per user + level + lesson
 	_, err = r.recitationAttempts.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "level_id", Value: 1}, {Key: "lesson_index", Value: 1}, {Key: "created_at", Value: -1}},
 		Options: options.Index().SetBackground(true),
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *MongoCoreRepository) GetProgress(ctx context.Context, userID string) (*model.Progress, error) {

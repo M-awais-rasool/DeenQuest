@@ -503,7 +503,6 @@ func (s *CoreService) GetLevels(ctx context.Context, userID string, courseType m
 	for _, l := range levels {
 		lws := model.LevelWithStatus{Level: l}
 		if ul, ok := ulMap[l.ID]; ok {
-			lws.Stars = ul.Stars
 			lws.LessonsComplete = ul.LessonsComplete
 			if ul.Completed {
 				lws.Status = "completed"
@@ -541,7 +540,6 @@ func (s *CoreService) GetLevelDetail(ctx context.Context, userID string, levelID
 
 	lws := &model.LevelWithStatus{Level: *level, Status: "available"}
 	if ul != nil {
-		lws.Stars = ul.Stars
 		lws.LessonsComplete = ul.LessonsComplete
 		if ul.Completed {
 			lws.Status = "completed"
@@ -595,7 +593,7 @@ func (s *CoreService) CompleteLessonInLevel(ctx context.Context, userID string, 
 }
 
 // CompleteLevel marks a level as fully completed and awards XP + rewards.
-func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID int, stars int, courseType model.CourseType) (*model.LevelCompletionResult, error) {
+func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID int, courseType model.CourseType) (*model.LevelCompletionResult, error) {
 	level, err := s.repo.GetLevelByID(ctx, levelID)
 	if err != nil {
 		return nil, err
@@ -605,13 +603,6 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 	}
 	if courseType != "" && level.CourseType != courseType {
 		return nil, ErrLevelNotFound
-	}
-
-	if stars < 1 {
-		stars = 1
-	}
-	if stars > 3 {
-		stars = 3
 	}
 
 	ul, err := s.repo.GetUserLevel(ctx, userID, levelID)
@@ -630,7 +621,6 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 		}
 		return &model.LevelCompletionResult{
 			XPEarned:     0,
-			Stars:        ul.Stars,
 			UnlockReward: level.UnlockReward,
 			TreasureOpen: false,
 			NextLevelID:  nextLevelID,
@@ -649,7 +639,6 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 	}
 
 	ul.CourseType = level.CourseType
-	ul.Stars = stars
 	ul.LessonsComplete = len(level.Lessons)
 	ul.MiniGameDone = true
 	ul.Completed = true
@@ -659,9 +648,9 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 		return nil, err
 	}
 
-	// Award XP scaled by stars.
-	xp := level.XPReward * stars / 2
-	if err := s.bumpProgress(ctx, userID, xp, stars*5); err != nil {
+	// Award XP (fixed amount per level).
+	xp := level.XPReward
+	if err := s.bumpProgress(ctx, userID, xp, 5); err != nil {
 		return nil, err
 	}
 	if err := s.bumpStreak(ctx, userID); err != nil {
@@ -686,9 +675,9 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 	if nextLevel != nil {
 		nextLevelID = nextLevel.ID
 	}
+
 	return &model.LevelCompletionResult{
 		XPEarned:     xp,
-		Stars:        stars,
 		UnlockReward: level.UnlockReward,
 		TreasureOpen: level.CourseLevel%5 == 0,
 		NextLevelID:  nextLevelID,

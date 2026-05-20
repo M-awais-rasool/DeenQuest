@@ -193,11 +193,10 @@ func (h *CoreController) CompleteLevel(c *gin.Context) {
 	}
 
 	var body struct {
-		Stars      int    `json:"stars"`
 		CourseType string `json:"course_type"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		body.Stars = 1
+		// course_type is optional
 	}
 
 	rawCourseType := c.Query("course_type")
@@ -210,7 +209,7 @@ func (h *CoreController) CompleteLevel(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.CompleteLevel(c.Request.Context(), userID, levelID, body.Stars, courseType)
+	result, err := h.service.CompleteLevel(c.Request.Context(), userID, levelID, courseType)
 	if err != nil {
 		if errors.Is(err, service.ErrLevelNotFound) {
 			response.NotFound(c, "level not found")
