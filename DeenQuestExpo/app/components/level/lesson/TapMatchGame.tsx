@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { MiniGame } from "../../../store/services/api";
 
@@ -35,6 +36,7 @@ export function TapMatchGame({
 
   const handleArabicTap = (arabic: string) => {
     if (matched.has(arabic)) return;
+    haptics.light();
     setSelectedArabic(arabic);
   };
 
@@ -42,11 +44,14 @@ export function TapMatchGame({
     if (!selectedArabic) return;
     const pair = pairs.find((p) => p.arabic === selectedArabic);
     if (pair?.answer === answer) {
+      haptics.success();
       setMatched((prev) => new Set(prev).add(selectedArabic));
       setMatchedCount((c) => c + 1);
       if (matchedCount + 1 >= pairs.length) {
         onFinish();
       }
+    } else {
+      haptics.error();
     }
     setSelectedArabic(null);
   };

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Mail, Eye, EyeOff, AlertCircle, Sparkles } from "lucide-react-native";
+import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { TactileButton } from "../../components/TactileButton";
 import { LoginRequest, useLoginMutation } from "../../store/services/api";
@@ -234,7 +235,10 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
                 />
                 <TouchableOpacity
                   style={styles.inputIconButton}
-                  onPress={() => setShowPassword((prev) => !prev)}
+                  onPress={() => {
+                    haptics.light();
+                    setShowPassword((prev) => !prev);
+                  }}
                   disabled={isLoading}
                 >
                   {showPassword ? (
@@ -261,7 +265,11 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
               <View style={styles.divider} />
             </View>
 
-            <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              disabled={isLoading}
+              onPressIn={() => haptics.medium()}
+            >
               <Image
                 source={require("../../../assets/icons/google.png")}
                 style={styles.socialIcon}
@@ -273,7 +281,10 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
 
           <TouchableOpacity
             style={styles.footer}
-            onPress={() => navigation.navigate("Signup")}
+            onPress={() => {
+              haptics.light();
+              navigation.navigate("Signup");
+            }}
           >
             <Text style={styles.footerText}>
               New to DeenQuest? <Text style={styles.signUpText}>Sign Up</Text>

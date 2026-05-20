@@ -18,6 +18,7 @@ import {
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { haptics } from "../../utils/haptics";
 import { Header } from "../../components/Header";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
@@ -69,6 +70,7 @@ export const HomeScreen = () => {
     progress?.weekly_completions ?? new Array(7).fill(false);
 
   const handleTaskPress = (task: DailyTask) => {
+    haptics.light();
     navigation.navigate("DailyTaskDetail", { task });
   };
   return (

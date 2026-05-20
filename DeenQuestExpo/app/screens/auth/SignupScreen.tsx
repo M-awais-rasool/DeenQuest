@@ -18,6 +18,7 @@ import {
   Sparkles,
   UserPlus,
 } from "lucide-react-native";
+import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { TactileButton } from "../../components/TactileButton";
 import { AppStackParamList } from "../../navigators/navigationTypes";
@@ -334,7 +335,10 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 
           <TouchableOpacity
             style={styles.termsRow}
-            onPress={() => setAcceptedTerms((prev) => !prev)}
+            onPress={() => {
+              haptics.light();
+              setAcceptedTerms((prev) => !prev);
+            }}
             disabled={isLoading}
             activeOpacity={0.8}
           >
@@ -359,7 +363,10 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 
           <TouchableOpacity
             style={styles.footer}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              haptics.light();
+              navigation.goBack();
+            }}
           >
             <Text style={styles.footerText}>
               Already have an account?{" "}

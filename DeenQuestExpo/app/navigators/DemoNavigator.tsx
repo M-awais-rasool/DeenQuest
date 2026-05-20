@@ -11,6 +11,7 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react-native";
+import { haptics } from "../utils/haptics";
 import type { DemoTabParamList } from "./navigationTypes";
 import { theme } from "../theme/themes";
 import { HomeScreen } from "../screens/home/HomeScreen";
@@ -42,6 +43,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         const TabIcon = tabConf?.icon ?? Home;
 
         const onPress = () => {
+          haptics.light();
           const event = navigation.emit({
             type: "tabPress",
             target: route.key,

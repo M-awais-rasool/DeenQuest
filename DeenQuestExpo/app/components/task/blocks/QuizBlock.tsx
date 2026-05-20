@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { BlockComponentProps } from "./types";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 
 export const QuizBlock = ({
@@ -19,6 +20,13 @@ export const QuizBlock = ({
     if (selected !== null || completed) return;
     setSelected(i);
     onReady(true);
+    if (isQuizMode && i === correct) {
+      haptics.success();
+    } else if (isQuizMode) {
+      haptics.error();
+    } else {
+      haptics.selection();
+    }
   };
 
   const getOptionStyle = (i: number) => {

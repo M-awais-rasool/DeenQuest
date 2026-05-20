@@ -10,6 +10,7 @@ import { X } from "lucide-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
+import { haptics } from "../../utils/haptics";
 import { theme } from "../../theme/themes";
 import {
   useGetLevelDetailQuery,
@@ -93,7 +94,10 @@ export function MiniGamePlayerScreen() {
       <View style={s.container}>
         <View style={s.topBar}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              haptics.light();
+              navigation.goBack();
+            }}
             style={s.closeBtn}
           >
             <X size={22} color={theme.colors.text} />

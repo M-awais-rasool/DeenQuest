@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { MiniGame } from "../../../store/services/api";
 
@@ -39,7 +40,12 @@ export function MCQGame({
   const handleSelect = (idx: number) => {
     if (hasAnswered) return;
     setSelected(idx);
-    if (idx === q.correct) setScore((s) => s + 1);
+    if (idx === q.correct) {
+      haptics.success();
+      setScore((s) => s + 1);
+    } else {
+      haptics.error();
+    }
   };
 
   const handleNext = () => {
@@ -71,7 +77,13 @@ export function MCQGame({
         </TouchableOpacity>
       ))}
       {hasAnswered && (
-        <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
+        <TouchableOpacity
+          style={s.nextBtn}
+          onPress={() => {
+            haptics.medium();
+            handleNext();
+          }}
+        >
           <Text style={s.nextBtnText}>
             {currentQ < questions.length - 1 ? "NEXT" : "FINISH"}
           </Text>

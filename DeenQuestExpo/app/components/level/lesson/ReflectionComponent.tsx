@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
@@ -21,7 +22,10 @@ export function ReflectionComponent({
         <TouchableOpacity
           key={idx}
           style={[s.option, selected === idx && s.optionSelected]}
-          onPress={() => setSelected(idx)}
+          onPress={() => {
+            haptics.selection();
+            setSelected(idx);
+          }}
           activeOpacity={0.7}
         >
           <Text
@@ -42,7 +46,13 @@ export function ReflectionComponent({
       )}
 
       {selected !== null && (
-        <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
+        <TouchableOpacity
+          style={s.continueBtn}
+          onPress={() => {
+            haptics.medium();
+            onComplete();
+          }}
+        >
           <Text style={s.continueBtnText}>CONTINUE</Text>
           <ChevronRight size={18} color={theme.colors.onPrimary} />
         </TouchableOpacity>

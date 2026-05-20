@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { ArrowRight, Flame, Sparkles, Trophy } from "lucide-react-native";
+import { haptics } from "../../utils/haptics";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { useAppSelector } from "../../store/hooks";
@@ -275,7 +276,12 @@ export default function OnboardingScreen({
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>DeenQuest</Text>
-        <TouchableOpacity onPress={completeOnboarding}>
+        <TouchableOpacity
+          onPress={() => {
+            haptics.light();
+            completeOnboarding();
+          }}
+        >
           <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
       </View>
@@ -308,7 +314,13 @@ export default function OnboardingScreen({
                 <Text style={styles.description}>{screen.description}</Text>
               </View>
 
-              <TouchableOpacity style={styles.primaryButton} onPress={goToNext}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => {
+                  haptics.medium();
+                  goToNext();
+                }}
+              >
                 <Text style={styles.primaryButtonText}>
                   {screen.buttonText}
                 </Text>
@@ -330,7 +342,10 @@ export default function OnboardingScreen({
         {SCREENS.map((_, index) => (
           <TouchableOpacity
             key={index}
-            onPress={() => goToIndex(index)}
+            onPress={() => {
+              haptics.selection();
+              goToIndex(index);
+            }}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Animated.View

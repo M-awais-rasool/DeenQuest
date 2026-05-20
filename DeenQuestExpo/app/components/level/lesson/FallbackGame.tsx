@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { MiniGame } from "../../../store/services/api";
 
@@ -23,7 +24,13 @@ export function FallbackGame({
         </Text>
         <Text style={s.fallbackDesc}>{game.description}</Text>
       </View>
-      <TouchableOpacity style={s.nextBtn} onPress={() => onFinish()}>
+      <TouchableOpacity
+        style={s.nextBtn}
+        onPress={() => {
+          haptics.medium();
+          onFinish();
+        }}
+      >
         <Text style={s.nextBtnText}>COMPLETE</Text>
       </TouchableOpacity>
     </View>

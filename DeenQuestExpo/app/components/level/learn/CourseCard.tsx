@@ -7,6 +7,7 @@ import {
   Animated,
 } from "react-native";
 import { Lock, ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import { Box3D, STATIC_ANIM } from "./Box3D";
 import type { CourseConfig } from "./types";
@@ -98,7 +99,10 @@ export const CourseCard = memo(function CourseCard({
       ]}
     >
       <TouchableOpacity
-        onPress={onPress}
+        onPress={() => {
+          if (!isLocked) haptics.light();
+          onPress();
+        }}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={isLocked}

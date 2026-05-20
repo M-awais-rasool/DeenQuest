@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { Sparkles, Star } from "lucide-react-native";
+import { haptics } from "../../utils/haptics";
 import { theme } from "../../theme/themes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
@@ -48,7 +49,7 @@ export function RewardsScreen() {
     const toShow = pendingUnlocks[pendingUnlocks.length - 1];
     dispatch(clearPendingRewardUnlocks());
     setActiveUnlock(toShow);
-    Vibration.vibrate([0, 60, 40, 110]);
+    haptics.success();
     popAnim.setValue(0.75);
     fadeAnim.setValue(0);
     ringAnim.setValue(0.5);

@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { Star } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import { type NewlyGrantedReward } from "../../../store/services/api";
 import { RewardIcon } from "./RewardIcon";
@@ -83,7 +84,10 @@ export function UnlockModal({
 
             <TouchableOpacity
               style={[s.awesomeBtn, { backgroundColor: rt.accent }]}
-              onPress={onClose}
+              onPress={() => {
+                haptics.medium();
+                onClose();
+              }}
               activeOpacity={0.88}
             >
               <Text style={s.awesomeBtnText}>Awesome!</Text>

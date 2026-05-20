@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Flame } from "lucide-react-native";
+import { haptics } from "../utils/haptics";
 import { theme } from "../theme/themes";
 
 interface HeaderProps {
@@ -26,7 +27,13 @@ export const Header = ({ title, xp, Icon, onSettingsPress }: HeaderProps) => {
           <Text style={styles.xpText}>{xp.toLocaleString()} XP</Text>
         </View>
         {Icon && (
-          <TouchableOpacity style={styles.iconButton} onPress={onSettingsPress}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => {
+              haptics.light();
+              onSettingsPress?.();
+            }}
+          >
             <Icon color={theme.colors.text} size={20} />
           </TouchableOpacity>
         )}

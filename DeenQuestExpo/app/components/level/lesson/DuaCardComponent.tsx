@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useRecitation, RecitationPanel } from "./recitation";
@@ -43,7 +44,10 @@ export function DuaCardComponent({
       {(!hasRecitation || rec.hasResult) && (
         <TouchableOpacity
           style={s.continueBtn}
-          onPress={onComplete}
+          onPress={() => {
+            haptics.medium();
+            onComplete();
+          }}
           activeOpacity={0.8}
         >
           <Text style={s.continueBtnText}>I'VE LEARNED THIS</Text>

@@ -10,6 +10,7 @@ import {
   Share,
 } from "react-native";
 import { Flame, Settings, Trophy, Heart, Check } from "lucide-react-native";
+import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { Header } from "../../components/Header";
@@ -232,7 +233,10 @@ export function ProfileScreen({ navigation }: Props) {
               </Text>
             </View>
             <TouchableOpacity
-              onPress={() => navigation.navigate("RewardsScreen")}
+              onPress={() => {
+                haptics.light();
+                navigation.navigate("RewardsScreen");
+              }}
             >
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>

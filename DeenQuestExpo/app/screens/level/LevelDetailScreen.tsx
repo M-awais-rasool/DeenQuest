@@ -18,6 +18,7 @@ import {
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
+import { haptics } from "../../utils/haptics";
 import { theme } from "../../theme/themes";
 import { useGetLevelDetailQuery } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
@@ -90,7 +91,10 @@ export function LevelDetailScreen() {
         {/* Header */}
         <View style={s.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              haptics.light();
+              navigation.goBack();
+            }}
             style={s.backBtn}
           >
             <ArrowLeft size={22} color={theme.colors.text} />
@@ -160,7 +164,10 @@ export function LevelDetailScreen() {
                 isCurrent && s.lessonCurrent,
                 isLocked && s.lessonLocked,
               ]}
-              onPress={() => handleStartLesson(index)}
+              onPress={() => {
+                haptics.light();
+                handleStartLesson(index);
+              }}
               disabled={isLocked}
               activeOpacity={0.7}
             >
@@ -197,7 +204,10 @@ export function LevelDetailScreen() {
         <Text style={s.sectionTitle}>MINI GAME</Text>
         <TouchableOpacity
           style={[s.miniGameCard, !allLessonsDone && s.miniGameLocked]}
-          onPress={handleStartMiniGame}
+          onPress={() => {
+            haptics.medium();
+            handleStartMiniGame();
+          }}
           disabled={!allLessonsDone}
           activeOpacity={0.7}
         >

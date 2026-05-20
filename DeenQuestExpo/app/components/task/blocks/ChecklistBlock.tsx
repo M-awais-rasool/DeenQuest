@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { BlockComponentProps } from "./types";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 
 export const ChecklistBlock = ({
@@ -25,6 +26,7 @@ export const ChecklistBlock = ({
 
   const toggle = (i: number) => {
     if (isLocked || checked[i]) return;
+    haptics.light();
     setChecked((prev) => {
       const next = [...prev];
       next[i] = true;

@@ -1,5 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { haptics } from "../utils/haptics";
 import { theme } from "../theme/themes";
 
 interface TactileButtonProps {
@@ -19,10 +20,19 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
 }) => {
   const isPrimary = variant === "primary";
 
+  const handlePressIn = () => {
+    if (isPrimary) {
+      haptics.medium();
+    } else {
+      haptics.light();
+    }
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={onPress}
+      onPressIn={handlePressIn}
       style={[
         styles.button,
         isPrimary ? styles.primaryButton : styles.secondaryButton,

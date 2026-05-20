@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { CheckCircle, Circle, ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
@@ -13,6 +14,7 @@ export function PrayerChecklistComponent({
   const [checked, setChecked] = useState<Set<number>>(new Set());
 
   const toggle = (idx: number) => {
+    haptics.light();
     setChecked((prev) => {
       const next = new Set(prev);
       if (next.has(idx)) next.delete(idx);
@@ -45,8 +47,14 @@ export function PrayerChecklistComponent({
       })}
 
       {allChecked && (
-        <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
-          <Text style={s.continueBtnText}>ALL DONE!</Text>
+        <TouchableOpacity
+          style={s.continueBtn}
+          onPress={() => {
+            haptics.medium();
+            onComplete();
+          }}
+        >
+          <Text style={s.continueBtnText}>CONTINUE</Text>
           <ChevronRight size={18} color={theme.colors.onPrimary} />
         </TouchableOpacity>
       )}

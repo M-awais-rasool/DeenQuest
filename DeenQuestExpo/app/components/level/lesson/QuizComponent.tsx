@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { CheckCircle2, XCircle, ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
@@ -17,6 +18,11 @@ export function QuizComponent({ lesson, onComplete }: LessonComponentProps) {
   const handleSelect = (idx: number) => {
     if (hasAnswered) return;
     setSelected(idx);
+    if (idx === correctIndex) {
+      haptics.success();
+    } else {
+      haptics.error();
+    }
   };
 
   return (
@@ -80,7 +86,13 @@ export function QuizComponent({ lesson, onComplete }: LessonComponentProps) {
       )}
 
       {hasAnswered && (
-        <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
+        <TouchableOpacity
+          style={s.continueBtn}
+          onPress={() => {
+            haptics.medium();
+            onComplete();
+          }}
+        >
           <Text style={s.continueBtnText}>CONTINUE</Text>
           <ChevronRight size={18} color={theme.colors.onPrimary} />
         </TouchableOpacity>

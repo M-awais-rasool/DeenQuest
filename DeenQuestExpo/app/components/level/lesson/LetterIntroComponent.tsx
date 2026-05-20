@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Volume2, ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
@@ -43,7 +44,10 @@ export function LetterIntroComponent({
         <TouchableOpacity
           key={idx}
           style={[s.letterCard, speakingIdx === idx && s.letterCardActive]}
-          onPress={() => speakLetter(item.letter, idx)}
+          onPress={() => {
+            haptics.light();
+            speakLetter(item.letter, idx);
+          }}
           activeOpacity={0.7}
         >
           <Text style={s.arabicLetter}>{item.letter}</Text>
@@ -79,7 +83,13 @@ export function LetterIntroComponent({
         </View>
       )}
 
-      <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
+      <TouchableOpacity
+        style={s.continueBtn}
+        onPress={() => {
+          haptics.medium();
+          onComplete();
+        }}
+      >
         <Text style={s.continueBtnText}>CONTINUE</Text>
         <ChevronRight size={18} color={theme.colors.onPrimary} />
       </TouchableOpacity>

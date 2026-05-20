@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
@@ -16,7 +17,13 @@ export function HadithComponent({ lesson, onComplete }: LessonComponentProps) {
         <Text style={s.reference}>— {data.reference}</Text>
       </View>
 
-      <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
+      <TouchableOpacity
+        style={s.continueBtn}
+        onPress={() => {
+          haptics.medium();
+          onComplete();
+        }}
+      >
         <Text style={s.continueBtnText}>CONTINUE</Text>
         <ChevronRight size={18} color={theme.colors.onPrimary} />
       </TouchableOpacity>

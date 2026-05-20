@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Sparkles,
 } from "lucide-react-native";
+import { haptics } from "../../../../utils/haptics";
 import { theme } from "../../../../theme/themes";
 import type { RecitationWordResult } from "../../../../store/services/api";
 import type { UseRecitationReturn } from "./useRecitation";
@@ -256,7 +257,10 @@ export const RecitationPanel = React.memo(function RecitationPanel({
             {/* Speaker */}
             <View style={s.speakerWrap}>
               <TouchableOpacity
-                onPress={handlePlay}
+                onPress={() => {
+                  haptics.light();
+                  handlePlay();
+                }}
                 disabled={isRecording || isProcessing}
                 style={[
                   s.controlBtn,
@@ -283,7 +287,10 @@ export const RecitationPanel = React.memo(function RecitationPanel({
             <View style={s.recordWrap}>
               <PulsingRing active={isRecording} />
               <TouchableOpacity
-                onPress={handleRecord}
+                onPress={() => {
+                  haptics.medium();
+                  handleRecord();
+                }}
                 disabled={isProcessing}
                 style={[
                   s.recordBtn,
@@ -377,7 +384,10 @@ export const RecitationPanel = React.memo(function RecitationPanel({
 
           {/* Try Again */}
           <TouchableOpacity
-            onPress={handleRetry}
+            onPress={() => {
+              haptics.light();
+              handleRetry();
+            }}
             style={s.retryBtn}
             activeOpacity={0.8}
           >

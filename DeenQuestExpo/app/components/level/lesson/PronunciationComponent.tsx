@@ -7,6 +7,7 @@ import {
   Animated,
 } from "react-native";
 import { Volume2, ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
@@ -37,7 +38,10 @@ export function PronunciationComponent({
         <TouchableOpacity
           key={idx}
           style={[s.card, speakingIdx === idx && s.cardActive]}
-          onPress={() => speak(item.arabic, idx)}
+          onPress={() => {
+            haptics.light();
+            speak(item.arabic, idx);
+          }}
           activeOpacity={0.7}
         >
           <Text style={s.arabic}>{item.arabic}</Text>
@@ -58,7 +62,13 @@ export function PronunciationComponent({
         </TouchableOpacity>
       ))}
 
-      <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
+      <TouchableOpacity
+        style={s.continueBtn}
+        onPress={() => {
+          haptics.medium();
+          onComplete();
+        }}
+      >
         <Text style={s.continueBtnText}>CONTINUE</Text>
         <ChevronRight size={18} color={theme.colors.onPrimary} />
       </TouchableOpacity>

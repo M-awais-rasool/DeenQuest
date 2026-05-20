@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Award, ChevronRight } from "lucide-react-native";
+import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 
@@ -27,8 +28,14 @@ export function CertificateComponent({
         )}
       </View>
 
-      <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
-        <Text style={s.continueBtnText}>CLAIM CERTIFICATE</Text>
+      <TouchableOpacity
+        style={s.continueBtn}
+        onPress={() => {
+          haptics.medium();
+          onComplete();
+        }}
+      >
+        <Text style={s.continueBtnText}>CONTINUE</Text>
         <ChevronRight size={18} color={theme.colors.onPrimary} />
       </TouchableOpacity>
     </View>

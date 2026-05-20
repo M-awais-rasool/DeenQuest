@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
+import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { TactileButton } from "../../components/TactileButton";
@@ -77,7 +78,10 @@ export function EditProfileScreen({ navigation }: Props) {
     <ScreenWrapper>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            haptics.light();
+            navigation.goBack();
+          }}
           style={styles.backButton}
         >
           <ArrowLeft color={theme.colors.text} size={24} />

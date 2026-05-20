@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { ArrowLeft, Flame, Trophy, Heart } from "lucide-react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { theme } from "../../theme/themes";
@@ -56,7 +57,13 @@ export function PublicProfileScreen({ navigation, route }: Props) {
     return (
       <ScreenWrapper>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => {
+              haptics.light();
+              handleBack();
+            }}
+            style={styles.backButton}
+          >
             <ArrowLeft color={theme.colors.text} size={24} />
           </TouchableOpacity>
           <View style={styles.backButton} />
@@ -81,7 +88,13 @@ export function PublicProfileScreen({ navigation, route }: Props) {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => {
+            haptics.light();
+            handleBack();
+          }}
+          style={styles.backButton}
+        >
           <ArrowLeft color={theme.colors.text} size={24} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>

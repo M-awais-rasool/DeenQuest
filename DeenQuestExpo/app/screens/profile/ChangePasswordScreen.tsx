@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react-native";
+import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { TactileButton } from "../../components/TactileButton";
 import { theme } from "../../theme/themes";
@@ -60,7 +61,10 @@ export function ChangePasswordScreen({ navigation }: Props) {
     <ScreenWrapper>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            haptics.light();
+            navigation.goBack();
+          }}
           style={styles.backButton}
         >
           <ArrowLeft color={theme.colors.text} size={24} />
@@ -89,7 +93,10 @@ export function ChangePasswordScreen({ navigation }: Props) {
             />
             <TouchableOpacity
               style={styles.eyeButton}
-              onPress={() => setShowCurrent((v) => !v)}
+              onPress={() => {
+                haptics.light();
+                setShowCurrent((v) => !v);
+              }}
             >
               {showCurrent ? (
                 <EyeOff color={theme.colors.textMuted} size={20} />
@@ -114,7 +121,10 @@ export function ChangePasswordScreen({ navigation }: Props) {
             />
             <TouchableOpacity
               style={styles.eyeButton}
-              onPress={() => setShowNew((v) => !v)}
+              onPress={() => {
+                haptics.light();
+                setShowNew((v) => !v);
+              }}
             >
               {showNew ? (
                 <EyeOff color={theme.colors.textMuted} size={20} />

@@ -11,6 +11,7 @@ import { X, ChevronRight } from "lucide-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
+import { haptics } from "../../utils/haptics";
 import { theme } from "../../theme/themes";
 import {
   useGetLevelDetailQuery,
@@ -80,10 +81,16 @@ const LessonRenderer = memo(function LessonRenderer({
               </Text>
             ))}
         </View>
-        <TouchableOpacity style={s.continueBtn} onPress={onComplete}>
-          <Text style={s.continueBtnText}>CONTINUE</Text>
-          <ChevronRight size={18} color={theme.colors.onPrimary} />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={s.continueBtn}
+            onPress={() => {
+              haptics.medium();
+              onComplete();
+            }}
+          >
+            <Text style={s.continueBtnText}>CONTINUE</Text>
+            <ChevronRight size={18} color={theme.colors.onPrimary} />
+          </TouchableOpacity>
       </View>
     );
   }
@@ -168,7 +175,13 @@ export function LessonPlayerScreen() {
       <View style={s.container}>
         {/* Top bar */}
         <View style={s.topBar}>
-          <TouchableOpacity onPress={handleClose} style={s.closeBtn}>
+          <TouchableOpacity
+            onPress={() => {
+              haptics.light();
+              handleClose();
+            }}
+            style={s.closeBtn}
+          >
             <X size={22} color={theme.colors.text} />
           </TouchableOpacity>
           <ProgressBar current={currentIndex} total={level.lessons.length} />

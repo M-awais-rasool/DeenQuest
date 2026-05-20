@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { haptics } from "../../utils/haptics";
 import { theme } from "../../theme/themes";
 
 interface Props {
@@ -22,7 +23,10 @@ export const CompleteButton = ({
 }: Props) => (
   <TouchableOpacity
     style={[s.btn, disabled && s.btnDisabled]}
-    onPress={onPress}
+    onPress={() => {
+      haptics.medium();
+      onPress();
+    }}
     disabled={disabled || loading}
     activeOpacity={0.8}
   >

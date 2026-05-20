@@ -17,6 +17,7 @@ import {
   Trash2,
   ArrowLeft,
 } from "lucide-react-native";
+import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { theme } from "../../theme/themes";
 import { useAppDispatch } from "../../store/hooks";
@@ -45,6 +46,7 @@ export function SettingsScreen({ navigation }: Props) {
   const [deleteAccount, { isLoading: isDeleting }] = useDeleteAccountMutation();
 
   const handleLogout = () => {
+    haptics.heavy();
     Alert.alert("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -56,6 +58,7 @@ export function SettingsScreen({ navigation }: Props) {
   };
 
   const handleDeleteAccount = () => {
+    haptics.heavy();
     Alert.alert(
       "Delete Account",
       "This action is permanent and cannot be undone. All your progress will be lost.",
@@ -138,7 +141,10 @@ export function SettingsScreen({ navigation }: Props) {
     <ScreenWrapper>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            haptics.light();
+            navigation.goBack();
+          }}
           style={styles.backButton}
         >
           <ArrowLeft color={theme.colors.text} size={24} />
@@ -165,7 +171,14 @@ export function SettingsScreen({ navigation }: Props) {
                     styles.settingsRow,
                     itemIdx < section.items.length - 1 && styles.rowBorder,
                   ]}
-                  onPress={item.onPress}
+                  onPress={() => {
+                    if (!item.danger) {
+                      haptics.light();
+                    } else {
+                      haptics.medium();
+                    }
+                    item.onPress();
+                  }}
                   disabled={isDeleting && item.label === "Delete Account"}
                 >
                   <View style={styles.rowLeft}>
