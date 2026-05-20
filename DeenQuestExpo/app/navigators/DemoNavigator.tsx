@@ -1,4 +1,11 @@
-import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  Animated,
+} from "react-native";
+import { useRef, useEffect } from "react";
 import {
   createBottomTabNavigator,
   BottomTabBarProps,
@@ -34,7 +41,64 @@ const TAB_CONFIG: {
   { name: "ProfileScreen", label: "PROFILE", icon: User },
 ];
 
+const SPRING = { friction: 8, tension: 120, useNativeDriver: true };
+
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+  const tabCount = state.routes.length;
+
+  const iconScales = useRef(
+    Array.from({ length: tabCount }, () => new Animated.Value(1))
+  ).current;
+  const iconTranslateYs = useRef(
+    Array.from({ length: tabCount }, () => new Animated.Value(0))
+  ).current;
+  const labelOpacities = useRef(
+    Array.from({ length: tabCount }, () => new Animated.Value(0.5))
+  ).current;
+  const bgScales = useRef(
+    Array.from({ length: tabCount }, () => new Animated.Value(0.7))
+  ).current;
+  const bgOpacities = useRef(
+    Array.from({ length: tabCount }, () => new Animated.Value(0))
+  ).current;
+  const indicatorScales = useRef(
+    Array.from({ length: tabCount }, () => new Animated.Value(0))
+  ).current;
+
+  useEffect(() => {
+    for (let i = 0; i < tabCount; i++) {
+      const isFocused = state.index === i;
+      Animated.parallel([
+        Animated.spring(iconScales[i], {
+          toValue: isFocused ? 1.14 : 1,
+          ...SPRING,
+        }),
+        Animated.spring(iconTranslateYs[i], {
+          toValue: isFocused ? -3 : 0,
+          ...SPRING,
+        }),
+        Animated.timing(labelOpacities[i], {
+          toValue: isFocused ? 1 : 0.45,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.spring(bgScales[i], {
+          toValue: isFocused ? 1 : 0.7,
+          ...SPRING,
+        }),
+        Animated.timing(bgOpacities[i], {
+          toValue: isFocused ? 1 : 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.spring(indicatorScales[i], {
+          toValue: isFocused ? 1 : 0,
+          ...SPRING,
+        }),
+      ]).start();
+    }
+  }, [state.index, tabCount]);
+
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
@@ -59,23 +123,46 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             key={route.key}
             style={styles.tab}
             onPress={onPress}
+            activeOpacity={0.7}
           >
-            <View
+            {/* Icon wrapper with background pill */}
+            <View style={styles.iconWrapper}>
+              <Animated.View
+                style={[
+                  styles.activeBg,
+                  {
+                    opacity: bgOpacities[index],
+                    transform: [{ scale: bgScales[index] }],
+                  },
+                ]}
+              />
+              <Animated.View
+                style={{
+                  transform: [
+                    { scale: iconScales[index] },
+                    { translateY: iconTranslateYs[index] },
+                  ],
+                }}
+              >
+                <TabIcon
+                  size={24}
+                  color={
+                    isFocused ? theme.colors.primary : theme.colors.textMuted
+                  }
+                />
+              </Animated.View>
+            </View>
+
+            {/* Label */}
+            <Animated.Text
               style={[
-                styles.iconContainer,
-                isFocused && styles.activeIconContainer,
+                styles.label,
+                isFocused && styles.activeLabel,
+                { opacity: labelOpacities[index] },
               ]}
             >
-              <TabIcon
-                size={24}
-                color={
-                  isFocused ? theme.colors.primary : theme.colors.textMuted
-                }
-              />
-            </View>
-            <Text style={[styles.label, isFocused && styles.activeLabel]}>
               {tabConf?.label}
-            </Text>
+            </Animated.Text>
           </TouchableOpacity>
         );
       })}
@@ -113,26 +200,38 @@ const styles = StyleSheet.create({
   tab: {
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 4,
+    minWidth: 56,
   },
-  iconContainer: {
+  iconWrapper: {
     alignItems: "center",
     justifyContent: "center",
-    padding: 8,
-    borderRadius: 16,
+    width: 38,
+    height: 38,
   },
-  activeIconContainer: {
+  activeBg: {
+    position: "absolute",
+    marginTop: -6,
+    width: 38,
+    height: 38,
+    borderRadius: 14,
     backgroundColor: theme.colors.primary10,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.primary,
   },
   label: {
     fontSize: 10,
     fontWeight: "900",
     textTransform: "uppercase",
     color: theme.colors.textMuted,
-    marginTop: 4,
+    marginTop: 2,
   },
   activeLabel: {
     color: theme.colors.primary,
+  },
+  indicator: {
+    width: 16,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: theme.colors.primary,
+    marginTop: 4,
   },
 });
