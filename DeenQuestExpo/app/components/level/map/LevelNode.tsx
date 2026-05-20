@@ -5,7 +5,6 @@ import { Lock, Star, Trophy } from "lucide-react-native";
 import type { LevelWithStatus } from "../../../store/services/api";
 import { STATUS_CONFIG, getNodeOffset } from "./constants";
 import { TreasureBadge } from "./TreasureBadge";
-import { StarsDisplay } from "./StarsDisplay";
 import { LevelPopup } from "./LevelPopup";
 import { s } from "./styles";
 
@@ -196,8 +195,6 @@ export const LevelNode = memo(function LevelNode({
         >
           {level.title}
         </Text>
-
-        {isCompleted && <StarsDisplay stars={level.stars} />}
 
         {level.status === "in_progress" && (
           <View style={s.progressPill}>

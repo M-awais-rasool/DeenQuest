@@ -13,7 +13,7 @@ export function FallbackGame({
   onFinish,
 }: {
   game: MiniGame;
-  onFinish: (stars: number) => void;
+  onFinish: () => void;
 }) {
   return (
     <View>
@@ -23,7 +23,7 @@ export function FallbackGame({
         </Text>
         <Text style={s.fallbackDesc}>{game.description}</Text>
       </View>
-      <TouchableOpacity style={s.nextBtn} onPress={() => onFinish(3)}>
+      <TouchableOpacity style={s.nextBtn} onPress={() => onFinish()}>
         <Text style={s.nextBtnText}>COMPLETE</Text>
       </TouchableOpacity>
     </View>

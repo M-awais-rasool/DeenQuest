@@ -243,7 +243,6 @@ export interface Level {
 
 export interface LevelWithStatus extends Level {
   status: LevelStatus;
-  stars: number;
   lessons_complete: number;
 }
 
@@ -252,7 +251,6 @@ export interface UserLevel {
   user_id: string;
   level_id: number;
   course_type: CourseType;
-  stars: number;
   lessons_complete: number;
   mini_game_done: boolean;
   completed: boolean;
@@ -261,7 +259,6 @@ export interface UserLevel {
 
 export interface LevelCompletionResult {
   xp_earned: number;
-  stars: number;
   unlock_reward: string;
   treasure_open: boolean;
   next_level_id: number;
@@ -289,7 +286,6 @@ export interface RecitationWordResult {
 
 export interface RecitationCheckResult {
   score: number; // 0–100
-  stars: number; // 1–3
   words: RecitationWordResult[];
   message: string;
   xp_earned: number;
@@ -501,13 +497,13 @@ export const API = createApi({
     }),
     completeLevel: builder.mutation<
       APIResponse<LevelCompletionResult>,
-      { levelId: number; stars: number; courseType?: CourseType }
+      { levelId: number; courseType?: CourseType }
     >({
-      query: ({ levelId, stars, courseType }) => ({
+      query: ({ levelId, courseType }) => ({
         url: `/api/v1/levels/${levelId}/complete`,
         method: "POST",
         params: courseType ? { course_type: courseType } : undefined,
-        body: { stars, course_type: courseType },
+        body: { course_type: courseType },
       }),
       invalidatesTags: ["Levels", "Progress", "Leaderboard", "Rewards"],
     }),

@@ -155,11 +155,6 @@ export const s = StyleSheet.create({
     color: theme.colors.textMuted,
     opacity: 0.5,
   },
-  starsRow: {
-    flexDirection: "row",
-    gap: 2,
-    marginTop: 4,
-  },
   progressPill: {
     backgroundColor: theme.colors.primary18,
     paddingHorizontal: 10,

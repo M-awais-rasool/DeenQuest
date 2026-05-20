@@ -12,7 +12,6 @@ export const ProgressSummary = memo(function ProgressSummary({
   xp: number;
 }) {
   const completed = levels.filter((l) => l.status === "completed").length;
-  const totalStars = levels.reduce((sum, l) => sum + l.stars, 0);
   const pct = levels.length > 0 ? (completed / levels.length) * 100 : 0;
 
   return (
@@ -20,10 +19,7 @@ export const ProgressSummary = memo(function ProgressSummary({
       <View style={s.summaryRow}>
         <SummaryStat value={`${completed}/${levels.length}`} label="Levels" />
         <View style={s.summaryDivider} />
-        <SummaryStat
-          value={`${totalStars}/${levels.length * 3}`}
-          label="Stars"
-        />
+        <SummaryStat value={`${Math.round(pct)}%`} label="Complete" />
         <View style={s.summaryDivider} />
         <SummaryStat value={String(xp)} label="Total XP" />
       </View>

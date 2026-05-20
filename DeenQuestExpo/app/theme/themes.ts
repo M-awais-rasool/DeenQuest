@@ -81,6 +81,7 @@ export const theme = {
     surface82: "rgba(31, 31, 31, 0.82)",
     background60: "rgba(19, 19, 19, 0.6)",
     background80: "rgba(19, 19, 19, 0.8)",
+    background90: "rgba(19, 19, 19, 0.9)",
     outline10: "rgba(64, 73, 61, 0.1)",
     outline20: "rgba(64, 73, 61, 0.2)",
     outline25: "rgba(64, 73, 61, 0.25)",

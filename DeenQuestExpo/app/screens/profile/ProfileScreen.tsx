@@ -525,9 +525,6 @@ const styles = StyleSheet.create({
   dayBoxActive: {
     backgroundColor: theme.colors.primary,
   },
-  dayBoxStar: {
-    backgroundColor: theme.colors.secondary,
-  },
   dayBoxEmpty: {
     backgroundColor: theme.colors.surfaceHigh,
     opacity: 0.4,

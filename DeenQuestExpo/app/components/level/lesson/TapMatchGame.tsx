@@ -13,7 +13,7 @@ export function TapMatchGame({
   onFinish,
 }: {
   game: MiniGame;
-  onFinish: (stars: number) => void;
+  onFinish: () => void;
 }) {
   const data = game.data as Record<string, any>;
   const pairs = useMemo<Array<{ arabic: string; answer: string }>>(
@@ -27,7 +27,6 @@ export function TapMatchGame({
   const [matchedCount, setMatchedCount] = useState(0);
   const [selectedArabic, setSelectedArabic] = useState<string | null>(null);
   const [matched, setMatched] = useState<Set<string>>(new Set());
-  const [mistakes, setMistakes] = useState(0);
 
   const shuffledAnswers = useMemo(
     () => [...pairs].sort(() => Math.random() - 0.5),
@@ -46,11 +45,8 @@ export function TapMatchGame({
       setMatched((prev) => new Set(prev).add(selectedArabic));
       setMatchedCount((c) => c + 1);
       if (matchedCount + 1 >= pairs.length) {
-        const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
-        onFinish(stars);
+        onFinish();
       }
-    } else {
-      setMistakes((m) => m + 1);
     }
     setSelectedArabic(null);
   };

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,13 +14,11 @@ import { theme } from "../../theme/themes";
 import {
   useGetLevelDetailQuery,
   useCompleteLevelMutation,
-  type NewlyGrantedReward,
 } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
-import { RewardCelebrationModal } from "../../components/level/lesson/RewardCelebrationModal";
-import { CompletionScreen } from "../../components/level/lesson/CompletionScreen";
+import { CourseCompletionScreen } from "../../components/level/lesson/CourseCompletionScreen";
 import { TapMatchGame } from "../../components/level/lesson/TapMatchGame";
 import { FallbackGame } from "../../components/level/lesson/FallbackGame";
 import { MCQGame } from "../../components/level/lesson/MCQGame";
@@ -37,58 +35,29 @@ export function MiniGamePlayerScreen() {
   const level = res?.data;
   const [completeLevel] = useCompleteLevelMutation();
 
-  const [result, setResult] = useState<{
-    stars: number;
+  const [completionResult, setCompletionResult] = useState<{
     xpEarned: number;
-    rewards: NewlyGrantedReward[];
   } | null>(null);
-  const [rewardQueueIdx, setRewardQueueIdx] = useState(0);
-  const [showRewardModal, setShowRewardModal] = useState(false);
-  const rewardTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
 
   const handleFinish = useCallback(
-    async (stars: number) => {
+    async () => {
       if (!level) return;
       try {
         const apiRes = await completeLevel({
           levelId: level.id,
-          stars,
           courseType: level.course_type ?? courseType,
         }).unwrap();
-        const rewards = apiRes.data?.new_rewards ?? [];
-        setResult({
-          stars,
+        setCompletionResult({
           xpEarned: apiRes.data?.xp_earned ?? level.xp_reward,
-          rewards,
         });
       } catch {
-        setResult({ stars, xpEarned: level.xp_reward, rewards: [] });
+        setCompletionResult({ xpEarned: level.xp_reward });
       }
     },
     [courseType, level, completeLevel],
   );
 
-  useEffect(() => () => clearTimeout(rewardTimerRef.current), []);
-
-  const handleClaimReward = useCallback(() => {
-    clearTimeout(rewardTimerRef.current);
-    setShowRewardModal(true);
-  }, []);
-
-  const handleRewardDismiss = useCallback(() => {
-    setShowRewardModal(false);
-    const nextIdx = rewardQueueIdx + 1;
-    if (result && nextIdx < result.rewards.length) {
-      rewardTimerRef.current = setTimeout(() => {
-        setRewardQueueIdx(nextIdx);
-        setShowRewardModal(true);
-      }, 350);
-    }
-  }, [rewardQueueIdx, result]);
-
-  const handleDone = useCallback(() => {
+  const handleContinue = useCallback(() => {
     navigation.popToTop();
   }, [navigation]);
 
@@ -100,20 +69,12 @@ export function MiniGamePlayerScreen() {
     );
   }
 
-  if (result) {
+  if (completionResult) {
     return (
-      <ScreenWrapper innerStyle={{flex: 1}}>
-        <CompletionScreen
-          stars={result.stars}
-          xpEarned={result.xpEarned}
-          hasRewards={result.rewards.length > 0}
-          onDone={handleDone}
-          onClaimReward={handleClaimReward}
-        />
-        <RewardCelebrationModal
-          reward={result.rewards[rewardQueueIdx] ?? null}
-          visible={showRewardModal}
-          onDismiss={handleRewardDismiss}
+      <ScreenWrapper innerStyle={{ flex: 1 }}>
+        <CourseCompletionScreen
+          xpEarned={completionResult.xpEarned}
+          onContinue={handleContinue}
         />
       </ScreenWrapper>
     );

@@ -11,7 +11,6 @@ import {
   Volume2,
   Mic,
   MicOff,
-  Star,
   RotateCcw,
   Sparkles,
 } from "lucide-react-native";
@@ -56,26 +55,6 @@ const WORD_BG: Record<string, string> = {
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-export const StarRow = React.memo(function StarRow({
-  stars,
-}: {
-  stars: number;
-}) {
-  return (
-    <View style={s.starRow}>
-      {[1, 2, 3].map((n) => (
-        <View key={n} style={[s.starWrap, n <= stars && s.starActive]}>
-          <Star
-            size={20}
-            color={n <= stars ? theme.colors.secondary : theme.colors.outline}
-            fill={n <= stars ? theme.colors.secondary : "transparent"}
-          />
-        </View>
-      ))}
-    </View>
-  );
-});
 
 export const ScoreBadge = React.memo(function ScoreBadge({
   score,
@@ -360,11 +339,10 @@ export const RecitationPanel = React.memo(function RecitationPanel({
             },
           ]}
         >
-          {/* Score + stars + XP */}
+          {/* Score + XP */}
           <View style={s.scoreRow}>
             <ScoreBadge score={result.score} />
             <View style={s.scoreMeta}>
-              <StarRow stars={result.stars} />
               <View style={s.xpEarnedRow}>
                 <Sparkles size={13} color={theme.colors.secondary} />
                 <Text style={s.xpEarnedText}>
@@ -542,16 +520,6 @@ const s = StyleSheet.create({
   scoreNum: { fontSize: 24, fontWeight: "900" },
   scorePct: { fontSize: 13, fontWeight: "700", marginTop: 6 },
   scoreMeta: { flex: 1, gap: 8 },
-  starRow: { flexDirection: "row", gap: 5 },
-  starWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: theme.colors.surfaceHigh,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  starActive: { backgroundColor: theme.colors.secondary10 },
   xpEarnedRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   xpEarnedText: {
     color: theme.colors.secondary,

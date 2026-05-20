@@ -13,7 +13,7 @@ export function MCQGame({
   onFinish,
 }: {
   game: MiniGame;
-  onFinish: (stars: number) => void;
+  onFinish: () => void;
 }) {
   const data = game.data as Record<string, any>;
   const questions: Array<{
@@ -47,9 +47,7 @@ export function MCQGame({
       setCurrentQ((c) => c + 1);
       setSelected(null);
     } else {
-      const pct = score / questions.length;
-      const stars = pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : 1;
-      onFinish(stars);
+      onFinish();
     }
   };
 
