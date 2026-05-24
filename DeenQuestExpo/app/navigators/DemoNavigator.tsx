@@ -13,10 +13,11 @@ import {
 import {
   Home,
   BookOpen,
-  Trophy,
-  BarChart2,
+  Book,
+  TrendingUp,
   User,
   type LucideIcon,
+  Trophy,
 } from "lucide-react-native";
 import { haptics } from "../utils/haptics";
 import type { DemoTabParamList } from "./navigationTypes";
@@ -34,11 +35,11 @@ const TAB_CONFIG: {
   label: string;
   icon: LucideIcon;
 }[] = [
-  { name: "HomeScreen", label: "HOME", icon: Home },
-  { name: "PathScreen", label: "LEARN", icon: BookOpen },
-  { name: "RewardsScreen", label: "REWARDS", icon: Trophy },
-  { name: "LeaderboardScreen", label: "RANK", icon: BarChart2 },
-  { name: "ProfileScreen", label: "PROFILE", icon: User },
+  { name: "HomeScreen", label: "Home", icon: Home },
+  { name: "PathScreen", label: "Learn", icon: BookOpen },
+  { name: "RewardsScreen", label: "Rewards", icon: Trophy },
+  { name: "LeaderboardScreen", label: "Progress", icon: TrendingUp },
+  { name: "ProfileScreen", label: "Profile", icon: User },
 ];
 
 const SPRING = { friction: 8, tension: 120, useNativeDriver: true };
@@ -49,17 +50,8 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const iconScales = useRef(
     Array.from({ length: tabCount }, () => new Animated.Value(1))
   ).current;
-  const iconTranslateYs = useRef(
-    Array.from({ length: tabCount }, () => new Animated.Value(0))
-  ).current;
   const labelOpacities = useRef(
     Array.from({ length: tabCount }, () => new Animated.Value(0.5))
-  ).current;
-  const bgScales = useRef(
-    Array.from({ length: tabCount }, () => new Animated.Value(0.7))
-  ).current;
-  const bgOpacities = useRef(
-    Array.from({ length: tabCount }, () => new Animated.Value(0))
   ).current;
   const indicatorScales = useRef(
     Array.from({ length: tabCount }, () => new Animated.Value(0))
@@ -70,24 +62,11 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       const isFocused = state.index === i;
       Animated.parallel([
         Animated.spring(iconScales[i], {
-          toValue: isFocused ? 1.14 : 1,
-          ...SPRING,
-        }),
-        Animated.spring(iconTranslateYs[i], {
-          toValue: isFocused ? -3 : 0,
+          toValue: isFocused ? 1.1 : 1,
           ...SPRING,
         }),
         Animated.timing(labelOpacities[i], {
-          toValue: isFocused ? 1 : 0.45,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-        Animated.spring(bgScales[i], {
-          toValue: isFocused ? 1 : 0.7,
-          ...SPRING,
-        }),
-        Animated.timing(bgOpacities[i], {
-          toValue: isFocused ? 1 : 0,
+          toValue: isFocused ? 1 : 0.5,
           duration: 180,
           useNativeDriver: true,
         }),
@@ -125,35 +104,20 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             onPress={onPress}
             activeOpacity={0.7}
           >
-            {/* Icon wrapper with background pill */}
-            <View style={styles.iconWrapper}>
-              <Animated.View
-                style={[
-                  styles.activeBg,
-                  {
-                    opacity: bgOpacities[index],
-                    transform: [{ scale: bgScales[index] }],
-                  },
-                ]}
+            <Animated.View
+              style={{
+                transform: [{ scale: iconScales[index] }],
+              }}
+            >
+              <TabIcon
+                size={24}
+                color={
+                  isFocused ? theme.colors.primary : theme.colors.textMuted
+                }
+                strokeWidth={isFocused ? 2.5 : 2}
               />
-              <Animated.View
-                style={{
-                  transform: [
-                    { scale: iconScales[index] },
-                    { translateY: iconTranslateYs[index] },
-                  ],
-                }}
-              >
-                <TabIcon
-                  size={24}
-                  color={
-                    isFocused ? theme.colors.primary : theme.colors.textMuted
-                  }
-                />
-              </Animated.View>
-            </View>
+            </Animated.View>
 
-            {/* Label */}
             <Animated.Text
               style={[
                 styles.label,
@@ -163,6 +127,16 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             >
               {tabConf?.label}
             </Animated.Text>
+
+            {/* Active indicator line */}
+            <Animated.View
+              style={[
+                styles.indicator,
+                {
+                  transform: [{ scaleX: indicatorScales[index] }],
+                },
+              ]}
+            />
           </TouchableOpacity>
         );
       })}
@@ -190,9 +164,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     backgroundColor: theme.colors.background,
-    borderTopWidth: 4,
+    borderTopWidth: 1,
     borderTopColor: theme.colors.surface,
-    paddingBottom: 20,
+    paddingBottom: 24,
     paddingTop: 10,
     justifyContent: "space-around",
     alignItems: "center",
@@ -202,36 +176,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 4,
     minWidth: 56,
-  },
-  iconWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 38,
-    height: 38,
-  },
-  activeBg: {
-    position: "absolute",
-    marginTop: -6,
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    backgroundColor: theme.colors.primary10,
+    gap: 4,
   },
   label: {
-    fontSize: 10,
-    fontWeight: "900",
-    textTransform: "uppercase",
+    fontSize: 11,
+    fontWeight: "600",
     color: theme.colors.textMuted,
     marginTop: 2,
   },
   activeLabel: {
     color: theme.colors.primary,
+    fontWeight: "700",
   },
   indicator: {
-    width: 16,
+    width: 20,
     height: 3,
     borderRadius: 2,
     backgroundColor: theme.colors.primary,
-    marginTop: 4,
+    marginTop: 2,
   },
 });
