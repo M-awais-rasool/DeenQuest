@@ -18,7 +18,6 @@ import {
   useLoginMutation,
   LoginRequest,
 } from "../../store/services/api";
-import { setOnboardingCompleted } from "../../store/storage/authStorage";
 import { useAppDispatch } from "../../store/hooks";
 import {
   setIsAuthenticated,
@@ -273,7 +272,6 @@ export default function OnboardingScreen({
           dispatch(setUser(loginResult.data.user));
           dispatch(setAccessToken(loginResult.data.access_token));
           dispatch(setIsAuthenticated(true));
-          await setOnboardingCompleted();
           navigation.reset({
             index: 0,
             routes: [{ name: "Demo" }],
@@ -285,7 +283,6 @@ export default function OnboardingScreen({
       }
     }
 
-    await setOnboardingCompleted();
     navigation.reset({
       index: 0,
       routes: [{ name: "Login" }],
