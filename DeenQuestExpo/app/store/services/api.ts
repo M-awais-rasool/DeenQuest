@@ -300,6 +300,21 @@ export interface CheckRecitationRequest {
   audioMimeType?: string;
 }
 
+// ─── Onboarding Types ───
+
+export interface OnboardingRequest {
+  quran_level: string;
+  weak_areas: string[];
+  daily_time: string;
+  motivations: string[];
+}
+
+export interface OnboardingResponse {
+  path_id: string;
+  course_type: CourseType;
+  message: string;
+}
+
 // ─── Reward Types ───
 
 export type RewardTrigger = "levels_completed" | "xp" | "streak_days";
@@ -536,6 +551,19 @@ export const API = createApi({
       invalidatesTags: ["Progress"],
     }),
 
+    // ─── Onboarding ───
+    generateLearningPath: builder.mutation<
+      APIResponse<OnboardingResponse>,
+      OnboardingRequest
+    >({
+      query: (data) => ({
+        url: "/api/v1/onboarding/generate-path",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["User", "Progress", "Levels"],
+    }),
+
     // ─── Rewards ───
     getRewards: builder.query<APIResponse<RewardWithStatus[]>, void>({
       query: () => ({ url: "/api/v1/rewards", method: "GET" }),
@@ -565,4 +593,5 @@ export const {
   useCompleteLevelMutation,
   useGetRewardsQuery,
   useCheckRecitationMutation,
+  useGenerateLearningPathMutation,
 } = API;

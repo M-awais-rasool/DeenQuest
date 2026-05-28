@@ -19,6 +19,7 @@ export type DemoTabParamList = {
 export type AppStackParamList = {
   Welcome: undefined;
   OnboardingScreen: undefined;
+  PersonalizedOnboarding: { email?: string; password?: string };
   Login: undefined;
   Signup: undefined;
   Demo: NavigatorScreenParams<DemoTabParamList>;

@@ -162,7 +162,10 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 
       await signup(payload).unwrap();
       dispatch(setError(null));
-      navigation.goBack();
+      navigation.navigate("PersonalizedOnboarding", {
+        email: payload.email,
+        password: payload.password,
+      });
     } catch (err: any) {
       const message = getErrorMessage(err);
       setFormError(message);

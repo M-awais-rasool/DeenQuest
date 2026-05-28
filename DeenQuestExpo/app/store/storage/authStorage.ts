@@ -5,7 +5,6 @@ export const STORAGE_KEYS = {
   accessToken: "accessToken",
   authUser: "authUser",
   isAuthenticated: "isAuthenticated",
-  hasCompletedOnboarding: "hasCompletedOnboarding",
 } as const;
 
 export interface PersistedAuthState {
@@ -69,13 +68,4 @@ export const readPersistedAuth = async (): Promise<PersistedAuthState> => {
     user,
     isAuthenticated: isAuthenticatedString === "true",
   };
-};
-
-export const setOnboardingCompleted = async () => {
-  await AsyncStorage.setItem(STORAGE_KEYS.hasCompletedOnboarding, "true");
-};
-
-export const hasCompletedOnboarding = async () => {
-  const value = await AsyncStorage.getItem(STORAGE_KEYS.hasCompletedOnboarding);
-  return value === "true";
 };

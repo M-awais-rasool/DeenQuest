@@ -67,9 +67,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
         y: Math.max(
           formOffset.current +
             inputOffsets.current[field] -
-            (Platform.OS === "android"
-              ? 190 
-              : theme.spacing.lg), 
+            (Platform.OS === "android" ? 190 : theme.spacing.lg),
           0,
         ),
         animated: true,
@@ -129,7 +127,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
     ((error as any)?.data?.errors as string[] | undefined)?.[0];
 
   return (
-    <ScreenWrapper innerStyle={{flex:1}}>
+    <ScreenWrapper innerStyle={{ flex: 1 }}>
       <View style={styles.backgroundOrbTop} />
       <View style={styles.backgroundOrbBottom} />
 

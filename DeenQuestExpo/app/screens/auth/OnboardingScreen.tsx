@@ -1,624 +1,545 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
-  Image,
-  PanResponder,
+  Easing,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { ArrowRight, Flame, Sparkles, Trophy } from "lucide-react-native";
-import { haptics } from "../../utils/haptics";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { AppStackParamList } from "../../navigators/navigationTypes";
-import { useAppSelector } from "../../store/hooks";
-import type { RootState } from "../../store/store";
-import type { MainState } from "../../store/slices/mainSlice";
-import { setOnboardingCompleted } from "../../store/storage/authStorage";
-import { theme } from "../../theme/themes";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-const { width } = Dimensions.get("window");
+import { AppStackParamList } from "../../navigators/navigationTypes";
+import {
+  useGenerateLearningPathMutation,
+  useLoginMutation,
+  LoginRequest,
+} from "../../store/services/api";
+import { setOnboardingCompleted } from "../../store/storage/authStorage";
+import { useAppDispatch } from "../../store/hooks";
+import {
+  setIsAuthenticated,
+  setUser,
+  setAccessToken,
+} from "../../store/slices/mainSlice";
+import { haptics } from "../../utils/haptics";
+import {
+  ONBOARDING_STEPS,
+  getSelectedTags,
+  buildOnboardingPayload,
+} from "../../utils/onboardingConfig";
 
-const COLORS = {
-  surface: theme.colors.background,
-  surfaceContainer: theme.colors.surface,
-  surfaceContainerLow: theme.colors.surfaceLow,
-  surfaceContainerHigh: theme.colors.surfaceHigh,
-  primary: theme.colors.primary,
-  onPrimary: theme.colors.onPrimary,
-  secondaryContainer: theme.colors.secondary,
-  onSecondaryFixed: theme.colors.onSecondary,
-  onSurface: theme.colors.text,
-  onSurfaceVariant: theme.colors.textMuted,
-  outlineVariant: theme.colors.outline,
-};
+import NoorCharacter from "../../components/onboarding/NoorCharacter";
+import OptionButton from "../../components/onboarding/OptionButton";
+import BikeHornWrapper from "../../components/onboarding/BikeHornWrapper";
+import {
+  COLORS,
+  FONTS,
+  SCREEN_WIDTH,
+  SPRING_EASE,
+} from "../../components/onboarding/constants";
+import CompletionScreen from "../../components/onboarding/CompletionScreen";
+import LoadingScreen from "../../components/onboarding/LoadingScreen";
+import ProgressHeader from "../../components/onboarding/ProgressHeader";
 
-const FONTS = {
-  headline: "Lexend",
-  body: "Plus Jakarta Sans",
-};
-
-const SWIPE_THRESHOLD = 50;
-
-// ---------------------------------------------------------------------------
-// Screen data — add new screens here, no JSX changes required elsewhere
-// ---------------------------------------------------------------------------
-interface ScreenConfig {
-  title: string;
-  titleHighlight: string;
-  description: string;
-  buttonText: string;
-  showArrow?: boolean;
-}
-
-const SCREENS: ScreenConfig[] = [
-  {
-    title: "Begin Your",
-    titleHighlight: "Sacred Journey",
-    description:
-      "Experience the beauty of Islam through a gamified, habit-building quest designed for the modern Muslim.",
-    buttonText: "Get Started",
-    showArrow: true,
-  },
-  {
-    title: "Spiritual Growth,",
-    titleHighlight: "Gamified",
-    description:
-      "Complete daily missions, maintain your streaks, and level up your spiritual life with ease and joy.",
-    buttonText: "Next Step",
-  },
-  {
-    title: "Your Personalized",
-    titleHighlight: "Path",
-    description:
-      "Whether you want to master Salah, read the Quran daily, or learn new Hadiths, we create a plan just for you.",
-    buttonText: "Find My Path",
-    showArrow: true,
-  },
-];
-
-function HeroScreen0() {
-  return (
-    <>
-      <View style={styles.imageCircle}>
-        <Image
-          source={{
-            uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuCAQRPocBP9-2EE4wvrs1expePn0jLCU4vCxN_K1W5oLgVs7SnT6Ai88-0lzMKSYR15b-Rb1CrIR0Oj4Yi-8T2Zwl_62ZiEyVoE5TLm-R--aF9PyCjEDoUS-Ec2EnnZ4H6aQ2uhKeZ26iikDbXhyGdj7nktV59iwDnR6iPDDfrLHpSaA3p2gYne8jxJx5-olqmF936aw5vJMy3Qp4sCC1YhWhm2C51J-ZmbHs2nnMwcTEqP97gwaKebqbnZjJN4G1AgiOJdfCgPCd0",
-          }}
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
-      </View>
-    </>
-  );
-}
-
-function HeroScreen1() {
-  return (
-    <View style={styles.visualContainer}>
-      <View
-        style={{
-          width: 250,
-          height: 250,
-          borderRadius: 125,
-          position: "absolute",
-          backgroundColor: COLORS.secondaryContainer,
-        }}
-      />
-      <View
-        style={{
-          width: 230,
-          height: 230,
-          borderRadius: 125,
-          position: "absolute",
-          borderColor: COLORS.outlineVariant,
-          borderWidth: 2,
-        }}
-      />
-      <View style={styles.streakCard}>
-        <Flame
-          size={72}
-          color={COLORS.secondaryContainer}
-          fill={COLORS.secondaryContainer}
-        />
-        <View style={styles.streakBadge}>
-          <Text style={styles.streakBadgeText}>12 DAYS</Text>
-        </View>
-      </View>
-      <View style={styles.levelBadge}>
-        <Trophy size={40} color={COLORS.primary} fill={COLORS.primary} />
-        <Text style={styles.levelBadgeLabel}>NEW LEVEL</Text>
-      </View>
-      <View style={styles.sparkleAccent}>
-        <Sparkles size={36} color={COLORS.primary} />
-      </View>
-    </View>
-  );
-}
-
-function HeroScreen2() {
-  return (
-    <>
-      <View style={styles.imageCircle}>
-        <Image
-          source={{
-            uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0Ymacn5LPYy_OTdPgK_cuteNV6V0oMRODkiWdoUhvfJ7er5PlnxCjVmIVgTQh6kqNY0Y65fSecLtyKwFOxMGxBE5wbR9EaGBixg1o-fOTgDhCGP6zVxmYZbd7Bu-HSkH1iymctyzF2sUtw_cIbJzwfW1i9e49kUiQCSH98a57xzN74171QH6DK9BPVbOHbq6xsVmBus-WT09zhhqJWN6NUMEOLbxtoNuFuS82tPkjtR26Is3cNRIAgG0BbvVSo4FTBDgBuwzKrnI",
-          }}
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
-      </View>
-      <View style={styles.goalTag}>
-        <View style={styles.goalIcon}>
-          <Sparkles size={14} color={COLORS.primary} />
-        </View>
-        <Text style={styles.goalText}>Daily Goal</Text>
-      </View>
-    </>
-  );
-}
-
-const HERO_COMPONENTS = [HeroScreen0, HeroScreen1, HeroScreen2];
-
-type OnboardingScreenProps = NativeStackScreenProps<
+type Props = NativeStackScreenProps<
   AppStackParamList,
-  "OnboardingScreen"
+  "PersonalizedOnboarding"
 >;
 
 export default function OnboardingScreen({
   navigation,
-}: OnboardingScreenProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const currentIndexRef = useRef(0);
+  route,
+}: Props) {
+  const dispatch = useAppDispatch();
+  const { email, password } = route.params || {};
 
-  const slideX = useRef(new Animated.Value(0)).current;
+  const [currentStep, setCurrentStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, string[]>>({
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+  });
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [screenState, setScreenState] = useState<
+    "steps" | "completion" | "loading"
+  >("steps");
+  const [stepKey, setStepKey] = useState(0);
 
-  const dotWidths = useRef(
-    SCREENS.map((_, i) => new Animated.Value(i === 0 ? 24 : 8)),
-  ).current;
+  // ─── API ───
+  const [generatePath, { isLoading: isGenerating }] =
+    useGenerateLearningPathMutation();
+  const [login] = useLoginMutation();
 
-  const slideAnimations = useRef(
-    SCREENS.map((_, index) => ({
-      translateX: Animated.add(
-        new Animated.Value(index * width),
-        Animated.multiply(slideX, -1),
-      ),
-      scale: slideX.interpolate({
-        inputRange: [(index - 1) * width, index * width, (index + 1) * width],
-        outputRange: [0.88, 1, 0.88],
-        extrapolate: "clamp",
+  // ─── Animation refs (all hooks must be before any early return) ───
+  const characterAnim = useRef(new Animated.Value(0)).current;
+  const contentOffset = useRef(new Animated.Value(0)).current;
+  const contentOpacity = useRef(new Animated.Value(1)).current;
+  const bubbleAnim = useRef(new Animated.Value(0)).current;
+  const titleAnim = useRef(new Animated.Value(0)).current;
+  const buttonAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  // ─── Derived values ───
+  const stepConfig = ONBOARDING_STEPS[currentStep];
+  const selectedIds = answers[stepConfig.id] || [];
+  const progress =
+    screenState === "completion"
+      ? 1
+      : (currentStep + 1) / ONBOARDING_STEPS.length;
+
+  useEffect(() => {
+    Animated.spring(characterAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 6,
+      tension: 50,
+    }).start();
+  }, [characterAnim]);
+
+  useEffect(() => {
+    bubbleAnim.setValue(0);
+    titleAnim.setValue(0);
+    buttonAnim.setValue(0);
+
+    const animations: Animated.CompositeAnimation[] = [
+      Animated.timing(bubbleAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: 400,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
       }),
-      opacity: slideX.interpolate({
-        inputRange: [(index - 1) * width, index * width, (index + 1) * width],
-        outputRange: [0.35, 1, 0.35],
-        extrapolate: "clamp",
+      Animated.timing(titleAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: 300,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
       }),
-    })),
-  ).current;
+      Animated.timing(buttonAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: 1000,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+    ];
 
-  const { isAuthenticated } = useAppSelector(
-    (state: RootState) => (state as RootState & { main: MainState }).main,
+    Animated.parallel(animations).start();
+  }, [currentStep, stepConfig, bubbleAnim, titleAnim, buttonAnim]);
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 500,
+      useNativeDriver: false,
+      easing: Easing.out(Easing.cubic),
+    }).start();
+  }, [progress, progressAnim]);
+
+  // ─── Callbacks ───
+  const goToStep = useCallback(
+    (nextStep: number) => {
+      if (isTransitioning) return;
+      setIsTransitioning(true);
+
+      Animated.timing(contentOffset, {
+        toValue: -SCREEN_WIDTH,
+        duration: 320,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.quad),
+      }).start(() => {
+        setCurrentStep(nextStep);
+        setStepKey((k) => k + 1);
+        contentOffset.setValue(SCREEN_WIDTH);
+        contentOpacity.setValue(0);
+
+        Animated.parallel([
+          Animated.timing(contentOffset, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+            easing: SPRING_EASE,
+          }),
+          Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setIsTransitioning(false);
+        });
+      });
+    },
+    [isTransitioning, contentOffset, contentOpacity],
   );
 
-  const completeOnboarding = async () => {
+  const handleContinue = useCallback(() => {
+    haptics.medium();
+    if (currentStep < ONBOARDING_STEPS.length - 1) {
+      goToStep(currentStep + 1);
+    } else {
+      setScreenState("completion");
+    }
+  }, [currentStep, goToStep]);
+
+  const handleSkip = useCallback(() => {
+    haptics.light();
+    if (currentStep < ONBOARDING_STEPS.length - 1) {
+      goToStep(currentStep + 1);
+    } else {
+      setScreenState("completion");
+    }
+  }, [currentStep, goToStep]);
+
+  const handleBack = useCallback(() => {
+    haptics.light();
+    if (currentStep > 0) {
+      if (isTransitioning) return;
+      setIsTransitioning(true);
+
+      Animated.timing(contentOffset, {
+        toValue: SCREEN_WIDTH,
+        duration: 320,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.quad),
+      }).start(() => {
+        setCurrentStep((s) => s - 1);
+        setStepKey((k) => k + 1);
+        contentOffset.setValue(-SCREEN_WIDTH);
+        contentOpacity.setValue(0);
+
+        Animated.parallel([
+          Animated.timing(contentOffset, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+            easing: SPRING_EASE,
+          }),
+          Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setIsTransitioning(false);
+        });
+      });
+    }
+  }, [currentStep, isTransitioning, contentOffset, contentOpacity]);
+
+  const toggleOption = useCallback(
+    (optionId: string) => {
+      haptics.selection();
+      setAnswers((prev) => {
+        const current = prev[stepConfig.id] || [];
+        if (stepConfig.multiSelect) {
+          if (current.includes(optionId)) {
+            return {
+              ...prev,
+              [stepConfig.id]: current.filter((id) => id !== optionId),
+            };
+          }
+          return { ...prev, [stepConfig.id]: [...current, optionId] };
+        }
+        return { ...prev, [stepConfig.id]: [optionId] };
+      });
+    },
+    [stepConfig],
+  );
+
+  const handleStartJourney = useCallback(async () => {
+    haptics.success();
+    setScreenState("loading");
+
+    const payload = buildOnboardingPayload(answers);
+
+    try {
+      await generatePath(payload).unwrap();
+    } catch (err) {
+      console.warn("Path generation failed, continuing to login", err);
+    }
+
+    if (email && password) {
+      try {
+        const loginPayload: LoginRequest = { email, password };
+        const loginResult = await login(loginPayload).unwrap();
+        if (loginResult.data) {
+          dispatch(setUser(loginResult.data.user));
+          dispatch(setAccessToken(loginResult.data.access_token));
+          dispatch(setIsAuthenticated(true));
+          await setOnboardingCompleted();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Demo" }],
+          });
+          return;
+        }
+      } catch (loginErr) {
+        console.warn("Auto-login failed after onboarding", loginErr);
+      }
+    }
+
     await setOnboardingCompleted();
     navigation.reset({
       index: 0,
-      routes: [{ name: isAuthenticated ? "Demo" : "Login" }],
+      routes: [{ name: "Login" }],
     });
-  };
+  }, [answers, generatePath, login, email, password, navigation, dispatch]);
 
-  const goToIndex = (newIndex: number) => {
-    currentIndexRef.current = newIndex;
-    setCurrentIndex(newIndex);
+  // ─── Early return (ALL hooks already called above) ───
+  if (screenState === "loading") {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <LoadingScreen />
+      </View>
+    );
+  }
 
-    Animated.spring(slideX, {
-      toValue: newIndex * width,
-      useNativeDriver: true,
-      damping: 22,
-      stiffness: 220,
-      mass: 0.8,
-    }).start();
-
-    SCREENS.forEach((_, i) => {
-      Animated.spring(dotWidths[i], {
-        toValue: i === newIndex ? 24 : 8,
-        useNativeDriver: false,
-        damping: 18,
-        stiffness: 200,
-      }).start();
-    });
-  };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gs) =>
-        Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 10,
-
-      onPanResponderMove: (_, gs) => {
-        const idx = currentIndexRef.current;
-        const raw = idx * width - gs.dx;
-        const max = (SCREENS.length - 1) * width;
-        let clamped: number;
-        if (raw < 0) clamped = raw * 0.15;
-        else if (raw > max) clamped = max + (raw - max) * 0.15;
-        else clamped = raw;
-        slideX.setValue(clamped);
-      },
-
-      onPanResponderRelease: (_, gs) => {
-        const idx = currentIndexRef.current;
-        let newIndex = idx;
-        if (gs.dx < -SWIPE_THRESHOLD && idx < SCREENS.length - 1)
-          newIndex = idx + 1;
-        else if (gs.dx > SWIPE_THRESHOLD && idx > 0) newIndex = idx - 1;
-        goToIndex(newIndex);
-      },
-    }),
-  ).current;
-
-  const goToNext = () => {
-    if (currentIndex < SCREENS.length - 1) {
-      goToIndex(currentIndex + 1);
-    } else {
-      completeOnboarding();
-    }
-  };
-
+  // ─── Render ───
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.logo}>DeenQuest</Text>
-        <TouchableOpacity
-          onPress={() => {
-            haptics.light();
-            completeOnboarding();
-          }}
-        >
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
-      </View>
+      <ProgressHeader
+        currentStep={currentStep}
+        isTransitioning={isTransitioning}
+        onBack={handleBack}
+        progressAnim={progressAnim}
+      />
 
-      {/* Slides — all rendered simultaneously, clipped to container */}
-      <View style={styles.slidesWrapper} {...panResponder.panHandlers}>
-        {SCREENS.map((screen, index) => {
-          const HeroComponent = HERO_COMPONENTS[index];
-          const { translateX, scale, opacity } = slideAnimations[index];
-          return (
-            <Animated.View
-              key={index}
-              style={[
-                styles.slide,
-                { transform: [{ translateX }, { scale }], opacity },
-              ]}
-            >
-              <View style={styles.heroContainer}>
-                <HeroComponent />
-              </View>
+      <NoorCharacter animatedValue={characterAnim} />
 
-              <View style={styles.contentContainer}>
-                <Text style={styles.title}>
-                  {screen.title}
-                  {"\n"}
-                  <Text style={styles.primaryText}>
-                    {screen.titleHighlight}
-                  </Text>
-                </Text>
-                <Text style={styles.description}>{screen.description}</Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => {
-                  haptics.medium();
-                  goToNext();
-                }}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {screen.buttonText}
-                </Text>
-                {screen.showArrow && (
-                  <ArrowRight
-                    size={20}
-                    color={COLORS.onPrimary}
-                    strokeWidth={3}
-                  />
-                )}
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
-      </View>
-
-      {/* Dot indicator — anchored outside the slide area, always visible */}
-      <View style={styles.dotContainer}>
-        {SCREENS.map((_, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => {
-              haptics.selection();
-              goToIndex(index);
-            }}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      {screenState === "completion" ? (
+        <CompletionScreen
+          selectedTags={getSelectedTags(answers)}
+          onStart={handleStartJourney}
+          isLoading={isGenerating}
+        />
+      ) : (
+        <>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={!isTransitioning}
           >
             <Animated.View
-              style={[
-                styles.dot,
-                {
-                  width: dotWidths[index],
-                  backgroundColor:
-                    index === currentIndex
-                      ? COLORS.secondaryContainer
-                      : COLORS.surfaceContainerHigh,
-                },
-              ]}
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
+              style={{
+                transform: [{ translateX: contentOffset }],
+                opacity: contentOpacity,
+              }}
+            >
+              {/* Speech Bubble */}
+              <Animated.View
+                style={[
+                  styles.speechBubble,
+                  {
+                    opacity: bubbleAnim,
+                    transform: [
+                      {
+                        translateX: bubbleAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-30, 0],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Text style={styles.speechText}>{stepConfig.speech}</Text>
+                <View style={styles.speechTail} />
+              </Animated.View>
+
+              {/* Title */}
+              <Animated.View
+                style={{
+                  opacity: titleAnim,
+                  transform: [
+                    {
+                      translateY: titleAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [16, 0],
+                      }),
+                    },
+                  ],
+                }}
+              >
+                <Text style={styles.questionTitle}>{stepConfig.title}</Text>
+                <Text style={styles.questionSubtitle}>
+                  {stepConfig.subtitle}
+                </Text>
+              </Animated.View>
+
+              {/* Options */}
+              <View style={styles.optionsGrid}>
+                {stepConfig.options.map((option, i) => (
+                  <OptionButton
+                    key={option.id}
+                    option={option}
+                    selected={selectedIds.includes(option.id)}
+                    onPress={() => toggleOption(option.id)}
+                    delayIndex={i}
+                    stepKey={stepKey}
+                  />
+                ))}
+              </View>
+            </Animated.View>
+          </ScrollView>
+
+          {/* Bottom Actions */}
+          <Animated.View
+            style={[
+              styles.bottomActions,
+              {
+                opacity: buttonAnim,
+                transform: [
+                  {
+                    translateY: buttonAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <BikeHornWrapper
+              onPress={handleContinue}
+              disabled={selectedIds.length === 0 || isTransitioning}
+              wrapperStyle={{
+                width: "100%",
+                opacity: selectedIds.length === 0 ? 0.45 : 1,
+              }}
+              rimStyle={styles.continueRim}
+              capStyle={styles.continueCap}
+              height={60}
+            >
+              <Text style={styles.continueButtonText}>Continue</Text>
+            </BikeHornWrapper>
+
+            <TouchableOpacity
+              style={styles.skipButton}
+              onPress={handleSkip}
+              disabled={isTransitioning}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.skipButtonText}>Skip for now</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </>
+      )}
     </SafeAreaView>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  speechBubble: {
+    marginLeft: 100,
+    marginRight: 20,
+    marginTop: 40,
+    marginBottom: 24,
     backgroundColor: COLORS.surface,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    zIndex: 10,
-  },
-  logo: {
-    fontFamily: FONTS.headline,
-    fontSize: 20,
-    fontWeight: "800",
-    color: COLORS.primary,
-    letterSpacing: -1,
-  },
-  skipText: {
-    fontFamily: FONTS.headline,
-    fontSize: 16,
-    fontWeight: "700",
-    color: COLORS.onSurface,
-  },
-  // Clipping container for all slides
-  slidesWrapper: {
-    flex: 1,
-    overflow: "hidden",
-  },
-  // Each slide fills the wrapper and is positioned absolutely
-  slide: {
-    position: "absolute",
-    width,
-    top: 0,
-    bottom: 0,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  heroContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-  },
-  imageCircle: {
-    width: width * 0.8,
-    height: width * 0.8,
-    borderRadius: width * 0.4,
-    overflow: "hidden",
+    borderRadius: 20,
+    borderTopLeftRadius: 4,
+    padding: 16,
     borderWidth: 1,
-    borderColor: COLORS.outlineVariant + "33",
-    backgroundColor: COLORS.surfaceContainerLow,
+    borderColor: COLORS.outline,
   },
-  heroImage: {
-    width: "100%",
-    height: "100%",
+  speechText: {
+    fontFamily: FONTS.body,
+    fontSize: 15,
+    lineHeight: 22,
+    color: COLORS.text,
+    fontWeight: "600",
   },
-  floatingBadge: {
+  speechTail: {
     position: "absolute",
-    right: width * 0.05,
-    top: "20%",
-    backgroundColor: COLORS.secondaryContainer,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    transform: [{ rotate: "12deg" }],
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    left: -8,
+    top: 0,
+    width: 16,
+    height: 16,
+    backgroundColor: COLORS.surface,
+    borderLeftWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: COLORS.outline,
+    transform: [{ rotate: "45deg" }],
   },
-  badgeText: {
+  questionTitle: {
     fontFamily: FONTS.headline,
-    fontSize: 14,
+    fontSize: 24,
     fontWeight: "800",
-    color: COLORS.onSecondaryFixed,
+    color: COLORS.text,
+    lineHeight: 30,
+    marginHorizontal: 20,
+    marginBottom: 8,
   },
-  contentContainer: {
-    width: "100%",
-    alignItems: "center",
+  questionSubtitle: {
+    fontFamily: FONTS.body,
+    fontSize: 14,
+    color: COLORS.textMuted,
+    marginHorizontal: 20,
     marginBottom: 20,
   },
-  title: {
-    fontFamily: FONTS.headline,
-    fontSize: 34,
-    fontWeight: "800",
-    color: COLORS.onSurface,
-    textAlign: "center",
-    lineHeight: 40,
-    letterSpacing: -0.5,
-    marginBottom: 16,
-  },
-  primaryText: {
-    color: COLORS.primary,
-  },
-  description: {
-    fontFamily: FONTS.body,
-    fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.onSurfaceVariant,
-    textAlign: "center",
-    lineHeight: 24,
+  optionsGrid: {
     paddingHorizontal: 20,
+    gap: 10,
   },
-  primaryButton: {
-    width: "100%",
-    backgroundColor: COLORS.primary,
-    height: 64,
+  bottomActions: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    paddingTop: 12,
+    gap: 12,
+  },
+  continueRim: {
+    position: "absolute",
+    top: 4,
+    left: 0,
+    right: 0,
+    height: 56,
     borderRadius: 16,
-    flexDirection: "row",
+    backgroundColor: COLORS.primaryContainer,
+  },
+  continueCap: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
-    gap: 8,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.shadowGreen,
   },
-  primaryButtonText: {
+  continueButtonText: {
     fontFamily: FONTS.headline,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "800",
     color: COLORS.onPrimary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  // Dots — fixed below the slides
-  dotContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
+  skipButton: {
     alignItems: "center",
-    gap: 12,
-    paddingTop: 16,
-    paddingBottom: 40,
+    paddingVertical: 8,
   },
-  dot: {
-    height: 8,
-    borderRadius: 4,
-  },
-  // Screen 2 (visual) hero styles
-  visualContainer: {
-    width: width * 0.8,
-    height: width * 0.8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  streakCard: {
-    width: 152,
-    height: 152,
-    backgroundColor: COLORS.surfaceContainer,
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant + "1A",
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.4,
-    shadowRadius: 40,
-  },
-  streakBadge: {
-    marginTop: 12,
-    backgroundColor: COLORS.secondaryContainer + "1A",
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.secondaryContainer + "33",
-  },
-  streakBadgeText: {
-    fontFamily: FONTS.headline,
-    fontSize: 20,
-    fontWeight: "800",
-    color: COLORS.secondaryContainer,
-  },
-  levelBadge: {
-    position: "absolute",
-    top: -16,
-    right: -16,
-    width: 128,
-    height: 128,
-    backgroundColor: COLORS.surfaceContainerHigh,
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant + "33",
-    transform: [{ rotate: "6deg" }],
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-  },
-  levelBadgeLabel: {
-    fontFamily: FONTS.headline,
-    fontSize: 10,
-    fontWeight: "800",
-    color: COLORS.onSurfaceVariant,
-    letterSpacing: 2,
-    marginTop: 4,
-  },
-  sparkleAccent: {
-    position: "absolute",
-    bottom: 36,
-    left: 16,
-    width: 80,
-    height: 80,
-    backgroundColor: theme.colors.primaryContainer,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    transform: [{ rotate: "-12deg" }],
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-  },
-  // Screen 3 hero styles
-  goalTag: {
-    position: "absolute",
-    bottom: 50,
-    right: 8,
-    backgroundColor: COLORS.surfaceContainer,
-    padding: 12,
-    borderRadius: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant + "33",
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-  },
-  goalIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary + "33",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  goalText: {
-    fontFamily: FONTS.headline,
-    fontSize: 12,
-    fontWeight: "700",
-    color: COLORS.onSurface,
-    paddingRight: 4,
+  skipButtonText: {
+    fontFamily: FONTS.body,
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.textMuted,
+    textDecorationLine: "underline",
   },
 });

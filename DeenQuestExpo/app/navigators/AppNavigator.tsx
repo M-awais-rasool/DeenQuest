@@ -13,17 +13,11 @@ import { DemoNavigator } from "./DemoNavigator";
 import type { AppStackParamList, NavigationProps } from "./navigationTypes";
 import { LoginScreen } from "../screens/auth/LoginScreen";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { SignupScreen } from "../screens/auth/SignupScreen";
 import type { RootState } from "../store/store";
 import type { MainState } from "../store/slices/mainSlice";
-import { theme } from "../theme/themes";
 import { restoreAuth } from "../store/slices/mainSlice";
 import { Loader } from "../components/Loader";
-import OnboardingScreen from "../screens/auth/OnboardingScreen";
-import {
-  hasCompletedOnboarding as getOnboardingCompletionStatus,
-  readPersistedAuth,
-} from "../store/storage/authStorage";
+import { readPersistedAuth } from "../store/storage/authStorage";
 import { DailyTaskDetailScreen } from "../screens/task/DailyTaskDetailScreen";
 import { LevelDetailScreen } from "../screens/level/LevelDetailScreen";
 import { LevelMapScreen } from "../screens/level/LevelMapScreen";
@@ -33,6 +27,8 @@ import { SettingsScreen } from "../screens/profile/SettingsScreen";
 import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { PublicProfileScreen } from "../screens/profile/PublicProfileScreen";
+import OnboardingScreen from "../screens/auth/OnboardingScreen";
+import { SignupScreen } from "../screens/auth/SignupScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -56,9 +52,6 @@ const linking: LinkingOptions<AppStackParamList> = {
 
 const AppStack = () => {
   const dispatch = useAppDispatch();
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<
-    boolean | null
-  >(null);
   const { isAuthenticated, isLoading } = useAppSelector(
     (state: RootState) => (state as RootState & { main: MainState }).main,
   );
@@ -68,16 +61,11 @@ const AppStack = () => {
 
     const bootstrapSession = async () => {
       try {
-        const [authState, onboardingComplete] = await Promise.all([
-          readPersistedAuth(),
-          getOnboardingCompletionStatus(),
-        ]);
+        const [authState] = await Promise.all([readPersistedAuth()]);
 
         if (!isMounted) {
           return;
         }
-
-        setHasCompletedOnboarding(onboardingComplete);
 
         if (authState.token && authState.isAuthenticated) {
           dispatch(
@@ -91,7 +79,6 @@ const AppStack = () => {
         if (!isMounted) {
           return;
         }
-        setHasCompletedOnboarding(false);
         dispatch(restoreAuth({ token: null, user: null }));
       }
     };
@@ -103,15 +90,9 @@ const AppStack = () => {
     };
   }, [dispatch]);
 
-  if (isLoading || hasCompletedOnboarding === null) {
+  if (isLoading) {
     return <Loader fullScreen />;
   }
-
-  const initialRouteName = hasCompletedOnboarding
-    ? isAuthenticated
-      ? "Demo"
-      : "Login"
-    : "OnboardingScreen";
 
   return (
     <Stack.Navigator
@@ -119,7 +100,7 @@ const AppStack = () => {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName={initialRouteName}
+      initialRouteName={isAuthenticated ? "Demo" : "Login"}
     >
       {isAuthenticated ? (
         <>
@@ -150,9 +131,12 @@ const AppStack = () => {
         </>
       ) : (
         <>
-          <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen
+            name="PersonalizedOnboarding"
+            component={OnboardingScreen}
+          />
         </>
       )}
     </Stack.Navigator>
