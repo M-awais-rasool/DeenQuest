@@ -6,6 +6,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -30,6 +31,7 @@ import {
   getSelectedTags,
   buildOnboardingPayload,
 } from "../../utils/onboardingConfig";
+import { theme } from "../../theme/themes";
 
 import NoorCharacter from "../../components/onboarding/NoorCharacter";
 import OptionButton from "../../components/onboarding/OptionButton";
@@ -62,7 +64,10 @@ export default function OnboardingScreen({
     2: [],
     3: [],
     4: [],
+    5: [],
+    6: [],
   });
+  const [nameForm, setNameForm] = useState({ firstName: "", lastName: "" });
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [screenState, setScreenState] = useState<
     "steps" | "completion" | "loading"
@@ -86,6 +91,10 @@ export default function OnboardingScreen({
   // ─── Derived values ───
   const stepConfig = ONBOARDING_STEPS[currentStep];
   const selectedIds = answers[stepConfig.id] || [];
+  const isNameStep = stepConfig.type === "name";
+  const isContinueDisabled = isNameStep
+    ? !nameForm.firstName.trim() || !nameForm.lastName.trim() || isTransitioning
+    : selectedIds.length === 0 || isTransitioning;
   const progress =
     screenState === "completion"
       ? 1
@@ -256,7 +265,7 @@ export default function OnboardingScreen({
     haptics.success();
     setScreenState("loading");
 
-    const payload = buildOnboardingPayload(answers);
+    const payload = buildOnboardingPayload(answers, nameForm);
 
     try {
       await generatePath(payload).unwrap();
@@ -287,7 +296,7 @@ export default function OnboardingScreen({
       index: 0,
       routes: [{ name: "Login" }],
     });
-  }, [answers, generatePath, login, email, password, navigation, dispatch]);
+  }, [answers, nameForm, generatePath, login, email, password, navigation, dispatch]);
 
   // ─── Early return (ALL hooks already called above) ───
   if (screenState === "loading") {
@@ -325,6 +334,7 @@ export default function OnboardingScreen({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             scrollEnabled={!isTransitioning}
+            keyboardShouldPersistTaps="handled"
           >
             <Animated.View
               style={{
@@ -373,19 +383,58 @@ export default function OnboardingScreen({
                 </Text>
               </Animated.View>
 
-              {/* Options */}
-              <View style={styles.optionsGrid}>
-                {stepConfig.options.map((option, i) => (
-                  <OptionButton
-                    key={option.id}
-                    option={option}
-                    selected={selectedIds.includes(option.id)}
-                    onPress={() => toggleOption(option.id)}
-                    delayIndex={i}
-                    stepKey={stepKey}
-                  />
-                ))}
-              </View>
+              {/* Step Content */}
+              {isNameStep ? (
+                <View style={styles.inputContainer}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>First Name</Text>
+                    <View style={styles.inputWrapper}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Muhammad"
+                        placeholderTextColor={COLORS.textMuted}
+                        value={nameForm.firstName}
+                        onChangeText={(text) =>
+                          setNameForm((prev) => ({ ...prev, firstName: text }))
+                        }
+                        autoCapitalize="words"
+                        selectionColor={COLORS.primary}
+                        editable={!isTransitioning}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Last Name</Text>
+                    <View style={styles.inputWrapper}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Ahmed"
+                        placeholderTextColor={COLORS.textMuted}
+                        value={nameForm.lastName}
+                        onChangeText={(text) =>
+                          setNameForm((prev) => ({ ...prev, lastName: text }))
+                        }
+                        autoCapitalize="words"
+                        selectionColor={COLORS.primary}
+                        editable={!isTransitioning}
+                      />
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.optionsGrid}>
+                  {stepConfig.options.map((option, i) => (
+                    <OptionButton
+                      key={option.id}
+                      option={option}
+                      selected={selectedIds.includes(option.id)}
+                      onPress={() => toggleOption(option.id)}
+                      delayIndex={i}
+                      stepKey={stepKey}
+                    />
+                  ))}
+                </View>
+              )}
             </Animated.View>
           </ScrollView>
 
@@ -408,10 +457,10 @@ export default function OnboardingScreen({
           >
             <BikeHornWrapper
               onPress={handleContinue}
-              disabled={selectedIds.length === 0 || isTransitioning}
+              disabled={isContinueDisabled}
               wrapperStyle={{
                 width: "100%",
-                opacity: selectedIds.length === 0 ? 0.45 : 1,
+                opacity: isContinueDisabled ? 0.45 : 1,
               }}
               rimStyle={styles.continueRim}
               capStyle={styles.continueCap}
@@ -493,6 +542,37 @@ const styles = StyleSheet.create({
   optionsGrid: {
     paddingHorizontal: 20,
     gap: 10,
+  },
+  inputContainer: {
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  inputGroup: {
+    marginBottom: 4,
+  },
+  inputLabel: {
+    fontFamily: FONTS.body,
+    fontSize: 12,
+    fontWeight: "900",
+    color: COLORS.textMuted,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    position: "relative",
+  },
+  input: {
+    backgroundColor: theme.colors.surfaceLow,
+    borderBottomWidth: 3,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    color: COLORS.text,
+    padding: 16,
+    borderTopLeftRadius: theme.borderRadius.sm,
+    borderTopRightRadius: theme.borderRadius.sm,
+    fontSize: 16,
+    fontFamily: FONTS.body,
   },
   bottomActions: {
     paddingHorizontal: 20,

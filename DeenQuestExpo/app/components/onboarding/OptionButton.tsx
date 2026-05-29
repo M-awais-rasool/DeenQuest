@@ -9,12 +9,16 @@ import {
   Gem,
   Hand,
   Heart,
+  HelpCircle,
   Landmark,
   Leaf,
   Library,
   Medal,
   Moon,
   ScrollText,
+  Search,
+  Share2,
+  Smartphone,
   Sprout,
   Type,
   Users,
@@ -44,6 +48,10 @@ const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string
   Heart,
   Calendar,
   Moon,
+  Share2,
+  Search,
+  Smartphone,
+  HelpCircle,
 };
 
 interface Props {

@@ -16,17 +16,46 @@ export interface OnboardingStep {
   subtitle: string;
   speech: string;
   multiSelect: boolean;
+  type: "options" | "name";
   options: OnboardingOption[];
 }
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 1,
+    title: "What should we call you?",
+    subtitle: "Enter your name so Noor can personalize your journey.",
+    speech:
+      "As-salamu alaykum! I'm Noor, your Islamic learning companion. Let's get to know you first!",
+    multiSelect: false,
+    type: "name",
+    options: [],
+  },
+  {
+    id: 2,
+    title: "Where did you hear about us?",
+    subtitle: "This helps us understand how people find DeenQuest.",
+    speech:
+      "Great to have you here! Where did you first hear about DeenQuest?",
+    multiSelect: false,
+    type: "options",
+    options: [
+      { id: "friend_family", icon: "Users", label: "Friend or family member" },
+      { id: "social_media", icon: "Share2", label: "Social media" },
+      { id: "search_engine", icon: "Search", label: "Google or search engine" },
+      { id: "mosque", icon: "Landmark", label: "Mosque or Islamic center" },
+      { id: "app_store", icon: "Smartphone", label: "App Store / Play Store" },
+      { id: "other", icon: "HelpCircle", label: "Other" },
+    ],
+  },
+  {
+    id: 3,
     title: "What's your Quran reading level?",
     subtitle: "This helps us start you at the right place.",
     speech:
-      "As-salamu alaykum! I'm Noor, your Islamic learning companion. Let's build your personal path!",
+      "Let's build your personal path! What's your Quran reading level?",
     multiSelect: false,
+    type: "options",
     options: [
       {
         id: "beginner",
@@ -51,12 +80,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
   },
   {
-    id: 2,
+    id: 4,
     title: "Where would you like to grow?",
     subtitle: "Select all that apply.",
     speech:
       "Great! Now tell me where you'd like to grow. I'll focus your lessons there 🌟",
     multiSelect: true,
+    type: "options",
     options: [
       { id: "quran_tajweed", icon: "BookMarked", label: "Quran reading & Tajweed" },
       { id: "daily_prayers", icon: "Landmark", label: "Daily prayers & consistency" },
@@ -67,12 +97,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
   },
   {
-    id: 3,
+    id: 5,
     title: "How much time can you give each day?",
     subtitle: "Be honest — consistency matters more than duration.",
     speech:
       "You're doing amazing! How much time can you give each day? Even 5 minutes is a great start ⏰",
     multiSelect: false,
+    type: "options",
     options: [
       { id: "5_min", icon: "Zap", label: "5 minutes — quick daily habit" },
       { id: "15_min", icon: "Leaf", label: "15 minutes — steady learner" },
@@ -80,12 +111,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
   },
   {
-    id: 4,
+    id: 6,
     title: "What's driving your journey?",
     subtitle: "Select all that apply.",
     speech:
       "MashaAllah! One last thing — what's driving your journey? This helps me inspire you at the right moments 💫",
     multiSelect: true,
+    type: "options",
     options: [
       { id: "consistent_salah", icon: "CircleDot", label: "Be consistent in Salah" },
       { id: "teach_children", icon: "Users", label: "Teach my children" },
@@ -119,28 +151,39 @@ export const LOADING_STEPS = [
 /** Maps answer IDs → human-readable tags for the completion screen */
 export function getSelectedTags(answers: Record<number, string[]>): string[] {
   const tags: string[] = [];
-  const step2 = ONBOARDING_STEPS[1];
-  const step4 = ONBOARDING_STEPS[3];
+  const growthStep = ONBOARDING_STEPS[3];
+  const motivationStep = ONBOARDING_STEPS[5];
 
-  answers[2]?.forEach((id) => {
-    const opt = step2.options.find((o) => o.id === id);
+  answers[4]?.forEach((id) => {
+    const opt = growthStep.options.find((o) => o.id === id);
     if (opt) tags.push(opt.label);
   });
 
-  answers[4]?.forEach((id) => {
-    const opt = step4.options.find((o) => o.id === id);
+  answers[6]?.forEach((id) => {
+    const opt = motivationStep.options.find((o) => o.id === id);
     if (opt) tags.push(opt.label);
   });
 
   return tags;
 }
 
+interface NameForm {
+  firstName: string;
+  lastName: string;
+}
+
 /** Builds the API payload from collected answers */
-export function buildOnboardingPayload(answers: Record<number, string[]>) {
+export function buildOnboardingPayload(
+  answers: Record<number, string[]>,
+  nameForm: NameForm
+) {
   return {
-    quran_level: answers[1]?.[0] || "beginner",
-    weak_areas: answers[2] || [],
-    daily_time: answers[3]?.[0] || "15_min",
-    motivations: answers[4] || [],
+    first_name: nameForm.firstName.trim(),
+    last_name: nameForm.lastName.trim(),
+    referral_source: answers[2]?.[0] || "other",
+    quran_level: answers[3]?.[0] || "beginner",
+    weak_areas: answers[4] || [],
+    daily_time: answers[5]?.[0] || "15_min",
+    motivations: answers[6] || [],
   };
 }
