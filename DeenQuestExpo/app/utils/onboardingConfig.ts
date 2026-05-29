@@ -31,10 +31,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id: 2,
-    title: "Where did you hear about us?",
-    subtitle: "This helps us understand how people find DeenQuest.",
-    speech:
-      "Great to have you here! Where did you first hear about DeenQuest?",
+    speech: "Where did you hear about us?",
     multiSelect: false,
     type: "options",
     options: [
@@ -48,10 +45,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id: 3,
-    title: "What's your Quran reading level?",
-    subtitle: "This helps us start you at the right place.",
-    speech:
-      "Let's build your personal path! What's your Quran reading level?",
+    speech: "What's your Quran reading level?",
     multiSelect: false,
     type: "options",
     options: [
@@ -79,10 +73,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id: 4,
-    title: "Where would you like to grow?",
-    subtitle: "Select all that apply.",
-    speech:
-      "Great! Now tell me where you'd like to grow. I'll focus your lessons there 🌟",
+    speech: "What would you like to learn?",
     multiSelect: true,
     type: "options",
     options: [
@@ -96,10 +87,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id: 5,
-    title: "How much time can you give each day?",
-    subtitle: "Be honest — consistency matters more than duration.",
-    speech:
-      "You're doing amazing! How much time can you give each day? Even 5 minutes is a great start ⏰",
+    speech: "How much time can you give daily?",
     multiSelect: false,
     type: "options",
     options: [
@@ -110,10 +98,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id: 6,
-    title: "What's driving your journey?",
-    subtitle: "Select all that apply.",
-    speech:
-      "MashaAllah! One last thing — what's driving your journey? This helps me inspire you at the right moments 💫",
+    speech: "What's driving your journey?",
     multiSelect: true,
     type: "options",
     options: [

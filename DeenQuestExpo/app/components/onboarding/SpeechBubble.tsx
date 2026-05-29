@@ -1,12 +1,17 @@
 import React from "react";
 import { StyleSheet, Text, View, ViewStyle, TextStyle } from "react-native";
 import { COLORS, FONTS } from "./constants";
+import TypewriterText from "./TypewriterText";
 
 interface Props {
   text: string;
   tailDirection: "left" | "bottom";
   bubbleStyle?: ViewStyle;
   textStyle?: TextStyle;
+  typewriter?: boolean;
+  typewriterSpeed?: number;
+  typewriterDelay?: number;
+  typewriterOnComplete?: () => void;
 }
 
 export default function SpeechBubble({
@@ -14,12 +19,27 @@ export default function SpeechBubble({
   tailDirection,
   bubbleStyle,
   textStyle,
+  typewriter = false,
+  typewriterSpeed = 35,
+  typewriterDelay = 0,
+  typewriterOnComplete,
 }: Props) {
   const isLeft = tailDirection === "left";
 
   return (
     <View style={[styles.bubble, bubbleStyle]}>
-      <Text style={[styles.text, textStyle]}>{text}</Text>
+      {typewriter ? (
+        <TypewriterText
+          text={text}
+          speed={typewriterSpeed}
+          delay={typewriterDelay}
+          style={textStyle}
+          onComplete={typewriterOnComplete}
+          showCursor={false}
+        />
+      ) : (
+        <Text style={[styles.text, textStyle]}>{text}</Text>
+      )}
       {isLeft ? (
         <View style={styles.tailLeft}>
           <View style={styles.tailLeftBorder} />

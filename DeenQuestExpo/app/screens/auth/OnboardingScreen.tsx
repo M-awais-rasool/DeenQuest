@@ -90,7 +90,6 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   const contentOffset = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(1)).current;
   const bubbleAnim = useRef(new Animated.Value(0)).current;
-  const titleAnim = useRef(new Animated.Value(0)).current;
   const buttonAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const introTextAnim = useRef(new Animated.Value(0)).current;
@@ -125,7 +124,6 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   useEffect(() => {
     if (!isInSteps) return;
     bubbleAnim.setValue(0);
-    titleAnim.setValue(0);
     buttonAnim.setValue(0);
 
     const animations: Animated.CompositeAnimation[] = [
@@ -133,13 +131,6 @@ export default function OnboardingScreen({ navigation, route }: Props) {
         toValue: 1,
         duration: 500,
         delay: 400,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.quad),
-      }),
-      Animated.timing(titleAnim, {
-        toValue: 1,
-        duration: 500,
-        delay: 300,
         useNativeDriver: true,
         easing: Easing.out(Easing.quad),
       }),
@@ -153,7 +144,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
     ];
 
     Animated.parallel(animations).start();
-  }, [currentStep, stepConfig, isInSteps, bubbleAnim, titleAnim, buttonAnim]);
+  }, [currentStep, stepConfig, isInSteps, bubbleAnim, buttonAnim]);
 
   // Entrance animation for intro text
   useEffect(() => {
@@ -448,8 +439,12 @@ export default function OnboardingScreen({ navigation, route }: Props) {
                 }}
               >
                 <SpeechBubble
+                  key={`speech-${stepKey}`}
                   tailDirection="left"
                   text={stepConfig.speech}
+                  typewriter
+                  typewriterSpeed={28}
+                  typewriterDelay={500}
                   bubbleStyle={{
                     marginLeft: 120,
                     marginRight: 20,
@@ -458,28 +453,6 @@ export default function OnboardingScreen({ navigation, route }: Props) {
                   }}
                 />
               </Animated.View>
-
-              {/* Title */}
-              {stepConfig.title && (
-                <Animated.View
-                  style={{
-                    opacity: titleAnim,
-                    transform: [
-                      {
-                        translateY: titleAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [16, 0],
-                        }),
-                      },
-                    ],
-                  }}
-                >
-                  <Text style={styles.questionTitle}>{stepConfig.title}</Text>
-                  <Text style={styles.questionSubtitle}>
-                    {stepConfig.subtitle}
-                  </Text>
-                </Animated.View>
-              )}
 
               {/* Step Content */}
               {isNameStep ? (
@@ -587,8 +560,12 @@ export default function OnboardingScreen({ navigation, route }: Props) {
               }}
             >
               <SpeechBubble
+                key={`intro-${introPhase}`}
                 tailDirection="bottom"
                 text={INTRO_TEXTS[introPhase]}
+                typewriter
+                typewriterSpeed={30}
+                typewriterDelay={400}
                 bubbleStyle={{
                   maxWidth: "90%",
                   alignSelf: "center",
@@ -719,22 +696,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
-  questionTitle: {
-    fontFamily: FONTS.headline,
-    fontSize: 24,
-    fontWeight: "800",
-    color: COLORS.text,
-    lineHeight: 30,
-    marginHorizontal: 20,
-    marginBottom: 8,
-  },
-  questionSubtitle: {
-    fontFamily: FONTS.body,
-    fontSize: 14,
-    color: COLORS.textMuted,
-    marginHorizontal: 20,
-    marginBottom: 20,
-  },
   optionsGrid: {
     paddingHorizontal: 20,
     gap: 10,
