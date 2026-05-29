@@ -79,6 +79,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
     "steps" | "completion" | "loading"
   >("steps");
   const [stepKey, setStepKey] = useState(0);
+  const [speechDone, setSpeechDone] = useState(false);
 
   // ─── API ───
   const [generatePath, { isLoading: isGenerating }] =
@@ -90,6 +91,7 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   const contentOffset = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(1)).current;
   const bubbleAnim = useRef(new Animated.Value(0)).current;
+  const optionsAnim = useRef(new Animated.Value(0)).current;
   const buttonAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const introTextAnim = useRef(new Animated.Value(0)).current;
@@ -124,7 +126,9 @@ export default function OnboardingScreen({ navigation, route }: Props) {
   useEffect(() => {
     if (!isInSteps) return;
     bubbleAnim.setValue(0);
+    optionsAnim.setValue(0);
     buttonAnim.setValue(0);
+    setSpeechDone(false);
 
     const animations: Animated.CompositeAnimation[] = [
       Animated.timing(bubbleAnim, {
@@ -144,7 +148,18 @@ export default function OnboardingScreen({ navigation, route }: Props) {
     ];
 
     Animated.parallel(animations).start();
-  }, [currentStep, stepConfig, isInSteps, bubbleAnim, buttonAnim]);
+  }, [currentStep, stepConfig, isInSteps, bubbleAnim, optionsAnim, buttonAnim]);
+
+  // Animate options in after speech is done typing
+  useEffect(() => {
+    if (!speechDone || !isInSteps) return;
+    Animated.timing(optionsAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.quad),
+    }).start();
+  }, [speechDone, isInSteps, optionsAnim]);
 
   // Entrance animation for intro text
   useEffect(() => {
@@ -443,8 +458,9 @@ export default function OnboardingScreen({ navigation, route }: Props) {
                   tailDirection="left"
                   text={stepConfig.speech}
                   typewriter
-                  typewriterSpeed={28}
+                  typewriterSpeed={10}
                   typewriterDelay={500}
+                  typewriterOnComplete={() => setSpeechDone(true)}
                   bubbleStyle={{
                     marginLeft: 120,
                     marginRight: 20,
@@ -455,57 +471,71 @@ export default function OnboardingScreen({ navigation, route }: Props) {
               </Animated.View>
 
               {/* Step Content */}
-              {isNameStep ? (
-                <View style={styles.inputContainer}>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>First Name</Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="e.g. Muhammad"
-                        placeholderTextColor={COLORS.textMuted}
-                        value={nameForm.firstName}
-                        onChangeText={(text) =>
-                          setNameForm((prev) => ({ ...prev, firstName: text }))
-                        }
-                        autoCapitalize="words"
-                        selectionColor={COLORS.primary}
-                        editable={!isTransitioning}
-                      />
+              <Animated.View
+                style={{
+                  opacity: optionsAnim,
+                  transform: [
+                    {
+                      translateY: optionsAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [24, 0],
+                      }),
+                    },
+                  ],
+                }}
+              >
+                {isNameStep ? (
+                  <View style={styles.inputContainer}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>First Name</Text>
+                      <View style={styles.inputWrapper}>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="e.g. Muhammad"
+                          placeholderTextColor={COLORS.textMuted}
+                          value={nameForm.firstName}
+                          onChangeText={(text) =>
+                            setNameForm((prev) => ({ ...prev, firstName: text }))
+                          }
+                          autoCapitalize="words"
+                          selectionColor={COLORS.primary}
+                          editable={!isTransitioning}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.inputLabel}>Last Name</Text>
+                      <View style={styles.inputWrapper}>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="e.g. Ahmed"
+                          placeholderTextColor={COLORS.textMuted}
+                          value={nameForm.lastName}
+                          onChangeText={(text) =>
+                            setNameForm((prev) => ({ ...prev, lastName: text }))
+                          }
+                          autoCapitalize="words"
+                          selectionColor={COLORS.primary}
+                          editable={!isTransitioning}
+                        />
+                      </View>
                     </View>
                   </View>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Last Name</Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="e.g. Ahmed"
-                        placeholderTextColor={COLORS.textMuted}
-                        value={nameForm.lastName}
-                        onChangeText={(text) =>
-                          setNameForm((prev) => ({ ...prev, lastName: text }))
-                        }
-                        autoCapitalize="words"
-                        selectionColor={COLORS.primary}
-                        editable={!isTransitioning}
+                ) : (
+                  <View style={styles.optionsGrid}>
+                    {stepConfig.options.map((option, i) => (
+                      <OptionButton
+                        key={option.id}
+                        option={option}
+                        selected={selectedIds.includes(option.id)}
+                        onPress={() => toggleOption(option.id)}
+                        delayIndex={i}
+                        stepKey={stepKey}
                       />
-                    </View>
+                    ))}
                   </View>
-                </View>
-              ) : (
-                <View style={styles.optionsGrid}>
-                  {stepConfig.options.map((option, i) => (
-                    <OptionButton
-                      key={option.id}
-                      option={option}
-                      selected={selectedIds.includes(option.id)}
-                      onPress={() => toggleOption(option.id)}
-                      delayIndex={i}
-                      stepKey={stepKey}
-                    />
-                  ))}
-                </View>
-              )}
+                )}
+              </Animated.View>
             </Animated.View>
           </ScrollView>
 
@@ -564,14 +594,14 @@ export default function OnboardingScreen({ navigation, route }: Props) {
                 tailDirection="bottom"
                 text={INTRO_TEXTS[introPhase]}
                 typewriter
-                typewriterSpeed={30}
+                typewriterSpeed={10}
                 typewriterDelay={400}
                 bubbleStyle={{
                   maxWidth: "90%",
                   alignSelf: "center",
                 }}
                 textStyle={{
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: "500",
                   lineHeight: 26,
                   textAlign: "center",
@@ -699,6 +729,7 @@ const styles = StyleSheet.create({
   optionsGrid: {
     paddingHorizontal: 20,
     gap: 10,
+    marginTop: 20,
   },
   inputContainer: {
     paddingHorizontal: 20,

@@ -83,7 +83,7 @@ export default function NoorCharacter({ animatedValue, size = "normal", containe
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: 150,
+    top: 141,
     left: 10,
     zIndex: 10,
   },
