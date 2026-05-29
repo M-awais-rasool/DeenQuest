@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Easing,
+  Image,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -12,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { ArrowLeft } from "lucide-react-native";
 
 import { AppStackParamList } from "../../navigators/navigationTypes";
 import {
@@ -45,19 +47,23 @@ import {
 import CompletionScreen from "../../components/onboarding/CompletionScreen";
 import LoadingScreen from "../../components/onboarding/LoadingScreen";
 import ProgressHeader from "../../components/onboarding/ProgressHeader";
+import SpeechBubble from "../../components/onboarding/SpeechBubble";
 
 type Props = NativeStackScreenProps<
   AppStackParamList,
   "PersonalizedOnboarding"
 >;
 
-export default function OnboardingScreen({
-  navigation,
-  route,
-}: Props) {
+const INTRO_TEXTS = [
+  "Hi there! I'm Noor!",
+  "Just 8 questions before we start your first lesson and learning journey.",
+];
+
+export default function OnboardingScreen({ navigation, route }: Props) {
   const dispatch = useAppDispatch();
   const { email, password } = route.params || {};
 
+  const [introPhase, setIntroPhase] = useState(0); // 0, 1 = intro screens; 2 = steps
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string[]>>({
     1: [],
@@ -79,7 +85,7 @@ export default function OnboardingScreen({
     useGenerateLearningPathMutation();
   const [login] = useLoginMutation();
 
-  // ─── Animation refs (all hooks must be before any early return) ───
+  // ─── Animation refs ───
   const characterAnim = useRef(new Animated.Value(0)).current;
   const contentOffset = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(1)).current;
@@ -87,14 +93,20 @@ export default function OnboardingScreen({
   const titleAnim = useRef(new Animated.Value(0)).current;
   const buttonAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const introTextAnim = useRef(new Animated.Value(0)).current;
 
   // ─── Derived values ───
+  const isInSteps = introPhase >= 2;
   const stepConfig = ONBOARDING_STEPS[currentStep];
   const selectedIds = answers[stepConfig.id] || [];
   const isNameStep = stepConfig.type === "name";
-  const isContinueDisabled = isNameStep
-    ? !nameForm.firstName.trim() || !nameForm.lastName.trim() || isTransitioning
-    : selectedIds.length === 0 || isTransitioning;
+  const isContinueDisabled = isInSteps
+    ? isNameStep
+      ? !nameForm.firstName.trim() ||
+        !nameForm.lastName.trim() ||
+        isTransitioning
+      : selectedIds.length === 0 || isTransitioning
+    : isTransitioning;
   const progress =
     screenState === "completion"
       ? 1
@@ -109,7 +121,9 @@ export default function OnboardingScreen({
     }).start();
   }, [characterAnim]);
 
+  // Entrance animations for steps
   useEffect(() => {
+    if (!isInSteps) return;
     bubbleAnim.setValue(0);
     titleAnim.setValue(0);
     buttonAnim.setValue(0);
@@ -139,7 +153,31 @@ export default function OnboardingScreen({
     ];
 
     Animated.parallel(animations).start();
-  }, [currentStep, stepConfig, bubbleAnim, titleAnim, buttonAnim]);
+  }, [currentStep, stepConfig, isInSteps, bubbleAnim, titleAnim, buttonAnim]);
+
+  // Entrance animation for intro text
+  useEffect(() => {
+    if (isInSteps) return;
+    introTextAnim.setValue(0);
+    buttonAnim.setValue(0);
+
+    Animated.parallel([
+      Animated.timing(introTextAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 300,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+      Animated.timing(buttonAnim, {
+        toValue: 1,
+        duration: 500,
+        delay: 800,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.quad),
+      }),
+    ]).start();
+  }, [introPhase, isInSteps, introTextAnim, buttonAnim]);
 
   useEffect(() => {
     Animated.timing(progressAnim, {
@@ -150,7 +188,36 @@ export default function OnboardingScreen({
     }).start();
   }, [progress, progressAnim]);
 
-  // ─── Callbacks ───
+  // ─── Transitions ───
+  const animateTransition = useCallback(
+    (onComplete: () => void) => {
+      if (isTransitioning) return;
+      setIsTransitioning(true);
+
+      Animated.timing(contentOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.quad),
+      }).start(() => {
+        onComplete();
+        contentOpacity.setValue(0);
+
+        Animated.parallel([
+          Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.quad),
+          }),
+        ]).start(() => {
+          setIsTransitioning(false);
+        });
+      });
+    },
+    [isTransitioning, contentOpacity],
+  );
+
   const goToStep = useCallback(
     (nextStep: number) => {
       if (isTransitioning) return;
@@ -188,26 +255,22 @@ export default function OnboardingScreen({
   );
 
   const handleContinue = useCallback(() => {
-    haptics.medium();
-    if (currentStep < ONBOARDING_STEPS.length - 1) {
+    if (introPhase < 1) {
+      animateTransition(() => setIntroPhase(1));
+    } else if (introPhase === 1) {
+      animateTransition(() => setIntroPhase(2));
+    } else if (currentStep < ONBOARDING_STEPS.length - 1) {
       goToStep(currentStep + 1);
     } else {
       setScreenState("completion");
     }
-  }, [currentStep, goToStep]);
-
-  const handleSkip = useCallback(() => {
-    haptics.light();
-    if (currentStep < ONBOARDING_STEPS.length - 1) {
-      goToStep(currentStep + 1);
-    } else {
-      setScreenState("completion");
-    }
-  }, [currentStep, goToStep]);
+  }, [introPhase, currentStep, animateTransition, goToStep]);
 
   const handleBack = useCallback(() => {
     haptics.light();
-    if (currentStep > 0) {
+    if (introPhase === 1) {
+      animateTransition(() => setIntroPhase(0));
+    } else if (introPhase === 2 && currentStep > 0) {
       if (isTransitioning) return;
       setIsTransitioning(true);
 
@@ -239,11 +302,17 @@ export default function OnboardingScreen({
         });
       });
     }
-  }, [currentStep, isTransitioning, contentOffset, contentOpacity]);
+  }, [
+    introPhase,
+    currentStep,
+    isTransitioning,
+    animateTransition,
+    contentOffset,
+    contentOpacity,
+  ]);
 
   const toggleOption = useCallback(
     (optionId: string) => {
-      haptics.selection();
       setAnswers((prev) => {
         const current = prev[stepConfig.id] || [];
         if (stepConfig.multiSelect) {
@@ -296,7 +365,16 @@ export default function OnboardingScreen({
       index: 0,
       routes: [{ name: "Login" }],
     });
-  }, [answers, nameForm, generatePath, login, email, password, navigation, dispatch]);
+  }, [
+    answers,
+    nameForm,
+    generatePath,
+    login,
+    email,
+    password,
+    navigation,
+    dispatch,
+  ]);
 
   // ─── Early return (ALL hooks already called above) ───
   if (screenState === "loading") {
@@ -313,14 +391,25 @@ export default function OnboardingScreen({
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <ProgressHeader
-        currentStep={currentStep}
-        isTransitioning={isTransitioning}
-        onBack={handleBack}
-        progressAnim={progressAnim}
-      />
+      {isInSteps && (
+        <ProgressHeader
+          currentStep={currentStep}
+          isTransitioning={isTransitioning}
+          onBack={handleBack}
+          progressAnim={progressAnim}
+        />
+      )}
 
-      <NoorCharacter animatedValue={characterAnim} />
+      {introPhase === 1 && (
+        <TouchableOpacity
+          style={styles.introBackButton}
+          onPress={handleBack}
+          disabled={isTransitioning}
+          activeOpacity={0.7}
+        >
+          <ArrowLeft size={22} color={COLORS.text} />
+        </TouchableOpacity>
+      )}
 
       {screenState === "completion" ? (
         <CompletionScreen
@@ -328,8 +417,10 @@ export default function OnboardingScreen({
           onStart={handleStartJourney}
           isLoading={isGenerating}
         />
-      ) : (
+      ) : isInSteps ? (
         <>
+          <NoorCharacter animatedValue={characterAnim} />
+
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -344,44 +435,51 @@ export default function OnboardingScreen({
             >
               {/* Speech Bubble */}
               <Animated.View
-                style={[
-                  styles.speechBubble,
-                  {
-                    opacity: bubbleAnim,
-                    transform: [
-                      {
-                        translateX: bubbleAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [-30, 0],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <Text style={styles.speechText}>{stepConfig.speech}</Text>
-                <View style={styles.speechTail} />
-              </Animated.View>
-
-              {/* Title */}
-              <Animated.View
                 style={{
-                  opacity: titleAnim,
+                  opacity: bubbleAnim,
                   transform: [
                     {
-                      translateY: titleAnim.interpolate({
+                      translateX: bubbleAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [16, 0],
+                        outputRange: [-30, 0],
                       }),
                     },
                   ],
                 }}
               >
-                <Text style={styles.questionTitle}>{stepConfig.title}</Text>
-                <Text style={styles.questionSubtitle}>
-                  {stepConfig.subtitle}
-                </Text>
+                <SpeechBubble
+                  tailDirection="left"
+                  text={stepConfig.speech}
+                  bubbleStyle={{
+                    marginLeft: 120,
+                    marginRight: 20,
+                    marginTop: 40,
+                    marginBottom: 24,
+                  }}
+                />
               </Animated.View>
+
+              {/* Title */}
+              {stepConfig.title && (
+                <Animated.View
+                  style={{
+                    opacity: titleAnim,
+                    transform: [
+                      {
+                        translateY: titleAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [16, 0],
+                        }),
+                      },
+                    ],
+                  }}
+                >
+                  <Text style={styles.questionTitle}>{stepConfig.title}</Text>
+                  <Text style={styles.questionSubtitle}>
+                    {stepConfig.subtitle}
+                  </Text>
+                </Animated.View>
+              )}
 
               {/* Step Content */}
               {isNameStep ? (
@@ -468,17 +566,99 @@ export default function OnboardingScreen({
             >
               <Text style={styles.continueButtonText}>Continue</Text>
             </BikeHornWrapper>
-
-            <TouchableOpacity
-              style={styles.skipButton}
-              onPress={handleSkip}
-              disabled={isTransitioning}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.skipButtonText}>Skip for now</Text>
-            </TouchableOpacity>
           </Animated.View>
         </>
+      ) : (
+        // ─── Intro Screens ───
+        <View style={styles.introRoot}>
+          <View style={styles.introCenter}>
+            {/* Speech Bubble */}
+            <Animated.View
+              style={{
+                opacity: introTextAnim,
+                transform: [
+                  {
+                    translateY: introTextAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-12, 0],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <SpeechBubble
+                tailDirection="bottom"
+                text={INTRO_TEXTS[introPhase]}
+                bubbleStyle={{
+                  maxWidth: "90%",
+                  alignSelf: "center",
+                }}
+                textStyle={{
+                  fontSize: 18,
+                  fontWeight: "500",
+                  lineHeight: 26,
+                  textAlign: "center",
+                }}
+              />
+            </Animated.View>
+
+            {/* Character */}
+            <Animated.View
+              style={{
+                opacity: characterAnim,
+                transform: [
+                  {
+                    scale: characterAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1],
+                    }),
+                  },
+                ],
+              }}
+            >
+              <View style={styles.introCharacterCircle}>
+                <Image
+                  source={require("../../../assets/login-logo.png")}
+                  style={styles.introCharacterImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={styles.introCharacterGlow} />
+            </Animated.View>
+          </View>
+
+          {/* Continue Button */}
+          <Animated.View
+            style={[
+              styles.introButtonWrap,
+              {
+                opacity: buttonAnim,
+                transform: [
+                  {
+                    translateY: buttonAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <BikeHornWrapper
+              onPress={handleContinue}
+              disabled={isTransitioning}
+              wrapperStyle={{
+                width: "100%",
+                opacity: isTransitioning ? 0.45 : 1,
+              }}
+              rimStyle={styles.continueRim}
+              capStyle={styles.continueCap}
+              height={60}
+            >
+              <Text style={styles.continueButtonText}>Continue</Text>
+            </BikeHornWrapper>
+          </Animated.View>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -489,40 +669,56 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  introRoot: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  introBackButton: {
+    position: "absolute",
+    top: 12,
+    left: 16,
+    zIndex: 20,
+    padding: 8,
+  },
+  introCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 28,
+  },
+
+  introCharacterCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: COLORS.surface,
+    borderWidth: 2,
+    borderColor: COLORS.outline,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  introCharacterImage: {
+    width: 96,
+    height: 96,
+  },
+  introCharacterGlow: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: theme.colors.white05,
+    zIndex: -1,
+  },
+  introButtonWrap: {
+    width: "100%",
+    paddingBottom: 8,
+  },
   scrollContent: {
     paddingBottom: 20,
   },
-  speechBubble: {
-    marginLeft: 100,
-    marginRight: 20,
-    marginTop: 40,
-    marginBottom: 24,
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    borderTopLeftRadius: 4,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: COLORS.outline,
-  },
-  speechText: {
-    fontFamily: FONTS.body,
-    fontSize: 15,
-    lineHeight: 22,
-    color: COLORS.text,
-    fontWeight: "600",
-  },
-  speechTail: {
-    position: "absolute",
-    left: -8,
-    top: 0,
-    width: 16,
-    height: 16,
-    backgroundColor: COLORS.surface,
-    borderLeftWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: COLORS.outline,
-    transform: [{ rotate: "45deg" }],
-  },
+
   questionTitle: {
     fontFamily: FONTS.headline,
     fontSize: 24,
@@ -546,6 +742,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     paddingHorizontal: 20,
     gap: 16,
+    marginTop: 20,
   },
   inputGroup: {
     marginBottom: 4,
@@ -607,16 +804,5 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-  },
-  skipButton: {
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  skipButtonText: {
-    fontFamily: FONTS.body,
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.textMuted,
-    textDecorationLine: "underline",
   },
 });

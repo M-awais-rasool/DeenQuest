@@ -5,10 +5,14 @@ import { COLORS, SCREEN_HEIGHT } from "./constants";
 
 interface Props {
   animatedValue: Animated.Value;
+  size?: "normal" | "large";
+  containerStyle?: object;
 }
 
-export default function NoorCharacter({ animatedValue }: Props) {
+export default function NoorCharacter({ animatedValue, size = "normal", containerStyle }: Props) {
   const floatAnim = useRef(new Animated.Value(0)).current;
+
+  const dimensions = size === "large" ? { circle: 120, image: 96 } : { circle: 80, image: 64 };
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -59,17 +63,19 @@ export default function NoorCharacter({ animatedValue }: Props) {
     <Animated.View
       style={[
         styles.container,
+        size === "large" && styles.containerLarge,
         { transform: [{ translateY }, { scale }], opacity },
+        containerStyle,
       ]}
     >
-      <View style={styles.circle}>
+      <View style={[styles.circle, { width: dimensions.circle, height: dimensions.circle, borderRadius: dimensions.circle / 2 }]}>
         <Image
           source={require("../../../assets/login-logo.png")}
-          style={styles.image}
+          style={{ width: dimensions.image, height: dimensions.image }}
           resizeMode="contain"
         />
       </View>
-      <View style={styles.glow} />
+      <View style={[styles.glow, { width: dimensions.circle, height: dimensions.circle, borderRadius: dimensions.circle / 2 }]} />
     </Animated.View>
   );
 }
@@ -81,10 +87,14 @@ const styles = StyleSheet.create({
     left: 10,
     zIndex: 10,
   },
+  containerLarge: {
+    position: "relative",
+    top: undefined,
+    left: undefined,
+    zIndex: undefined,
+    alignSelf: "center",
+  },
   circle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
     backgroundColor: COLORS.surface,
     borderWidth: 2,
     borderColor: COLORS.outline,
@@ -92,15 +102,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  image: {
-    width: 64,
-    height: 64,
-  },
   glow: {
     position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
     backgroundColor: theme.colors.white05,
     zIndex: -1,
   },

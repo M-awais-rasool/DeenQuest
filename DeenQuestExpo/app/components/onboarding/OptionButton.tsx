@@ -91,7 +91,7 @@ export default function OptionButton({ option, selected, onPress, delayIndex, st
   });
 
   const handlePressIn = () => {
-    haptics.medium();
+    haptics.selection(); 
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 0.96,
@@ -108,7 +108,6 @@ export default function OptionButton({ option, selected, onPress, delayIndex, st
   };
 
   const handlePressOut = () => {
-    haptics.light();
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1,

@@ -26,7 +26,7 @@ export default function BikeHornWrapper({
 
   const handlePressIn = () => {
     if (disabled) return;
-    haptics.medium();
+    haptics.selection(); 
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 0.96,
@@ -43,7 +43,6 @@ export default function BikeHornWrapper({
   };
 
   const handlePressOut = () => {
-    haptics.light();
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1,
