@@ -12,8 +12,8 @@ export interface OnboardingOption {
 
 export interface OnboardingStep {
   id: number;
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   speech: string;
   multiSelect: boolean;
   type: "options" | "name";
@@ -23,10 +23,8 @@ export interface OnboardingStep {
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 1,
-    title: "What should we call you?",
-    subtitle: "Enter your name so Noor can personalize your journey.",
     speech:
-      "As-salamu alaykum! I'm Noor, your Islamic learning companion. Let's get to know you first!",
+      "What should I call you?",
     multiSelect: false,
     type: "name",
     options: [],
