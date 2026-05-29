@@ -24,9 +24,16 @@ export default function TypewriterText({
   const [isDone, setIsDone] = useState(false);
   const indexRef = useRef(0);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const onCompleteRef = useRef(onComplete);
+
+  // Keep the latest onComplete callback in a ref so we don't
+  // restart typing when the parent re-renders with a new function reference.
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
-    // Reset state when text changes
+    // Reset state when text/speed/delay changes
     setDisplayed("");
     setIsDone(false);
     indexRef.current = 0;
@@ -45,7 +52,7 @@ export default function TypewriterText({
           timersRef.current.push(nextTimer);
         } else {
           setIsDone(true);
-          onComplete?.();
+          onCompleteRef.current?.();
         }
       };
 
@@ -59,7 +66,7 @@ export default function TypewriterText({
       timersRef.current.forEach(clearTimeout);
       timersRef.current = [];
     };
-  }, [text, speed, delay, onComplete]);
+  }, [text, speed, delay]);
 
   // Blinking cursor effect
   useEffect(() => {
