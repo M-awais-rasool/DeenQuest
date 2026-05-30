@@ -4,7 +4,7 @@
 
 <h1 align="center">DeenQuest</h1>
 <p align="center">
-  A gamified Islamic learning platform with a mobile app, admin panel, and scalable Go microservices backend.
+  A gamified Islamic learning platform with a mobile app, admin panel, and a clean Go monolithic backend following Domain-Driven Design.
 </p>
 
 <p align="center">
@@ -79,31 +79,66 @@ DeenQuest is designed to make daily Islamic growth consistent and rewarding thro
 DeenQuest/
 ├─ DeenQuestExpo/        # Mobile app (React Native + Expo + TypeScript)
 ├─ admin-panel/          # Web admin dashboard (React + Vite + Tailwind)
-└─ backend/              # Go microservices + API gateway + worker
+└─ backend/              # Go monolithic API (DDD + Clean Architecture)
 ```
 
-## Architecture
+## Backend Architecture
+
+The backend follows **Domain-Driven Design** with **Clean Architecture** principles, organized into four layers:
+
+```text
+backend/
+├── cmd/
+│   └── api/
+│       └── main.go                          # Single entry point
+├── internal/
+│   ├── domain/                              # Domain Layer (entities, value objects, repository interfaces)
+│   │   ├── identity/                        #   User entity, UserRepository interface
+│   │   ├── progress/                        #   Progress, Streak, DailyTask, Level, Reward, Recitation
+│   │   ├── notification/                    #   UserToken, Message, TokenRepository interface
+│   │   └── intelligent/                     #   NotificationRule, NotificationLog, LogRepository interface
+│   ├── application/                         # Application Layer (use cases, application services)
+│   │   ├── auth/                            #   AuthService (signup, login)
+│   │   ├── user/                            #   UserService (profile, password)
+│   │   ├── progress/                        #   CoreService, RecitationService, ArabicMatcher
+│   │   ├── notification/                    #   NotificationService (token registration, push)
+│   │   ├── intelligent/                     #   Intelligent notification rules, scheduler, user fetcher
+│   │   └── worker/                          #   Kafka consumer, daily reset scheduler
+│   ├── interfaces/                          # Interface Layer (HTTP handlers, DTOs, routing)
+│   │   └── http/
+│   │       ├── handler/                     #   Auth, User, Core, Recitation, Notification handlers
+│   │       ├── dto/                         #   Request/response DTOs
+│   │       └── router.go                    #   Unified route registration
+│   └── infrastructure/                      # Infrastructure Layer (external concerns)
+│       ├── config/                          #   Environment configuration
+│       ├── logger/                          #   Structured logging (zap)
+│       ├── persistence/                     #   MongoDB repository implementations
+│       ├── jwt/                             #   JWT token management
+│       ├── bcrypt/                          #   Password hashing
+│       ├── cache/                           #   Redis client
+│       ├── middleware/                       #   Auth, CORS, logging, rate limiting, recovery
+│       ├── push/                            #   Expo push notification client
+│       ├── queue/                           #   Kafka producer/consumer
+│       ├── validator/                       #   Request validation
+│       ├── response/                        #   Standardized API responses
+│       └── ollama/                          #   Ollama LLM client
+├── whisper-service/                         # Python speech-to-text microservice (FastAPI)
+├── docs/                                    # API docs, workflows, project analysis
+├── docker-compose.yml                       # Kafka + Redis infrastructure
+├── Makefile                                 # Build, run, test, lint commands
+└── go.mod
+```
 
 ```mermaid
 flowchart LR
-  M[Mobile App\nDeenQuestExpo] --> G[API Gateway\nGin]
-  A[Admin Panel\nReact + Vite] --> G
+  M[Mobile App\nDeenQuestExpo] --> API[DeenQuest API\nGin Monolith]
+  A[Admin Panel\nReact + Vite] --> API
 
-  G --> I[Identity/Auth Service]
-  G --> C[Core Service]
-
-  C --> K[(Kafka)]
-  W[Worker Service] --> K
-
-  I --> DB[(MongoDB)]
-  C --> DB
-  W --> DB
-
-  G --> R[(Redis\nRate Limiting)]
-
-  W --> N[Intelligent Notification\nSystem]
-  N --> DB
-  N --> P[Expo Push API]
+  API --> DB[(MongoDB)]
+  API --> K[(Kafka)]
+  API --> R[(Redis\nRate Limiting)]
+  API --> W[Whisper Service\nPython/FastAPI]
+  API --> P[Expo Push API]
 ```
 
 ## Tech Stack
@@ -113,7 +148,7 @@ flowchart LR
 | Mobile | React Native, Expo, TypeScript, Redux Toolkit (RTK Query), AsyncStorage, Expo Notifications |
 | Admin | React 18, TypeScript, Vite, Tailwind CSS, Axios, Chart.js |
 | Backend | Go 1.22, Gin, JWT, MongoDB driver, Kafka, Redis, Cron |
-| Infra | Docker, Docker Compose, Nginx |
+| Infra | Docker, Docker Compose |
 
 ## Core Features
 
@@ -122,12 +157,11 @@ flowchart LR
 - Levels, lessons, and progression rewards.
 - Leaderboard ranking by level and XP.
 - Role-aware admin panel for content management.
-- Event-driven processing with Kafka and worker service.
+- Event-driven processing with Kafka.
 - Intelligent notification system with template-based push notifications:
   - Daily task reminders for pending missions
   - Streak warnings to protect user consistency
   - Friday special reminders for Surah Al-Kahf
-  - Leaderboard rank improvement alerts
 
 ## API Highlights
 
@@ -136,13 +170,15 @@ Base prefix: `/api/v1`
 - Auth
   - `POST /auth/signup`
   - `POST /auth/login`
-  - `POST /auth/refresh`
-  - `POST /auth/logout`
 - User
   - `GET /users/me`
   - `PUT /users/me`
-- Core
+  - `PUT /users/me/password`
+  - `DELETE /users/me`
+  - `GET /users/:id/public`
+- Progress
   - `GET /progress/me`
+  - `GET /progress/user/:id`
   - `GET /leaderboard`
   - `GET /daily-tasks`
   - `POST /daily-tasks/:id/complete`
@@ -150,8 +186,11 @@ Base prefix: `/api/v1`
   - `GET /levels/:id?course_type=qaida|tajweed`
   - `POST /levels/:id/lessons/complete`
   - `POST /levels/:id/complete`
+  - `GET /rewards`
+  - `POST /recitation/check`
 - Notifications
-  - `POST /notifications/token` — Register push notification token
+  - `POST /notifications/register`
+  - `POST /notifications/test`
 
 ## Quick Start
 
@@ -160,23 +199,26 @@ Base prefix: `/api/v1`
 ```bash
 cd backend
 cp .env.example .env
+# Edit .env with your MongoDB URI and other settings
+
+# Start infrastructure (Kafka + Redis)
 make compose-up
+
+# Run the API server
+make run
 ```
 
-Services:
-
-- Gateway: `http://localhost:8080`
-- Auth: `http://localhost:8081`
-- Core: `http://localhost:8082`
-- Worker: `http://localhost:8083`
+The API server starts at `http://localhost:8080`.
 
 Useful commands:
 
 ```bash
-make build
-make test
-make compose-logs
-make compose-down
+make build          # Build binary to build/deenquest-api
+make run            # Run with go run
+make test           # Run tests
+make lint           # Format + vet + test
+make compose-logs   # Tail infrastructure logs
+make compose-down   # Stop Kafka + Redis
 ```
 
 ### 2) Mobile App (Expo)
@@ -194,7 +236,7 @@ npm run android
 npm run ios
 ```
 
-Note: Update API base URL in `DeenQuestExpo/app/store/services/api.ts` to match your network and gateway host.
+Note: Update API base URL in `DeenQuestExpo/app/store/services/api.ts` to match your server address.
 
 ### 3) Admin Panel (Vite)
 
@@ -204,7 +246,7 @@ npm install
 npm run dev
 ```
 
-The admin panel expects API traffic under `/api` and can be routed via your gateway/proxy configuration.
+The admin panel expects API traffic under `/api`.
 
 ## Environment Notes
 
@@ -212,41 +254,40 @@ Backend environment template is provided in `backend/.env.example`.
 
 Important keys:
 
-- `MONGO_URI`, `MONGO_DB`
-- `REDIS_HOST`, `REDIS_PORT`
-- `KAFKA_BROKERS`
-- `JWT_SECRET`, `JWT_ACCESS_EXPIRY`, `JWT_REFRESH_EXPIRY`
-- `AUTH_SERVICE_URL`, `CORE_SERVICE_URL`
+- `SERVER_HOST`, `SERVER_PORT` — API server bind address
+- `MONGO_URI`, `MONGO_DB` — MongoDB connection
+- `REDIS_HOST`, `REDIS_PORT` — Redis for rate limiting
+- `KAFKA_BROKERS` — Kafka for async event processing
+- `JWT_SECRET`, `JWT_ACCESS_EXPIRY`, `JWT_REFRESH_EXPIRY` — JWT configuration
+- `WHISPER_URL` — Python whisper service URL
+- `EXPO_PUSH_URL`, `EXPO_PUSH_ACCESS_TOKEN` — Push notifications
 
 ## Documentation
 
 Backend docs:
 
-- `backend/docs/api.md`
-- `backend/docs/migration.md`
-- `backend/docs/kafka-explained.md`
-- `backend/docs/daily-task-assignment.md`
-- `backend/internal/ai-service/ai-notifications/README.md` — Intelligent notification system
-- `backend/internal/ai-service/ai-notifications/WORKFLOW.md` — Notification flow diagrams
+- `backend/docs/api.md` — API endpoint reference
+- `backend/docs/kafka-explained.md` — Kafka event architecture
+- `backend/docs/daily-task-assignment.md` — Daily task assignment algorithm
+- `backend/docs/WORKFLOW.md` — Intelligent notification system workflow
+- `backend/docs/PROJECT_ANALYSIS.md` — Comprehensive project analysis
+- `backend/docs/LEARNING_AGENT.md` — Learning agent framework design
 
 ## Intelligent Notification System
 
-The worker service runs a cron job every 10 minutes that evaluates all users against 4 notification rules in a single pass:
+The server runs a cron job every minute that evaluates all users against notification rules in a single pass:
 
 | Notification Type | Trigger Condition | Cooldown |
 |---|---|---|
 | Daily Task Reminder | Pending tasks + inactive > 4h | 6 hours |
 | Streak Warning | Streak > 3 days + missed today | 12 hours |
 | Friday Special | Today is Friday | 24 hours |
-| Leaderboard Update | User rank improved | 24 hours |
 
 Key design decisions:
 - **Template-based messages** — no AI dependency, instant generation, predictable tone
 - **Single-pass processing** — users fetched once, evaluated against all rules
 - **Per-type cooldowns** — each notification type tracks its own cooldown window
 - **Retry with backoff** — up to 3 attempts with exponential backoff on failure
-
-Full workflow and diagrams: [ai-notifications/README.md](backend/internal/ai-service/ai-notifications/README.md)
 
 ## Screens Overview
 
@@ -265,12 +306,12 @@ Full workflow and diagrams: [ai-notifications/README.md](backend/internal/ai-ser
 ## Contributing
 
 1. Create a feature branch.
-2. Keep changes scoped to one app/service when possible.
+2. Keep changes scoped to one domain when possible.
 3. Run checks before opening a PR:
 
 ```bash
 # backend
-cd backend && make test
+cd backend && make lint
 
 # mobile
 cd DeenQuestExpo && ./node_modules/.bin/tsc --noEmit
