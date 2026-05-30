@@ -1,8 +1,8 @@
 # DeenQuest — Complete Project Analysis
 
-> **Date**: 2026-05-24  
+> **Date**: 2026-05-30  
 > **Project**: DeenQuest (Nuur) — Gamified Islamic Learning Platform  
-> **Components**: Mobile App (Expo), Go Backend (Microservices), Landing Page (Vite), Admin Panel (React + Vite)
+> **Components**: Mobile App (Expo), Go Backend (DDD Monolith), Landing Page (Vite), Admin Panel (React + Vite)
 
 ---
 
@@ -243,22 +243,29 @@ Store Structure:
 
 Base URL: `http://172.16.29.205:8080` (local dev)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/auth/signup` | POST | Create account |
-| `/api/v1/auth/login` | POST | Authenticate |
-| `/api/v1/users/me` | GET/PUT | Profile management |
-| `/api/v1/daily-tasks` | GET | Today's missions |
-| `/api/v1/daily-tasks/:id/complete` | POST | Mark task done |
-| `/api/v1/progress/me` | GET | XP, level, streak |
-| `/api/v1/leaderboard` | GET | Global rankings |
-| `/api/v1/levels` | GET | Course levels list |
-| `/api/v1/levels/:id` | GET | Level detail |
-| `/api/v1/levels/:id/lessons/complete` | POST | Complete lesson |
-| `/api/v1/levels/:id/complete` | POST | Complete level + get rewards |
-| `/api/v1/rewards` | GET | All rewards with status |
-| `/api/v1/recitation/check` | POST | Upload audio for AI check |
-| `/api/v1/notifications/register` | POST | Register push token |
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/health` | GET | No | Health check |
+| `/api/v1/auth/signup` | POST | No | Create account |
+| `/api/v1/auth/login` | POST | No | Authenticate |
+| `/api/v1/users/:id/public` | GET | No | View public profile |
+| `/api/v1/progress/user/:id` | GET | No | View public progress |
+| `/api/v1/users/me` | GET | JWT | Profile management |
+| `/api/v1/users/me` | PUT | JWT | Update profile |
+| `/api/v1/users/me/password` | PUT | JWT | Change password |
+| `/api/v1/users/me` | DELETE | JWT | Delete account |
+| `/api/v1/notifications/register` | POST | JWT | Register push token |
+| `/api/v1/notifications/test` | POST | JWT | Send test notification |
+| `/api/v1/daily-tasks` | GET | JWT | Today's missions |
+| `/api/v1/daily-tasks/:id/complete` | POST | JWT | Mark task done |
+| `/api/v1/progress/me` | GET | JWT | XP, level, streak |
+| `/api/v1/leaderboard` | GET | JWT | Global rankings |
+| `/api/v1/levels` | GET | JWT | Course levels list |
+| `/api/v1/levels/:id` | GET | JWT | Level detail |
+| `/api/v1/levels/:id/lessons/complete` | POST | JWT | Complete lesson |
+| `/api/v1/levels/:id/complete` | POST | JWT | Complete level + get rewards |
+| `/api/v1/rewards` | GET | JWT | All rewards with status |
+| `/api/v1/recitation/check` | POST | JWT | Upload audio for AI check |
 
 ### 2.10 Notification System
 
@@ -281,65 +288,66 @@ URL Scheme: `deenquest://`
 
 ---
 
-## 3. BACKEND — Go Microservices
+## 3. BACKEND — Go DDD Monolith
 
 ### 3.1 Architecture Overview
 
 ```
-                    ┌─────────────────┐
-                    │   API Gateway   │  (Gin, port 8080)
-                    │   (Routing)     │
-                    └────────┬────────┘
-                             │
-           ┌─────────────────┼─────────────────┐
-           │                 │                 │
-    ┌──────▼──────┐   ┌──────▼──────┐   ┌──────▼──────┐
-    │   Identity  │   │    Core     │   │   Worker    │
-    │  (Auth/JWT) │   │  (Business) │   │(Background) │
-    │  port 8081  │   │  port 8082  │   │  port 8083  │
-    └──────┬──────┘   └──────┬──────┘   └──────┬──────┘
-           │                 │                 │
-           └────────┬────────┘                 │
-                    │                           │
-             ┌──────▼──────┐              ┌──────▼──────┐
-             │   MongoDB   │              │    Kafka    │
-             │  (Primary)  │              │  (Events)   │
-             └─────────────┘              └─────────────┘
-                    ▲                           │
-                    │                      ┌────▼────┐
-                    │                      │  Redis  │
-                    │                      │ (Cache) │
-                    │                      └─────────┘
-             ┌──────┴──────┐
-             │  Whisper AI   │ (Python/FastAPI, port 8001)
-             │ (Speech-to-   │
-             │   Text)       │
-             └───────────────┘
+                     ┌─────────────────────────────────────┐
+                     │       DeenQuest API (Gin 1.22)      │
+                     │         Single Process              │
+                     │         Port 8080                   │
+                     └─────────────────────────────────────┘
+                                    │
+          ┌─────────────────────────┼─────────────────────────┐
+          │                         │                         │
+          ▼                         ▼                         ▼
+┌─────────────────────┐   ┌─────────────────────┐   ┌─────────────────────┐
+│   Interfaces Layer  │   │  Application Layer  │   │    Domain Layer     │
+│   (HTTP Handlers)   │──▶│   (Use Cases)       │──▶│  (Entities +       │
+│   - Auth Handler    │   │   - AuthService      │   │   Interfaces)      │
+│   - User Handler    │   │   - UserService      │   │                    │
+│   - Core Handler    │   │   - CoreService      │   │   identity/        │
+│   - Recitation H.   │   │   - RecitationSvc    │   │   progress/        │
+│   - Notification H. │   │   - NotificationSvc  │   │   notification/    │
+└─────────────────────┘   │   - IntelligentSvc   │   │   intelligent/     │
+          │                │   - WorkerConsumer   │   └─────────────────────┘
+          │                └─────────────────────┘               │
+          ▼                                                      │
+┌────────────────────────────────────────────────────────────┐   │
+│                 Infrastructure Layer                        │   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────┐  │   │
+│  │  MongoDB  │  │  Redis   │  │  Kafka   │  │  Expo     │  │   │
+│  │ (5 repos) │  │ (Rate    │  │ (Queue)  │  │  Push     │  │   │
+│  │           │  │  Limit)  │  │          │  │  (Notif)  │  │   │
+│  └──────────┘  └──────────┘  └──────────┘  └───────────┘  │   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────┐  │   │
+│  │   JWT    │  │  Bcrypt  │  │  Logger  │  │  Ollama   │  │   │
+│  │  Manager │  │ (Hashing)│  │  (Zap)   │  │  Client   │  │   │
+│  └──────────┘  └──────────┘  └──────────┘  └───────────┘  │   │
+└────────────────────────────────────────────────────────────┘   │
+          │                                                      │
+          ▼                                                      ▼
+┌─────────────────────┐                               ┌─────────────────────┐
+│    Whisper Service  │                               │  Docker Compose     │
+│  (Python/FastAPI)   │                               │  - Zookeeper        │
+│   Port 8001         │                               │  - Kafka (9092)     │
+│   Speech-to-Text    │                               │  - Redis (6379)     │
+└─────────────────────┘                               └─────────────────────┘
 ```
 
-### 3.2 Services Breakdown
+**Key Change**: Four separate Go binaries (gateway, auth, core-service, worker-service) are replaced by a single `cmd/api/main.go` binary. All business logic resides within the same process, organized by DDD layers instead of service boundaries.
 
-#### Gateway Service (`cmd/gateway/`)
-- **Purpose**: Single entry point for all client requests
-- **Technology**: Gin framework
-- **Responsibilities**:
-  - Request routing to downstream services
-  - JWT validation (middleware)
-  - Rate limiting (Redis-backed)
-  - CORS handling
-  - Request/response logging
+### 3.2 DDD Layer Breakdown
 
-#### Identity Service (`internal/identity-service/`)
-- **Purpose**: Authentication & user management
-- **Endpoints**:
-  - `POST /auth/signup` — bcrypt password hashing
-  - `POST /auth/login` — JWT access + refresh tokens
-  - `POST /auth/refresh` — Token rotation
-  - `POST /auth/logout` — Token revocation
-  - `GET/PUT /users/me` — Profile CRUD
-- **Models**:
-  ```go
-  type User struct {
+#### Domain Layer (`internal/domain/`)
+
+The innermost layer — pure Go types with zero external dependencies. Contains entities, value objects, and repository interfaces.
+
+**`identity/`** — User entity and authentication contracts:
+```go
+// user.go
+type User struct {
     ID           string    `bson:"_id" json:"id"`
     Email        string    `bson:"email" json:"email"`
     PasswordHash string    `bson:"password_hash" json:"-"`
@@ -350,185 +358,202 @@ URL Scheme: `deenquest://`
     Role         string    `bson:"role" json:"role"`
     IsVerified   bool      `bson:"is_verified" json:"is_verified"`
     CreatedAt    time.Time `bson:"created_at" json:"created_at"`
-  }
-  ```
+}
 
-#### Core Service (`internal/core-service/`)
-- **Purpose**: All business logic — tasks, levels, progress, rewards
-- **Sub-packages**:
-  - `controller/` — HTTP handlers
-  - `service/` — Business logic
-  - `repository/` — MongoDB data access
-  - `model/` — Data structures
-  - `router/` — Route definitions
-
-**Key Models**:
-
-**DailyTask** (seeded templates):
-```go
-type DailyTask struct {
-    ID             string         // UUID
-    Title          string
-    Category       TaskCategory   // salah, quran, dhikr, learning, character, social, reflection
-    Description    string
-    Blocks         []Block        // Structured content blocks
-    CompletionType CompletionType // button, auto, quiz
-    RewardXP       int
-    Difficulty     Difficulty     // easy, medium
-    IsFixed        bool           // Always included (e.g., Fajr)
+// repository.go
+type UserRepository interface {
+    Create(ctx context.Context, user *User) error
+    FindByID(ctx context.Context, id string) (*User, error)
+    FindByEmail(ctx context.Context, email string) (*User, error)
+    Update(ctx context.Context, user *User) error
+    Delete(ctx context.Context, id string) error
 }
 ```
 
-**Block System** (Content Abstraction):
-The backend sends tasks as arrays of typed blocks, making the frontend truly dynamic:
-- `TextBlock` — Rich text content
-- `AyahBlock` — Quran verse with reference
-- `HadithBlock` — Hadith text with narrator chain
-- `CounterBlock` — Increment/decrement counter (for dhikr)
-- `QuizBlock` — Multiple choice questions
-- `AudioBlock` — Audio player with transcript
-- `ChecklistBlock` — Multi-item checklist
-- `FlashCardBlock` — Flip cards for memorization
-- `DragDropBlock` — Interactive ordering
-- `MatchBlock` — Pair matching
-- `ImageBlock` / `VideoBlock` — Media
-- `VoicePracticeBlock` — Record and compare pronunciation
+**`progress/`** — Core business domain: daily tasks, levels, rewards, recitation, streaks, blocks. Contains all seed data:
+- `daily_task.go` — DailyTask entity, TaskCategory, Difficulty, CompletionType enums
+- `block.go` — 14 block types (Text, Ayah, Hadith, Counter, Quiz, Audio, Checklist, FlashCard, DragDrop, Match, Image, Video, VoicePractice)
+- `level.go` — Level entity, Lesson, MiniGame, LessonType, ScreenType
+- `course.go` — CourseType enum (qaida/tajweed), Course entity
+- `reward.go` — Reward entity, RewardTrigger, Rarity enums
+- `entity.go` — Progress, Streak, UserDailyTask entities
+- `recitation.go` — RecitationResult, WordResult value objects
+- `seed_levels.go` — 32 seeded levels (20 Qaida + 12 Tajweed)
+- `seed_tasks.go` — 10 daily task templates
+- `seed_rewards.go` — 6 milestone reward definitions
 
-**Level System**:
-```go
-type Level struct {
-    ID           int            // Sequential within course
-    CourseType   CourseType   // "qaida" | "tajweed"
-    CourseLevel  int           // Display level number
-    Title        string
-    Theme        string        // Thematic grouping
-    Goal         string        // Learning objective
-    Lessons      []Lesson      // Ordered lesson steps
-    MiniGame     MiniGame      // Post-lesson challenge
-    XPReward     int
-    UnlockReward string        // Description of unlock
-    Difficulty   LevelDifficulty // easy | medium | hard
-}
+**`notification/`** — Push notification domain:
+- `entity.go` — UserToken (Expo push token per device), Message value object
+- `repository.go` — TokenRepository interface
+- `errors.go` — ErrTokenNotFound, ErrTokenExpired
+
+**`intelligent/`** — Intelligent notification rules:
+- `entity.go` — NotificationRule, UserContext (streak, tasks, rank), NotificationType enum
+- `repository.go` — LogRepository interface for notification logs
+
+#### Application Layer (`internal/application/`)
+
+Orchestration layer — each package implements one use case or service by composing domain interfaces and infrastructure. No HTTP awareness.
+
+| Package | Service | Responsibility |
+|---------|---------|----------------|
+| `auth/` | `AuthService` | Signup (bcrypt + JWT), Login, token generation |
+| `user/` | `UserService` | Profile CRUD, password change, account deletion |
+| `progress/` | `CoreService` | Daily task assignment/completion, level progression, XP/streak/reward logic, leaderboard, seeding |
+| `progress/` | `RecitationService` | Audio upload → Whisper → Arabic comparison → scoring |
+| `notification/` | `Service` | Token registration, Expo push dispatch |
+| `intelligent/` | `Service` | Rule-based notification engine (3 rules), single-pass user evaluation |
+| `worker/` | `Consumer` | Kafka consumer for `notification.send` topic — looks up token, sends push, logs result |
+| `worker/` | `Scheduler` | Daily job log cleanup (24h cron) |
+
+**Key Design Decision**: Template-based intelligent notifications (no AI dependency) for instant, predictable messaging.
+
+#### Interfaces Layer (`internal/interfaces/http/`)
+
+HTTP-specific concerns — Gin handlers, DTOs, and route registration. Translates between HTTP and application layer.
+
+**Handlers** (5 files):
+- `auth_handler.go` — `POST /auth/signup`, `POST /auth/login`
+- `user_handler.go` — `GET/PUT /users/me`, `PUT /users/me/password`, `DELETE /users/me`, `GET /users/:id/public`
+- `core_handler.go` — All progress/leaderboard/levels/rewards/daily-tasks endpoints
+- `recitation_handler.go` — `POST /recitation/check`
+- `notification_handler.go` — `POST /notifications/register`, `POST /notifications/test`
+
+**DTOs** (2 files):
+- `auth_dto.go` — SignupRequest, LoginRequest, AuthResponse
+- `user_dto.go` — UpdateProfileRequest, ChangePasswordRequest, UserResponse, PublicProfileResponse
+
+**Router** (`router.go`):
+- `SetupRoutes()` — Wire all handlers and middleware. 21 routes total.
+
+#### Infrastructure Layer (`internal/infrastructure/`)
+
+All external concerns — concrete implementations of domain interfaces, framework adapters, and cross-cutting utilities.
+
+| Package | File(s) | Responsibility |
+|---------|---------|----------------|
+| `config/` | `config.go` | Env loading (godotenv), Config struct |
+| `logger/` | `logger.go` | Structured logging via Uber Zap |
+| `persistence/` | 5 files | MongoDB repository implementations (User, Core, Token, NotificationLog, JobLog) |
+| `jwt/` | `jwt.go` | JWT access/refresh token generation and validation |
+| `bcrypt/` | `password.go` | Password hashing and comparison |
+| `cache/` | `redis.go` | Redis client initialization |
+| `middleware/` | 5 files | Auth (JWT), CORS, Request Logging, Rate Limit (Redis), Recovery |
+| `push/` | `expo.go` | Expo push notification API client |
+| `queue/` | `kafka.go` | Kafka producer/consumer abstraction |
+| `validator/` | `validator.go` | Go Playground Validator setup |
+| `response/` | `response.go` | Standardized JSON response envelope |
+| `ollama/` | `client.go` | Ollama LLM API client |
+
+### 3.3 API Routes (21 total)
+
+All under `/api/v1` prefix, standard JSON envelope:
+```json
+{ "success": true, "data": {...}, "message": "optional", "error": "optional" }
 ```
 
-**Lesson Types**:
-- `qaida` — Arabic alphabet/reading
-- `hadith` — Prophet's sayings
-- `dua` — Supplications
-- `quiz` — Knowledge check
-- `pronunciation` — Voice practice (integrates Whisper AI)
-- `manners` — Islamic etiquette
-- `revision` — Spaced repetition
+| Method | Path | Auth | Handler |
+|--------|------|------|---------|
+| GET | `/health` | No | Inline — health check |
+| POST | `/api/v1/auth/signup` | No | AuthHandler.Signup |
+| POST | `/api/v1/auth/login` | No | AuthHandler.Login |
+| GET | `/api/v1/users/:id/public` | No | UserHandler.GetPublicProfile |
+| GET | `/api/v1/progress/user/:id` | No | CoreHandler.GetPublicProgress |
+| GET | `/api/v1/users/me` | JWT | UserHandler.GetProfile |
+| PUT | `/api/v1/users/me` | JWT | UserHandler.UpdateProfile |
+| PUT | `/api/v1/users/me/password` | JWT | UserHandler.ChangePassword |
+| DELETE | `/api/v1/users/me` | JWT | UserHandler.DeleteAccount |
+| POST | `/api/v1/notifications/register` | JWT | NotificationHandler.RegisterToken |
+| POST | `/api/v1/notifications/test` | JWT | NotificationHandler.SendTestNotification |
+| GET | `/api/v1/progress/me` | JWT | CoreHandler.GetProgress |
+| GET | `/api/v1/leaderboard` | JWT | CoreHandler.GetLeaderboard |
+| GET | `/api/v1/daily-tasks` | JWT | CoreHandler.GetDailyTasks |
+| POST | `/api/v1/daily-tasks/:id/complete` | JWT | CoreHandler.CompleteDailyTask |
+| GET | `/api/v1/levels` | JWT | CoreHandler.GetLevels |
+| GET | `/api/v1/levels/:id` | JWT | CoreHandler.GetLevelDetail |
+| POST | `/api/v1/levels/:id/lessons/complete` | JWT | CoreHandler.CompleteLesson |
+| POST | `/api/v1/levels/:id/complete` | JWT | CoreHandler.CompleteLevel |
+| GET | `/api/v1/rewards` | JWT | CoreHandler.GetRewards |
+| POST | `/api/v1/recitation/check` | JWT | RecitationHandler.CheckRecitation |
 
-**Screen Types** (UI layout hints):
-- `CHECKLIST`, `QURAN_READER`, `COUNTER`, `HADITH_CARD`
-- `QUIZ`, `AUDIO_PLAYER`, `REFLECTION`, `TIPS`, `ACTION`
+### 3.4 Background Processing
 
-**Mini Game Types**:
-- `tap_match` — Tap matching pairs
-- `listen_choose` — Listen and select
-- `drag_drop` — Drag and drop ordering
-- `repeat_voice` — Voice repetition
-- `mcq` — Multiple choice
-- `memory_cards` — Card matching game
+The monolith runs background goroutines alongside the HTTP server:
 
-**Reward System**:
-```go
-type Reward struct {
-    ID          string
-    Title       string
-    Description string
-    Icon        string   // crown|flame|gem|trophy|zap
-    Rarity      string   // rare|epic|legendary
-    Trigger     RewardTrigger // levels_completed | xp | streak_days
-    Required    int      // Threshold to unlock
-    XPBonus     int      // Bonus XP on unlock
-    SortOrder   int      // Display order
-}
-```
+**Kafka Consumer** (`worker.Consumer`):
+- Topic: `notification.send`
+- Group: `worker-notification-send-group`
+- Handler: Decodes job → looks up user's Expo token → sends via Expo API → logs result in `job_logs`
+- Runs in a goroutine started from `main()`
 
-#### Worker Service (`internal/worker-service/` + `internal/ai-service/`)
-- **Purpose**: Background processing and intelligent notifications
-- **Technology**: Cron jobs + Kafka consumer
-- **Runs every**: 10 minutes
-- **Processes**:
-  1. Fetches all users from MongoDB (single-pass)
-  2. Evaluates against 4 notification rules:
-     | Rule | Trigger | Cooldown |
-     |------|---------|----------|
-     | Daily Task Reminder | Pending tasks + inactive > 4h | 6 hours |
-     | Streak Warning | Streak > 3 days + missed today | 12 hours |
-     | Friday Special | Today is Friday | 24 hours |
-     | Leaderboard Update | User rank improved | 24 hours |
-  3. Sends push notifications via Expo Push API
-  4. Retry with exponential backoff (3 attempts)
+**Daily Job Log Cleanup** (`worker.Scheduler`):
+- Cron: every 24 hours
+- Removes stale job log entries
 
-**Key Design Decision**: Template-based messages (no AI dependency) for instant, predictable notifications.
+**Intelligent Notification Scheduler** (`intelligent.Scheduler`):
+- Cron: every 60 seconds (`*/1 * * * *`)
+- Single-pass: fetches all users → evaluates 3 rules per user → sends via notification service
+- Each rule has its own cooldown:
+  | Rule | Cooldown |
+  |------|----------|
+  | Daily Task Reminder | 6 hours |
+  | Streak Warning | 12 hours |
+  | Friday Special | 24 hours |
+- Retry with exponential backoff (3 attempts max)
 
-#### Notification Service (`internal/notification-service/`)
-- Stores push tokens per user/device
-- Platform-aware (iOS/Android/Web)
-- Token refresh handling
+### 3.5 Database Schema (MongoDB)
 
-### 3.3 Database Schema (MongoDB)
+5 collections, unchanged from the original microservices:
 
-**Collections**:
-1. `users` — Identity service user records
-2. `daily_tasks` — Task templates (seeded)
-3. `user_daily_tasks` — Per-user daily assignments
-4. `levels` — Level templates (seeded)
-5. `user_levels` — Per-user level progress
-6. `rewards` — Reward definitions (seeded)
-7. `user_rewards` — Unlocked rewards
-8. `progress` — Aggregated user stats (XP, level, streak)
-9. `notification_tokens` — Expo push tokens
-10. `leaderboard` — Denormalized ranking data
+| Collection | Domain | Documents |
+|-----------|--------|-----------|
+| `users` | identity | User records with password hashes |
+| `progress` | progress | Aggregated stats: XP, level, streak, barakah_score |
+| `streaks` | progress | Current streak, longest streak, last_completed_date |
+| `daily_tasks` | progress | 10 seeded task templates |
+| `user_daily_tasks` | progress | Per-user daily assignments (5 per user/day) |
+| `levels` | progress | 32 seeded level templates (20 Qaida + 12 Tajweed) |
+| `user_levels` | progress | Per-user level progress |
+| `rewards` | progress | 6 seeded reward definitions |
+| `user_rewards` | progress | Per-user unlocked rewards |
+| `leaderboard` | progress | Denormalized ranking (level DESC, XP DESC) |
+| `notification_tokens` | notification | Expo push tokens per user/device |
+| `notification_logs` | intelligent | Sent notification history for cooldown tracking |
+| `job_logs` | worker | Kafka consumer job execution records |
 
-### 3.4 AI / Whisper Integration
+### 3.6 AI / Whisper Integration
 
-- **Whisper Service**: Python/FastAPI running OpenAI Whisper (small model)
+- **Whisper Service**: Python/FastAPI running OpenAI Whisper (small model), external process
 - **Purpose**: Evaluate user's Quran/Arabic pronunciation
 - **Flow**:
   1. App records audio (m4a format)
   2. Uploads to `/api/v1/recitation/check` as multipart form
-  3. Backend forwards to Whisper service
-  4. Whisper transcribes Arabic text
-  5. Backend compares transcript to expected text
-  6. Returns: `score` (0-100), `words[]` (with correct/wrong/missing/extra status), `xp_earned`
+  3. `RecitationHandler` receives the file, forwards to `RecitationService`
+  4. `RecitationService.Check()` sends audio to Whisper service via HTTP
+  5. Whisper transcribes Arabic text
+  6. Backend compares transcript to expected text using `ArabicMatcher`
+  7. Returns: `score` (0-100), `words[]` (with correct/wrong/missing/extra status), `xp_earned`
 
-### 3.5 Infrastructure
+**ArabicMatcher** (`internal/application/progress/arabic_matcher.go`):
+- Normalizes Arabic text (removes diacritics, standardizes variants)
+- Aligns expected vs. transcribed words
+- Computes per-word correctness and overall score
 
-**Docker Compose**:
+### 3.7 Infrastructure
+
+**Docker Compose** (unchanged from microservices era):
 - `zookeeper` — Kafka coordination
 - `kafka` — Event streaming (port 9092)
-- `redis` — Caching & rate limiting (port 6379, AOF persistence)
+- `redis` — Rate limiting (port 6379, AOF persistence)
 
-**Development Tools**:
-- `Air` — Hot reload for Go services
-- `tmux` — Multi-service dev layout
-- `Makefile` — Comprehensive build/run/test commands
-- `Nginx` — Reverse proxy configuration
+**External Dependencies**:
+- Whisper Service (Python/FastAPI, port 8001) — started separately via `make whisper-run`
+- Expo Push API — external SaaS
 
-**Build Output**:
+**Single Build Output**:
 ```
 backend/build/
-├── gateway      # API Gateway binary
-├── auth         # Identity service binary
-├── core-service # Core business logic binary
-└── worker-service # Background worker binary
-```
-
-### 3.6 API Versioning
-
-All endpoints under `/api/v1/` prefix.
-Response envelope:
-```json
-{
-  "success": true,
-  "message": "optional",
-  "data": { ... },
-  "error": "optional"
-}
+└── deenquest-api          # Single binary (~25MB)
 ```
 
 ---
@@ -845,16 +870,22 @@ This allows the app to work immediately after deployment without manual content 
 |-------|---------------|
 | Authentication | JWT access tokens (short-lived) + refresh tokens |
 | Password Storage | bcrypt hashing |
-| API Protection | JWT middleware on all protected routes |
-| Rate Limiting | Redis-backed rate limiting at gateway |
+| API Protection | JWT middleware on all protected JWT routes |
+| Rate Limiting | Redis-backed, 100 requests/minute, fail-open on Redis down |
 | Input Validation | Go Playground Validator v10 |
-| CORS | Configured at gateway level |
+| CORS | Configured at Gin router level |
 
 ### 6.5 Development Workflow
 
 ```bash
-# Start all backend services
-cd backend && make dev-tmux
+# Start infrastructure (Kafka + Redis)
+cd backend && make compose-up
+
+# Start whisper service (if using recitation features)
+cd backend && make whisper-run
+
+# Run the API server
+cd backend && make run
 
 # Start mobile app
 cd DeenQuestExpo && npm run start
@@ -868,7 +899,7 @@ cd admin-panel && npm run dev
 
 **Build Commands**:
 ```bash
-# Backend
+# Backend (single binary)
 cd backend && make build && make test
 
 # Mobile
@@ -884,97 +915,96 @@ cd admin-panel && npm run build
 
 ```
 DeenQuest/
-├── DeenQuestExpo/              # Mobile App
+├── DeenQuestExpo/                 # Mobile App (React Native + Expo + TS)
 │   ├── app/
-│   │   ├── components/          # Reusable UI (Header, ScreenWrapper, TactileButton, BlockRenderer, etc.)
-│   │   ├── screens/             # 18+ screen components
-│   │   │   ├── auth/            # Login, Signup, Onboarding
-│   │   │   ├── home/            # HomeScreen
-│   │   │   ├── level/           # LearnPath, LevelMap, LessonPlayer, MiniGame
-│   │   │   ├── task/            # DailyTask, DailyTaskDetail
-│   │   │   ├── profile/         # Profile, Settings, EditProfile, PublicProfile
-│   │   │   ├── leaderboard/     # LeaderboardScreen
-│   │   │   └── reward/          # RewardsScreen + components
-│   │   ├── navigators/          # AppNavigator, DemoNavigator (tabs)
-│   │   ├── store/               # Redux + RTK Query
-│   │   │   ├── slices/          # mainSlice (auth state)
-│   │   │   ├── services/        # API service definitions
-│   │   │   └── storage/         # AsyncStorage helpers
-│   │   ├── theme/               # themes.ts (comprehensive color system)
-│   │   ├── utils/               # haptics, helpers
-│   │   └── services/            # notificationService
-│   ├── assets/                  # Logos, icons, screenshots, sounds
-│   ├── App.js                   # Root component
-│   └── app.json                 # Expo configuration
+│   │   ├── components/            # Reusable UI (Header, ScreenWrapper, TactileButton, BlockRenderer...)
+│   │   ├── screens/               # 18+ screen components
+│   │   │   ├── auth/              # Login, Signup, Onboarding
+│   │   │   ├── home/              # HomeScreen
+│   │   │   ├── level/             # LearnPath, LevelMap, LessonPlayer, MiniGame
+│   │   │   ├── task/              # DailyTask, DailyTaskDetail
+│   │   │   ├── profile/           # Profile, Settings, EditProfile, PublicProfile
+│   │   │   ├── leaderboard/       # LeaderboardScreen
+│   │   │   └── reward/            # RewardsScreen + components
+│   │   ├── navigators/            # AppNavigator, DemoNavigator (tabs)
+│   │   ├── store/                 # Redux + RTK Query
+│   │   │   ├── slices/            # mainSlice (auth state)
+│   │   │   ├── services/          # API service definitions
+│   │   │   └── storage/           # AsyncStorage helpers
+│   │   ├── theme/                 # themes.ts (comprehensive color system)
+│   │   ├── utils/                 # haptics, helpers
+│   │   └── services/              # notificationService
+│   ├── assets/                    # Logos, icons, screenshots, sounds
+│   ├── App.js                     # Root component
+│   └── app.json                   # Expo configuration
 │
-├── backend/                     # Go Microservices
-│   ├── cmd/                     # Service entry points
-│   │   ├── gateway/             # API Gateway
-│   │   ├── auth/                # Identity service
-│   │   ├── core-service/        # Core business logic
-│   │   └── worker-service/      # Background worker
-│   ├── internal/                # Private service code
-│   │   ├── core-service/        # Controllers, services, repositories, models
-│   │   ├── identity-service/    # Auth logic, user management
-│   │   ├── worker-service/      # Cron jobs, notification scheduler
-│   │   ├── notification-service/ # Push notification handling
-│   │   └── ai-service/          # AI notification rules + logic
-│   ├── pkg/                     # Shared packages
-│   ├── scripts/                 # Dev tooling (tmux, etc.)
-│   ├── dev/                     # Air hot-reload configs
-│   ├── nginx/                   # Reverse proxy config
-│   ├── whisper-service/         # Python Whisper API
-│   ├── docker-compose.yml       # Kafka, Redis, Zookeeper
-│   └── Makefile                 # Comprehensive build commands
+├── backend/                       # Go DDD Monolith (Gin + MongoDB + Kafka + Redis)
+│   ├── cmd/
+│   │   └── api/
+│   │       └── main.go            # Single entry point — DI wiring, seed, goroutines, HTTP server
+│   ├── internal/
+│   │   ├── domain/                # LAYER 1 — Entities, value objects, repository interfaces
+│   │   │   ├── identity/          #   User entity, UserRepository interface
+│   │   │   ├── progress/          #   Progress/Streak/DailyTask/Level/Reward/Recitation + seed data
+│   │   │   ├── notification/      #   UserToken, Message, TokenRepository, errors
+│   │   │   └── intelligent/       #   NotificationRule, NotificationLog, LogRepository
+│   │   ├── application/           # LAYER 2 — Use cases, application services
+│   │   │   ├── auth/              #   AuthService (signup, login, JWT generation)
+│   │   │   ├── user/              #   UserService (profile CRUD, password change)
+│   │   │   ├── progress/          #   CoreService + RecitationService + ArabicMatcher
+│   │   │   ├── notification/      #   NotificationService (token reg, push dispatch)
+│   │   │   ├── intelligent/       #   Rule engine, user fetcher, scheduler (cron every 1min)
+│   │   │   └── worker/            #   Kafka consumer + daily cleanup scheduler
+│   │   ├── interfaces/            # LAYER 3 — HTTP handlers, DTOs, routing
+│   │   │   └── http/
+│   │   │       ├── handler/       #   5 handlers (auth, user, core, recitation, notification)
+│   │   │       ├── dto/           #   Request/response DTOs
+│   │   │       └── router.go      #   Unified 21-route setup
+│   │   └── infrastructure/        # LAYER 4 — External concerns, framework adapters
+│   │       ├── config/            #   Env loading, Config struct
+│   │       ├── logger/            #   Uber Zap structured logger
+│   │       ├── persistence/       #   5 MongoDB repo implementations
+│   │       ├── jwt/               #   JWT manager (access + refresh tokens)
+│   │       ├── bcrypt/            #   Password hashing
+│   │       ├── cache/             #   Redis client
+│   │       ├── middleware/        #   5 Gin middlewares (auth, CORS, logging, rate limit, recovery)
+│   │       ├── push/              #   Expo push notification client
+│   │       ├── queue/             #   Kafka producer/consumer
+│   │       ├── validator/         #   Go Playground Validator
+│   │       ├── response/          #   Standardized JSON response envelope
+│   │       └── ollama/            #   Ollama LLM client
+│   ├── whisper-service/           # Python speech-to-text microservice (FastAPI)
+│   ├── docs/                      # API docs, workflows, architecture
+│   ├── docker-compose.yml         # Kafka + Redis + Zookeeper infrastructure
+│   ├── Makefile                   # Build, run, test, lint commands
+│   └── go.mod
 │
-├── LandingPage/                 # Marketing Website
+├── LandingPage/                   # Marketing Website (React + Vite + Tailwind v4)
 │   ├── src/
-│   │   ├── routes/              # TanStack file-based routes
-│   │   │   ├── __root.tsx       # Root layout
-│   │   │   └── index.tsx        # Home page (all sections)
+│   │   ├── routes/
+│   │   │   ├── __root.tsx         # Root layout
+│   │   │   └── index.tsx          # Home page (all sections)
 │   │   ├── components/
-│   │   │   ├── landing/         # 15 section components
-│   │   │   │   ├── Navbar.tsx
-│   │   │   │   ├── Hero.tsx
-│   │   │   │   ├── Features.tsx
-│   │   │   │   ├── HowItWorks.tsx
-│   │   │   │   ├── Levels.tsx
-│   │   │   │   ├── DailyTasks.tsx
-│   │   │   │   ├── Gamification.tsx
-│   │   │   │   ├── MiniGames.tsx
-│   │   │   │   ├── Community.tsx
-│   │   │   │   ├── Testimonials.tsx
-│   │   │   │   ├── Download.tsx
-│   │   │   │   ├── Footer.tsx
-│   │   │   │   ├── FloatingNotification.tsx
-│   │   │   │   └── Particles.tsx
-│   │   │   └── ui/              # shadcn/ui components
-│   │   ├── assets/              # Images, mockups
-│   │   ├── styles.css           # Tailwind v4 theme + animations
-│   │   └── router.tsx           # Router configuration
-│   └── index.html               # HTML entry point
+│   │   │   ├── landing/           # 15 section components (Navbar, Hero, Features...)
+│   │   │   └── ui/                # shadcn/ui components
+│   │   ├── assets/                # Images, mockups
+│   │   ├── styles.css             # Tailwind v4 theme + animations
+│   │   └── router.tsx             # Router configuration
+│   └── index.html
 │
-├── admin-panel/                 # Admin Dashboard
+├── admin-panel/                   # Admin Dashboard (React + Vite + Tailwind v3)
 │   ├── src/
-│   │   ├── pages/               # 8 page components
-│   │   │   ├── DashboardPage.tsx
-│   │   │   ├── LoginPage.tsx
-│   │   │   ├── ContentListPage.tsx
-│   │   │   ├── ContentEditorPage.tsx
-│   │   │   ├── ThemesPage.tsx
-│   │   │   ├── RewardsPage.tsx
-│   │   │   ├── EventsPage.tsx
-│   │   │   └── AuditLogPage.tsx
-│   │   ├── components/          # Layout, StatCard, Sidebar
-│   │   ├── context/             # AuthContext
-│   │   ├── lib/                 # API client, utilities
-│   │   ├── types/               # TypeScript interfaces
-│   │   ├── App.tsx              # Route configuration
-│   │   └── index.css            # Tailwind directives + custom utilities
-│   └── tailwind.config.js       # Custom colors (emerald, gold, navy)
+│   │   ├── pages/                 # 8 pages (Dashboard, Login, Content, Themes...)
+│   │   ├── components/            # Layout, StatCard, Sidebar
+│   │   ├── context/               # AuthContext
+│   │   ├── lib/                   # API client, utilities
+│   │   ├── types/                 # TypeScript interfaces
+│   │   ├── App.tsx                # Route configuration
+│   │   └── index.css              # Tailwind directives + custom utilities
+│   └── tailwind.config.js         # Custom colors (emerald, gold, navy)
 │
-├── README.md                    # Project documentation
-└── Requirements.md              # Original design requirements
+├── README.md                      # Project documentation
+└── Requirements.md                 # Original design requirements
 ```
 
 ---
@@ -1001,6 +1031,12 @@ DeenQuest/
 
 10. **Monorepo Structure**: All components in one repo enables coordinated releases and shared understanding, even though each can be deployed independently.
 
+11. **DDD Monolith over Microservices**: The original microservices architecture (4 services: gateway, auth, core, worker) was migrated to a single DDD monolith to eliminate network overhead, simplify deployment, reduce memory footprint, and remove the API gateway without changing any business logic or API contracts.
+
+12. **Dependency Inversion**: All domain layers define repository interfaces; infrastructure provides MongoDB implementations. Application services depend on interfaces, not concrete implementations. This enables testability through mocking.
+
+13. **Single-Pass Evaluation**: The intelligent notification scheduler fetches all users once per tick and evaluates all 3 rules per user in one loop — no per-rule database round trips.
+
 ---
 
 ## 9. CONCLUSION
@@ -1010,10 +1046,12 @@ DeenQuest is a **production-grade, thoughtfully designed** gamified Islamic lear
 - **Comprehensive gamification** (XP, levels, streaks, rewards, leaderboard)
 - **Truly dynamic content** (block-based tasks, component-mapped lessons)
 - **AI integration** (Whisper for pronunciation checking)
-- **Event-driven architecture** (Kafka for scalability)
-- **Intelligent notifications** (context-aware push notifications)
+- **Event-driven processing** (Kafka for async notification delivery)
+- **Intelligent notifications** (template-based, context-aware push notifications)
+- **Clean DDD architecture** (4-layer monolith with dependency inversion)
 - **Beautiful, consistent design** across all three frontend components
 - **Open source** (MIT licensed, GitHub-hosted)
-- **Professional development tooling** (Air hot-reload, Docker Compose, tmux dev layout)
+- **Single-binary deployment** — one build, one process, zero service coordination
+- **Graceful degradation** — Redis rate limiting fails open, Whisper service failure returns a readable error
 
 The project demonstrates **senior-level architecture decisions** in mobile development, backend microservices, and modern web frontend development.

@@ -6,17 +6,21 @@ This system sends smart notifications to users who haven't used the app recently
 
 ---
 
-## File Structure
+## File Structure (DDD Monolith)
 
 ```
-ai-notifications/
-├── model.go              → Data shapes (types, structs)
-├── user_fetcher.go       → Fetches all users + their data from DB
-├── rules.go              → Rules + message templates for each notification type
-├── service.go            → Main brain: loops users, checks rules, sends notifications
-├── repository.go         → Interface for saving/loading notification logs
-├── mongo_repository.go   → MongoDB implementation of the repository
-└── scheduler.go          → Cron job that runs every 10 minutes
+internal/domain/intelligent/         → Data shapes (NotificationRule, UserContext, NotificationLog)
+├── entity.go                        → Structs and types
+└── repository.go                    → LogRepository interface
+
+internal/application/intelligent/    → Intelligent notification orchestration
+├── service.go                       → Main brain: loops users, checks rules, sends
+├── rules.go                         → 3 rule definitions with message templates
+├── user_fetcher.go                  → Fetches all users + their data from DB
+└── scheduler.go                     → Cron job that runs every 60 seconds
+
+internal/infrastructure/persistence/
+└── mongo_notification_log_repository.go  → MongoDB implementation of LogRepository
 ```
 
 ---
@@ -24,37 +28,40 @@ ai-notifications/
 ## File Relationships
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     scheduler.go                            │
-│  "Runs every 10 minutes, tells service to start working"    │
-└────────────────────────┬────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  internal/application/intelligent/scheduler.go                  │
+│  "Runs every 60 seconds, tells service to start working"        │
+└────────────────────────┬────────────────────────────────────────┘
                          │ calls
                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     service.go                              │
-│  "The boss: fetches users, checks rules, sends messages"    │
-└───┬──────────────────────┬──────────────────────┬───────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  internal/application/intelligent/service.go                    │
+│  "The boss: fetches users, checks rules, sends messages"        │
+└───┬──────────────────────┬──────────────────────┬───────────────┘
     │                      │                      │
     │ calls                │ calls                │ calls
     ▼                      ▼                      ▼
-┌──────────────┐   ┌──────────────┐   ┌──────────────────────┐
-│user_fetcher  │   │  rules.go    │   │mongo_repository.go   │
-│.go           │   │              │   │                      │
-│"Get all      │   │"Check if     │   │"Save logs + check    │
-│ users from   │   │ user should  │   │ cooldown: when was   │
-│ DB with      │   │ receive this │   │ last notification    │
-│ their data"  │   │ notification│   │ sent to this user?"  │
-└──────┬───────┘   └──────┬───────┘   └──────────┬───────────┘
-       │                  │                       │
-       │                  │                       │
-       ▼                  ▼                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     model.go                                │
-│  "Defines all data shapes used by every file above"         │
-│  - UserContext: user's streak, tasks, rank, token           │
-│  - NotificationRule: rule + template for one type           │
-│  - NotificationLog: record of sent notifications            │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────┐ ┌──────────────────┐ ┌──────────────────────────┐
+│ user_fetcher.go  │ │    rules.go      │ │ mongo_notification_      │
+│ (app layer)      │ │  (app layer)     │ │ log_repository.go        │
+│                  │ │                  │ │ (infra layer)            │
+│ "Get all users   │ │ "Check if user   │ │                          │
+│  from DB with    │ │  should receive  │ │ "Save logs + check       │
+│  their data"     │ │  this notif"     │ │  cooldown: when was      │
+│                  │ │                  │ │  last notification       │
+│                  │ │                  │ │  sent to this user?"     │
+└──────┬───────────┘ └──────┬───────────┘ └────────────┬─────────────┘
+       │                    │                           │
+       │                    │                           │
+       ▼                    ▼                           ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  internal/domain/intelligent/entity.go + repository.go          │
+│  "Defines all data shapes used by every file above"             │
+│  - UserContext: user's streak, tasks, rank, token               │
+│  - NotificationRule: rule + template for one type               │
+│  - NotificationLog: record of sent notifications                │
+│  - LogRepository interface                                      │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -62,22 +69,25 @@ ai-notifications/
 ## End-to-End Flow Diagram
 
 ```
-                    ┌─────────────────────┐
-                    │   Cron Scheduler    │
-                    │  (every 10 min)     │
-                    └─────────┬───────────┘
+                    ┌───────────────────────────────────────┐
+                    │  Cron Scheduler                       │
+                    │  (every 60 seconds)                   │
+                    │  internal/application/intelligent/    │
+                    │         scheduler.go                  │
+                    └─────────┬─────────────────────────────┘
                               │
                               ▼
-                    ┌─────────────────────┐
-                    │   service.go        │
-                    │ ProcessAllNotifs()  │
-                    └─────────┬───────────┘
+                    ┌───────────────────────────────────────┐
+                    │  service.go                            │
+                    │  ProcessAllNotifications()             │
+                    │  internal/application/intelligent/    │
+                    └─────────┬─────────────────────────────┘
                               │
            ┌──────────────────┼──────────────────┐
            ▼                  ▼                  ▼
 ┌──────────────────┐ ┌──────────────┐ ┌────────────────────┐
 │  Fetch Users     │ │  For each    │ │  For each rule     │
-│  from DB         │ │  user:       │ │  (4 types):        │
+│  from DB         │ │  user:       │ │  (3 types):        │
 │                  │ │              │ │                    │
 │  - tokens        │ │  ┌─────────┐ │ │  1. Check cooldown │
 │  - streaks       │ │  │ Check   │ │ │  2. Evaluate rule  │
@@ -87,11 +97,11 @@ ai-notifications/
                      └───────┼──────┘ └────────────────────┘
                              │
                              ▼
-                    ┌─────────────────────┐
-                    │   Push Sent via     │
-                    │   Expo Push API     │
-                    │   (to user's phone) │
-                    └─────────────────────┘
+                    ┌───────────────────────────────────────┐
+                    │  Push Sent via Expo Push API          │
+                    │  (to user's phone)                    │
+                    │  internal/infrastructure/push/expo.go │
+                    └───────────────────────────────────────┘
 ```
 
 ---
@@ -101,7 +111,7 @@ ai-notifications/
 ### Step 1: Scheduler Starts (scheduler.go)
 
 ```
-Every 10 minutes → Cron triggers → calls service.ProcessAllNotifications()
+Every 60 seconds → Cron triggers → calls service.ProcessAllNotifications()
 ```
 
 ### Step 2: Fetch All Users (user_fetcher.go)
@@ -120,7 +130,7 @@ Result: []UserContext  (list of users with all their data attached)
 
 ### Step 3: Check Each Notification Type (rules.go)
 
-For each user, the system checks 4 rules:
+For each user, the system checks 3 rules:
 
 ```
 ┌─────────────────────────────┬─────────────────────────────────────────────┐
@@ -136,13 +146,10 @@ For each user, the system checks 4 rules:
 ├─────────────────────────────┼─────────────────────────────────────────────┤
 │  FridaySpecial              │  - Today is Friday                          │
 │                             │  - Cooldown: 24 hours                       │
-├─────────────────────────────┼─────────────────────────────────────────────┤
-│  LeaderboardUpdate          │  - User's rank improved                     │
-│                             │  - Cooldown: 24 hours                       │
 └─────────────────────────────┴─────────────────────────────────────────────┘
 ```
 
-### Step 4: Check Cooldown (mongo_repository.go)
+### Step 4: Check Cooldown (mongo_notification_log_repository.go)
 
 Before sending, check: "Did we already send this type of notification recently?"
 
@@ -168,7 +175,7 @@ Each rule has a `BuildMessage` function that creates a personalized message:
 Send via Expo Push API → User's phone receives notification
 ```
 
-### Step 7: Save Log (mongo_repository.go)
+### Step 7: Save Log (mongo_notification_log_repository.go)
 
 ```
 Save to notification_logs collection:
@@ -190,7 +197,6 @@ User: Ahmed
 Streak: 7 days
 Last Activity: 14 hours ago
 Today's Tasks: 3 total, 1 completed
-Rank: #5 (was #8 yesterday)
 
 ┌──────────────────────────────────────────────────────────────────┐
 │  Rule Check Results:                                             │
@@ -200,13 +206,11 @@ Rank: #5 (was #8 yesterday)
 │  DailyTaskReminder       │  SEND    │  2 tasks pending, 14h ago  │
 │  StreakWarning           │  SEND    │  7 > 3 streak, missed today│
 │  FridaySpecial           │  SKIP    │  Not Friday                │
-│  LeaderboardUpdate       │  SEND    │  Rank improved #8 → #5     │
 └──────────────────────────┴──────────┴────────────────────────────┘
 
-Ahmed receives 3 notifications:
+Ahmed receives 2 notifications:
 1. "You have 2 tasks left today. Keep going!"
 2. "Your 7-day streak is at risk. Complete a task today!"
-3. "You reached Top 10 this week. Keep pushing!"
 ```
 
 ---
@@ -218,7 +222,7 @@ Ahmed receives 3 notifications:
 | 30s timeout per user | Instant message generation |
 | Needs Ollama server running | No external dependencies |
 | Unpredictable messages | Consistent, controlled tone |
-| One notification type | 4 notification types |
+| One notification type | 3 notification types |
 | Fetches users per type | Fetches users once |
 | No per-type cooldown | Per-type cooldown tracking |
 
