@@ -162,10 +162,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 
       await signup(payload).unwrap();
       dispatch(setError(null));
-      navigation.navigate("PersonalizedOnboarding", {
-        email: payload.email,
-        password: payload.password,
-      });
+      navigation.goBack();
     } catch (err: any) {
       const message = getErrorMessage(err);
       setFormError(message);
@@ -177,7 +174,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   const displayError = formError || requestError;
 
   return (
-    <ScreenWrapper innerStyle={{flex:1}}>
+    <ScreenWrapper innerStyle={{ flex: 1 }}>
       <View style={styles.backgroundOrbTop} />
       <View style={styles.backgroundOrbBottom} />
 
@@ -220,148 +217,146 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
               </View>
             )}
 
-          <View
-            style={styles.inputGroup}
-            onLayout={(event) => {
-              inputOffsets.current.email = event.nativeEvent.layout.y;
-            }}
-          >
-            <Text style={styles.label}>Email Address</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[
-                  styles.input,
-                  errors.email && styles.inputError,
-                ]}
-                placeholder="name@example.com"
-                placeholderTextColor={theme.colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                selectionColor={theme.colors.primary}
-                value={form.email}
-                onChangeText={(text) => handleChange("email", text)}
-                onFocus={() => handleInputFocus("email")}
-                editable={!isLoading}
-              />
-              <Mail
-                size={18}
-                color={theme.colors.textMuted}
-                style={styles.inputIcon}
-              />
-            </View>
-            {!!errors.email && (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            )}
-          </View>
-
-          <View
-            style={styles.inputGroup}
-            onLayout={(event) => {
-              inputOffsets.current.password = event.nativeEvent.layout.y;
-            }}
-          >
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[
-                  styles.input,
-                  errors.password && styles.inputError,
-                ]}
-                placeholder="Create a secure password"
-                placeholderTextColor={theme.colors.textMuted}
-                secureTextEntry
-                selectionColor={theme.colors.primary}
-                value={form.password}
-                onChangeText={(text) => handleChange("password", text)}
-                onFocus={() => handleInputFocus("password")}
-                editable={!isLoading}
-              />
-              <Lock
-                size={18}
-                color={theme.colors.textMuted}
-                style={styles.inputIcon}
-              />
-            </View>
-            {!!errors.password && (
-              <Text style={styles.errorText}>{errors.password}</Text>
-            )}
-          </View>
-
-          <View
-            style={styles.inputGroup}
-            onLayout={(event) => {
-              inputOffsets.current.confirmPassword = event.nativeEvent.layout.y;
-            }}
-          >
-            <Text style={styles.label}>Confirm Password</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={[
-                  styles.input,
-                  errors.confirmPassword && styles.inputError,
-                ]}
-                placeholder="Re-enter your password"
-                placeholderTextColor={theme.colors.textMuted}
-                secureTextEntry
-                selectionColor={theme.colors.primary}
-                value={form.confirmPassword}
-                onChangeText={(text) => handleChange("confirmPassword", text)}
-                onFocus={() => handleInputFocus("confirmPassword")}
-                editable={!isLoading}
-              />
-              <UserPlus
-                size={18}
-                color={theme.colors.textMuted}
-                style={styles.inputIcon}
-              />
-            </View>
-            {!!errors.confirmPassword && (
-              <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-            )}
-          </View>
-
-          <View style={styles.checklistBox}>
-            <ChecklistItem
-              ok={passwordChecklist.length}
-              text="At least 8 characters"
-            />
-            <ChecklistItem
-              ok={passwordChecklist.upper}
-              text="Contains one uppercase letter"
-            />
-            <ChecklistItem
-              ok={passwordChecklist.number}
-              text="Contains one number"
-            />
-          </View>
-
-          <TouchableOpacity
-            style={styles.termsRow}
-            onPress={() => {
-              haptics.light();
-              setAcceptedTerms((prev) => !prev);
-            }}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
             <View
-              style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}
+              style={styles.inputGroup}
+              onLayout={(event) => {
+                inputOffsets.current.email = event.nativeEvent.layout.y;
+              }}
             >
-              {acceptedTerms && (
-                <CheckCircle2 size={14} color={theme.colors.onPrimary} />
+              <Text style={styles.label}>Email Address</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, errors.email && styles.inputError]}
+                  placeholder="name@example.com"
+                  placeholderTextColor={theme.colors.textMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  selectionColor={theme.colors.primary}
+                  value={form.email}
+                  onChangeText={(text) => handleChange("email", text)}
+                  onFocus={() => handleInputFocus("email")}
+                  editable={!isLoading}
+                />
+                <Mail
+                  size={18}
+                  color={theme.colors.textMuted}
+                  style={styles.inputIcon}
+                />
+              </View>
+              {!!errors.email && (
+                <Text style={styles.errorText}>{errors.email}</Text>
               )}
             </View>
-            <Text style={styles.termsText}>
-              I agree to the community guidelines and privacy policy.
-            </Text>
-          </TouchableOpacity>
 
-          <TactileButton
-            title={isLoading ? "Creating account..." : "Create Account"}
-            onPress={handleSignup}
-            style={styles.signupButton}
-          />
+            <View
+              style={styles.inputGroup}
+              onLayout={(event) => {
+                inputOffsets.current.password = event.nativeEvent.layout.y;
+              }}
+            >
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.input, errors.password && styles.inputError]}
+                  placeholder="Create a secure password"
+                  placeholderTextColor={theme.colors.textMuted}
+                  secureTextEntry
+                  selectionColor={theme.colors.primary}
+                  value={form.password}
+                  onChangeText={(text) => handleChange("password", text)}
+                  onFocus={() => handleInputFocus("password")}
+                  editable={!isLoading}
+                />
+                <Lock
+                  size={18}
+                  color={theme.colors.textMuted}
+                  style={styles.inputIcon}
+                />
+              </View>
+              {!!errors.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
+            </View>
+
+            <View
+              style={styles.inputGroup}
+              onLayout={(event) => {
+                inputOffsets.current.confirmPassword =
+                  event.nativeEvent.layout.y;
+              }}
+            >
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.confirmPassword && styles.inputError,
+                  ]}
+                  placeholder="Re-enter your password"
+                  placeholderTextColor={theme.colors.textMuted}
+                  secureTextEntry
+                  selectionColor={theme.colors.primary}
+                  value={form.confirmPassword}
+                  onChangeText={(text) => handleChange("confirmPassword", text)}
+                  onFocus={() => handleInputFocus("confirmPassword")}
+                  editable={!isLoading}
+                />
+                <UserPlus
+                  size={18}
+                  color={theme.colors.textMuted}
+                  style={styles.inputIcon}
+                />
+              </View>
+              {!!errors.confirmPassword && (
+                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+              )}
+            </View>
+
+            <View style={styles.checklistBox}>
+              <ChecklistItem
+                ok={passwordChecklist.length}
+                text="At least 8 characters"
+              />
+              <ChecklistItem
+                ok={passwordChecklist.upper}
+                text="Contains one uppercase letter"
+              />
+              <ChecklistItem
+                ok={passwordChecklist.number}
+                text="Contains one number"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.termsRow}
+              onPress={() => {
+                haptics.light();
+                setAcceptedTerms((prev) => !prev);
+              }}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  acceptedTerms && styles.checkboxChecked,
+                ]}
+              >
+                {acceptedTerms && (
+                  <CheckCircle2 size={14} color={theme.colors.onPrimary} />
+                )}
+              </View>
+              <Text style={styles.termsText}>
+                I agree to the community guidelines and privacy policy.
+              </Text>
+            </TouchableOpacity>
+
+            <TactileButton
+              title={isLoading ? "Creating account..." : "Create Account"}
+              onPress={handleSignup}
+              style={styles.signupButton}
+            />
           </View>
 
           <TouchableOpacity
