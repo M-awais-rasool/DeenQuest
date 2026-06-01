@@ -30,6 +30,11 @@ Base prefix: `/api/v1`. Standard response envelope:
 |--------|------|------|-------------|
 | GET | `/api/v1/users/:id/public` | No | View public profile |
 | GET | `/api/v1/progress/user/:id` | No | View public progress/stats |
+| GET | `/api/v1/quran/surahs` | No | List all 114 Surahs |
+| GET | `/api/v1/quran/surah/:id?translation=en.asad` | No | Get a Surah ayah-by-ayah, optionally with translation |
+| GET | `/api/v1/quran/surah/:id/audio` | No | Get full-Surah audio URL |
+
+Compatibility aliases are also available under `/api/quran/*` for clients that do not use the v1 prefix.
 
 ## User (JWT required)
 
@@ -73,3 +78,4 @@ Base prefix: `/api/v1`. Standard response envelope:
 - Access tokens are short-lived (default 15m), refresh by re-authenticating
 - Rate limit: 100 requests per minute per IP (Redis-backed, fail-open if Redis is down)
 - CORS origins configured via `CORS_ALLOWED_ORIGINS` env var
+- Quran responses are Redis-backed: Surah list is cached for 1 hour; Surah details and audio URLs are cached for 7 days.

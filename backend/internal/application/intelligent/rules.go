@@ -10,8 +10,8 @@ import (
 func BuildRules() []domain.NotificationRule {
 	return []domain.NotificationRule{
 		{
-			Type:     domain.DailyTaskReminder,
-			Cooldown: 6 * time.Hour,
+			Type:       domain.DailyTaskReminder,
+			Cooldown:   6 * time.Hour,
 			TimeWindow: domain.TimeWindow{StartHour: 9, EndHour: 14},
 			Evaluate: func(ctx *domain.UserContext, now time.Time) bool {
 				if ctx.TodayTasksTotal == 0 {
@@ -38,7 +38,7 @@ func BuildRules() []domain.NotificationRule {
 				remaining := ctx.TodayTasksTotal - ctx.TodayTasksDone
 				if remaining > 0 {
 					return formatWithVariations(
-						"You have %d task%s left today. Keep going!",
+						"You have %d daily task left today. Keep going!",
 						"Your daily Quran mission is waiting for you.",
 						"A small step today keeps your learning journey strong.",
 					)(ctx, remaining)
@@ -47,8 +47,8 @@ func BuildRules() []domain.NotificationRule {
 			},
 		},
 		{
-			Type:     domain.StreakWarning,
-			Cooldown: 12 * time.Hour,
+			Type:       domain.StreakWarning,
+			Cooldown:   12 * time.Hour,
 			TimeWindow: domain.TimeWindow{StartHour: 18, EndHour: 22},
 			Evaluate: func(ctx *domain.UserContext, now time.Time) bool {
 				if ctx.CurrentStreak <= 3 {
@@ -78,8 +78,8 @@ func BuildRules() []domain.NotificationRule {
 			},
 		},
 		{
-			Type:     domain.FridaySpecial,
-			Cooldown: 24 * time.Hour,
+			Type:       domain.FridaySpecial,
+			Cooldown:   24 * time.Hour,
 			TimeWindow: domain.TimeWindow{StartHour: 10, EndHour: 16},
 			Evaluate: func(ctx *domain.UserContext, now time.Time) bool {
 				return now.Weekday() == time.Friday
@@ -92,16 +92,67 @@ func BuildRules() []domain.NotificationRule {
 				}
 				return titles[int(math.Abs(float64(hashStr(ctx.UserID+"friday"))))%len(titles)]
 			},
-		BuildMessage: func(ctx *domain.UserContext) string {
-			msgs := []string{
-				"Don't forget to read Surah Al-Kahf today. It brings light between two Fridays.",
-				"Friday is a blessed day. Increase your dhikr and send salawat upon the Prophet.",
-				"Make the most of this blessed Friday. Open the app and earn extra rewards.",
-			}
-			return msgs[int(math.Abs(float64(hashStr(ctx.UserID+"friday-msg"))))%len(msgs)]
+			BuildMessage: func(ctx *domain.UserContext) string {
+				msgs := []string{
+					"Don't forget to read Surah Al-Kahf today. It brings light between two Fridays.",
+					"Friday is a blessed day. Increase your dhikr and send salawat upon the Prophet.",
+					"Make the most of this blessed Friday. Open the app and earn extra rewards.",
+				}
+				return msgs[int(math.Abs(float64(hashStr(ctx.UserID+"friday-msg"))))%len(msgs)]
+			},
+			BuildData: func(ctx *domain.UserContext) map[string]interface{} {
+				return quranNotificationData(18, "Al-Kahf")
+			},
 		},
+		{
+			Type:       domain.QuranSuggestion,
+			Cooldown:   24 * time.Hour,
+			TimeWindow: domain.TimeWindow{StartHour: 7, EndHour: 11},
+			Evaluate: func(ctx *domain.UserContext, now time.Time) bool {
+				return true
+			},
+			BuildTitle: func(ctx *domain.UserContext) string {
+				surah := pickSuggestedSurah(ctx)
+				return "Daily Quran reminder: " + surah.name
+			},
+			BuildMessage: func(ctx *domain.UserContext) string {
+				surah := pickSuggestedSurah(ctx)
+				return "Take a few quiet minutes with Surah " + surah.name + " today."
+			},
+			BuildData: func(ctx *domain.UserContext) map[string]interface{} {
+				surah := pickSuggestedSurah(ctx)
+				return quranNotificationData(surah.id, surah.name)
+			},
 		},
+	}
 }
+
+type suggestedSurah struct {
+	id   int
+	name string
+}
+
+var suggestedSurahs = []suggestedSurah{
+	{id: 1, name: "Al-Fatiha"},
+	{id: 18, name: "Al-Kahf"},
+	{id: 36, name: "Ya-Sin"},
+	{id: 55, name: "Ar-Rahman"},
+	{id: 67, name: "Al-Mulk"},
+	{id: 112, name: "Al-Ikhlas"},
+}
+
+func pickSuggestedSurah(ctx *domain.UserContext) suggestedSurah {
+	idx := int(math.Abs(float64(hashStr(ctx.UserID+time.Now().UTC().Format("2006-01-02"))))) % len(suggestedSurahs)
+	return suggestedSurahs[idx]
+}
+
+func quranNotificationData(id int, name string) map[string]interface{} {
+	return map[string]interface{}{
+		"screen":     "SurahDetail",
+		"surah_id":   id,
+		"surah_name": name,
+		"url":        "deenquest://quran/surah/" + intToStr(id),
+	}
 }
 
 func formatWithVariations(variants ...string) func(ctx *domain.UserContext, args ...int) string {
@@ -191,4 +242,3 @@ func hashStr(s string) int64 {
 	}
 	return h
 }
-

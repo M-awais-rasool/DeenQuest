@@ -32,6 +32,11 @@ type Config struct {
 
 	WhisperURL string
 
+	AlQuranBaseURL    string
+	QuranAudioCDNURL  string
+	QuranAudioEdition string
+	QuranAudioBitrate int
+
 	ExpoPushURL         string
 	ExpoPushAccessToken string
 
@@ -59,6 +64,10 @@ func Load() (*Config, error) {
 		KafkaBrokers:        getEnv("KAFKA_BROKERS", "localhost:9092"),
 		JWTSecret:           getEnv("JWT_SECRET", "change-me-in-production"),
 		WhisperURL:          getEnv("WHISPER_URL", "http://localhost:8001"),
+		AlQuranBaseURL:      getEnv("ALQURAN_BASE_URL", "https://api.alquran.cloud/v1"),
+		QuranAudioCDNURL:    getEnv("QURAN_AUDIO_CDN_URL", "https://cdn.islamic.network"),
+		QuranAudioEdition:   getEnv("QURAN_AUDIO_EDITION", "ar.alafasy"),
+		QuranAudioBitrate:   getInt("QURAN_AUDIO_BITRATE", 128),
 		ExpoPushURL:         getEnv("EXPO_PUSH_URL", "https://exp.host/--/api/v2/push/send"),
 		ExpoPushAccessToken: getEnv("EXPO_PUSH_ACCESS_TOKEN", ""),
 		OllamaURL:           getEnv("OLLAMA_URL", "http://127.0.0.1:11434"),

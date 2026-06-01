@@ -46,10 +46,10 @@ type ProcessingStats struct {
 }
 
 type NotificationTypeStats struct {
-	Type   domain.NotificationType
-	Sent   int
+	Type    domain.NotificationType
+	Sent    int
 	Skipped int
-	Failed int
+	Failed  int
 }
 
 func (s *NotificationService) ProcessAllNotifications(ctx context.Context) (*ProcessingStats, error) {
@@ -102,8 +102,16 @@ func (s *NotificationService) ProcessAllNotifications(ctx context.Context) (*Pro
 
 				title := rule.BuildTitle(&user)
 				message := rule.BuildMessage(&user)
+				data := map[string]interface{}{
+					"type": string(rule.Type),
+				}
+				if rule.BuildData != nil {
+					for k, v := range rule.BuildData(&user) {
+						data[k] = v
+					}
+				}
 
-				err = s.sendWithRetry(ctx, user, rule.Type, title, message)
+				err = s.sendWithRetry(ctx, user, rule.Type, title, message, data)
 				if err != nil {
 					stats.Notifications[i].Failed++
 					logger.Error("failed to send notification after retries",
@@ -155,10 +163,10 @@ func (s *NotificationService) isOnCooldown(ctx context.Context, userID string, n
 	return time.Since(*lastNotified) < cooldown, nil
 }
 
-func (s *NotificationService) sendWithRetry(ctx context.Context, user domain.UserContext, notifType domain.NotificationType, title, message string) error {
+func (s *NotificationService) sendWithRetry(ctx context.Context, user domain.UserContext, notifType domain.NotificationType, title, message string, data map[string]interface{}) error {
 	var lastErr error
 	for attempt := 1; attempt <= s.maxRetries; attempt++ {
-		err := s.sendNotification(ctx, user, notifType, title, message, attempt)
+		err := s.sendNotification(ctx, user, notifType, title, message, data, attempt)
 		if err == nil {
 			return nil
 		}
@@ -182,14 +190,12 @@ func (s *NotificationService) sendWithRetry(ctx context.Context, user domain.Use
 	return fmt.Errorf("all %d attempts failed, last error: %w", s.maxRetries, lastErr)
 }
 
-func (s *NotificationService) sendNotification(ctx context.Context, user domain.UserContext, notifType domain.NotificationType, title, message string, attempt int) error {
+func (s *NotificationService) sendNotification(ctx context.Context, user domain.UserContext, notifType domain.NotificationType, title, message string, data map[string]interface{}, attempt int) error {
 	userInfo := notifdomain.UserInfo{ID: user.UserID}
 	msg := notifdomain.Message{
 		Title: title,
 		Body:  message,
-		Data: map[string]interface{}{
-			"type": string(notifType),
-		},
+		Data:  data,
 	}
 
 	_, err := s.pushSender.SendToUser(ctx, userInfo, msg)
