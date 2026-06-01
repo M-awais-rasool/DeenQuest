@@ -33,8 +33,9 @@ func SeedTasks() []DailyTask {
 				{
 					Type: BlockAyah,
 					Content: map[string]any{
-						"surah": "Ar-Rahman",
-						"ayahs": []int{1, 2, 3},
+						"surah":    "Ar-Rahman",
+						"surah_id": 55,
+						"ayahs":    []int{1, 2, 3},
 					},
 				},
 				{
@@ -111,6 +112,7 @@ func SeedTasks() []DailyTask {
 					Type: BlockAudio,
 					Content: map[string]any{
 						"surah":    "Al-Mulk",
+						"surah_id": 67,
 						"duration": 300,
 					},
 				},
@@ -192,6 +194,29 @@ func SeedTasks() []DailyTask {
 			},
 			CompletionType: CompletionButton,
 			RewardXP:       20,
+			Difficulty:     DifficultyEasy,
+		},
+		{
+			ID:          "11",
+			Title:       "Read Surah Al-Fatiha",
+			Category:    CategoryQuran,
+			Description: "Open the Quran reader and complete Surah Al-Fatiha",
+			Blocks: []Block{
+				{
+					Type: BlockAyah,
+					Content: map[string]any{
+						"surah":    "Al-Fatiha",
+						"surah_id": 1,
+						"ayahs":    []int{1, 2, 3, 4, 5, 6, 7},
+					},
+				},
+				{
+					Type:    BlockText,
+					Content: map[string]any{"content": "Read slowly and reflect on the opening Surah."},
+				},
+			},
+			CompletionType: CompletionButton,
+			RewardXP:       15,
 			Difficulty:     DifficultyEasy,
 		},
 	}
