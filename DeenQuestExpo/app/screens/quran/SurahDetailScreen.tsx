@@ -94,7 +94,9 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
       </View>
       <Text style={s.ayahText}>{item.text}</Text>
       {item.translation ? (
-        <Text style={s.translationText}>{item.translation}</Text>
+        <View style={s.translationBlock}>
+          <Text style={s.translationText}>{item.translation}</Text>
+        </View>
       ) : null}
     </View>
   );
@@ -140,6 +142,7 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
         data={ayahs}
         keyExtractor={(item) => String(item.number)}
         renderItem={renderAyah}
+        ItemSeparatorComponent={() => <View style={s.ayahSeparator} />}
         refreshing={isFetching}
         contentContainerStyle={s.listContent}
         showsVerticalScrollIndicator={false}
@@ -257,48 +260,55 @@ const s = StyleSheet.create({
   },
   basmalahText: {
     fontSize: 31,
-    lineHeight: 54,
+    lineHeight: 58,
     writingDirection: "rtl",
     textAlign: "center",
     color: theme.colors.secondary,
-    fontWeight: "600",
   },
   ayahRow: {
     backgroundColor: theme.colors.surfaceLow,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: theme.colors.outline25,
-    padding: 16,
-    marginBottom: 12,
+    padding: 20,
   },
   ayahNumber: {
-    width: 34,
-    height: 34,
-    borderRadius: theme.borderRadius.sm,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: theme.colors.surfaceHigh,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   ayahNumberText: {
     color: theme.colors.primary,
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
   },
   ayahText: {
     color: theme.colors.text,
     fontSize: 27,
-    lineHeight: 48,
+    lineHeight: 54,
     writingDirection: "rtl",
     textAlign: "right",
-    fontWeight: "500",
+  },
+  translationBlock: {
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.outline25,
   },
   translationText: {
     color: theme.colors.textMuted,
     fontSize: 15,
-    lineHeight: 24,
+    lineHeight: 26,
     fontWeight: "600",
-    marginTop: 14,
+  },
+  ayahSeparator: {
+    height: 1,
+    backgroundColor: theme.colors.outline25,
+    marginVertical: 12,
   },
   errorState: {
     flex: 1,
