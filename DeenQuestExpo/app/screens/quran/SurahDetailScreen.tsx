@@ -24,6 +24,8 @@ type Props = NativeStackScreenProps<AppStackParamList, "SurahDetail">;
 
 const TRANSLATION_EDITION = "en.asad";
 
+const BASMALAH = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ";
+
 export const SurahDetailScreen = ({ route, navigation }: Props) => {
   const [showTranslation, setShowTranslation] = useState(false);
   const surahId = Number(route.params.surahId);
@@ -43,8 +45,20 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
     useGetSurahAudioQuery(isValidSurah ? surahId : 1, { skip: !isValidSurah });
 
   const surah = data?.data;
-  const ayahs = surah?.ayahs ?? [];
+  const rawAyahs = surah?.ayahs ?? [];
 
+  const { ayahs, showBasmalah } = useMemo(() => {
+    if (rawAyahs.length === 0) return { ayahs: [], showBasmalah: false };
+    const hasBasmalah =
+      surahId !== 1 && surahId !== 9 && rawAyahs[0].text.startsWith(BASMALAH);
+    if (!hasBasmalah) return { ayahs: rawAyahs, showBasmalah: false };
+    return {
+      ayahs: rawAyahs.map((ayah, i) =>
+        i === 0 ? { ...ayah, text: ayah.text.replace(BASMALAH, "").trim() } : ayah,
+      ),
+      showBasmalah: true,
+    };
+  }, [rawAyahs, surahId]);
   if (!isValidSurah) {
     return (
       <ScreenWrapper>
@@ -141,6 +155,11 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
                   {surah.revelation_type}
                 </Text>
               </View>
+              {showBasmalah && (
+                <View style={s.basmalahContainer}>
+                  <Text style={s.basmalahText}>{BASMALAH}</Text>
+                </View>
+              )}
               <AudioPlayer
                 surah={surah}
                 audio={audioData?.data}
@@ -228,6 +247,21 @@ const s = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     marginTop: 8,
+  },
+  basmalahContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outline25,
+  },
+  basmalahText: {
+    fontSize: 31,
+    lineHeight: 54,
+    writingDirection: "rtl",
+    textAlign: "center",
+    color: theme.colors.secondary,
+    fontWeight: "600",
   },
   ayahRow: {
     backgroundColor: theme.colors.surfaceLow,
