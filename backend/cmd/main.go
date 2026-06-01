@@ -19,8 +19,10 @@ import (
 	intel "github.com/chawais/talent-flow/backend/internal/application/intelligent"
 	notifiesvc "github.com/chawais/talent-flow/backend/internal/application/notification"
 	progresssvc "github.com/chawais/talent-flow/backend/internal/application/progress"
+	quransvc "github.com/chawais/talent-flow/backend/internal/application/quran"
 	usersvc "github.com/chawais/talent-flow/backend/internal/application/user"
 	"github.com/chawais/talent-flow/backend/internal/application/worker"
+	"github.com/chawais/talent-flow/backend/internal/infrastructure/alquran"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/cache"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/config"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/jwt"
@@ -29,8 +31,8 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/persistence"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/push"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/queue"
-	"github.com/chawais/talent-flow/backend/internal/interfaces/http/handler"
 	router "github.com/chawais/talent-flow/backend/internal/interfaces/http"
+	"github.com/chawais/talent-flow/backend/internal/interfaces/http/handler"
 )
 
 func main() {
@@ -82,6 +84,14 @@ func main() {
 	expoClient := push.NewExpoClient(cfg.ExpoPushURL, cfg.ExpoPushAccessToken)
 	notificationService := notifiesvc.NewService(tokenRepo, expoClient)
 
+	redisClient, err := cache.NewRedisClient(cfg.GetRedisAddr(), cfg.RedisPassword, cfg.RedisDB)
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Redis not available for caching or rate limiting: %v", err))
+		redisClient = nil
+	} else {
+		defer redisClient.Close()
+	}
+
 	if err := coreService.SeedDailyTasks(context.Background()); err != nil {
 		log.Fatalf("failed to seed daily tasks: %v", err)
 	}
@@ -129,14 +139,9 @@ func main() {
 	coreHandler := handler.NewCoreHandler(coreService)
 	recitationHandler := handler.NewRecitationHandler(recitationService)
 	notificationHandler := handler.NewNotificationHandler(notificationService)
-
-	redisClient, err := cache.NewRedisClient(cfg.GetRedisAddr(), cfg.RedisPassword, cfg.RedisDB)
-	if err != nil {
-		logger.Warn(fmt.Sprintf("Redis not available for rate limiting: %v", err))
-		redisClient = nil
-	} else {
-		defer redisClient.Close()
-	}
+	quranClient := alquran.NewClient(cfg.AlQuranBaseURL, cfg.QuranAudioCDNURL, cfg.QuranAudioEdition, cfg.QuranAudioBitrate)
+	quranService := quransvc.NewService(quranClient, redisClient)
+	quranHandler := handler.NewQuranHandler(quranService)
 
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -151,7 +156,7 @@ func main() {
 		r.Use(middleware.RateLimit(redisClient, 100, time.Minute))
 	}
 
-	router.SetupRoutes(r, authHandler, userHandler, coreHandler, recitationHandler, notificationHandler, jwtManager)
+	router.SetupRoutes(r, authHandler, userHandler, coreHandler, recitationHandler, notificationHandler, quranHandler, jwtManager)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: r}

@@ -30,12 +30,14 @@ const (
 //	TextBlock:      { "content": string }
 //	                Optional: "items": []string, "style": "list"|"numbered"
 //	AyahBlock:      { "surah": string, "ayahs": []int }
+//	                Optional: "surah_id": int for opening the Quran reader
 //	HadithBlock:    { "text": string, "reference": string }
 //	CounterBlock:   { "target": int, "phrase": string }
 //	QuizBlock:      { "question": string, "options": []string }
 //	                Quiz mode:       add "correct": int (0-based index)
 //	                Reflection mode: omit "correct" (any selection is valid)
 //	AudioBlock:     { "surah": string, "duration": int (seconds) }
+//	                Optional: "surah_id": int for opening the Quran reader/player
 //	ChecklistBlock: { "items": []string }
 type Block struct {
 	Type    BlockType      `bson:"type" json:"type"`

@@ -3,9 +3,9 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/chawais/talent-flow/backend/internal/interfaces/http/handler"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/jwt"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/middleware"
+	"github.com/chawais/talent-flow/backend/internal/interfaces/http/handler"
 )
 
 func SetupRoutes(
@@ -15,6 +15,7 @@ func SetupRoutes(
 	coreHandler *handler.CoreHandler,
 	recitationHandler *handler.RecitationHandler,
 	notificationHandler *handler.NotificationHandler,
+	quranHandler *handler.QuranHandler,
 	jwtManager *jwt.JWTManager,
 ) {
 	v1 := r.Group("/api/v1")
@@ -32,6 +33,9 @@ func SetupRoutes(
 	v1.GET("/users/:id/public", userHandler.GetPublicProfile)
 
 	v1.GET("/progress/user/:id", coreHandler.GetPublicProgress)
+
+	registerQuranRoutes(v1.Group("/quran"), quranHandler)
+	registerQuranRoutes(r.Group("/api/quran"), quranHandler)
 
 	authed := v1.Group("")
 	authed.Use(middleware.JWTAuth(jwtManager))
@@ -58,4 +62,10 @@ func SetupRoutes(
 
 		authed.POST("/recitation/check", recitationHandler.CheckRecitation)
 	}
+}
+
+func registerQuranRoutes(group *gin.RouterGroup, quranHandler *handler.QuranHandler) {
+	group.GET("/surahs", quranHandler.GetSurahList)
+	group.GET("/surah/:id", quranHandler.GetSurahByID)
+	group.GET("/surah/:id/audio", quranHandler.GetSurahAudio)
 }
