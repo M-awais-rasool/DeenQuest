@@ -89,9 +89,13 @@ export const getExpoPushRegistrationAsync =
       const expoPushToken = tokenResult.data;
       const deviceId = await getOrCreateDeviceIdAsync();
 
+      const timezone =
+        Intl.DateTimeFormat?.().resolvedOptions?.().timeZone;
+
       return {
         expo_push_token: expoPushToken,
         platform: Platform.OS as RegisterNotificationTokenRequest["platform"],
+        timezone,
         device_id: deviceId,
         app_version:
           Constants.nativeAppVersion ||

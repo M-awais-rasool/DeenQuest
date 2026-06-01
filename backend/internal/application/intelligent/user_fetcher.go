@@ -39,6 +39,7 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) 
 	var tokenDocs []struct {
 		UserID        string `bson:"user_id"`
 		ExpoPushToken string `bson:"expo_push_token"`
+		Timezone      string `bson:"timezone"`
 	}
 	if err := tokenCursor.All(ctx, &tokenDocs); err != nil {
 		return nil, err
@@ -48,13 +49,20 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) 
 		return []domain.UserContext{}, nil
 	}
 
+	type tokenInfo struct {
+		expoPushToken string
+		timezone      string
+	}
 	userIDs := make([]string, 0, len(tokenDocs))
-	tokenMap := make(map[string]string, len(tokenDocs))
+	tokenMap := make(map[string]tokenInfo, len(tokenDocs))
 	for _, t := range tokenDocs {
 		if t.UserID != "" {
 			userIDs = append(userIDs, t.UserID)
 			if _, exists := tokenMap[t.UserID]; !exists {
-				tokenMap[t.UserID] = t.ExpoPushToken
+				tokenMap[t.UserID] = tokenInfo{
+					expoPushToken: t.ExpoPushToken,
+					timezone:      t.Timezone,
+				}
 			}
 		}
 	}
@@ -142,8 +150,8 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) 
 
 	users := make([]domain.UserContext, 0, len(userIDs))
 	for _, uid := range userIDs {
-		token, ok := tokenMap[uid]
-		if !ok || token == "" {
+		ti, ok := tokenMap[uid]
+		if !ok || ti.expoPushToken == "" {
 			continue
 		}
 
@@ -156,7 +164,8 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) 
 
 		users = append(users, domain.UserContext{
 			UserID:          uid,
-			ExpoPushToken:   token,
+			ExpoPushToken:   ti.expoPushToken,
+			Timezone:        ti.timezone,
 			CurrentStreak:   streak.CurrentStreak,
 			LongestStreak:   streak.LongestStreak,
 			LastCompletedAt: streak.LastCompleted,

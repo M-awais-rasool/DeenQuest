@@ -14,6 +14,7 @@ const (
 type UserContext struct {
 	UserID           string
 	ExpoPushToken    string
+	Timezone         string
 	CurrentStreak    int
 	LongestStreak    int
 	LastCompletedAt  time.Time

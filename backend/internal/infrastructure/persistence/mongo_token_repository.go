@@ -45,6 +45,7 @@ func (r *MongoTokenRepository) Upsert(ctx context.Context, token *domain.UserTok
 			"platform":        token.Platform,
 			"device_id":       token.DeviceID,
 			"app_version":     token.AppVersion,
+			"timezone":        token.Timezone,
 			"enabled":         true,
 			"last_seen_at":    now,
 			"updated_at":      now,

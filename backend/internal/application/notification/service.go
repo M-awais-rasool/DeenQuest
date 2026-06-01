@@ -36,6 +36,7 @@ func (s *Service) RegisterToken(ctx context.Context, user domain.UserInfo, req d
 		Platform:      strings.ToLower(strings.TrimSpace(req.Platform)),
 		DeviceID:      strings.TrimSpace(req.DeviceID),
 		AppVersion:    strings.TrimSpace(req.AppVersion),
+		Timezone:      strings.TrimSpace(req.Timezone),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("save notification token: %w", err)

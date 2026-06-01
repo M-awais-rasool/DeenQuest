@@ -25,6 +25,7 @@ type UserToken struct {
 	Platform      string    `bson:"platform" json:"platform"`
 	DeviceID      string    `bson:"device_id,omitempty" json:"device_id,omitempty"`
 	AppVersion    string    `bson:"app_version,omitempty" json:"app_version,omitempty"`
+	Timezone      string    `bson:"timezone,omitempty" json:"timezone,omitempty"`
 	Enabled       bool      `bson:"enabled" json:"enabled"`
 	LastSeenAt    time.Time `bson:"last_seen_at" json:"last_seen_at"`
 	CreatedAt     time.Time `bson:"created_at" json:"created_at"`
@@ -36,6 +37,7 @@ type RegisterTokenRequest struct {
 	Platform      string `json:"platform" validate:"required,oneof=ios android web"`
 	DeviceID      string `json:"device_id" validate:"omitempty,max=128"`
 	AppVersion    string `json:"app_version" validate:"omitempty,max=64"`
+	Timezone      string `json:"timezone" validate:"omitempty,max=64"`
 }
 
 type Message struct {

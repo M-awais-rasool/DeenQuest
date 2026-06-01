@@ -92,6 +92,7 @@ export interface RegisterNotificationTokenRequest {
   platform: NotificationPlatform;
   device_id?: string;
   app_version?: string;
+  timezone?: string;
 }
 
 export interface NotificationUserInfo {

@@ -70,13 +70,21 @@ func (s *NotificationService) ProcessAllNotifications(ctx context.Context) (*Pro
 			break
 		}
 
-		now := time.Now().UTC()
+		now := time.Now()
 
 		for _, user := range users {
 			stats.TotalUsers++
 
+			loc := time.UTC
+			if user.Timezone != "" {
+				if parsed, err := time.LoadLocation(user.Timezone); err == nil {
+					loc = parsed
+				}
+			}
+			localNow := now.In(loc)
+
 			for i, rule := range s.rules {
-				hour := now.UTC().Hour()
+				hour := localNow.Hour()
 				if hour < rule.TimeWindow.StartHour || hour >= rule.TimeWindow.EndHour {
 					stats.Notifications[i].Skipped++
 					continue
