@@ -23,7 +23,12 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.awaisrasool.DeenQuestExpo"
+      "bundleIdentifier": "com.awaisrasool.DeenQuestExpo",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
