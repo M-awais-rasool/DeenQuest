@@ -11,9 +11,9 @@ import type { CourseType, DailyTask } from "../store/services/api";
 export type DemoTabParamList = {
   PathScreen: undefined;
   HomeScreen: undefined;
+  QuranScreen: undefined;
   ProfileScreen: undefined;
   RewardsScreen: undefined;
-  LeaderboardScreen: undefined;
 };
 
 export type AppStackParamList = {
@@ -34,10 +34,12 @@ export type AppStackParamList = {
     courseType?: CourseType;
   };
   MiniGamePlayer: { levelId: number; courseType?: CourseType };
+  SurahDetail: { surahId: number | string };
   Settings: undefined;
   EditProfile: undefined;
   ChangePassword: undefined;
   PublicProfile: { userId: string };
+  Leaderboard: undefined;
 };
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =

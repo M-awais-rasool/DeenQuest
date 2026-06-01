@@ -30,8 +30,10 @@ import { SettingsScreen } from "../screens/profile/SettingsScreen";
 import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { PublicProfileScreen } from "../screens/profile/PublicProfileScreen";
+import { LeaderboardScreen } from "../screens/leaderboard/LeaderboardScreen";
 import OnboardingScreen from "../screens/auth/OnboardingScreen";
 import { SignupScreen } from "../screens/auth/SignupScreen";
+import { SurahDetailScreen } from "../screens/quran/SurahDetailScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -46,9 +48,11 @@ const linking: LinkingOptions<AppStackParamList> = {
       Demo: {
         screens: {
           ProfileScreen: "my-profile",
+          QuranScreen: "quran",
         },
       },
       PublicProfile: "profile/:userId",
+      SurahDetail: "quran/surah/:surahId",
     },
   },
 };
@@ -137,6 +141,7 @@ const AppStack = () => {
             component={MiniGamePlayerScreen}
             options={{ gestureEnabled: false }}
           />
+          <Stack.Screen name="SurahDetail" component={SurahDetailScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           <Stack.Screen
@@ -144,6 +149,7 @@ const AppStack = () => {
             component={ChangePasswordScreen}
           />
           <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
+          <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
         </>
       ) : (
         <>

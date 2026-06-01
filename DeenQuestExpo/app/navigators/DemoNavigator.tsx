@@ -14,7 +14,6 @@ import {
   Home,
   BookOpen,
   Book,
-  TrendingUp,
   User,
   type LucideIcon,
   Trophy,
@@ -24,9 +23,10 @@ import type { DemoTabParamList } from "./navigationTypes";
 import { theme } from "../theme/themes";
 import { HomeScreen } from "../screens/home/HomeScreen";
 import { RewardsScreen } from "../screens/reward/RewardsScreen";
-import { LeaderboardScreen } from "../screens/leaderboard/LeaderboardScreen";
+
 import { ProfileScreen } from "../screens/profile/ProfileScreen";
 import { LearnPathScreen } from "../screens/level/LearnPathScreen";
+import { QuranHomeScreen } from "../screens/quran/QuranHomeScreen";
 
 const Tab = createBottomTabNavigator<DemoTabParamList>();
 
@@ -37,8 +37,8 @@ const TAB_CONFIG: {
 }[] = [
   { name: "HomeScreen", label: "Home", icon: Home },
   { name: "PathScreen", label: "Learn", icon: BookOpen },
+  { name: "QuranScreen", label: "Quran", icon: Book },
   { name: "RewardsScreen", label: "Rewards", icon: Trophy },
-  { name: "LeaderboardScreen", label: "Progress", icon: TrendingUp },
   { name: "ProfileScreen", label: "Profile", icon: User },
 ];
 
@@ -153,8 +153,8 @@ export function DemoNavigator() {
     >
       <Tab.Screen name="HomeScreen" component={HomeScreen} />
       <Tab.Screen name="PathScreen" component={LearnPathScreen} />
+      <Tab.Screen name="QuranScreen" component={QuranHomeScreen} />
       <Tab.Screen name="RewardsScreen" component={RewardsScreen} />
-      <Tab.Screen name="LeaderboardScreen" component={LeaderboardScreen} />
       <Tab.Screen name="ProfileScreen" component={ProfileScreen} />
     </Tab.Navigator>
   );

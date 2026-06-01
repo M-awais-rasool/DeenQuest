@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.100.18:8080",
+  baseUrl: "http://172.16.1.152:8080",
   prepareHeaders: async (headers, { getState }) => {
     try {
       const stateToken = (getState() as any)?.main?.accessToken;
@@ -348,6 +348,45 @@ export interface NewlyGrantedReward {
   xp_bonus: number;
 }
 
+// ─── Quran Types ───
+
+export interface QuranSurahSummary {
+  id: number;
+  number: number;
+  name: string;
+  english_name: string;
+  english_name_translation: string;
+  number_of_ayahs: number;
+  revelation_type: string;
+}
+
+export interface QuranAyah {
+  number: number;
+  number_in_surah: number;
+  juz: number;
+  page: number;
+  text: string;
+  translation?: string;
+}
+
+export interface QuranSurahDetail extends QuranSurahSummary {
+  translation_edition?: string;
+  ayahs: QuranAyah[];
+}
+
+export interface QuranSurahAudio {
+  surah_id: number;
+  reciter: string;
+  bitrate: number;
+  url: string;
+  source: string;
+}
+
+export interface QuranSurahRequest {
+  id: number;
+  translation?: string;
+}
+
 // API Service
 export const API = createApi({
   reducerPath: "API",
@@ -362,6 +401,7 @@ export const API = createApi({
     "Rewards",
     "Recitation",
     "Notifications",
+    "Quran",
   ],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
@@ -569,6 +609,40 @@ export const API = createApi({
       query: () => ({ url: "/api/v1/rewards", method: "GET" }),
       providesTags: ["Rewards"],
     }),
+
+    // ─── Quran ───
+    getSurahs: builder.query<APIResponse<QuranSurahSummary[]>, void>({
+      query: () => ({
+        url: "/api/v1/quran/surahs",
+        method: "GET",
+      }),
+      providesTags: ["Quran"],
+      keepUnusedDataFor: 3600,
+    }),
+    getSurahById: builder.query<
+      APIResponse<QuranSurahDetail>,
+      QuranSurahRequest
+    >({
+      query: ({ id, translation }) => ({
+        url: `/api/v1/quran/surah/${id}`,
+        method: "GET",
+        params: translation ? { translation } : undefined,
+      }),
+      providesTags: (_result, _error, { id, translation }) => [
+        { type: "Quran", id: `surah:${id}:${translation ?? "none"}` },
+      ],
+      keepUnusedDataFor: 604800,
+    }),
+    getSurahAudio: builder.query<APIResponse<QuranSurahAudio>, number>({
+      query: (id) => ({
+        url: `/api/v1/quran/surah/${id}/audio`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, id) => [
+        { type: "Quran", id: `surah:${id}:audio` },
+      ],
+      keepUnusedDataFor: 604800,
+    }),
   }),
 });
 
@@ -594,4 +668,7 @@ export const {
   useGetRewardsQuery,
   useCheckRecitationMutation,
   useGenerateLearningPathMutation,
+  useGetSurahsQuery,
+  useGetSurahByIdQuery,
+  useGetSurahAudioQuery,
 } = API;
