@@ -9,6 +9,7 @@ const (
 	StreakWarning     NotificationType = "streak_warning"
 	FridaySpecial     NotificationType = "friday_special"
 	QuranSuggestion   NotificationType = "quran_suggestion"
+	MulkReminder      NotificationType = "mulk_reminder"
 )
 
 type UserContext struct {

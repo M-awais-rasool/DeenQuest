@@ -124,6 +124,37 @@ func BuildRules() []domain.NotificationRule {
 				return quranNotificationData(surah.id, surah.name)
 			},
 		},
+		{
+			Type:       domain.MulkReminder,
+			Cooldown:   24 * time.Hour,
+			TimeWindow: domain.TimeWindow{StartHour: 22, EndHour: 23},
+			Evaluate: func(ctx *domain.UserContext, now time.Time) bool {
+				return true
+			},
+			BuildTitle: func(ctx *domain.UserContext) string {
+				titles := []string{
+					"Time for Surah Al-Mulk",
+					"Your nightly protection",
+					"Before you sleep",
+				}
+				seed := ctx.UserID + "mulk-title" + time.Now().UTC().Format("2006-01-02")
+				return titles[int(math.Abs(float64(hashStr(seed))))%len(titles)]
+			},
+			BuildMessage: func(ctx *domain.UserContext) string {
+				msgs := []string{
+					"The Prophet ﷺ used to recite Surah Al-Mulk before sleep. It protects from the punishment of the grave.",
+					"Surah Al-Mulk intercedes for its reciter. Make it your nightly companion.",
+					"Recite Surah Al-Mulk tonight and earn 30 hasanah for every ayah.",
+					"Avoid the punishment of the grave — recite Surah Al-Mulk before sleeping tonight.",
+					"Surah Al-Mulk is the protector. The Prophet ﷺ never slept without it.",
+				}
+				seed := ctx.UserID + "mulk-msg" + time.Now().UTC().Format("2006-01-02")
+				return msgs[int(math.Abs(float64(hashStr(seed))))%len(msgs)]
+			},
+			BuildData: func(ctx *domain.UserContext) map[string]interface{} {
+				return quranNotificationData(67, "Al-Mulk")
+			},
+		},
 	}
 }
 
