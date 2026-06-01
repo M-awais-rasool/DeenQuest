@@ -9,7 +9,14 @@ import {
   StatusBar,
   Share,
 } from "react-native";
-import { Flame, Settings, Trophy, Heart, Check } from "lucide-react-native";
+import {
+  Flame,
+  Settings,
+  Trophy,
+  Heart,
+  Check,
+  Crown,
+} from "lucide-react-native";
 import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
@@ -182,6 +189,38 @@ export function ProfileScreen({ navigation }: Props) {
             <Text style={styles.statSubtext}>Points for good deeds</Text>
           </View>
 
+          {/* Leaderboard */}
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.leaderboardCard}
+              onPress={() => {
+                haptics.light();
+                navigation.navigate("Leaderboard");
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.leaderboardLeft}>
+                <View style={styles.crownCircle}>
+                  <Crown
+                    size={24}
+                    color={theme.colors.secondary}
+                    fill={theme.colors.secondary}
+                  />
+                </View>
+                <View>
+                  <Text style={styles.leaderboardTitle}>
+                    Global Leaderboard
+                  </Text>
+                  <Text style={styles.leaderboardSub}>
+                    See how you rank among other seekers
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.leaderboardArrow}>
+                <Text style={styles.leaderboardArrowText}>View</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
           {/* Streak History */}
           <View style={styles.streakCard}>
             <View style={styles.streakHeader}>
@@ -705,6 +744,52 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     color: theme.colors.textMuted,
+  },
+  leaderboardCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: theme.colors.surface,
+    padding: 20,
+    borderRadius: 16,
+    borderBottomWidth: 4,
+    borderBottomColor: theme.colors.black20,
+  },
+  leaderboardLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  crownCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.surfaceHigh,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  leaderboardTitle: {
+    fontFamily: "Lexend",
+    fontWeight: "700",
+    fontSize: 16,
+    color: theme.colors.white,
+  },
+  leaderboardSub: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    marginTop: 2,
+  },
+  leaderboardArrow: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  leaderboardArrowText: {
+    fontFamily: "Lexend",
+    fontWeight: "700",
+    fontSize: 12,
+    color: theme.colors.onPrimary,
   },
   bottomNav: {
     position: "absolute",
