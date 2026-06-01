@@ -3,6 +3,22 @@ import { useRegisterNotificationTokenMutation } from "../store/services/api";
 import { useAppSelector } from "../store/hooks";
 import { getExpoPushRegistrationAsync } from "../services/notificationService";
 import * as Notifications from "expo-notifications";
+import { Linking } from "react-native";
+
+const openNotificationTarget = async (data?: Record<string, unknown>) => {
+  const rawURL = data?.url;
+  if (typeof rawURL === "string" && rawURL.length > 0) {
+    await Linking.openURL(rawURL);
+    return;
+  }
+
+  const rawSurahId = data?.surah_id;
+  const surahId =
+    typeof rawSurahId === "number" ? rawSurahId : Number(rawSurahId);
+  if (Number.isInteger(surahId) && surahId >= 1 && surahId <= 114) {
+    await Linking.openURL(`deenquest://quran/surah/${surahId}`);
+  }
+};
 
 export function NotificationBootstrap() {
   const isAuthenticated = useAppSelector(
@@ -57,6 +73,11 @@ export function NotificationBootstrap() {
             "Notification Clicked:",
             JSON.stringify(response, null, 2)
           );
+          openNotificationTarget(
+            response.notification.request.content.data,
+          ).catch((error) => {
+            console.warn("Failed to open notification target", error);
+          });
         }
       );
 
