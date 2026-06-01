@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ArrowLeft, Languages } from "lucide-react-native";
+import { ArrowLeft, ChevronDown, ChevronUp, Languages } from "lucide-react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
@@ -19,15 +19,21 @@ import {
 } from "../../store/services/api";
 import { AudioPlayer } from "../../components/quran/AudioPlayer";
 import { haptics } from "../../utils/haptics";
+import { toArabicNumber } from "../../utils/arabicNumbers";
+import { useQuranFont } from "../../hooks/useQuranFont";
 
 type Props = NativeStackScreenProps<AppStackParamList, "SurahDetail">;
 
 const TRANSLATION_EDITION = "en.asad";
 
-const BASMALAH = "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ";
+const BASMALAH = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+
+const AYAH_MARKER_PREFIX = "\u06DD";
 
 export const SurahDetailScreen = ({ route, navigation }: Props) => {
   const [showTranslation, setShowTranslation] = useState(false);
+  const [audioExpanded, setAudioExpanded] = useState(true);
+  const { fontFamily } = useQuranFont();
   const surahId = Number(route.params.surahId);
   const isValidSurah = Number.isInteger(surahId) && surahId >= 1 && surahId <= 114;
   const queryArgs = useMemo(
@@ -59,6 +65,29 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
       showBasmalah: true,
     };
   }, [rawAyahs, surahId]);
+
+  const toggleAudio = useCallback(() => {
+    haptics.light();
+    setAudioExpanded((v) => !v);
+  }, []);
+  const renderAyah = useCallback(({ item }: { item: QuranAyah }) => (
+    <View>
+      <View style={s.ayahBlock}>
+        <Text style={s.ayahText}>
+          <Text style={[s.ayahTextContent, fontFamily ? { fontFamily } : undefined]}>{item.text}</Text>
+          <Text style={s.ayahMarker}>
+            {" "}{AYAH_MARKER_PREFIX}{toArabicNumber(item.number_in_surah)}
+          </Text>
+        </Text>
+      </View>
+      {showTranslation && item.translation && (
+        <View style={s.translationBlock}>
+          <Text style={s.translationText}>{item.translation}</Text>
+        </View>
+      )}
+    </View>
+  ), [showTranslation, fontFamily]);
+
   if (!isValidSurah) {
     return (
       <ScreenWrapper>
@@ -87,19 +116,10 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
     );
   }
 
-  const renderAyah = ({ item }: { item: QuranAyah }) => (
-    <View style={s.ayahRow}>
-      <View style={s.ayahNumber}>
-        <Text style={s.ayahNumberText}>{item.number_in_surah}</Text>
-      </View>
-      <Text style={s.ayahText}>{item.text}</Text>
-      {item.translation ? (
-        <View style={s.translationBlock}>
-          <Text style={s.translationText}>{item.translation}</Text>
-        </View>
-      ) : null}
-    </View>
-  );
+  const revelationLabel =
+    surah?.revelation_type === "Meccan" || surah?.revelation_type === "meccan"
+      ? "Meccan"
+      : "Medinan";
 
   return (
     <ScreenWrapper>
@@ -138,40 +158,59 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={ayahs}
-        keyExtractor={(item) => String(item.number)}
-        renderItem={renderAyah}
-        ItemSeparatorComponent={() => <View style={s.ayahSeparator} />}
-        refreshing={isFetching}
-        contentContainerStyle={s.listContent}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          surah ? (
+      {surah && (
+        <FlatList
+          data={ayahs}
+          keyExtractor={(item) => String(item.number)}
+          renderItem={renderAyah}
+          style={s.list}
+          contentContainerStyle={s.listContent}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
             <View>
-              <View style={s.hero}>
-                <Text style={s.surahNumber}>Surah {surah.number}</Text>
-                <Text style={s.title}>{surah.english_name}</Text>
-                <Text style={s.arabicTitle}>{surah.name}</Text>
-                <Text style={s.subtitle}>
-                  {surah.english_name_translation} • {surah.number_of_ayahs} ayahs •{" "}
-                  {surah.revelation_type}
+              {/* Surah Header */}
+              <View style={s.surahHeader}>
+                <Text style={[s.surahNameArabic, fontFamily ? { fontFamily } : undefined]}>{surah.name}</Text>
+                <Text style={s.surahNameEnglish}>{surah.english_name}</Text>
+                <Text style={s.surahMeta}>
+                  {revelationLabel} · {surah.number_of_ayahs} verses
                 </Text>
               </View>
+
+              {/* Bismillah */}
               {showBasmalah && (
-                <View style={s.basmalahContainer}>
-                  <Text style={s.basmalahText}>{BASMALAH}</Text>
+                <View style={s.bismillahContainer}>
+                  <Text style={[s.bismillahText, fontFamily ? { fontFamily } : undefined]}>{BASMALAH}</Text>
                 </View>
               )}
-              <AudioPlayer
-                surah={surah}
-                audio={audioData?.data}
-                loadingAudio={audioLoading}
-              />
+
+              {/* Audio Player Toggle */}
+              <TouchableOpacity
+                style={s.audioToggle}
+                onPress={toggleAudio}
+                activeOpacity={0.7}
+              >
+                <Text style={s.audioToggleText}>
+                  {audioExpanded ? "Hide reciter" : "Show reciter"}
+                </Text>
+                {audioExpanded ? (
+                  <ChevronUp size={16} color={theme.colors.textMuted} />
+                ) : (
+                  <ChevronDown size={16} color={theme.colors.textMuted} />
+                )}
+              </TouchableOpacity>
+
+              {audioExpanded && (
+                <AudioPlayer
+                  surah={surah}
+                  audio={audioData?.data}
+                  loadingAudio={audioLoading}
+                />
+              )}
             </View>
-          ) : null
-        }
-      />
+          }
+        />
+      )}
     </ScreenWrapper>
   );
 };
@@ -183,6 +222,8 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outline25,
   },
   backBtn: {
     width: 42,
@@ -217,98 +258,12 @@ const s = StyleSheet.create({
   translateTextActive: {
     color: theme.colors.onPrimary,
   },
+  list: {
+    // flex: 1,
+  },
   listContent: {
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: 20,
     paddingBottom: 120,
-  },
-  hero: {
-    paddingBottom: theme.spacing.md,
-  },
-  surahNumber: {
-    color: theme.colors.primary,
-    fontSize: 12,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  title: {
-    color: theme.colors.text,
-    fontSize: 34,
-    fontWeight: "900",
-    marginTop: 4,
-  },
-  arabicTitle: {
-    color: theme.colors.secondary,
-    fontSize: 28,
-    fontWeight: "800",
-    marginTop: 6,
-    writingDirection: "rtl",
-    textAlign: "left",
-  },
-  subtitle: {
-    color: theme.colors.textMuted,
-    fontSize: 13,
-    fontWeight: "700",
-    marginTop: 8,
-  },
-  basmalahContainer: {
-    alignItems: "center",
-    paddingVertical: 20,
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline25,
-  },
-  basmalahText: {
-    fontSize: 31,
-    lineHeight: 58,
-    writingDirection: "rtl",
-    textAlign: "center",
-    color: theme.colors.secondary,
-  },
-  ayahRow: {
-    backgroundColor: theme.colors.surfaceLow,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.outline25,
-    padding: 20,
-  },
-  ayahNumber: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: theme.colors.surfaceHigh,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  ayahNumberText: {
-    color: theme.colors.primary,
-    fontWeight: "800",
-    fontSize: 12,
-  },
-  ayahText: {
-    color: theme.colors.text,
-    fontSize: 27,
-    lineHeight: 54,
-    writingDirection: "rtl",
-    textAlign: "right",
-  },
-  translationBlock: {
-    marginTop: 16,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.outline25,
-  },
-  translationText: {
-    color: theme.colors.textMuted,
-    fontSize: 15,
-    lineHeight: 26,
-    fontWeight: "600",
-  },
-  ayahSeparator: {
-    height: 1,
-    backgroundColor: theme.colors.outline25,
-    marginVertical: 12,
   },
   errorState: {
     flex: 1,
@@ -320,5 +275,105 @@ const s = StyleSheet.create({
     color: theme.colors.error,
     fontSize: 18,
     fontWeight: "900",
+  },
+
+  /* Surah Header */
+  surahHeader: {
+    alignItems: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outline25,
+  },
+  surahNameArabic: {
+    fontSize: 32,
+    lineHeight: 56,
+    color: theme.colors.text,
+    writingDirection: "rtl",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  surahNameEnglish: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: theme.colors.white,
+    letterSpacing: 0.3,
+  },
+  surahMeta: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: theme.colors.textMuted,
+    marginTop: 6,
+    letterSpacing: 0.5,
+  },
+
+  /* Bismillah */
+  bismillahContainer: {
+    alignItems: "center",
+    paddingVertical: 22,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outline10,
+  },
+  bismillahText: {
+    fontSize: 32,
+    lineHeight: 60,
+    writingDirection: "rtl",
+    textAlign: "center",
+    color: theme.colors.text,
+  },
+
+  /* Audio Toggle */
+  audioToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  audioToggleText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: theme.colors.textMuted,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+
+  /* Ayah Block */
+  ayahBlock: {
+    marginBottom: 4,
+  },
+  ayahText: {
+    fontSize: 38,
+    lineHeight: 82,
+    writingDirection: "rtl",
+    textAlign: "center",
+    color: theme.colors.text,
+  },
+  ayahTextContent: {
+    fontSize: 38,
+    lineHeight: 82,
+  },
+  ayahMarker: {
+    fontSize: 28,
+    lineHeight: 82,
+    color: theme.colors.textMuted,
+  },
+
+  /* Translation */
+  translationBlock: {
+    marginBottom: 18,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.outline10,
+  },
+  translationText: {
+    color: theme.colors.textMuted,
+    fontSize: 14,
+    lineHeight: 24,
+    fontWeight: "500",
+    fontStyle: "italic",
+    textAlign: "center",
   },
 });

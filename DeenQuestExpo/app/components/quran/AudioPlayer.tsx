@@ -6,12 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  Pause,
-  Play,
-  Square,
-  Headphones,
-} from "lucide-react-native";
+import { Pause, Play, Square, Headphones } from "lucide-react-native";
 import TrackPlayer, {
   State,
   useActiveTrack,
@@ -112,16 +107,36 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
 
   return (
     <View style={s.container}>
-      <View style={s.metaRow}>
-        <View style={s.iconBox}>
-          <Headphones size={22} color={theme.colors.secondary} />
-        </View>
-        <View style={s.metaText}>
-          <Text style={s.title}>Surah Audio</Text>
-          <Text style={s.subtitle} numberOfLines={1}>
+      <View style={s.topRow}>
+        <View style={s.reciterInfo}>
+          <Headphones size={16} color={theme.colors.textMuted} />
+          <Text style={s.reciterName} numberOfLines={1}>
             {audio?.reciter ?? "Mishary Alafasy"}
-            {audio?.bitrate ? ` • ${audio.bitrate} kbps` : ""}
           </Text>
+        </View>
+        <View style={s.controls}>
+          <TouchableOpacity
+            style={[s.controlBtn, !canPlay && s.controlBtnDisabled]}
+            onPress={handlePlayPause}
+            disabled={!canPlay || isBusy}
+            activeOpacity={0.8}
+          >
+            {isBusy || loadingAudio ? (
+              <ActivityIndicator color={theme.colors.text} size="small" />
+            ) : isPlaying ? (
+              <Pause size={18} color={theme.colors.text} fill={theme.colors.text} />
+            ) : (
+              <Play size={18} color={theme.colors.text} fill={theme.colors.text} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.controlBtn, !isCurrentTrack && s.controlBtnDisabled]}
+            onPress={handleStop}
+            disabled={!isCurrentTrack}
+            activeOpacity={0.8}
+          >
+            <Square size={16} color={theme.colors.textMuted} fill={theme.colors.textMuted} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -137,31 +152,6 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
         </Text>
       </View>
 
-      <View style={s.controls}>
-        <TouchableOpacity
-          style={[s.controlButton, !canPlay && s.controlButtonDisabled]}
-          onPress={handlePlayPause}
-          disabled={!canPlay || isBusy}
-          activeOpacity={0.8}
-        >
-          {isBusy || loadingAudio ? (
-            <ActivityIndicator color={theme.colors.onPrimary} />
-          ) : isPlaying ? (
-            <Pause size={22} color={theme.colors.onPrimary} fill={theme.colors.onPrimary} />
-          ) : (
-            <Play size={22} color={theme.colors.onPrimary} fill={theme.colors.onPrimary} />
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[s.stopButton, !isCurrentTrack && s.controlButtonDisabled]}
-          onPress={handleStop}
-          disabled={!isCurrentTrack}
-          activeOpacity={0.8}
-        >
-          <Square size={18} color={theme.colors.text} fill={theme.colors.text} />
-        </TouchableOpacity>
-      </View>
-
       {error ? <Text style={s.errorText}>{error}</Text> : null}
     </View>
   );
@@ -169,97 +159,69 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
 
 const s = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.surfaceLow,
-    borderRadius: theme.borderRadius.md,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.outline25,
-    marginTop: 16,
-    marginBottom: 18,
+    marginHorizontal: 20,
+    marginBottom: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
   },
-  metaRow: {
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 14,
-  },
-  iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.secondary12,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.secondary25,
-  },
-  metaText: {
-    flex: 1,
-  },
-  title: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "900",
-  },
-  subtitle: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-  progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.surfaceHigh,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: theme.colors.secondary,
-  },
-  timeRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 6,
   },
-  timeText: {
+  reciterInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  reciterName: {
     color: theme.colors.textMuted,
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: 13,
+    fontWeight: "600",
   },
   controls: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginTop: 14,
+    gap: 8,
   },
-  controlButton: {
-    width: 52,
-    height: 44,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    borderBottomWidth: 3,
-    borderBottomColor: theme.colors.primaryContainer,
-  },
-  stopButton: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.borderRadius.sm,
+  controlBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: theme.colors.surfaceHigh,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.outline25,
   },
-  controlButtonDisabled: {
-    opacity: 0.5,
+  controlBtnDisabled: {
+    opacity: 0.4,
+  },
+  progressTrack: {
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: theme.colors.surfaceHigh,
+    overflow: "hidden",
+    marginTop: 10,
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: theme.colors.textMuted,
+    borderRadius: 2,
+  },
+  timeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  timeText: {
+    color: theme.colors.textMuted,
+    fontSize: 10,
+    fontWeight: "600",
   },
   errorText: {
     color: theme.colors.error,
-    marginTop: 10,
-    fontSize: 12,
-    fontWeight: "700",
+    marginTop: 8,
+    fontSize: 11,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });

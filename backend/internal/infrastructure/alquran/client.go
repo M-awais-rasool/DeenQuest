@@ -100,8 +100,10 @@ func (c *Client) GetSurahByID(ctx context.Context, id int, translationEdition st
 		return nil, err
 	}
 
+	const edition = "ar.alafasy"
+
 	var envelope apiEnvelope[apiSurahDetail]
-	if err := c.get(ctx, fmt.Sprintf("/surah/%d", id), &envelope); err != nil {
+	if err := c.get(ctx, fmt.Sprintf("/surah/%d/%s", id, edition), &envelope); err != nil {
 		return nil, err
 	}
 

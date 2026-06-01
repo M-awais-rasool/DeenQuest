@@ -57,7 +57,7 @@ func (s *Service) GetSurahByID(ctx context.Context, id int, translationEdition s
 	}
 
 	translationEdition = strings.TrimSpace(translationEdition)
-	key := fmt.Sprintf("quran:surah:%d:%s:v1", id, cacheToken(translationEdition))
+	key := fmt.Sprintf("quran:surah:%d:%s:v2", id, cacheToken(translationEdition))
 
 	var cached domain.SurahDetail
 	if s.getCached(ctx, key, &cached) {
