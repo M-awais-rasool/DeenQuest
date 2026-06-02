@@ -38,14 +38,23 @@ export const setupQuranPlayer = async () => {
           Capability.Pause,
           Capability.Stop,
           Capability.SeekTo,
+          Capability.SkipToNext,
+          Capability.SkipToPrevious,
         ],
         notificationCapabilities: [
           Capability.Play,
           Capability.Pause,
           Capability.Stop,
+          Capability.SkipToNext,
+          Capability.SkipToPrevious,
         ],
-        compactCapabilities: [Capability.Play, Capability.Pause],
-        progressUpdateEventInterval: 1,
+        compactCapabilities: [
+          Capability.SkipToPrevious,
+          Capability.Play,
+          Capability.Pause,
+          Capability.SkipToNext,
+        ],
+        progressUpdateEventInterval: 0.25,
       });
     })();
   }

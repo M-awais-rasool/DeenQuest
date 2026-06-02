@@ -1,6 +1,5 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import {
-  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,24 +12,17 @@ import { Loader } from "../../components/Loader";
 import { theme } from "../../theme/themes";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import {
-  QuranAyah,
   useGetSurahAudioQuery,
   useGetSurahByIdQuery,
 } from "../../store/services/api";
-import { AudioPlayer } from "../../components/quran/AudioPlayer";
+import { SyncedSurahReader } from "../../components/quran/SyncedSurahReader";
+import { BASMALAH } from "../../components/quran/constants";
 import { haptics } from "../../utils/haptics";
-import { toArabicNumber } from "../../utils/arabicNumbers";
 import { useQuranFont } from "../../hooks/useQuranFont";
 
 type Props = NativeStackScreenProps<AppStackParamList, "SurahDetail">;
 
 const TRANSLATION_EDITION = "en.asad";
-
-const BASMALAH = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
-
-const AYAH_MARKER_PREFIX = "\u06DD";
-
-const PLAYER_HEIGHT = 96;
 
 export const SurahDetailScreen = ({ route, navigation }: Props) => {
   const [showTranslation, setShowTranslation] = React.useState(false);
@@ -66,24 +58,6 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
       showBasmalah: true,
     };
   }, [rawAyahs, surahId]);
-
-  const renderAyah = useCallback(({ item }: { item: QuranAyah }) => (
-    <View>
-      <View style={s.ayahBlock}>
-        <Text style={s.ayahText}>
-          <Text style={[s.ayahTextContent, fontFamily ? { fontFamily } : undefined]}>{item.text}</Text>
-          <Text style={s.ayahMarker}>
-            {" "}{AYAH_MARKER_PREFIX}{toArabicNumber(item.number_in_surah)}
-          </Text>
-        </Text>
-      </View>
-      {showTranslation && item.translation && (
-        <View style={s.translationBlock}>
-          <Text style={s.translationText}>{item.translation}</Text>
-        </View>
-      )}
-    </View>
-  ), [showTranslation, fontFamily]);
 
   if (!isValidSurah) {
     return (
@@ -156,41 +130,17 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
       </View>
 
       {surah && (
-        <FlatList
-          data={ayahs}
-          keyExtractor={(item) => String(item.number)}
-          renderItem={renderAyah}
-          style={s.list}
-          contentContainerStyle={s.listContent}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={
-            <View>
-              <View style={s.surahHeader}>
-                <Text style={[s.surahNameArabic, fontFamily ? { fontFamily } : undefined]}>{surah.name}</Text>
-                <Text style={s.surahNameEnglish}>{surah.english_name}</Text>
-                <Text style={s.surahMeta}>
-                  {revelationLabel} · {surah.number_of_ayahs} verses
-                </Text>
-              </View>
-
-              {showBasmalah && (
-                <View style={s.bismillahContainer}>
-                  <Text style={[s.bismillahText, fontFamily ? { fontFamily } : undefined]}>{BASMALAH}</Text>
-                </View>
-              )}
-            </View>
-          }
+        <SyncedSurahReader
+          surah={surah}
+          ayahs={ayahs}
+          syncAyahs={rawAyahs}
+          audio={audioData?.data}
+          loadingAudio={audioLoading}
+          showBasmalah={showBasmalah}
+          showTranslation={showTranslation}
+          fontFamily={fontFamily}
+          revelationLabel={revelationLabel}
         />
-      )}
-
-      {surah && (
-        <View style={s.bottomPlayer}>
-          <AudioPlayer
-            surah={surah}
-            audio={audioData?.data}
-            loadingAudio={audioLoading}
-          />
-        </View>
       )}
     </ScreenWrapper>
   );
@@ -239,13 +189,6 @@ const s = StyleSheet.create({
   translateTextActive: {
     color: theme.colors.onPrimary,
   },
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: PLAYER_HEIGHT + 8,
-  },
   errorState: {
     flex: 1,
     alignItems: "center",
@@ -256,97 +199,5 @@ const s = StyleSheet.create({
     color: theme.colors.error,
     fontSize: 18,
     fontWeight: "900",
-  },
-
-  /* Surah Header */
-  surahHeader: {
-    alignItems: "center",
-    paddingVertical: 28,
-    paddingHorizontal: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline25,
-  },
-  surahNameArabic: {
-    fontSize: 32,
-    lineHeight: 56,
-    color: theme.colors.text,
-    writingDirection: "rtl",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  surahNameEnglish: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: theme.colors.white,
-    letterSpacing: 0.3,
-  },
-  surahMeta: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: theme.colors.textMuted,
-    marginTop: 6,
-    letterSpacing: 0.5,
-  },
-
-  /* Bismillah */
-  bismillahContainer: {
-    alignItems: "center",
-    paddingVertical: 22,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline10,
-  },
-  bismillahText: {
-    fontSize: 32,
-    lineHeight: 60,
-    writingDirection: "rtl",
-    textAlign: "center",
-    color: theme.colors.text,
-  },
-
-  /* Bottom Player */
-  bottomPlayer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-
-  /* Ayah Block */
-  ayahBlock: {
-    marginBottom: 4,
-  },
-  ayahText: {
-    fontSize: 38,
-    lineHeight: 82,
-    writingDirection: "rtl",
-    textAlign: "center",
-    color: theme.colors.text,
-  },
-  ayahTextContent: {
-    fontSize: 38,
-    lineHeight: 82,
-  },
-  ayahMarker: {
-    fontSize: 28,
-    lineHeight: 82,
-    color: theme.colors.textMuted,
-  },
-
-  /* Translation */
-  translationBlock: {
-    marginBottom: 18,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.outline10,
-  },
-  translationText: {
-    color: theme.colors.textMuted,
-    fontSize: 14,
-    lineHeight: 24,
-    fontWeight: "500",
-    fontStyle: "italic",
-    textAlign: "center",
   },
 });

@@ -1,10 +1,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../storage/authStorage";
+import type { AyahTimingInput } from "../../types/quranSync";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.1.45:8080",
+  baseUrl: "http://172.16.1.152:8080",
   prepareHeaders: async (headers, { getState }) => {
     try {
       const stateToken = (getState() as any)?.main?.accessToken;
@@ -368,11 +369,16 @@ export interface QuranAyah {
   page: number;
   text: string;
   translation?: string;
+  timing?: AyahTimingInput | null;
+  audio_start?: number;
+  audio_end?: number;
 }
 
 export interface QuranSurahDetail extends QuranSurahSummary {
   translation_edition?: string;
   ayahs: QuranAyah[];
+  ayah_timings?: AyahTimingInput[];
+  timings?: AyahTimingInput[];
 }
 
 export interface QuranSurahAudio {
