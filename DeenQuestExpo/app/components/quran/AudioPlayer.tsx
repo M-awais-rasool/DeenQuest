@@ -1,30 +1,39 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  type GestureResponderEvent,
+  type LayoutChangeEvent,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { Pause, Play } from "lucide-react-native";
+import { Pause, Play, SkipBack, SkipForward } from "lucide-react-native";
 import TrackPlayer, {
   State,
-  useActiveTrack,
   usePlaybackState,
-  useProgress,
+  type Progress,
 } from "react-native-track-player";
 import { theme } from "../../theme/themes";
 import type {
+  QuranAyah,
   QuranSurahAudio,
   QuranSurahDetail,
 } from "../../store/services/api";
 import { setupQuranPlayer } from "../../services/trackPlayer";
 import { haptics } from "../../utils/haptics";
+import { buildQuranAyahTracks } from "./quranTrack";
 
 interface Props {
   surah: QuranSurahDetail;
+  ayahs: readonly QuranAyah[];
   audio?: QuranSurahAudio | null;
   loadingAudio?: boolean;
+  queueId: string;
+  progress: Progress;
+  isCurrentQueue: boolean;
+  activeAyahNumber: number | null;
 }
 
 const formatTime = (seconds: number) => {
@@ -41,43 +50,68 @@ const getPlaybackStateValue = (state: unknown) => {
   return state as State | undefined;
 };
 
-export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
+export const AudioPlayer = ({
+  surah,
+  ayahs,
+  audio,
+  loadingAudio,
+  queueId,
+  progress,
+  isCurrentQueue,
+  activeAyahNumber,
+}: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
+  const [progressTrackWidth, setProgressTrackWidth] = useState(0);
   const playbackState = getPlaybackStateValue(usePlaybackState());
-  const activeTrack = useActiveTrack();
-  const progress = useProgress(1000);
+  const isCurrentRef = useRef(false);
+  const prevQueueIdRef = useRef(queueId);
 
-  const trackId = useMemo(() => `quran-surah-${surah.id}`, [surah.id]);
-  const isCurrentTrack = activeTrack?.id === trackId;
-  const isPlaying = isCurrentTrack && playbackState === State.Playing;
-  const isBusy =
-    isPreparing ||
-    (isCurrentTrack &&
-      (playbackState === State.Buffering || playbackState === State.Loading));
-  const canPlay = Boolean(audio?.url) && !loadingAudio;
+  if (prevQueueIdRef.current !== queueId) {
+    prevQueueIdRef.current = queueId;
+    isCurrentRef.current = false;
+  }
+
+  if (isCurrentQueue) {
+    isCurrentRef.current = true;
+  }
+
+  const stableIsCurrent = isCurrentQueue || isCurrentRef.current;
+  const ayahTracks = useMemo(
+    () => buildQuranAyahTracks(surah, ayahs, audio),
+    [audio, ayahs, surah],
+  );
+
+  const isPlaying = stableIsCurrent &&
+    (playbackState === State.Playing ||
+      playbackState === State.Buffering ||
+      playbackState === State.Loading);
+  const isBusy = isPreparing;
+  const isTransitioning = stableIsCurrent &&
+    (playbackState === State.Buffering || playbackState === State.Loading);
+  const canPlay = ayahTracks.length > 0 && !loadingAudio;
 
   const progressFraction =
-    isCurrentTrack && progress.duration > 0
+    stableIsCurrent && progress.duration > 0
       ? Math.min(progress.position / progress.duration, 1)
       : 0;
 
+  const canSeek =
+    stableIsCurrent && progress.duration > 0 && progressTrackWidth > 0;
+
+  const activeAyahLabel = activeAyahNumber
+    ? `Ayah ${activeAyahNumber}/${surah.number_of_ayahs}`
+    : `${ayahTracks.length} ayahs`;
+
   const playSurah = useCallback(async () => {
-    if (!audio?.url) return;
+    if (ayahTracks.length === 0) return;
     try {
       setError(null);
       setIsPreparing(true);
       await setupQuranPlayer();
-      if (!isCurrentTrack) {
+      if (!stableIsCurrent || playbackState === State.Ended) {
         await TrackPlayer.reset();
-        await TrackPlayer.add({
-          id: trackId,
-          url: audio.url,
-          title: `Surah ${surah.english_name}`,
-          artist: audio.reciter,
-          album: "Quran",
-          description: surah.english_name_translation,
-        });
+        await TrackPlayer.add(ayahTracks);
       }
       await TrackPlayer.play();
     } catch {
@@ -85,7 +119,59 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
     } finally {
       setIsPreparing(false);
     }
-  }, [audio, isCurrentTrack, surah, trackId]);
+  }, [ayahTracks, stableIsCurrent, playbackState]);
+
+  const handleProgressLayout = useCallback((event: LayoutChangeEvent) => {
+    setProgressTrackWidth(event.nativeEvent.layout.width);
+  }, []);
+
+  const handleSeek = useCallback(
+    async (event: GestureResponderEvent) => {
+      if (!canSeek) return;
+
+      const ratio = Math.min(
+        Math.max(event.nativeEvent.locationX / progressTrackWidth, 0),
+        1,
+      );
+      const nextPosition = ratio * progress.duration;
+
+      try {
+        setError(null);
+        await TrackPlayer.seekTo(nextPosition);
+      } catch {
+        setError("Audio could not seek.");
+      }
+    },
+    [canSeek, progress.duration, progressTrackWidth],
+  );
+
+  const handleSkipPrevious = useCallback(async () => {
+    if (!stableIsCurrent) return;
+
+    haptics.light();
+    try {
+      setError(null);
+      if (progress.position > 2) {
+        await TrackPlayer.seekTo(0);
+        return;
+      }
+      await TrackPlayer.skipToPrevious(0);
+    } catch {
+      await TrackPlayer.seekTo(0);
+    }
+  }, [stableIsCurrent, progress.position]);
+
+  const handleSkipNext = useCallback(async () => {
+    if (!stableIsCurrent) return;
+
+    haptics.light();
+    try {
+      setError(null);
+      await TrackPlayer.skipToNext(0);
+    } catch {
+      await TrackPlayer.seekTo(0);
+    }
+  }, [stableIsCurrent]);
 
   const handlePlayPause = useCallback(async () => {
     haptics.light();
@@ -100,49 +186,79 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
 
   return (
     <View style={s.container}>
-      <View style={s.progressTrack}>
+      <Pressable
+        style={s.progressTrack}
+        onLayout={handleProgressLayout}
+        onPress={handleSeek}
+        disabled={!canSeek}
+        hitSlop={{ top: 10, bottom: 10 }}
+      >
         <View
           style={[
             s.progressFill,
             { width: `${progressFraction * 100}%` as unknown as number },
           ]}
         />
-      </View>
+      </Pressable>
       <View style={s.content}>
         <View style={s.info}>
           <Text style={s.timeText}>
-            {isCurrentTrack ? formatTime(progress.position) : "0:00"}
+            {stableIsCurrent ? formatTime(progress.position) : "0:00"}
           </Text>
           <View style={s.meta}>
             <Text style={s.surahName} numberOfLines={1}>
               {surah.english_name}
             </Text>
             <Text style={s.reciterName} numberOfLines={1}>
-              {audio?.reciter ?? "Mishary Alafasy"}
+              {activeAyahLabel} · {audio?.reciter ?? "ar.alafasy"}
             </Text>
           </View>
           <Text style={s.timeText}>
-            {isCurrentTrack ? formatTime(progress.duration) : "0:00"}
+            {stableIsCurrent ? formatTime(progress.duration) : "0:00"}
           </Text>
         </View>
         <View style={s.controls}>
-          {isBusy || loadingAudio ? (
+          {isPreparing ? (
             <View style={s.playBtn}>
               <ActivityIndicator color="#fff" size="small" />
             </View>
           ) : (
-            <TouchableOpacity
-              style={[s.playBtn, !canPlay && s.playBtnDisabled]}
-              onPress={handlePlayPause}
-              disabled={!canPlay || isBusy}
-              activeOpacity={0.8}
-            >
-              {isPlaying ? (
-                <Pause size={20} color="#fff" fill="#fff" />
-              ) : (
-                <Play size={20} color="#fff" fill="#fff" />
-              )}
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={[
+                  s.skipBtn,
+                  !stableIsCurrent && s.skipBtnDisabled,
+                ]}
+                onPress={handleSkipPrevious}
+                disabled={!stableIsCurrent}
+                activeOpacity={0.8}
+              >
+                <SkipBack size={18} color={theme.colors.text} fill={theme.colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.playBtn, !canPlay && s.playBtnDisabled]}
+                onPress={handlePlayPause}
+                disabled={!canPlay || isBusy || isTransitioning}
+                activeOpacity={0.8}
+              >
+                {isPlaying ? (
+                  <Pause size={20} color="#fff" fill="#fff" />
+                ) : (
+                  <Play size={20} color="#fff" fill="#fff" />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  s.skipBtn,
+                  !stableIsCurrent && s.skipBtnDisabled,
+                ]}
+                onPress={handleSkipNext}
+                disabled={!stableIsCurrent}
+                activeOpacity={0.8}
+              >
+                <SkipForward size={18} color={theme.colors.text} fill={theme.colors.text} />
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </View>
@@ -207,6 +323,9 @@ const s = StyleSheet.create({
   },
   controls: {
     marginLeft: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   playBtn: {
     width: 44,
@@ -223,6 +342,19 @@ const s = StyleSheet.create({
   },
   playBtnDisabled: {
     opacity: 0.5,
+  },
+  skipBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: theme.colors.surfaceHigh,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: theme.colors.outline25,
+  },
+  skipBtnDisabled: {
+    opacity: 0.35,
   },
   errorText: {
     color: theme.colors.error,
