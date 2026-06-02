@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
+import TrackPlayer from "react-native-track-player";
 import {
   StyleSheet,
   Text,
@@ -28,6 +29,13 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
   const [showTranslation, setShowTranslation] = React.useState(false);
   const { fontFamily } = useQuranFont();
   const surahId = Number(route.params.surahId);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", () => {
+      TrackPlayer.reset();
+    });
+    return unsubscribe;
+  }, [navigation]);
   const isValidSurah = Number.isInteger(surahId) && surahId >= 1 && surahId <= 114;
   const queryArgs = useMemo(
     () => ({
