@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Pause, Play, Square, Headphones } from "lucide-react-native";
+import { Pause, Play } from "lucide-react-native";
 import TrackPlayer, {
   State,
   useActiveTrack,
@@ -28,9 +28,7 @@ interface Props {
 }
 
 const formatTime = (seconds: number) => {
-  if (!Number.isFinite(seconds) || seconds <= 0) {
-    return "0:00";
-  }
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -58,19 +56,18 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
     (isCurrentTrack &&
       (playbackState === State.Buffering || playbackState === State.Loading));
   const canPlay = Boolean(audio?.url) && !loadingAudio;
-  const progressWidth =
+
+  const progressFraction =
     isCurrentTrack && progress.duration > 0
-      ? `${Math.min((progress.position / progress.duration) * 100, 100)}%`
-      : "0%";
+      ? Math.min(progress.position / progress.duration, 1)
+      : 0;
 
   const playSurah = useCallback(async () => {
     if (!audio?.url) return;
-
     try {
       setError(null);
       setIsPreparing(true);
       await setupQuranPlayer();
-
       if (!isCurrentTrack) {
         await TrackPlayer.reset();
         await TrackPlayer.add({
@@ -82,7 +79,6 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
           description: surah.english_name_translation,
         });
       }
-
       await TrackPlayer.play();
     } catch {
       setError("Audio could not start.");
@@ -100,58 +96,56 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
     await playSurah();
   }, [isPlaying, playSurah]);
 
-  const handleStop = useCallback(async () => {
-    haptics.light();
-    await TrackPlayer.stop();
-  }, []);
+  if (!audio?.url && !loadingAudio) return null;
 
   return (
     <View style={s.container}>
-      <View style={s.topRow}>
-        <View style={s.reciterInfo}>
-          <Headphones size={16} color={theme.colors.textMuted} />
-          <Text style={s.reciterName} numberOfLines={1}>
-            {audio?.reciter ?? "Mishary Alafasy"}
+      <View style={s.progressTrack}>
+        <View
+          style={[
+            s.progressFill,
+            { width: `${progressFraction * 100}%` as unknown as number },
+          ]}
+        />
+      </View>
+      <View style={s.content}>
+        <View style={s.info}>
+          <Text style={s.timeText}>
+            {isCurrentTrack ? formatTime(progress.position) : "0:00"}
+          </Text>
+          <View style={s.meta}>
+            <Text style={s.surahName} numberOfLines={1}>
+              {surah.english_name}
+            </Text>
+            <Text style={s.reciterName} numberOfLines={1}>
+              {audio?.reciter ?? "Mishary Alafasy"}
+            </Text>
+          </View>
+          <Text style={s.timeText}>
+            {isCurrentTrack ? formatTime(progress.duration) : "0:00"}
           </Text>
         </View>
         <View style={s.controls}>
-          <TouchableOpacity
-            style={[s.controlBtn, !canPlay && s.controlBtnDisabled]}
-            onPress={handlePlayPause}
-            disabled={!canPlay || isBusy}
-            activeOpacity={0.8}
-          >
-            {isBusy || loadingAudio ? (
-              <ActivityIndicator color={theme.colors.text} size="small" />
-            ) : isPlaying ? (
-              <Pause size={18} color={theme.colors.text} fill={theme.colors.text} />
-            ) : (
-              <Play size={18} color={theme.colors.text} fill={theme.colors.text} />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[s.controlBtn, !isCurrentTrack && s.controlBtnDisabled]}
-            onPress={handleStop}
-            disabled={!isCurrentTrack}
-            activeOpacity={0.8}
-          >
-            <Square size={16} color={theme.colors.textMuted} fill={theme.colors.textMuted} />
-          </TouchableOpacity>
+          {isBusy || loadingAudio ? (
+            <View style={s.playBtn}>
+              <ActivityIndicator color="#fff" size="small" />
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[s.playBtn, !canPlay && s.playBtnDisabled]}
+              onPress={handlePlayPause}
+              disabled={!canPlay || isBusy}
+              activeOpacity={0.8}
+            >
+              {isPlaying ? (
+                <Pause size={20} color="#fff" fill="#fff" />
+              ) : (
+                <Play size={20} color="#fff" fill="#fff" />
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </View>
-
-      <View style={s.progressTrack}>
-        <View style={[s.progressFill, { width: progressWidth }]} />
-      </View>
-      <View style={s.timeRow}>
-        <Text style={s.timeText}>
-          {isCurrentTrack ? formatTime(progress.position) : "0:00"}
-        </Text>
-        <Text style={s.timeText}>
-          {isCurrentTrack ? formatTime(progress.duration) : "0:00"}
-        </Text>
-      </View>
-
       {error ? <Text style={s.errorText}>{error}</Text> : null}
     </View>
   );
@@ -159,69 +153,83 @@ export const AudioPlayer = ({ surah, audio, loadingAudio }: Props) => {
 
 const s = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
-    marginBottom: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  reciterInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  reciterName: {
-    color: theme.colors.textMuted,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  controls: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  controlBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: theme.colors.surfaceHigh,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  controlBtnDisabled: {
-    opacity: 0.4,
+    backgroundColor: theme.colors.surface,
+    paddingBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 16,
   },
   progressTrack: {
     height: 3,
-    borderRadius: 2,
-    backgroundColor: theme.colors.surfaceHigh,
+    backgroundColor: theme.colors.outline10,
     overflow: "hidden",
-    marginTop: 10,
   },
   progressFill: {
     height: "100%",
-    backgroundColor: theme.colors.textMuted,
+    backgroundColor: theme.colors.primary,
     borderRadius: 2,
   },
-  timeRow: {
+  content: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 4,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  info: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  meta: {
+    flex: 1,
+  },
+  surahName: {
+    color: theme.colors.text,
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  reciterName: {
+    color: theme.colors.textMuted,
+    fontSize: 11,
+    fontWeight: "500",
+    marginTop: 1,
   },
   timeText: {
     color: theme.colors.textMuted,
     fontSize: 10,
     fontWeight: "600",
+    fontVariant: ["tabular-nums"],
+  },
+  controls: {
+    marginLeft: 12,
+  },
+  playBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  playBtnDisabled: {
+    opacity: 0.5,
   },
   errorText: {
     color: theme.colors.error,
-    marginTop: 8,
+    marginTop: 6,
     fontSize: 11,
     fontWeight: "600",
     textAlign: "center",
+    paddingHorizontal: 16,
   },
 });

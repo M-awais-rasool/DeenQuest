@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ArrowLeft, ChevronDown, ChevronUp, Languages } from "lucide-react-native";
+import { ArrowLeft, Languages } from "lucide-react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
@@ -30,9 +30,10 @@ const BASMALAH = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرّ�
 
 const AYAH_MARKER_PREFIX = "\u06DD";
 
+const PLAYER_HEIGHT = 96;
+
 export const SurahDetailScreen = ({ route, navigation }: Props) => {
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [audioExpanded, setAudioExpanded] = useState(true);
+  const [showTranslation, setShowTranslation] = React.useState(false);
   const { fontFamily } = useQuranFont();
   const surahId = Number(route.params.surahId);
   const isValidSurah = Number.isInteger(surahId) && surahId >= 1 && surahId <= 114;
@@ -44,7 +45,7 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
     [isValidSurah, showTranslation, surahId],
   );
 
-  const { data, isLoading, isFetching } = useGetSurahByIdQuery(queryArgs, {
+  const { data, isLoading } = useGetSurahByIdQuery(queryArgs, {
     skip: !isValidSurah,
   });
   const { data: audioData, isLoading: audioLoading } =
@@ -66,10 +67,6 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
     };
   }, [rawAyahs, surahId]);
 
-  const toggleAudio = useCallback(() => {
-    haptics.light();
-    setAudioExpanded((v) => !v);
-  }, []);
   const renderAyah = useCallback(({ item }: { item: QuranAyah }) => (
     <View>
       <View style={s.ayahBlock}>
@@ -122,7 +119,7 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
       : "Medinan";
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper style={{ position: "relative" }} innerStyle={{ flex: 1 }}>
       <View style={s.topBar}>
         <TouchableOpacity
           onPress={() => {
@@ -168,7 +165,6 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <View>
-              {/* Surah Header */}
               <View style={s.surahHeader}>
                 <Text style={[s.surahNameArabic, fontFamily ? { fontFamily } : undefined]}>{surah.name}</Text>
                 <Text style={s.surahNameEnglish}>{surah.english_name}</Text>
@@ -177,39 +173,24 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
                 </Text>
               </View>
 
-              {/* Bismillah */}
               {showBasmalah && (
                 <View style={s.bismillahContainer}>
                   <Text style={[s.bismillahText, fontFamily ? { fontFamily } : undefined]}>{BASMALAH}</Text>
                 </View>
               )}
-
-              {/* Audio Player Toggle */}
-              <TouchableOpacity
-                style={s.audioToggle}
-                onPress={toggleAudio}
-                activeOpacity={0.7}
-              >
-                <Text style={s.audioToggleText}>
-                  {audioExpanded ? "Hide reciter" : "Show reciter"}
-                </Text>
-                {audioExpanded ? (
-                  <ChevronUp size={16} color={theme.colors.textMuted} />
-                ) : (
-                  <ChevronDown size={16} color={theme.colors.textMuted} />
-                )}
-              </TouchableOpacity>
-
-              {audioExpanded && (
-                <AudioPlayer
-                  surah={surah}
-                  audio={audioData?.data}
-                  loadingAudio={audioLoading}
-                />
-              )}
             </View>
           }
         />
+      )}
+
+      {surah && (
+        <View style={s.bottomPlayer}>
+          <AudioPlayer
+            surah={surah}
+            audio={audioData?.data}
+            loadingAudio={audioLoading}
+          />
+        </View>
       )}
     </ScreenWrapper>
   );
@@ -259,11 +240,11 @@ const s = StyleSheet.create({
     color: theme.colors.onPrimary,
   },
   list: {
-    // flex: 1,
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 120,
+    paddingBottom: PLAYER_HEIGHT + 8,
   },
   errorState: {
     flex: 1,
@@ -322,21 +303,13 @@ const s = StyleSheet.create({
     color: theme.colors.text,
   },
 
-  /* Audio Toggle */
-  audioToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 10,
-    marginTop: 4,
-  },
-  audioToggleText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: theme.colors.textMuted,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
+  /* Bottom Player */
+  bottomPlayer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 
   /* Ayah Block */

@@ -27,5 +27,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  content: {  },
+  content: {
+  },
 });
