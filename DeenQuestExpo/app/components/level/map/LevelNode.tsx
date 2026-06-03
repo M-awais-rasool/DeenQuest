@@ -93,7 +93,6 @@ export const LevelNode = memo(function LevelNode({
   }, [isLocked, scaleAnim, pressDepth]);
 
   const handlePressOut = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1,
