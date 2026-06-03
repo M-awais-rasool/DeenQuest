@@ -1,6 +1,5 @@
 import {
   BookOpen,
-  Music2,
   Star,
   Feather,
   ScrollText,
@@ -20,19 +19,6 @@ export const COURSES: CourseConfig[] = [
     cardTint: theme.colors.primary12,
     glowColor: theme.colors.primary25,
     Icon: BookOpen,
-    status: "available",
-  },
-  {
-    id: "tajweed",
-    courseType: "tajweed",
-    title: "Tajweed Rules",
-    subtitle: "Beautiful Recitation",
-    levelCount: "13 Levels",
-    accentColor: "#4FC3F7",
-    depthColor: "#1876aa",
-    cardTint: "rgba(79,195,247,0.10)",
-    glowColor: "rgba(79,195,247,0.22)",
-    Icon: Music2,
     status: "available",
   },
   {
@@ -76,5 +62,4 @@ export const COURSES: CourseConfig[] = [
 /** Map from course id → navigation route name (extend as new courses unlock) */
 export const COURSE_ROUTE_MAP: Record<string, string> = {
   qaida: "LevelMap",
-  tajweed: "LevelMap",
 };

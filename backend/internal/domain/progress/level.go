@@ -6,8 +6,7 @@ import "time"
 type CourseType string
 
 const (
-	CourseQaida   CourseType = "qaida"
-	CourseTajweed CourseType = "tajweed"
+	CourseQaida CourseType = "qaida"
 )
 
 // ScreenType is used by the Lesson system to identify its screen layout.

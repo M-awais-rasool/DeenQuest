@@ -200,7 +200,7 @@ export type LessonType =
 export type LevelDifficulty = "easy" | "medium" | "hard";
 
 export type LevelStatus = "locked" | "available" | "in_progress" | "completed";
-export type CourseType = "qaida" | "tajweed";
+export type CourseType = "qaida";
 
 // ScreenType is used by the Level/Lesson system (not by daily tasks).
 export type ScreenType =
