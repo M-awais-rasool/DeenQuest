@@ -234,7 +234,6 @@ export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
   }, [buttonPressY]);
 
   const handlePressOut = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.spring(buttonPressY, {
       toValue: 0,
       useNativeDriver: true,
