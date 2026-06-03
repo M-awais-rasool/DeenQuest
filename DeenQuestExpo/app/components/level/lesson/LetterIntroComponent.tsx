@@ -5,11 +5,13 @@ import { haptics } from "../../../utils/haptics";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { useQuranFont } from "../../../hooks/useQuranFont";
 
 export function LetterIntroComponent({
   lesson,
   onComplete,
 }: LessonComponentProps) {
+  const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
 
@@ -50,7 +52,7 @@ export function LetterIntroComponent({
           }}
           activeOpacity={0.7}
         >
-          <Text style={s.arabicLetter}>{item.letter}</Text>
+          <Text style={[s.arabicLetter, { fontFamily }]}>{item.letter}</Text>
           <Text style={s.letterName}>{item.name}</Text>
           {item.transliteration && (
             <Text style={s.transliteration}>{item.transliteration}</Text>
@@ -116,6 +118,7 @@ const s = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: "300",
     marginBottom: 12,
+    writingDirection: "rtl",
   },
   letterName: {
     fontSize: 20,

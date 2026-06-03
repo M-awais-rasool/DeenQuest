@@ -5,6 +5,7 @@ import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useRecitation, RecitationPanel } from "./recitation";
+import { useQuranFont } from "../../../hooks/useQuranFont";
 
 export function DuaCardComponent({
   lesson,
@@ -12,6 +13,7 @@ export function DuaCardComponent({
   levelId,
   lessonIndex,
 }: LessonComponentProps) {
+  const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
   const arabicText = (data.arabic as string) ?? "";
 
@@ -24,7 +26,7 @@ export function DuaCardComponent({
     <View style={s.root}>
       {/* ── Dua card ─────────────────────────────────────────────────────── */}
       <View style={s.card}>
-        <Text style={s.arabic}>{arabicText}</Text>
+        <Text style={[s.arabic, { fontFamily }]}>{arabicText}</Text>
         <View style={s.divider} />
         {data.transliteration ? (
           <Text style={s.transliteration}>{data.transliteration}</Text>

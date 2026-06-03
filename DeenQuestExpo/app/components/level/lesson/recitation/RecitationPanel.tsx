@@ -18,6 +18,7 @@ import { haptics } from "../../../../utils/haptics";
 import { theme } from "../../../../theme/themes";
 import type { RecitationWordResult } from "../../../../store/services/api";
 import type { UseRecitationReturn } from "./useRecitation";
+import { QURAN_FONT } from "../../../../hooks/useQuranFont";
 
 // ─── Variant colours ──────────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ export const WordChip = React.memo(function WordChip({
   return (
     <View style={[s.wordChip, { backgroundColor: bg, borderColor: color }]}>
       <Text
-        style={[s.wordChipText, { color, writingDirection: "rtl" }]}
+        style={[s.wordChipText, { color, writingDirection: "rtl", fontFamily: QURAN_FONT }]}
         numberOfLines={1}
       >
         {word.text}

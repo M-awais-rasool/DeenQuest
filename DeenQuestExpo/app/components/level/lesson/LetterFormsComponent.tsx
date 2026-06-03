@@ -4,11 +4,13 @@ import { ChevronRight } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { useQuranFont } from "../../../hooks/useQuranFont";
 
 export function LetterFormsComponent({
   lesson,
   onComplete,
 }: LessonComponentProps) {
+  const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
   const letter: string = data.letter ?? "";
   const forms: Record<string, string> = data.forms ?? {};
@@ -23,7 +25,7 @@ export function LetterFormsComponent({
   return (
     <View>
       <View style={s.headerCard}>
-        <Text style={s.mainLetter}>{letter}</Text>
+        <Text style={[s.mainLetter, { fontFamily }]}>{letter}</Text>
         <Text style={s.subtitle}>Letter Forms</Text>
       </View>
 
@@ -32,7 +34,7 @@ export function LetterFormsComponent({
           forms[key] ? (
             <View key={key} style={s.formCard}>
               <Text style={s.formLabel}>{label}</Text>
-              <Text style={s.formArabic}>{forms[key]}</Text>
+              <Text style={[s.formArabic, { fontFamily }]}>{forms[key]}</Text>
             </View>
           ) : null,
         )}
@@ -66,6 +68,7 @@ const s = StyleSheet.create({
     fontSize: 72,
     color: theme.colors.primary,
     marginBottom: 8,
+    writingDirection: "rtl",
   },
   subtitle: {
     fontSize: 14,
@@ -98,6 +101,7 @@ const s = StyleSheet.create({
   formArabic: {
     fontSize: 40,
     color: theme.colors.text,
+    writingDirection: "rtl",
   },
   continueBtn: {
     flexDirection: "row",

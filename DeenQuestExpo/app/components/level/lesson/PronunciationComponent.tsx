@@ -11,11 +11,13 @@ import { haptics } from "../../../utils/haptics";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { useQuranFont } from "../../../hooks/useQuranFont";
 
 export function PronunciationComponent({
   lesson,
   onComplete,
 }: LessonComponentProps) {
+  const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
   const items: Array<{ arabic: string; sound: string }> = data.items ?? [];
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
@@ -44,7 +46,7 @@ export function PronunciationComponent({
           }}
           activeOpacity={0.7}
         >
-          <Text style={s.arabic}>{item.arabic}</Text>
+          <Text style={[s.arabic, { fontFamily }]}>{item.arabic}</Text>
           <View style={s.soundRow}>
             <Volume2
               size={18}
@@ -94,6 +96,7 @@ const s = StyleSheet.create({
     fontSize: 44,
     color: theme.colors.text,
     marginBottom: 12,
+    writingDirection: "rtl",
   },
   soundRow: {
     flexDirection: "row",

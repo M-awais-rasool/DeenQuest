@@ -5,6 +5,7 @@ import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useRecitation, RecitationPanel } from "./recitation";
+import { useQuranFont } from "../../../hooks/useQuranFont";
 
 export function QuranReaderComponent({
   lesson,
@@ -12,6 +13,7 @@ export function QuranReaderComponent({
   levelId,
   lessonIndex,
 }: LessonComponentProps) {
+  const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
   const arabicText = (data.text as string) ?? "";
   const transliteration = data.transliteration as string | undefined;
@@ -37,7 +39,7 @@ export function QuranReaderComponent({
       <View style={s.ayahCard}>
         <View style={s.cardGlow} />
         <View style={s.ayahCardInner}>
-          <Text style={s.arabic}>{arabicText}</Text>
+          <Text style={[s.arabic, { fontFamily }]}>{arabicText}</Text>
           {transliteration || meaning ? <View style={s.divider} /> : null}
           {transliteration ? (
             <Text style={s.transliteration}>{transliteration}</Text>
