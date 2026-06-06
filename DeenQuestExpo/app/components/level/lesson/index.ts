@@ -11,6 +11,11 @@ import { QuranReaderComponent } from "./QuranReaderComponent";
 import { ReflectionComponent } from "./ReflectionComponent";
 import { PrayerChecklistComponent } from "./PrayerChecklistComponent";
 import { CertificateComponent } from "./CertificateComponent";
+import { MCQComponent } from "./MCQComponent";
+import { FillBlankComponent } from "./FillBlankComponent";
+import { AyahBuilderComponent } from "./AyahBuilderComponent";
+import { MatchPairsComponent } from "./MatchPairsComponent";
+import { ListenChooseComponent } from "./ListenChooseComponent";
 
 export type LessonComponent = React.FC<LessonComponentProps>;
 
@@ -26,6 +31,12 @@ export const LESSON_COMPONENT_MAP: Record<string, LessonComponent> = {
   ReflectionComponent,
   PrayerChecklistComponent,
   CertificateComponent,
+  // New interactive task types
+  MCQComponent,
+  FillBlankComponent,
+  AyahBuilderComponent,
+  MatchPairsComponent,
+  ListenChooseComponent,
 };
 
 export type { LessonComponentProps } from "./types";
