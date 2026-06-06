@@ -24,6 +24,10 @@ import  CourseCompletionScreen  from "../../components/level/lesson/CourseComple
 import { TapMatchGame } from "../../components/level/lesson/TapMatchGame";
 import { FallbackGame } from "../../components/level/lesson/FallbackGame";
 import { MCQGame } from "../../components/level/lesson/MCQGame";
+import { MemoryGame } from "../../components/level/lesson/MemoryGame";
+import { BuildGame } from "../../components/level/lesson/BuildGame";
+import { ListenGame } from "../../components/level/lesson/ListenGame";
+import type { MiniGameType, NewlyGrantedReward } from "../../store/services/api";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "MiniGamePlayer">;
@@ -45,6 +49,9 @@ export function MiniGamePlayerScreen() {
     xpEarned: number;
     accuracy: number;
     timeString: string;
+    unlockReward?: string;
+    treasureOpen?: boolean;
+    newRewards?: NewlyGrantedReward[];
   } | null>(null);
 
   const handleFinish = useCallback(
@@ -65,12 +72,16 @@ export function MiniGamePlayerScreen() {
           xpEarned: apiRes.data?.xp_earned ?? level.xp_reward,
           accuracy: stats.accuracy,
           timeString,
+          unlockReward: apiRes.data?.unlock_reward ?? level.unlock_reward,
+          treasureOpen: apiRes.data?.treasure_open,
+          newRewards: apiRes.data?.new_rewards,
         });
       } catch {
         setCompletionResult({
           xpEarned: level.xp_reward,
           accuracy: stats.accuracy,
           timeString,
+          unlockReward: level.unlock_reward,
         });
       }
     },
@@ -97,6 +108,10 @@ export function MiniGamePlayerScreen() {
           accuracy={completionResult.accuracy}
           timeString={completionResult.timeString}
           currentTotalXP={currentTotalXP}
+          levelTitle={level.title}
+          unlockReward={completionResult.unlockReward}
+          treasureOpen={completionResult.treasureOpen}
+          newRewards={completionResult.newRewards}
           onContinue={handleContinue}
         />
       </ScreenWrapper>
@@ -104,12 +119,16 @@ export function MiniGamePlayerScreen() {
   }
 
   const game = level.mini_game;
-  const GameComponent =
-    game.type === "mcq"
-      ? MCQGame
-      : game.type === "tap_match"
-        ? TapMatchGame
-        : FallbackGame;
+  const GAME_MAP: Partial<
+    Record<MiniGameType, React.ComponentType<{ game: typeof game; onFinish: (s: { accuracy: number }) => void }>>
+  > = {
+    mcq: MCQGame,
+    tap_match: TapMatchGame,
+    memory_cards: MemoryGame,
+    drag_drop: BuildGame,
+    listen_choose: ListenGame,
+  };
+  const GameComponent = GAME_MAP[game.type] ?? FallbackGame;
 
   return (
     <ScreenWrapper>
