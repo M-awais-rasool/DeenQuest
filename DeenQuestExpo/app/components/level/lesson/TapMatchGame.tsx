@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import React, { useMemo, useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { haptics } from "../../../utils/haptics";
+import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
 import type { MiniGame } from "../../../store/services/api";
+import { ArabicChip, type ChipState, shuffle } from "./shared";
+
+type Pair = { left: string; right: string };
+type Cell = { id: number; text: string };
 
 export function TapMatchGame({
   game,
@@ -17,80 +17,100 @@ export function TapMatchGame({
   onFinish: (stats: { accuracy: number }) => void;
 }) {
   const data = game.data as Record<string, any>;
-  const pairs = useMemo<Array<{ arabic: string; answer: string }>>(
+  const pairs = useMemo<Pair[]>(
     () =>
       (data.pairs ?? []).map((p: Record<string, string>) => ({
-        arabic: p.arabic,
-        answer: p.answer ?? p.english ?? "",
+        left: p.left ?? p.arabic ?? "",
+        right: p.right ?? p.answer ?? p.english ?? "",
       })),
-    [],
+    [data.pairs],
   );
-  const [matchedCount, setMatchedCount] = useState(0);
-  const [selectedArabic, setSelectedArabic] = useState<string | null>(null);
-  const [matched, setMatched] = useState<Set<string>>(new Set());
-  const [attempts, setAttempts] = useState(0);
 
-  const shuffledAnswers = useMemo(
-    () => [...pairs].sort(() => Math.random() - 0.5),
+  const leftCells = useMemo<Cell[]>(
+    () => pairs.map((p, id) => ({ id, text: p.left })),
+    [pairs],
+  );
+  const rightCells = useMemo<Cell[]>(
+    () => shuffle(pairs.map((p, id) => ({ id, text: p.right }))),
     [pairs],
   );
 
-  const handleArabicTap = (arabic: string) => {
-    if (matched.has(arabic)) return;
+  const [matched, setMatched] = useState<Set<number>>(new Set());
+  const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
+  const [wrong, setWrong] = useState<{ left: number; right: number } | null>(null);
+  const [attempts, setAttempts] = useState(0);
+
+  const tapLeft = (id: number) => {
+    if (matched.has(id)) return;
     haptics.light();
-    setSelectedArabic(arabic);
+    setSelectedLeft(id);
   };
 
-  const handleAnswerTap = (answer: string) => {
-    if (!selectedArabic) return;
-    const newAttempts = attempts + 1;
-    setAttempts(newAttempts);
-    const pair = pairs.find((p) => p.arabic === selectedArabic);
-    if (pair?.answer === answer) {
+  const tapRight = (id: number) => {
+    if (matched.has(id) || selectedLeft === null) return;
+    const nextAttempts = attempts + 1;
+    setAttempts(nextAttempts);
+    if (id === selectedLeft) {
+      const next = new Set(matched).add(id);
+      setMatched(next);
+      setSelectedLeft(null);
       haptics.success();
-      setMatched((prev) => new Set(prev).add(selectedArabic));
-      const newMatchedCount = matchedCount + 1;
-      setMatchedCount(newMatchedCount);
-      if (newMatchedCount >= pairs.length) {
-        const accuracy = newAttempts > 0 ? Math.round((pairs.length / newAttempts) * 100) : 100;
-        onFinish({ accuracy });
+      sfx.correct();
+      if (next.size >= pairs.length) {
+        const accuracy =
+          nextAttempts > 0
+            ? Math.round((pairs.length / nextAttempts) * 100)
+            : 100;
+        sfx.complete();
+        setTimeout(() => onFinish({ accuracy }), 450);
       }
     } else {
+      setWrong({ left: selectedLeft, right: id });
+      setSelectedLeft(null);
       haptics.error();
+      sfx.wrong();
+      setTimeout(() => setWrong(null), 600);
     }
-    setSelectedArabic(null);
+  };
+
+  const leftState = (id: number): ChipState => {
+    if (matched.has(id)) return "correct";
+    if (wrong?.left === id) return "wrong";
+    if (selectedLeft === id) return "selected";
+    return "idle";
+  };
+  const rightState = (id: number): ChipState => {
+    if (matched.has(id)) return "correct";
+    if (wrong?.right === id) return "wrong";
+    return "idle";
   };
 
   return (
     <View>
-      <Text style={s.gameInstruction}>Match the Arabic to its meaning</Text>
-      <View style={s.matchGrid}>
-        <View style={s.matchColumn}>
-          {pairs.map((p, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={[
-                s.matchCard,
-                matched.has(p.arabic) && s.matchCardDone,
-                selectedArabic === p.arabic && s.matchCardSelected,
-              ]}
-              onPress={() => handleArabicTap(p.arabic)}
-              disabled={matched.has(p.arabic)}
-            >
-              <Text style={s.matchArabic}>{p.arabic}</Text>
-            </TouchableOpacity>
+      <Text style={s.instruction}>Tap a tile, then tap its match</Text>
+      <View style={s.grid}>
+        <View style={s.col}>
+          {leftCells.map((c) => (
+            <ArabicChip
+              key={`l-${c.id}`}
+              label={c.text}
+              size="sm"
+              fullWidth
+              state={leftState(c.id)}
+              onPress={matched.has(c.id) ? undefined : () => tapLeft(c.id)}
+            />
           ))}
         </View>
-        <View style={s.matchColumn}>
-          {shuffledAnswers.map((p, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={[s.matchCard, matched.has(p.arabic) && s.matchCardDone]}
-              onPress={() => handleAnswerTap(p.answer)}
-              disabled={matched.has(p.arabic)}
-            >
-              <Text style={s.matchAnswer}>{p.arabic}</Text>
-            </TouchableOpacity>
+        <View style={s.col}>
+          {rightCells.map((c) => (
+            <ArabicChip
+              key={`r-${c.id}`}
+              label={c.text}
+              size="sm"
+              fullWidth
+              state={rightState(c.id)}
+              onPress={matched.has(c.id) ? undefined : () => tapRight(c.id)}
+            />
           ))}
         </View>
       </View>
@@ -99,25 +119,15 @@ export function TapMatchGame({
 }
 
 const s = StyleSheet.create({
-  gameInstruction: {
+  instruction: {
     fontSize: 14,
     color: theme.colors.textMuted,
     fontWeight: "700",
     marginBottom: 16,
     textAlign: "center",
   },
-  matchGrid: { flexDirection: "row", gap: 12 },
-  matchColumn: { flex: 1, gap: 8 },
-  matchCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: theme.colors.outline,
-  },
-  matchCardSelected: { borderColor: theme.colors.primary },
-  matchCardDone: { opacity: 0.4, borderColor: theme.colors.primary },
-  matchArabic: { fontSize: 22, color: theme.colors.text },
-  matchAnswer: { fontSize: 14, color: theme.colors.text, fontWeight: "700" },
+  grid: { flexDirection: "row", gap: 12 },
+  col: { flex: 1, gap: 10 },
 });
+
+export default TapMatchGame;
