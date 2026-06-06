@@ -1,11 +1,10 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { ChevronRight } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
+import { View, Text, StyleSheet } from "react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useRecitation, RecitationPanel } from "./recitation";
 import { useQuranFont } from "../../../hooks/useQuranFont";
+import { FadeInView, ContinueButton } from "./shared";
 
 export function DuaCardComponent({
   lesson,
@@ -25,36 +24,23 @@ export function DuaCardComponent({
   return (
     <View style={s.root}>
       {/* ── Dua card ─────────────────────────────────────────────────────── */}
-      <View style={s.card}>
+      <FadeInView style={s.card}>
         <Text style={[s.arabic, { fontFamily }]}>{arabicText}</Text>
         <View style={s.divider} />
-        {data.transliteration ? (
-          <Text style={s.transliteration}>{data.transliteration}</Text>
-        ) : null}
         {data.meaning ? <Text style={s.meaning}>{data.meaning}</Text> : null}
         {data.context ? (
           <View style={s.contextBox}>
             <Text style={s.contextText}>{data.context}</Text>
           </View>
         ) : null}
-      </View>
+      </FadeInView>
 
       {/* ── Recitation panel (secondary / gold variant) ───────────────────── */}
       {hasRecitation && <RecitationPanel {...rec} variant="secondary" />}
 
       {/* CONTINUE — unlocked only after recitation is done */}
       {(!hasRecitation || rec.hasResult) && (
-        <TouchableOpacity
-          style={s.continueBtn}
-          onPress={() => {
-            haptics.medium();
-            onComplete();
-          }}
-          activeOpacity={0.8}
-        >
-          <Text style={s.continueBtnText}>I'VE LEARNED THIS</Text>
-          <ChevronRight size={18} color={theme.colors.onPrimary} />
-        </TouchableOpacity>
+        <ContinueButton label="I'VE LEARNED THIS" onPress={onComplete} />
       )}
 
       {/* Locked hint while recitation is pending */}

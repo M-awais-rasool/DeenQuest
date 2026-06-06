@@ -1,33 +1,23 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { ChevronRight } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
+import { Text, StyleSheet } from "react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { FadeInView, ContinueButton } from "./shared";
 
 export function HadithComponent({ lesson, onComplete }: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
 
   return (
-    <View>
-      <View style={s.card}>
+    <FadeInView>
+      <FadeInView style={s.card} delay={60}>
         <Text style={s.quoteOpen}>"</Text>
         <Text style={s.hadithText}>{data.hadith}</Text>
         <Text style={s.quoteClose}>"</Text>
         <Text style={s.reference}>— {data.reference}</Text>
-      </View>
+      </FadeInView>
 
-      <TouchableOpacity
-        style={s.continueBtn}
-        onPress={() => {
-          haptics.medium();
-          onComplete();
-        }}
-      >
-        <Text style={s.continueBtnText}>CONTINUE</Text>
-        <ChevronRight size={18} color={theme.colors.onPrimary} />
-      </TouchableOpacity>
-    </View>
+      <ContinueButton onPress={onComplete} style={{ marginTop: 24 }} />
+    </FadeInView>
   );
 }
 

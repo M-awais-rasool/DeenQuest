@@ -1,11 +1,12 @@
 import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Volume2, ChevronRight } from "lucide-react-native";
+import { Volume2 } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useQuranFont } from "../../../hooks/useQuranFont";
+import { FadeInView, ContinueButton } from "./shared";
 
 export function LetterIntroComponent({
   lesson,
@@ -43,32 +44,32 @@ export function LetterIntroComponent({
   return (
     <View>
       {letters.map((item, idx) => (
-        <TouchableOpacity
-          key={idx}
-          style={[s.letterCard, speakingIdx === idx && s.letterCardActive]}
-          onPress={() => {
-            haptics.light();
-            speakLetter(item.letter, idx);
-          }}
-          activeOpacity={0.7}
-        >
-          <Text style={[s.arabicLetter, { fontFamily }]}>{item.letter}</Text>
-          <Text style={s.letterName}>{item.name}</Text>
-          {item.transliteration && (
-            <Text style={s.transliteration}>{item.transliteration}</Text>
-          )}
-          <View style={s.audioRow}>
-            <Volume2
-              size={16}
-              color={
-                speakingIdx === idx
-                  ? theme.colors.secondary
-                  : theme.colors.primary
-              }
-            />
-            <Text style={s.audioLabel}>Tap to hear</Text>
-          </View>
-        </TouchableOpacity>
+        <FadeInView key={idx} delay={idx * 90}>
+          <TouchableOpacity
+            style={[s.letterCard, speakingIdx === idx && s.letterCardActive]}
+            onPress={() => {
+              haptics.light();
+              speakLetter(item.letter, idx);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[s.arabicLetter, { fontFamily }]}>{item.letter}</Text>
+            {item.name ? <Text style={s.letterName}>{item.name}</Text> : null}
+            <View style={s.audioRow}>
+              <Volume2
+                size={16}
+                color={
+                  speakingIdx === idx
+                    ? theme.colors.secondary
+                    : theme.colors.primary
+                }
+              />
+              <Text style={s.audioLabel}>
+                {speakingIdx === idx ? "Playing…" : "Tap to hear"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </FadeInView>
       ))}
 
       {data.audio_hint && (
@@ -85,16 +86,7 @@ export function LetterIntroComponent({
         </View>
       )}
 
-      <TouchableOpacity
-        style={s.continueBtn}
-        onPress={() => {
-          haptics.medium();
-          onComplete();
-        }}
-      >
-        <Text style={s.continueBtnText}>CONTINUE</Text>
-        <ChevronRight size={18} color={theme.colors.onPrimary} />
-      </TouchableOpacity>
+      <ContinueButton onPress={onComplete} style={{ marginTop: 24 }} />
     </View>
   );
 }

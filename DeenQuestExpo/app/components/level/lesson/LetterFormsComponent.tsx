@@ -1,10 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { ChevronRight } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
+import { View, Text, StyleSheet } from "react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useQuranFont } from "../../../hooks/useQuranFont";
+import { FadeInView, ContinueButton } from "./shared";
 
 export function LetterFormsComponent({
   lesson,
@@ -24,32 +23,23 @@ export function LetterFormsComponent({
 
   return (
     <View>
-      <View style={s.headerCard}>
+      <FadeInView style={s.headerCard}>
         <Text style={[s.mainLetter, { fontFamily }]}>{letter}</Text>
         <Text style={s.subtitle}>Letter Forms</Text>
-      </View>
+      </FadeInView>
 
       <View style={s.formsGrid}>
-        {formLabels.map(({ key, label }) =>
+        {formLabels.map(({ key, label }, idx) =>
           forms[key] ? (
-            <View key={key} style={s.formCard}>
+            <FadeInView key={key} delay={120 + idx * 80} style={s.formCard}>
               <Text style={s.formLabel}>{label}</Text>
               <Text style={[s.formArabic, { fontFamily }]}>{forms[key]}</Text>
-            </View>
+            </FadeInView>
           ) : null,
         )}
       </View>
 
-      <TouchableOpacity
-        style={s.continueBtn}
-        onPress={() => {
-          haptics.medium();
-          onComplete();
-        }}
-      >
-        <Text style={s.continueBtnText}>CONTINUE</Text>
-        <ChevronRight size={18} color={theme.colors.onPrimary} />
-      </TouchableOpacity>
+      <ContinueButton onPress={onComplete} style={{ marginTop: 24 }} />
     </View>
   );
 }

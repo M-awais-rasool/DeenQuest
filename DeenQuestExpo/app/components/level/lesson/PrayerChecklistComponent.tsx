@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { CheckCircle, Circle, ChevronRight } from "lucide-react-native";
+import { CheckCircle, Circle } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { FadeInView, ContinueButton } from "./shared";
 
 export function PrayerChecklistComponent({
   lesson,
@@ -30,33 +31,25 @@ export function PrayerChecklistComponent({
       {steps.map((step, idx) => {
         const done = checked.has(idx);
         return (
-          <TouchableOpacity
-            key={idx}
-            style={[s.item, done && s.itemDone]}
-            onPress={() => toggle(idx)}
-            activeOpacity={0.7}
-          >
-            {done ? (
-              <CheckCircle size={20} color={theme.colors.primary} />
-            ) : (
-              <Circle size={20} color={theme.colors.textMuted} />
-            )}
-            <Text style={[s.itemText, done && s.itemTextDone]}>{step}</Text>
-          </TouchableOpacity>
+          <FadeInView key={idx} delay={idx * 60}>
+            <TouchableOpacity
+              style={[s.item, done && s.itemDone]}
+              onPress={() => toggle(idx)}
+              activeOpacity={0.7}
+            >
+              {done ? (
+                <CheckCircle size={20} color={theme.colors.primary} />
+              ) : (
+                <Circle size={20} color={theme.colors.textMuted} />
+              )}
+              <Text style={[s.itemText, done && s.itemTextDone]}>{step}</Text>
+            </TouchableOpacity>
+          </FadeInView>
         );
       })}
 
       {allChecked && (
-        <TouchableOpacity
-          style={s.continueBtn}
-          onPress={() => {
-            haptics.medium();
-            onComplete();
-          }}
-        >
-          <Text style={s.continueBtnText}>CONTINUE</Text>
-          <ChevronRight size={18} color={theme.colors.onPrimary} />
-        </TouchableOpacity>
+        <ContinueButton onPress={onComplete} style={{ marginTop: 16 }} />
       )}
 
       {!allChecked && <Text style={s.hint}>Tap each item to check it off</Text>}

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { ChevronRight } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { ContinueButton } from "./shared";
 
 export function ReflectionComponent({
   lesson,
@@ -46,16 +46,7 @@ export function ReflectionComponent({
       )}
 
       {selected !== null && (
-        <TouchableOpacity
-          style={s.continueBtn}
-          onPress={() => {
-            haptics.medium();
-            onComplete();
-          }}
-        >
-          <Text style={s.continueBtnText}>CONTINUE</Text>
-          <ChevronRight size={18} color={theme.colors.onPrimary} />
-        </TouchableOpacity>
+        <ContinueButton onPress={onComplete} style={{ marginTop: 16 }} />
       )}
     </View>
   );

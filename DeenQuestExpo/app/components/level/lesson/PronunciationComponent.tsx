@@ -1,17 +1,12 @@
 import React, { useCallback, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-} from "react-native";
-import { Volume2, ChevronRight } from "lucide-react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Volume2 } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useQuranFont } from "../../../hooks/useQuranFont";
+import { FadeInView, ContinueButton } from "./shared";
 
 export function PronunciationComponent({
   lesson,
@@ -19,7 +14,7 @@ export function PronunciationComponent({
 }: LessonComponentProps) {
   const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
-  const items: Array<{ arabic: string; sound: string }> = data.items ?? [];
+  const items: Array<{ arabic: string }> = data.items ?? [];
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
 
   const speak = useCallback((text: string, idx: number) => {
@@ -37,43 +32,34 @@ export function PronunciationComponent({
   return (
     <View>
       {items.map((item, idx) => (
-        <TouchableOpacity
-          key={idx}
-          style={[s.card, speakingIdx === idx && s.cardActive]}
-          onPress={() => {
-            haptics.light();
-            speak(item.arabic, idx);
-          }}
-          activeOpacity={0.7}
-        >
-          <Text style={[s.arabic, { fontFamily }]}>{item.arabic}</Text>
-          <View style={s.soundRow}>
-            <Volume2
-              size={18}
-              color={
-                speakingIdx === idx
-                  ? theme.colors.secondary
-                  : theme.colors.primary
-              }
-            />
-            <Text style={[s.sound, speakingIdx === idx && s.soundActive]}>
-              {item.sound}
-            </Text>
-          </View>
-          <Text style={s.tapHint}>Tap to hear</Text>
-        </TouchableOpacity>
+        <FadeInView key={idx} delay={idx * 80}>
+          <TouchableOpacity
+            style={[s.card, speakingIdx === idx && s.cardActive]}
+            onPress={() => {
+              haptics.light();
+              speak(item.arabic, idx);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[s.arabic, { fontFamily }]}>{item.arabic}</Text>
+            <View style={s.soundRow}>
+              <Volume2
+                size={18}
+                color={
+                  speakingIdx === idx
+                    ? theme.colors.secondary
+                    : theme.colors.primary
+                }
+              />
+              <Text style={[s.tapHint, speakingIdx === idx && s.tapHintActive]}>
+                {speakingIdx === idx ? "Playing…" : "Tap to hear"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </FadeInView>
       ))}
 
-      <TouchableOpacity
-        style={s.continueBtn}
-        onPress={() => {
-          haptics.medium();
-          onComplete();
-        }}
-      >
-        <Text style={s.continueBtnText}>CONTINUE</Text>
-        <ChevronRight size={18} color={theme.colors.onPrimary} />
-      </TouchableOpacity>
+      <ContinueButton onPress={onComplete} style={{ marginTop: 24 }} />
     </View>
   );
 }
@@ -103,36 +89,13 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-  sound: {
-    fontSize: 16,
-    color: theme.colors.primary,
+  tapHint: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    letterSpacing: 0.5,
     fontWeight: "700",
   },
-  soundActive: {
+  tapHintActive: {
     color: theme.colors.secondary,
-  },
-  tapHint: {
-    fontSize: 11,
-    color: theme.colors.textMuted,
-    marginTop: 8,
-    letterSpacing: 0.5,
-  },
-  continueBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 16,
-    borderRadius: 16,
-    marginTop: 24,
-    gap: 6,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.primaryContainer,
-  },
-  continueBtnText: {
-    color: theme.colors.onPrimary,
-    fontWeight: "900",
-    fontSize: 16,
-    letterSpacing: 1,
   },
 });

@@ -1,11 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { BookOpen, ChevronRight } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
+import { View, Text, StyleSheet } from "react-native";
+import { BookOpen } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useRecitation, RecitationPanel } from "./recitation";
 import { useQuranFont } from "../../../hooks/useQuranFont";
+import { FadeInView, ContinueButton } from "./shared";
 
 export function QuranReaderComponent({
   lesson,
@@ -16,7 +16,6 @@ export function QuranReaderComponent({
   const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
   const arabicText = (data.text as string) ?? "";
-  const transliteration = data.transliteration as string | undefined;
   const meaning = data.meaning as string | undefined;
   const surahName = data.surah as string | undefined;
 
@@ -36,33 +35,21 @@ export function QuranReaderComponent({
       ) : null}
 
       {/* ── Ayah card ────────────────────────────────────────────────────── */}
-      <View style={s.ayahCard}>
+      <FadeInView style={s.ayahCard}>
         <View style={s.cardGlow} />
         <View style={s.ayahCardInner}>
           <Text style={[s.arabic, { fontFamily }]}>{arabicText}</Text>
-          {transliteration || meaning ? <View style={s.divider} /> : null}
-          {transliteration ? (
-            <Text style={s.transliteration}>{transliteration}</Text>
-          ) : null}
+          {meaning ? <View style={s.divider} /> : null}
           {meaning ? <Text style={s.meaning}>{meaning}</Text> : null}
         </View>
-      </View>
+      </FadeInView>
 
       {/* ── Recitation panel ─────────────────────────────────────────────── */}
       {hasRecitation && <RecitationPanel {...rec} variant="primary" />}
 
       {/* CONTINUE — unlocked only after recitation is done */}
       {(!hasRecitation || rec.hasResult) && (
-        <TouchableOpacity
-          style={s.continueBtn}
-          onPress={() => {
-            haptics.medium();
-            onComplete();
-          }}
-        >
-          <Text style={s.continueBtnText}>CONTINUE</Text>
-          <ChevronRight size={18} color={theme.colors.onPrimary} />
-        </TouchableOpacity>
+        <ContinueButton onPress={onComplete} />
       )}
 
       {/* Locked hint while recitation is pending */}

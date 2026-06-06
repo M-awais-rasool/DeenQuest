@@ -4,6 +4,7 @@ import { Award, ChevronRight } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { FadeInView } from "./shared";
 
 export function CertificateComponent({
   lesson,
@@ -13,7 +14,7 @@ export function CertificateComponent({
 
   return (
     <View>
-      <View style={s.card}>
+      <FadeInView style={s.card}>
         <View style={s.iconCircle}>
           <Award size={40} color={theme.colors.secondary} />
         </View>
@@ -26,7 +27,7 @@ export function CertificateComponent({
             <Text style={s.nextPhase}>{data.next_phase}</Text>
           </View>
         )}
-      </View>
+      </FadeInView>
 
       <TouchableOpacity
         style={s.continueBtn}

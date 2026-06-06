@@ -1,9 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Lightbulb, ChevronRight } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
+import { View, Text, StyleSheet } from "react-native";
+import { Lightbulb } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
+import { FadeInView, ContinueButton } from "./shared";
 
 export function TipsComponent({ lesson, onComplete }: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
@@ -12,22 +12,15 @@ export function TipsComponent({ lesson, onComplete }: LessonComponentProps) {
   return (
     <View>
       {tips.map((tip, idx) => (
-        <View key={idx} style={s.tipCard}>
-          <Lightbulb size={16} color={theme.colors.secondary} />
-          <Text style={s.tipText}>{tip}</Text>
-        </View>
+        <FadeInView key={idx} delay={idx * 70}>
+          <View style={s.tipCard}>
+            <Lightbulb size={16} color={theme.colors.secondary} />
+            <Text style={s.tipText}>{tip}</Text>
+          </View>
+        </FadeInView>
       ))}
 
-      <TouchableOpacity
-        style={s.continueBtn}
-        onPress={() => {
-          haptics.medium();
-          onComplete();
-        }}
-      >
-        <Text style={s.continueBtnText}>CONTINUE</Text>
-        <ChevronRight size={18} color={theme.colors.onPrimary} />
-      </TouchableOpacity>
+      <ContinueButton onPress={onComplete} style={{ marginTop: 24 }} />
     </View>
   );
 }
