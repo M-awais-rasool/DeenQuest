@@ -6,9 +6,9 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../ui";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react-native";
 import TrackPlayer, {
   State,
@@ -22,7 +22,6 @@ import type {
   QuranSurahDetail,
 } from "../../store/services/api";
 import { setupQuranPlayer } from "../../services/trackPlayer";
-import { haptics } from "../../utils/haptics";
 import { buildQuranAyahTracks } from "./quranTrack";
 
 interface Props {
@@ -148,7 +147,6 @@ export const AudioPlayer = ({
   const handleSkipPrevious = useCallback(async () => {
     if (!stableIsCurrent) return;
 
-    haptics.light();
     try {
       setError(null);
       if (progress.position > 2) {
@@ -164,7 +162,6 @@ export const AudioPlayer = ({
   const handleSkipNext = useCallback(async () => {
     if (!stableIsCurrent) return;
 
-    haptics.light();
     try {
       setError(null);
       await TrackPlayer.skipToNext(0);
@@ -174,7 +171,6 @@ export const AudioPlayer = ({
   }, [stableIsCurrent]);
 
   const handlePlayPause = useCallback(async () => {
-    haptics.light();
     if (isPlaying) {
       await TrackPlayer.pause();
       return;
@@ -224,7 +220,7 @@ export const AudioPlayer = ({
             </View>
           ) : (
             <>
-              <TouchableOpacity
+              <AnimatedPressable
                 style={[
                   s.skipBtn,
                   !stableIsCurrent && s.skipBtnDisabled,
@@ -234,20 +230,24 @@ export const AudioPlayer = ({
                 activeOpacity={0.8}
               >
                 <SkipBack size={18} color={theme.colors.text} fill={theme.colors.text} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.playBtn, !canPlay && s.playBtnDisabled]}
+              </AnimatedPressable>
+              <TactilePressable
+                edgeColor={theme.colors.primaryContainer}
+                depth={3}
+                radius={22}
+                haptic="light"
+                dimWhenDisabled={false}
+                faceStyle={[s.playBtn, !canPlay && s.playBtnDisabled]}
                 onPress={handlePlayPause}
                 disabled={!canPlay || isBusy || isTransitioning}
-                activeOpacity={0.8}
               >
                 {isPlaying ? (
                   <Pause size={20} color="#fff" fill="#fff" />
                 ) : (
                   <Play size={20} color="#fff" fill="#fff" />
                 )}
-              </TouchableOpacity>
-              <TouchableOpacity
+              </TactilePressable>
+              <AnimatedPressable
                 style={[
                   s.skipBtn,
                   !stableIsCurrent && s.skipBtnDisabled,
@@ -257,7 +257,7 @@ export const AudioPlayer = ({
                 activeOpacity={0.8}
               >
                 <SkipForward size={18} color={theme.colors.text} fill={theme.colors.text} />
-              </TouchableOpacity>
+              </AnimatedPressable>
             </>
           )}
         </View>

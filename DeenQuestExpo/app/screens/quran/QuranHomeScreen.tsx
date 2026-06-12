@@ -4,9 +4,9 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { TactilePressable } from "../../components/ui";
 import { BookOpen, Search } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
@@ -16,7 +16,6 @@ import {
   useGetSurahsQuery,
 } from "../../store/services/api";
 import type { DemoTabScreenProps } from "../../navigators/navigationTypes";
-import { haptics } from "../../utils/haptics";
 
 type Props = DemoTabScreenProps<"QuranScreen">;
 
@@ -38,7 +37,6 @@ export const QuranHomeScreen = ({ navigation }: Props) => {
   }, [search, surahs]);
 
   const handleOpen = (surah: QuranSurahSummary) => {
-    haptics.light();
     navigation.navigate("SurahDetail", { surahId: surah.id });
   };
 
@@ -78,10 +76,13 @@ export const QuranHomeScreen = ({ navigation }: Props) => {
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={s.surahRow}
+            <TactilePressable
+              edgeColor={theme.colors.outline}
+              depth={3}
+              radius={theme.borderRadius.md}
+              haptic="light"
+              faceStyle={s.surahRow}
               onPress={() => handleOpen(item)}
-              activeOpacity={0.78}
             >
               <View style={s.numberBadge}>
                 <Text style={s.numberText}>{item.number}</Text>
@@ -100,7 +101,7 @@ export const QuranHomeScreen = ({ navigation }: Props) => {
                   {item.number_of_ayahs} ayahs • {item.revelation_type}
                 </Text>
               </View>
-            </TouchableOpacity>
+            </TactilePressable>
           )}
           ListEmptyComponent={
             <View style={s.empty}>

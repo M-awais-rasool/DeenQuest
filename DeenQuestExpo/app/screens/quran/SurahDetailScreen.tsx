@@ -3,9 +3,9 @@ import TrackPlayer from "react-native-track-player";
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../../components/ui";
 import { ArrowLeft, Languages } from "lucide-react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
@@ -18,7 +18,6 @@ import {
 } from "../../store/services/api";
 import { SyncedSurahReader } from "../../components/quran/SyncedSurahReader";
 import { BASMALAH } from "../../components/quran/constants";
-import { haptics } from "../../utils/haptics";
 import { useQuranFont } from "../../hooks/useQuranFont";
 
 type Props = NativeStackScreenProps<AppStackParamList, "SurahDetail">;
@@ -71,9 +70,9 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
     return (
       <ScreenWrapper>
         <View style={s.topBar}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
+          <AnimatedPressable onPress={() => navigation.goBack()} style={s.backBtn}>
             <ArrowLeft size={22} color={theme.colors.text} />
-          </TouchableOpacity>
+          </AnimatedPressable>
         </View>
         <View style={s.errorState}>
           <Text style={s.errorTitle}>Surah not found</Text>
@@ -86,9 +85,9 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
     return (
       <ScreenWrapper>
         <View style={s.topBar}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
+          <AnimatedPressable onPress={() => navigation.goBack()} style={s.backBtn}>
             <ArrowLeft size={22} color={theme.colors.text} />
-          </TouchableOpacity>
+          </AnimatedPressable>
         </View>
         <Loader />
       </ScreenWrapper>
@@ -103,22 +102,23 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
   return (
     <ScreenWrapper style={{ position: "relative" }} innerStyle={{ flex: 1 }}>
       <View style={s.topBar}>
-        <TouchableOpacity
+        <AnimatedPressable
           onPress={() => {
-            haptics.light();
             navigation.goBack();
           }}
           style={s.backBtn}
         >
           <ArrowLeft size={22} color={theme.colors.text} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            haptics.light();
-            setShowTranslation((value) => !value);
-          }}
-          style={[s.translateBtn, showTranslation && s.translateBtnActive]}
-          activeOpacity={0.8}
+        </AnimatedPressable>
+        <TactilePressable
+          onPress={() => setShowTranslation((value) => !value)}
+          edgeColor={
+            showTranslation ? theme.colors.primary30 : theme.colors.primary25
+          }
+          depth={3}
+          radius={theme.borderRadius.sm}
+          haptic="selection"
+          faceStyle={[s.translateBtn, showTranslation && s.translateBtnActive]}
         >
           <Languages
             size={18}
@@ -134,7 +134,7 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
           >
             Translation
           </Text>
-        </TouchableOpacity>
+        </TactilePressable>
       </View>
 
       {surah && (
