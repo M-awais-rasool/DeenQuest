@@ -4,8 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../../components/ui";
 import {
   ArrowLeft,
   Check,
@@ -20,7 +20,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
-import { haptics } from "../../utils/haptics";
 import { theme } from "../../theme/themes";
 import { useGetLevelDetailQuery } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
@@ -60,7 +59,6 @@ export function LevelDetailScreen() {
   const startLesson = useCallback(
     (lessonIndex: number) => {
       if (!level) return;
-      haptics.light();
       navigation.navigate("LessonPlayer", {
         levelId: level.id,
         startLessonIndex: lessonIndex,
@@ -72,7 +70,6 @@ export function LevelDetailScreen() {
 
   const startMiniGame = useCallback(() => {
     if (!level) return;
-    haptics.medium();
     navigation.navigate("MiniGamePlayer", {
       levelId: level.id,
       courseType: level.course_type ?? courseType,
@@ -125,16 +122,15 @@ export function LevelDetailScreen() {
             style={s.hero}
           >
             <View style={s.heroTopRow}>
-              <TouchableOpacity
+              <AnimatedPressable
                 onPress={() => {
-                  haptics.light();
                   navigation.goBack();
                 }}
                 style={s.backBtn}
                 activeOpacity={0.8}
               >
                 <ArrowLeft size={20} color={theme.colors.white} />
-              </TouchableOpacity>
+              </AnimatedPressable>
               <View style={[s.diffPill, { backgroundColor: diff.tint }]}>
                 <Text style={[s.diffText, { color: diff.color }]}>
                   {level.difficulty.toUpperCase()}
@@ -205,8 +201,19 @@ export function LevelDetailScreen() {
                       />
                     )}
                     <FadeInView delay={index * 60}>
-                      <TouchableOpacity
-                        style={[
+                      <TactilePressable
+                        edgeColor={
+                          status === "current"
+                            ? theme.colors.primary
+                            : status === "done"
+                              ? theme.colors.primary30
+                              : theme.colors.outline
+                        }
+                        depth={3}
+                        radius={18}
+                        haptic="light"
+                        dimWhenDisabled={false}
+                        faceStyle={[
                           s.lessonRow,
                           status === "current" && s.lessonRowCurrent,
                           status === "done" && s.lessonRowDone,
@@ -214,7 +221,6 @@ export function LevelDetailScreen() {
                         ]}
                         onPress={() => startLesson(index)}
                         disabled={locked}
-                        activeOpacity={0.85}
                       >
                         <View
                           style={[
@@ -255,7 +261,7 @@ export function LevelDetailScreen() {
                             {lesson.description}
                           </Text>
                         </View>
-                      </TouchableOpacity>
+                      </TactilePressable>
                     </FadeInView>
                   </View>
                 );
@@ -267,11 +273,15 @@ export function LevelDetailScreen() {
           <View style={s.section}>
             <Text style={s.sectionTitle}>FINAL CHALLENGE</Text>
             <FadeInView>
-              <TouchableOpacity
-                style={[s.miniGame, !allLessonsDone && s.miniGameLocked]}
+              <TactilePressable
+                edgeColor={theme.colors.secondary20}
+                depth={3}
+                radius={18}
+                haptic="light"
+                dimWhenDisabled={false}
+                faceStyle={[s.miniGame, !allLessonsDone && s.miniGameLocked]}
                 onPress={startMiniGame}
                 disabled={!allLessonsDone}
-                activeOpacity={0.85}
               >
                 <View style={s.miniGameIcon}>
                   <Gamepad2
@@ -295,7 +305,7 @@ export function LevelDetailScreen() {
                 ) : (
                   <Lock size={16} color={theme.colors.textMuted} />
                 )}
-              </TouchableOpacity>
+              </TactilePressable>
             </FadeInView>
           </View>
 
@@ -329,13 +339,16 @@ export function LevelDetailScreen() {
 
         {/* ── Sticky CTA ─────────────────────────────────────────── */}
         <View style={s.footer}>
-          <TouchableOpacity
-            style={s.cta}
+          <TactilePressable
+            edgeColor={theme.colors.primaryContainer}
+            depth={5}
+            radius={18}
+            haptic="medium"
+            faceStyle={s.cta}
             onPress={ctaAction}
-            activeOpacity={0.9}
           >
             <Text style={s.ctaText}>{ctaLabel}</Text>
-          </TouchableOpacity>
+          </TactilePressable>
         </View>
       </View>
     </ScreenWrapper>
@@ -600,8 +613,6 @@ const s = StyleSheet.create({
     borderRadius: 18,
     paddingVertical: 17,
     alignItems: "center",
-    borderBottomWidth: 5,
-    borderBottomColor: theme.colors.primaryContainer,
   },
   ctaText: {
     color: theme.colors.onPrimary,

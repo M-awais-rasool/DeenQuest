@@ -3,11 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Animated,
 } from "react-native";
+import { TactilePressable } from "../../ui";
 import { Lock, ChevronRight } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import { Box3D, STATIC_ANIM } from "./Box3D";
 import type { CourseConfig } from "./types";
@@ -28,7 +27,6 @@ export const CourseCard = memo(function CourseCard({
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -71,43 +69,25 @@ export const CourseCard = memo(function CourseCard({
     return () => pulse.stop();
   }, [isAvailable, pulseAnim]);
 
-  const handlePressIn = useCallback(() => {
-    if (isLocked) return;
-    Animated.spring(scaleAnim, {
-      toValue: 0.97,
-      useNativeDriver: true,
-    }).start();
-  }, [isLocked, scaleAnim]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 5,
-      tension: 120,
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
-
   return (
     <Animated.View
       style={[
         s.wrapper,
         {
           opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+          transform: [{ translateY: slideAnim }],
         },
       ]}
     >
-      <TouchableOpacity
-        onPress={() => {
-          if (!isLocked) haptics.light();
-          onPress();
-        }}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+      <TactilePressable
+        onPress={onPress}
         disabled={isLocked}
-        activeOpacity={1}
-        style={[s.card, isLocked && s.cardLocked]}
+        dimWhenDisabled={false}
+        edgeColor={theme.colors.outline}
+        depth={4}
+        radius={20}
+        haptic="light"
+        faceStyle={[s.card, isLocked && s.cardLocked]}
       >
         {/* Top accent line — very subtle */}
         {isAvailable && (
@@ -179,7 +159,7 @@ export const CourseCard = memo(function CourseCard({
             )}
           </View>
         </View>
-      </TouchableOpacity>
+      </TactilePressable>
     </Animated.View>
   );
 });

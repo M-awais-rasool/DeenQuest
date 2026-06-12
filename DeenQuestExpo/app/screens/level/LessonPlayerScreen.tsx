@@ -3,15 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   Animated,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../../components/ui";
 import { X, ChevronRight } from "lucide-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
-import { haptics } from "../../utils/haptics";
 import { theme } from "../../theme/themes";
 import {
   useGetLevelDetailQuery,
@@ -81,16 +80,17 @@ const LessonRenderer = memo(function LessonRenderer({
               </Text>
             ))}
         </View>
-          <TouchableOpacity
-            style={s.continueBtn}
-            onPress={() => {
-              haptics.medium();
-              onComplete();
-            }}
+          <TactilePressable
+            edgeColor={theme.colors.primaryContainer}
+            radius={16}
+            haptic="medium"
+            style={s.continueBtnWrap}
+            faceStyle={s.continueBtn}
+            onPress={onComplete}
           >
             <Text style={s.continueBtnText}>CONTINUE</Text>
             <ChevronRight size={18} color={theme.colors.onPrimary} />
-          </TouchableOpacity>
+          </TactilePressable>
       </View>
     );
   }
@@ -175,15 +175,14 @@ export function LessonPlayerScreen() {
       <View style={s.container}>
         {/* Top bar */}
         <View style={s.topBar}>
-          <TouchableOpacity
+          <AnimatedPressable
             onPress={() => {
-              haptics.light();
               handleClose();
             }}
             style={s.closeBtn}
           >
             <X size={22} color={theme.colors.text} />
-          </TouchableOpacity>
+          </AnimatedPressable>
           <ProgressBar current={currentIndex} total={level.lessons.length} />
         </View>
 
@@ -304,6 +303,9 @@ const s = StyleSheet.create({
   },
 
   // Continue button
+  continueBtnWrap: {
+    marginTop: 16,
+  },
   continueBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -311,10 +313,7 @@ const s = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     paddingVertical: 16,
     borderRadius: 16,
-    marginTop: 16,
     gap: 6,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.primaryContainer,
   },
   continueBtnText: {
     color: theme.colors.onPrimary,

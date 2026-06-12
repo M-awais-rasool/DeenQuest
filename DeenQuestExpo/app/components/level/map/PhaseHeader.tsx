@@ -1,9 +1,9 @@
 import React, { memo } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
+import { AnimatedPressable } from "../../ui";
 import { ChevronLeft, Sparkles } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { AppStackParamList } from "../../../navigators/navigationTypes";
 import { s } from "./styles";
@@ -21,17 +21,16 @@ export const PhaseHeader = memo(function PhaseHeader({
 
   return (
     <View style={s.phaseHeader}>
-      <TouchableOpacity
+      <AnimatedPressable
         style={s.backBtn}
         onPress={() => {
-          haptics.light();
           navigation.goBack();
         }}
         activeOpacity={0.7}
       >
         <ChevronLeft size={20} color={theme.colors.primary} />
         <Text style={s.backBtnText}>Courses</Text>
-      </TouchableOpacity>
+      </AnimatedPressable>
       <View style={s.phaseRow}>
         <Sparkles size={18} color={theme.colors.primary} />
         <Text style={s.phaseTitle}>{title}</Text>

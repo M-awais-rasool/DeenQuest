@@ -1,13 +1,12 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   Animated,
   StyleSheet,
   Dimensions,
 } from "react-native";
-import * as Haptics from "expo-haptics";
+import { TactilePressable } from "../../ui";
 import { theme } from "../../../theme/themes";
 import { LEVEL_GREEN, LEVEL_GREEN_DEEP } from "./constants";
 import type { LevelWithStatus } from "../../../store/services/api";
@@ -32,9 +31,6 @@ export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
   const buttonEntranceOpacity = useRef(new Animated.Value(0)).current;
   const buttonEntranceTranslateY = useRef(new Animated.Value(12)).current;
   const dotsOpacity = useRef(new Animated.Value(0)).current;
-
-  // ── Button press (translateY so text never blurs) ──
-  const buttonPressY = useRef(new Animated.Value(0)).current;
 
   // ── Bottom slide ──
   const slideAnim = useRef(new Animated.Value(-CARD_WIDTH * 0.35)).current;
@@ -223,25 +219,6 @@ export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
     };
   }, []);
 
-  const handlePressIn = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Animated.spring(buttonPressY, {
-      toValue: 3,
-      useNativeDriver: true,
-      speed: 20,
-      bounciness: 0,
-    }).start();
-  }, [buttonPressY]);
-
-  const handlePressOut = useCallback(() => {
-    Animated.spring(buttonPressY, {
-      toValue: 0,
-      useNativeDriver: true,
-      friction: 3,
-      tension: 140,
-    }).start();
-  }, [buttonPressY]);
-
   const xpReward = level.xp_reward ?? 35;
 
   return (
@@ -319,30 +296,25 @@ export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
             transform: [{ translateY: buttonEntranceTranslateY }],
           }}
         >
-          <TouchableOpacity
-            activeOpacity={1}
+          <TactilePressable
             onPress={onStart}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
+            edgeColor={LEVEL_GREEN_DEEP}
+            depth={4}
+            radius={14}
+            haptic="medium"
             style={styles.buttonTouchable}
+            faceStyle={styles.button}
           >
-            <Animated.View
-              style={[
-                styles.button,
-                { transform: [{ translateY: buttonPressY }] },
-              ]}
-            >
-              <Text style={styles.buttonText}>START +{xpReward} XP</Text>
-              <View style={styles.buttonBottomBase}>
-                <Animated.View
-                  style={[
-                    styles.buttonBottomSlide,
-                    { transform: [{ translateX: slideAnim }] },
-                  ]}
-                />
-              </View>
-            </Animated.View>
-          </TouchableOpacity>
+            <Text style={styles.buttonText}>START +{xpReward} XP</Text>
+            <View style={styles.buttonBottomBase}>
+              <Animated.View
+                style={[
+                  styles.buttonBottomSlide,
+                  { transform: [{ translateX: slideAnim }] },
+                ]}
+              />
+            </View>
+          </TactilePressable>
         </Animated.View>
       </Animated.View>
     </Animated.View>
