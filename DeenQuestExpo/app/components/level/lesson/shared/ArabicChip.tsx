@@ -2,13 +2,13 @@ import React, { useEffect } from "react";
 import {
   Text,
   StyleSheet,
-  TouchableOpacity,
   Animated,
   StyleProp,
   ViewStyle,
 } from "react-native";
 import { theme } from "../../../../theme/themes";
 import { useQuranFont } from "../../../../hooks/useQuranFont";
+import { TactilePressable } from "../../../ui";
 import { useFeedbackAnim } from "./animations";
 
 export type ChipState = "idle" | "selected" | "correct" | "wrong" | "disabled";
@@ -20,8 +20,9 @@ const PAD_H: Record<ChipSize, number> = { sm: 14, md: 18, lg: 22 };
 
 /**
  * Pressable Arabic token used by the build / fill-blank / match tasks.
- * Renders in the Quran font, and animates declaratively from its `state`:
- * a pop on tap/correct and a shake on a wrong answer.
+ * Renders in the Quran font with the shared tactile press effect, and
+ * animates declaratively from its `state`: a pop on tap/correct and a
+ * shake on a wrong answer.
  */
 export function ArabicChip({
   label,
@@ -50,14 +51,17 @@ export function ArabicChip({
   const disabled = state === "disabled" || !onPress;
 
   return (
-    <Animated.View
-      style={[fullWidth && { alignSelf: "stretch" }, animStyle]}
-    >
-      <TouchableOpacity
-        activeOpacity={0.8}
+    <Animated.View style={[fullWidth && { alignSelf: "stretch" }, animStyle]}>
+      <TactilePressable
         disabled={disabled}
+        dimWhenDisabled={false}
         onPress={onPress}
-        style={[
+        edgeColor={palette.border}
+        depth={3}
+        radius={14}
+        haptic="none"
+        style={[state === "disabled" && s.chipDisabled, style]}
+        faceStyle={[
           s.chip,
           {
             backgroundColor: palette.bg,
@@ -65,9 +69,7 @@ export function ArabicChip({
             paddingVertical: PAD_V[size],
             paddingHorizontal: PAD_H[size],
           },
-          state === "disabled" && s.chipDisabled,
           fullWidth && s.chipFull,
-          style,
         ]}
       >
         <Text
@@ -79,7 +81,7 @@ export function ArabicChip({
         >
           {label}
         </Text>
-      </TouchableOpacity>
+      </TactilePressable>
     </Animated.View>
   );
 }
@@ -119,7 +121,6 @@ const s = StyleSheet.create({
   chip: {
     borderRadius: 14,
     borderWidth: 2,
-    borderBottomWidth: 4,
     alignItems: "center",
     justifyContent: "center",
   },

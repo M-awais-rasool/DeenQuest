@@ -1,15 +1,9 @@
-import React, { useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  Easing,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, Animated, Easing } from "react-native";
 import { CheckCircle2, XCircle, ChevronRight } from "lucide-react-native";
-import { haptics } from "../../../../utils/haptics";
 import { theme } from "../../../../theme/themes";
+import { TactilePressable } from "../../../ui";
+import { CelebrationOverlay } from "./CelebrationOverlay";
 
 export type FeedbackStatus = "correct" | "wrong" | null;
 type ButtonVariant = "primary" | "success" | "error" | "neutral";
@@ -25,6 +19,7 @@ export function ContinueButton({
   disabled = false,
   variant = "primary",
   showChevron = true,
+  haptic = "medium",
   style,
 }: {
   label?: string;
@@ -32,28 +27,24 @@ export function ContinueButton({
   disabled?: boolean;
   variant?: ButtonVariant;
   showChevron?: boolean;
+  /** Set "none" when onPress immediately fires its own result haptic. */
+  haptic?: "none" | "light" | "medium";
   style?: any;
 }) {
   const palette = BUTTON_PALETTE[variant];
   return (
-    <TouchableOpacity
-      style={[
-        s.btn,
-        { backgroundColor: palette.bg, borderBottomColor: palette.border },
-        disabled && s.btnDisabled,
-        style,
-      ]}
-      activeOpacity={0.85}
+    <TactilePressable
+      edgeColor={palette.border}
+      radius={16}
+      haptic={haptic}
       disabled={disabled}
-      onPress={() => {
-        if (disabled) return;
-        haptics.medium();
-        onPress();
-      }}
+      onPress={onPress}
+      style={style}
+      faceStyle={[s.btn, { backgroundColor: palette.bg }]}
     >
       <Text style={[s.btnText, { color: palette.fg }]}>{label}</Text>
       {showChevron && <ChevronRight size={18} color={palette.fg} />}
-    </TouchableOpacity>
+    </TactilePressable>
   );
 }
 
@@ -75,6 +66,7 @@ export function FeedbackBanner({
   onContinue: () => void;
 }) {
   const progress = useRef(new Animated.Value(0)).current;
+  const [burst, setBurst] = useState(0);
 
   useEffect(() => {
     if (status) {
@@ -86,6 +78,8 @@ export function FeedbackBanner({
         useNativeDriver: true,
       }).start();
     }
+    // Reward moment: a star burst over the banner on every correct answer.
+    if (status === "correct") setBurst((b) => b + 1);
   }, [status, progress]);
 
   if (!status) return null;
@@ -126,6 +120,7 @@ export function FeedbackBanner({
         onPress={onContinue}
         style={s.bannerBtn}
       />
+      <CelebrationOverlay trigger={isCorrect ? burst : 0} />
     </Animated.View>
   );
 }
@@ -164,10 +159,6 @@ const s = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 16,
     gap: 6,
-    borderBottomWidth: 4,
-  },
-  btnDisabled: {
-    opacity: 0.4,
   },
   btnText: {
     fontWeight: "900",
