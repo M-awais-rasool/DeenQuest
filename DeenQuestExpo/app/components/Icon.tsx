@@ -2,13 +2,12 @@ import {
   Image,
   ImageStyle,
   StyleProp,
-  TouchableOpacity,
-  TouchableOpacityProps,
   View,
   ViewProps,
   ViewStyle,
 } from "react-native";
 import { theme } from "../theme/themes";
+import { AnimatedPressable, AnimatedPressableProps } from "./ui";
 
 export type IconTypes = keyof typeof iconRegistry;
 
@@ -39,7 +38,7 @@ type BaseIconProps = {
   containerStyle?: StyleProp<ViewStyle>;
 };
 
-type PressableIconProps = Omit<TouchableOpacityProps, "style"> & BaseIconProps;
+type PressableIconProps = Omit<AnimatedPressableProps, "style"> & BaseIconProps;
 type IconProps = Omit<ViewProps, "style"> & BaseIconProps;
 
 /**
@@ -67,9 +66,9 @@ export function PressableIcon(props: PressableIconProps) {
   ];
 
   return (
-    <TouchableOpacity {...pressableProps} style={$containerStyleOverride}>
+    <AnimatedPressable {...pressableProps} style={$containerStyleOverride}>
       <Image style={$imageStyle} source={iconRegistry[icon]} />
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 }
 

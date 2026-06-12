@@ -1,11 +1,6 @@
 import React from "react";
-import {
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
-import { haptics } from "../../utils/haptics";
+import { Text, ActivityIndicator, StyleSheet } from "react-native";
+import { TactilePressable } from "../ui";
 import { theme } from "../../theme/themes";
 
 interface Props {
@@ -21,34 +16,33 @@ export const CompleteButton = ({
   disabled,
   label = "Mark Complete",
 }: Props) => (
-  <TouchableOpacity
-    style={[s.btn, disabled && s.btnDisabled]}
-    onPress={() => {
-      haptics.medium();
-      onPress();
-    }}
+  <TactilePressable
+    style={s.wrap}
+    faceStyle={s.btn}
+    edgeColor={theme.colors.primaryContainer}
+    radius={16}
+    haptic="medium"
+    onPress={onPress}
     disabled={disabled || loading}
-    activeOpacity={0.8}
   >
     {loading ? (
       <ActivityIndicator color={theme.colors.onPrimary} size="small" />
     ) : (
       <Text style={s.text}>{disabled ? "Completed ✓" : label}</Text>
     )}
-  </TouchableOpacity>
+  </TactilePressable>
 );
 
 const s = StyleSheet.create({
+  wrap: {
+    marginTop: 24,
+  },
   btn: {
     backgroundColor: theme.colors.primary,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
-    marginTop: 24,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.primaryContainer,
   },
-  btnDisabled: { opacity: 0.5 },
   text: {
     color: theme.colors.onPrimary,
     fontWeight: "900",
