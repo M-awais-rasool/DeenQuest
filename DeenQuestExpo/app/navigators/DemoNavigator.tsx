@@ -1,10 +1,10 @@
 import {
   View,
-  TouchableOpacity,
   StyleSheet,
   Text,
   Animated,
 } from "react-native";
+import { AnimatedPressable } from "../components/ui";
 import { useRef, useEffect } from "react";
 import {
   createBottomTabNavigator,
@@ -18,7 +18,6 @@ import {
   type LucideIcon,
   Trophy,
 } from "lucide-react-native";
-import { haptics } from "../utils/haptics";
 import type { DemoTabParamList } from "./navigationTypes";
 import { theme } from "../theme/themes";
 import { HomeScreen } from "../screens/home/HomeScreen";
@@ -86,7 +85,6 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         const TabIcon = tabConf?.icon ?? Home;
 
         const onPress = () => {
-          haptics.light();
           const event = navigation.emit({
             type: "tabPress",
             target: route.key,
@@ -98,7 +96,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         };
 
         return (
-          <TouchableOpacity
+          <AnimatedPressable
             key={route.key}
             style={styles.tab}
             onPress={onPress}
@@ -137,7 +135,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                 },
               ]}
             />
-          </TouchableOpacity>
+          </AnimatedPressable>
         );
       })}
     </View>

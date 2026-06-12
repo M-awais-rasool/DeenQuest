@@ -4,8 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from "react-native";
+import { TactilePressable } from "../../components/ui";
 import {
   Flame,
   CheckCircle2,
@@ -18,7 +18,6 @@ import {
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { haptics } from "../../utils/haptics";
 import { Header } from "../../components/Header";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
@@ -70,7 +69,6 @@ export const HomeScreen = () => {
     progress?.weekly_completions ?? new Array(7).fill(false);
 
   const handleTaskPress = (task: DailyTask) => {
-    haptics.light();
     navigation.navigate("DailyTaskDetail", { task });
   };
   return (
@@ -187,14 +185,17 @@ export const HomeScreen = () => {
               };
               const IconComp = catConf.icon;
               return (
-                <TouchableOpacity
+                <TactilePressable
                   key={task.id}
-                  style={[
+                  edgeColor={theme.colors.black35}
+                  depth={3}
+                  radius={theme.borderRadius.md}
+                  haptic="light"
+                  faceStyle={[
                     styles.missionCard,
                     task.completed && styles.missionCardDone,
                   ]}
                   onPress={() => handleTaskPress(task)}
-                  activeOpacity={0.75}
                 >
                   <View
                     style={[
@@ -228,7 +229,7 @@ export const HomeScreen = () => {
                       <Text style={styles.startBtnText}>Start</Text>
                     </View>
                   )}
-                </TouchableOpacity>
+                </TactilePressable>
               );
             })}
           </View>
@@ -425,8 +426,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceLow,
     padding: 14,
     borderRadius: theme.borderRadius.md,
-    borderBottomWidth: 3,
-    borderBottomColor: theme.colors.black35,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
