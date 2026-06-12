@@ -1,72 +1,17 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
-import { CheckCircle2, XCircle } from "lucide-react-native";
+import React, { useMemo, useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
-import { useQuranFont } from "../../../hooks/useQuranFont";
 import type { MiniGame } from "../../../store/services/api";
 import {
   FeedbackBanner,
   type FeedbackStatus,
-  useFeedbackAnim,
-  containsArabic,
+  OptionRow,
+  type OptionState,
 } from "./shared";
 
 type Question = { question: string; options: string[]; correct: number };
-type OptState = "idle" | "correct" | "wrong" | "reveal";
-
-function OptionRow({
-  text,
-  state,
-  onPress,
-  disabled,
-}: {
-  text: string;
-  state: OptState;
-  onPress: () => void;
-  disabled: boolean;
-}) {
-  const { fontFamily } = useQuranFont();
-  const { shake, pop, style: animStyle } = useFeedbackAnim();
-  const isAr = containsArabic(text);
-
-  useEffect(() => {
-    if (state === "wrong") shake();
-    else if (state === "correct") pop();
-  }, [state, shake, pop]);
-
-  return (
-    <Animated.View style={animStyle}>
-      <TouchableOpacity
-        style={[
-          s.option,
-          state === "correct" && s.optionCorrect,
-          state === "wrong" && s.optionWrong,
-          state === "reveal" && s.optionReveal,
-        ]}
-        activeOpacity={0.8}
-        disabled={disabled}
-        onPress={onPress}
-      >
-        <Text
-          style={[
-            s.optionText,
-            isAr && { fontFamily, fontSize: 26, writingDirection: "rtl" },
-            state === "correct" && { color: theme.colors.primary },
-            state === "wrong" && { color: theme.colors.error },
-          ]}
-        >
-          {text}
-        </Text>
-        {state === "correct" && (
-          <CheckCircle2 size={20} color={theme.colors.primary} />
-        )}
-        {state === "wrong" && <XCircle size={20} color={theme.colors.error} />}
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
 
 export function MCQGame({
   game,
@@ -126,7 +71,7 @@ export function MCQGame({
     setSelected(null);
   };
 
-  const optState = (idx: number): OptState => {
+  const optState = (idx: number): OptionState => {
     if (!answered) return "idle";
     if (idx === q.correct) return idx === selected ? "correct" : "reveal";
     if (idx === selected) return "wrong";
@@ -178,36 +123,6 @@ const s = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 16,
     lineHeight: 26,
-  },
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: theme.colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderBottomWidth: 4,
-    borderColor: theme.colors.outline,
-  },
-  optionCorrect: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary10,
-  },
-  optionWrong: {
-    borderColor: theme.colors.error,
-    backgroundColor: theme.colors.errorSoft10,
-  },
-  optionReveal: {
-    borderColor: theme.colors.primary30,
-    backgroundColor: theme.colors.primary05,
-  },
-  optionText: {
-    fontSize: 16,
-    color: theme.colors.text,
-    fontWeight: "600",
-    flex: 1,
   },
 });
 
