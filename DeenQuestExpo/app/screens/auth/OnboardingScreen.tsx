@@ -207,7 +207,7 @@ export default function OnboardingScreen({
     await setOnboardingCompleted();
     navigation.reset({
       index: 0,
-      routes: [{ name: isAuthenticated ? "Demo" : "Login" }],
+      routes: [{ name: isAuthenticated ? "Demo" : "Welcome" }],
     });
   };
 

@@ -33,6 +33,7 @@ import { PublicProfileScreen } from "../screens/profile/PublicProfileScreen";
 import { LeaderboardScreen } from "../screens/leaderboard/LeaderboardScreen";
 import OnboardingScreen from "../screens/auth/OnboardingScreen";
 import { SignupScreen } from "../screens/auth/SignupScreen";
+import { WelcomeScreen } from "../screens/auth/WelcomeScreen";
 import { SurahDetailScreen } from "../screens/quran/SurahDetailScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -111,7 +112,7 @@ const AppStack = () => {
   const initialRouteName = hasCompletedOnboarding
     ? isAuthenticated
       ? "Demo"
-      : "Login"
+      : "Welcome"
     : "OnboardingScreen";
 
   return (
@@ -154,6 +155,7 @@ const AppStack = () => {
       ) : (
         <>
           <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
         </>

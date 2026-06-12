@@ -7,3 +7,7 @@ export {
   TactilePressable,
   type TactilePressableProps,
 } from "./TactilePressable";
+export {
+  SocialAuthButton,
+  type SocialProvider,
+} from "./SocialAuthButton";

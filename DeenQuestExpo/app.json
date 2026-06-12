@@ -15,7 +15,8 @@
           "defaultChannel": "default"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-asset"
     ],
     "splash": {
       "image": "./assets/logo.png",
