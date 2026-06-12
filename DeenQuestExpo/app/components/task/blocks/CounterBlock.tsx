@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import * as Haptics from "expo-haptics";
 import type { BlockComponentProps } from "./types";
 import { theme } from "../../../theme/themes";
@@ -44,16 +45,21 @@ export const CounterBlock = ({
           ]}
         />
       </View>
-      <TouchableOpacity
-        style={[s.tapBtn, (reached || isDisabled) && s.tapBtnDone]}
+      <TactilePressable
+        edgeColor={theme.colors.primaryContainer}
+        depth={5}
+        radius={60}
+        haptic="light"
+        dimWhenDisabled={false}
+        style={s.tapBtnWrap}
+        faceStyle={[s.tapBtn, (reached || isDisabled) && s.tapBtnDone]}
         onPress={handleTap}
         disabled={isDisabled || reached}
-        activeOpacity={0.6}
       >
         <Text style={[s.tapText, (reached || isDisabled) && s.tapTextDone]}>
           {reached || completed ? "✓" : "Tap"}
         </Text>
-      </TouchableOpacity>
+      </TactilePressable>
     </View>
   );
 };
@@ -87,6 +93,10 @@ const s = StyleSheet.create({
     borderRadius: 4,
   },
   barDone: { backgroundColor: theme.colors.secondary },
+  tapBtnWrap: {
+    alignSelf: "center",
+    marginBottom: 8,
+  },
   tapBtn: {
     width: 120,
     height: 120,
@@ -96,8 +106,6 @@ const s = StyleSheet.create({
     borderColor: theme.colors.primary,
     justifyContent: "center",
     alignItems: "center",
-    alignSelf: "center",
-    marginBottom: 8,
   },
   tapBtnDone: {
     backgroundColor: theme.colors.primary,

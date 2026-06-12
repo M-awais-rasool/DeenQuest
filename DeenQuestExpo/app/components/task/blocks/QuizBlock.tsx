@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import type { BlockComponentProps } from "./types";
 import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
@@ -42,15 +43,26 @@ export const QuizBlock = ({
     <View style={s.wrapper}>
       <Text style={s.question}>{question}</Text>
       {options.map((opt, i) => (
-        <TouchableOpacity
+        <TactilePressable
           key={i}
-          style={getOptionStyle(i)}
+          edgeColor={
+            selected === i && isQuizMode
+              ? i === correct
+                ? theme.colors.primary
+                : theme.colors.error
+              : theme.colors.outline
+          }
+          depth={3}
+          radius={12}
+          haptic="none"
+          dimWhenDisabled={false}
+          style={s.optionWrap}
+          faceStyle={getOptionStyle(i)}
           onPress={() => handleSelect(i)}
           disabled={selected !== null || completed}
-          activeOpacity={0.7}
         >
           <Text style={getTextStyle(i)}>{opt}</Text>
-        </TouchableOpacity>
+        </TactilePressable>
       ))}
       {selected !== null && isQuizMode && (
         <Text
@@ -73,11 +85,13 @@ const s = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: 20,
   },
+  optionWrap: {
+    marginBottom: 10,
+  },
   option: {
     backgroundColor: theme.colors.surfaceLow,
     padding: 16,
     borderRadius: 12,
-    marginBottom: 10,
     borderWidth: 2,
     borderColor: "transparent",
   },

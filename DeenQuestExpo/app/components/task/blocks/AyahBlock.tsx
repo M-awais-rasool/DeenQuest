@@ -1,12 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { BookOpen } from "lucide-react-native";
 import type { BlockComponentProps } from "./types";
 import { theme } from "../../../theme/themes";
 import type { AppStackParamList } from "../../../navigators/navigationTypes";
-import { haptics } from "../../../utils/haptics";
 
 export const AyahBlock = ({ content }: BlockComponentProps) => {
   const navigation =
@@ -22,17 +22,18 @@ export const AyahBlock = ({ content }: BlockComponentProps) => {
       <Text style={s.surah}>{surah}</Text>
       <Text style={s.ayahs}>Ayahs: {ayahs.join(", ")}</Text>
       {canOpenSurah ? (
-        <TouchableOpacity
-          style={s.openButton}
-          onPress={() => {
-            haptics.light();
-            navigation.navigate("SurahDetail", { surahId });
-          }}
-          activeOpacity={0.8}
+        <TactilePressable
+          edgeColor={theme.colors.primaryContainer}
+          depth={3}
+          radius={8}
+          haptic="light"
+          style={s.openButtonWrap}
+          faceStyle={s.openButton}
+          onPress={() => navigation.navigate("SurahDetail", { surahId })}
         >
           <BookOpen size={17} color={theme.colors.onPrimary} />
           <Text style={s.openButtonText}>Open Surah</Text>
-        </TouchableOpacity>
+        </TactilePressable>
       ) : null}
     </View>
   );
@@ -58,9 +59,11 @@ const s = StyleSheet.create({
     color: theme.colors.textMuted,
     fontWeight: "600",
   },
-  openButton: {
+  openButtonWrap: {
     marginTop: 16,
     alignSelf: "flex-start",
+  },
+  openButton: {
     height: 40,
     borderRadius: 8,
     backgroundColor: theme.colors.primary,
@@ -68,8 +71,6 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    borderBottomWidth: 3,
-    borderBottomColor: theme.colors.primaryContainer,
   },
   openButtonText: {
     color: theme.colors.onPrimary,

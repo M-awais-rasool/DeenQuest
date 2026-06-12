@@ -4,9 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from "react-native";
-import { haptics } from "../../utils/haptics";
+import { AnimatedPressable } from "../../components/ui";
 import { theme } from "../../theme/themes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import type { DailyTask } from "../../store/services/api";
@@ -32,15 +31,14 @@ export function DailyTaskScreen({
   return (
     <ScreenWrapper>
       <View style={s.header}>
-        <TouchableOpacity
+        <AnimatedPressable
           onPress={() => {
-            haptics.light();
             onBack();
           }}
           style={s.backBtn}
         >
           <Text style={s.backText}>← Back</Text>
-        </TouchableOpacity>
+        </AnimatedPressable>
         <XPBadge xp={task.reward_xp} />
       </View>
       <ScrollView contentContainerStyle={s.scroll}>

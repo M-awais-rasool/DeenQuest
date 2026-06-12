@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import type { BlockComponentProps } from "./types";
-import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 
 export const ChecklistBlock = ({
@@ -26,7 +26,6 @@ export const ChecklistBlock = ({
 
   const toggle = (i: number) => {
     if (isLocked || checked[i]) return;
-    haptics.light();
     setChecked((prev) => {
       const next = [...prev];
       next[i] = true;
@@ -37,18 +36,23 @@ export const ChecklistBlock = ({
   return (
     <View style={s.wrapper}>
       {items.map((item, i) => (
-        <TouchableOpacity
+        <TactilePressable
           key={i}
-          style={[s.row, checked[i] && s.rowDone, isLocked && s.rowLocked]}
+          edgeColor={theme.colors.outline}
+          depth={3}
+          radius={12}
+          haptic="selection"
+          dimWhenDisabled={false}
+          style={s.rowWrap}
+          faceStyle={[s.row, checked[i] && s.rowDone, isLocked && s.rowLocked]}
           onPress={() => toggle(i)}
           disabled={isLocked || checked[i]}
-          activeOpacity={0.7}
         >
           <View style={[s.box, checked[i] && s.boxChecked]}>
             {checked[i] && <Text style={s.check}>✓</Text>}
           </View>
           <Text style={[s.label, checked[i] && s.labelDone]}>{item}</Text>
-        </TouchableOpacity>
+        </TactilePressable>
       ))}
     </View>
   );
@@ -56,13 +60,15 @@ export const ChecklistBlock = ({
 
 const s = StyleSheet.create({
   wrapper: { marginBottom: 8 },
+  rowWrap: {
+    marginBottom: 10,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.surfaceLow,
     padding: 16,
     borderRadius: 12,
-    marginBottom: 10,
     gap: 14,
   },
   rowDone: { opacity: 0.6 },
