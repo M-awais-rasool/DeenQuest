@@ -1,5 +1,6 @@
 import React from "react";
-import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { AnimatedPressable } from "../ui";
 import { ArrowLeft } from "lucide-react-native";
 import { COLORS} from "./constants";
 
@@ -15,14 +16,14 @@ export default function ProgressHeader({ currentStep, isTransitioning, onBack, p
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity
+      <AnimatedPressable
         style={[styles.backButton, !canGoBack && styles.backButtonHidden]}
         onPress={onBack}
         disabled={!canGoBack || isTransitioning}
         activeOpacity={0.7}
       >
         <ArrowLeft size={22} color={COLORS.text} />
-      </TouchableOpacity>
+      </AnimatedPressable>
 
       <View style={styles.barContainer}>
         <View style={styles.track}>

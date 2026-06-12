@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
-import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
+import { AnimatedPressable } from "../ui";
 import { haptics } from "../../utils/haptics";
 
 interface Props {
@@ -61,8 +62,10 @@ export default function BikeHornWrapper({
 
   return (
     <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, wrapperStyle]}>
-      <TouchableOpacity
-        activeOpacity={1}
+      <AnimatedPressable
+        pressDepth={0}
+        pressScale={1}
+        haptic="none"
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
@@ -73,7 +76,7 @@ export default function BikeHornWrapper({
         <Animated.View style={[capStyle, { transform: [{ translateY: pressDepth }] }]}>
           {children}
         </Animated.View>
-      </TouchableOpacity>
+      </AnimatedPressable>
     </Animated.View>
   );
 }

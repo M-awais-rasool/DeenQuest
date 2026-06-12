@@ -7,11 +7,10 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../../components/ui";
 import { ArrowRight, Flame, Sparkles, Trophy } from "lucide-react-native";
-import { haptics } from "../../utils/haptics";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { useAppSelector } from "../../store/hooks";
@@ -276,14 +275,13 @@ export default function OnboardingScreen({
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>DeenQuest</Text>
-        <TouchableOpacity
+        <AnimatedPressable
           onPress={() => {
-            haptics.light();
             completeOnboarding();
           }}
         >
           <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
+        </AnimatedPressable>
       </View>
 
       {/* Slides — all rendered simultaneously, clipped to container */}
@@ -314,12 +312,12 @@ export default function OnboardingScreen({
                 <Text style={styles.description}>{screen.description}</Text>
               </View>
 
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => {
-                  haptics.medium();
-                  goToNext();
-                }}
+              <TactilePressable
+                edgeColor={theme.colors.shadowGreen}
+                radius={16}
+                haptic="medium"
+                faceStyle={styles.primaryButton}
+                onPress={goToNext}
               >
                 <Text style={styles.primaryButtonText}>
                   {screen.buttonText}
@@ -331,7 +329,7 @@ export default function OnboardingScreen({
                     strokeWidth={3}
                   />
                 )}
-              </TouchableOpacity>
+              </TactilePressable>
             </Animated.View>
           );
         })}
@@ -340,12 +338,10 @@ export default function OnboardingScreen({
       {/* Dot indicator — anchored outside the slide area, always visible */}
       <View style={styles.dotContainer}>
         {SCREENS.map((_, index) => (
-          <TouchableOpacity
+          <AnimatedPressable
             key={index}
-            onPress={() => {
-              haptics.selection();
-              goToIndex(index);
-            }}
+            haptic="selection"
+            onPress={() => goToIndex(index)}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Animated.View
@@ -360,7 +356,7 @@ export default function OnboardingScreen({
                 },
               ]}
             />
-          </TouchableOpacity>
+          </AnimatedPressable>
         ))}
       </View>
     </SafeAreaView>
@@ -483,14 +479,12 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: "100%",
     backgroundColor: COLORS.primary,
-    height: 64,
+    height: 60,
     borderRadius: 16,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     gap: 8,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.shadowGreen,
   },
   primaryButtonText: {
     fontFamily: FONTS.headline,

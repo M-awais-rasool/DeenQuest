@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { AnimatedPressable } from "../ui";
 import {
   BookMarked,
   BookOpen,
@@ -131,8 +132,10 @@ export default function OptionButton({ option, selected, onPress, delayIndex, st
         { transform: [{ translateY }, { scale: scaleAnim }], opacity },
       ]}
     >
-      <TouchableOpacity
-        activeOpacity={1}
+      <AnimatedPressable
+        pressDepth={0}
+        pressScale={1}
+        haptic="none"
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
@@ -164,7 +167,7 @@ export default function OptionButton({ option, selected, onPress, delayIndex, st
             {option.label}
           </Text>
         </Animated.View>
-      </TouchableOpacity>
+      </AnimatedPressable>
     </Animated.View>
   );
 }

@@ -6,13 +6,12 @@ import {
   TextInput,
   StyleSheet,
   Image,
-  TouchableOpacity,
   ScrollView,
   Platform,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../../components/ui";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Mail, Eye, EyeOff, AlertCircle, Sparkles } from "lucide-react-native";
-import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { TactileButton } from "../../components/TactileButton";
 import { LoginRequest, useLoginMutation } from "../../store/services/api";
@@ -231,10 +230,9 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
                   onFocus={() => handleInputFocus("password")}
                   editable={!isLoading}
                 />
-                <TouchableOpacity
+                <AnimatedPressable
                   style={styles.inputIconButton}
                   onPress={() => {
-                    haptics.light();
                     setShowPassword((prev) => !prev);
                   }}
                   disabled={isLoading}
@@ -244,7 +242,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
                   ) : (
                     <Eye size={20} color={theme.colors.textMuted} />
                   )}
-                </TouchableOpacity>
+                </AnimatedPressable>
               </View>
               {errors.password && (
                 <Text style={styles.errorText}>{errors.password}</Text>
@@ -263,10 +261,13 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
               <View style={styles.divider} />
             </View>
 
-            <TouchableOpacity
-              style={styles.socialButton}
+            <TactilePressable
+              edgeColor={theme.colors.outline}
+              radius={theme.borderRadius.full}
+              haptic="medium"
+              style={styles.socialButtonWrap}
+              faceStyle={styles.socialButton}
               disabled={isLoading}
-              onPressIn={() => haptics.medium()}
             >
               <Image
                 source={require("../../../assets/icons/google.png")}
@@ -274,20 +275,17 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
                 resizeMode="contain"
               />
               <Text style={styles.socialText}>Continue with Google</Text>
-            </TouchableOpacity>
+            </TactilePressable>
           </View>
 
-          <TouchableOpacity
+          <AnimatedPressable
             style={styles.footer}
-            onPress={() => {
-              haptics.light();
-              navigation.navigate("Signup");
-            }}
+            onPress={() => navigation.navigate("Signup")}
           >
             <Text style={styles.footerText}>
               New to DeenQuest? <Text style={styles.signUpText}>Sign Up</Text>
             </Text>
-          </TouchableOpacity>
+          </AnimatedPressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenWrapper>
@@ -465,6 +463,9 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
   },
+  socialButtonWrap: {
+    alignSelf: "center",
+  },
   socialButton: {
     flexDirection: "row",
     backgroundColor: theme.colors.surfaceHigh,
@@ -473,7 +474,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     justifyContent: "center",
     alignItems: "center",
-    alignSelf: "center",
     borderWidth: 1,
     borderColor: theme.colors.outline,
     minWidth: 230,

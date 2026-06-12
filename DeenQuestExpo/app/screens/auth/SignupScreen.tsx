@@ -5,10 +5,10 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   Platform,
 } from "react-native";
+import { AnimatedPressable } from "../../components/ui";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   AlertCircle,
@@ -18,7 +18,6 @@ import {
   Sparkles,
   UserPlus,
 } from "lucide-react-native";
-import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { TactileButton } from "../../components/TactileButton";
 import { AppStackParamList } from "../../navigators/navigationTypes";
@@ -328,10 +327,9 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
               />
             </View>
 
-            <TouchableOpacity
+            <AnimatedPressable
               style={styles.termsRow}
               onPress={() => {
-                haptics.light();
                 setAcceptedTerms((prev) => !prev);
               }}
               disabled={isLoading}
@@ -350,7 +348,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
               <Text style={styles.termsText}>
                 I agree to the community guidelines and privacy policy.
               </Text>
-            </TouchableOpacity>
+            </AnimatedPressable>
 
             <TactileButton
               title={isLoading ? "Creating account..." : "Create Account"}
@@ -359,10 +357,9 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
             />
           </View>
 
-          <TouchableOpacity
+          <AnimatedPressable
             style={styles.footer}
             onPress={() => {
-              haptics.light();
               navigation.goBack();
             }}
           >
@@ -370,7 +367,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
               Already have an account?{" "}
               <Text style={styles.loginText}>Log In</Text>
             </Text>
-          </TouchableOpacity>
+          </AnimatedPressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenWrapper>
