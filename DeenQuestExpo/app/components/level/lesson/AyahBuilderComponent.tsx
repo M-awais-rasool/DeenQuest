@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
+import { AnimatedPressable } from "../../ui";
 import { RotateCcw } from "lucide-react-native";
-import { TouchableOpacity } from "react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
@@ -22,17 +22,22 @@ type Item = { id: number; text: string };
  * Tap a tile in the bank → it lands (right-to-left) in the answer row;
  * tap a placed tile → it returns. Wrong order shakes & clears; correct
  * order celebrates and reveals the meaning.
+ *
+ * `data.distractors` (optional) mixes decoy words into the bank that do
+ * not belong in the answer — the bank can hold more tiles than the ayah.
  */
 export function AyahBuilderComponent({ lesson, onComplete }: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
   const parts: string[] = data.parts ?? [];
+  const distractors: string[] = data.distractors ?? [];
   const meaning: string | undefined = data.meaning;
   const instruction: string =
     data.instruction ?? "Tap the words in the correct order";
 
   const items = useMemo<Item[]>(
-    () => parts.map((text, id) => ({ id, text })),
-    [parts],
+    () => [...parts, ...distractors].map((text, id) => ({ id, text })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data],
   );
   const shuffledIds = useMemo(() => shuffle(items.map((i) => i.id)), [items]);
 
@@ -42,11 +47,11 @@ export function AyahBuilderComponent({ lesson, onComplete }: LessonComponentProp
 
   const byId = (id: number) => items[id];
   const bankIds = shuffledIds.filter((id) => !order.includes(id));
-  const isFull = order.length === items.length && items.length > 0;
+  const isFull = order.length === parts.length && parts.length > 0;
   const solved = result === "correct";
 
   const addToAnswer = (id: number) => {
-    if (solved) return;
+    if (solved || order.length >= parts.length) return;
     haptics.selection();
     sfx.pick();
     setOrder((prev) => [...prev, id]);
@@ -62,13 +67,14 @@ export function AyahBuilderComponent({ lesson, onComplete }: LessonComponentProp
 
   const reset = () => {
     if (solved) return;
-    haptics.light();
     setOrder([]);
     setResult(null);
   };
 
   const check = () => {
-    const correct = order.every((id, idx) => byId(id).text === parts[idx]);
+    const correct =
+      order.length === parts.length &&
+      order.every((id, idx) => byId(id).text === parts[idx]);
     if (correct) {
       setResult("correct");
       haptics.success();
@@ -130,19 +136,23 @@ export function AyahBuilderComponent({ lesson, onComplete }: LessonComponentProp
           {bankIds.length === 0 && !solved && (
             <Text style={s.bankEmpty}>All words placed — tap CHECK</Text>
           )}
+          {bankIds.length > 0 && isFull && !solved && (
+            <Text style={s.bankEmpty}>Answer full — tap CHECK or remove a word</Text>
+          )}
         </View>
       </View>
 
       {!solved && order.length > 0 && (
-        <TouchableOpacity style={s.resetBtn} onPress={reset} activeOpacity={0.7}>
+        <AnimatedPressable style={s.resetBtn} onPress={reset} activeOpacity={0.7}>
           <RotateCcw size={14} color={theme.colors.textMuted} />
           <Text style={s.resetText}>Reset</Text>
-        </TouchableOpacity>
+        </AnimatedPressable>
       )}
 
       {!solved && (
         <ContinueButton
           label="CHECK"
+          haptic="none"
           variant="primary"
           showChevron={false}
           disabled={!isFull}

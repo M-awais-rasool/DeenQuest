@@ -16,6 +16,10 @@ import { FillBlankComponent } from "./FillBlankComponent";
 import { AyahBuilderComponent } from "./AyahBuilderComponent";
 import { MatchPairsComponent } from "./MatchPairsComponent";
 import { ListenChooseComponent } from "./ListenChooseComponent";
+import { TrueFalseComponent } from "./TrueFalseComponent";
+import { LetterHuntComponent } from "./LetterHuntComponent";
+import { SortBucketsComponent } from "./SortBucketsComponent";
+import { LightningRoundComponent } from "./LightningRoundComponent";
 
 export type LessonComponent = React.FC<LessonComponentProps>;
 
@@ -37,6 +41,10 @@ export const LESSON_COMPONENT_MAP: Record<string, LessonComponent> = {
   AyahBuilderComponent,
   MatchPairsComponent,
   ListenChooseComponent,
+  TrueFalseComponent,
+  LetterHuntComponent,
+  SortBucketsComponent,
+  LightningRoundComponent,
 };
 
 export type { LessonComponentProps } from "./types";
