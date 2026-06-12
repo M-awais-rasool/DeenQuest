@@ -3,12 +3,12 @@ import {
   StyleSheet,
   Text,
   View,
-  TouchableOpacity,
   Animated,
   Easing,
   Dimensions,
   ScrollView,
 } from "react-native";
+import { TactilePressable } from "../../ui";
 import { Trophy, Star, Target, Clock, Gift, Sparkles } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { haptics } from "../../../utils/haptics";
@@ -200,7 +200,6 @@ export default function CourseCompletionScreen({
 
     seq(headlineOpacity, headlineY, 200);
     seq(statsOpacity, statsY, 450, () => {
-      haptics.medium();
       setXpTrigger(true);
       setTimeout(() => setAccTrigger(true), 350);
     });
@@ -380,16 +379,22 @@ export default function CourseCompletionScreen({
       <Animated.View
         style={[styles.footer, { opacity: buttonOpacity, transform: [{ translateY: buttonY }] }]}
       >
-        <TouchableOpacity
-          style={[styles.claimBtn, claimed && styles.claimedBtn]}
-          activeOpacity={0.9}
+        <TactilePressable
+          edgeColor={
+            claimed ? theme.colors.surfaceLow : theme.colors.primaryContainer
+          }
+          depth={6}
+          radius={20}
+          haptic="medium"
+          dimWhenDisabled={false}
+          faceStyle={[styles.claimBtn, claimed && styles.claimedBtn]}
           onPress={handleClaim}
           disabled={claimed}
         >
           <Text style={[styles.claimText, claimed && styles.claimedText]}>
             {claimed ? "CLAIMED! 🎉" : "CLAIM REWARDS"}
           </Text>
-        </TouchableOpacity>
+        </TactilePressable>
 
         {showFlyingXP && (
           <Animated.View
@@ -553,10 +558,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 18,
     alignItems: "center",
-    borderBottomWidth: 6,
-    borderBottomColor: theme.colors.primaryContainer,
   },
-  claimedBtn: { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.surfaceLow },
+  claimedBtn: { backgroundColor: theme.colors.surface },
   claimText: { color: theme.colors.onPrimary, fontWeight: "900", fontSize: 16, letterSpacing: 0.5 },
   claimedText: { color: theme.colors.textMuted },
   flyingXp: {

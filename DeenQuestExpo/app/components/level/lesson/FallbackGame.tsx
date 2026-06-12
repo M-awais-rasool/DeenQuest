@@ -3,9 +3,8 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
 } from "react-native";
-import { haptics } from "../../../utils/haptics";
+import { TactilePressable } from "../../ui";
 import { theme } from "../../../theme/themes";
 import type { MiniGame } from "../../../store/services/api";
 
@@ -24,15 +23,16 @@ export function FallbackGame({
         </Text>
         <Text style={s.fallbackDesc}>{game.description}</Text>
       </View>
-      <TouchableOpacity
-        style={s.nextBtn}
-        onPress={() => {
-          haptics.medium();
-          onFinish({ accuracy: 100 });
-        }}
+      <TactilePressable
+        edgeColor={theme.colors.primaryContainer}
+        radius={16}
+        haptic="medium"
+        style={s.nextBtnWrap}
+        faceStyle={s.nextBtn}
+        onPress={() => onFinish({ accuracy: 100 })}
       >
         <Text style={s.nextBtnText}>COMPLETE</Text>
-      </TouchableOpacity>
+      </TactilePressable>
     </View>
   );
 }
@@ -59,14 +59,14 @@ const s = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
   },
+  nextBtnWrap: {
+    marginTop: 20,
+  },
   nextBtn: {
     backgroundColor: theme.colors.primary,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
-    marginTop: 20,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.primaryContainer,
   },
   nextBtnText: {
     color: theme.colors.onPrimary,

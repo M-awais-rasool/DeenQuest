@@ -129,6 +129,7 @@ export function BuildGame({
       {!solved ? (
         <ContinueButton
           label="CHECK"
+          haptic="none"
           showChevron={false}
           disabled={!isFull}
           onPress={check}

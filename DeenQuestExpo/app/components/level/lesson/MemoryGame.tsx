@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated } from "react-native";
+import { TactilePressable } from "../../ui";
 import { HelpCircle } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
@@ -31,11 +32,18 @@ function MemoryCard({
 
   return (
     <Animated.View style={[s.cardWrap, popStyle]}>
-      <TouchableOpacity
-        activeOpacity={0.85}
+      <TactilePressable
         disabled={matched || faceUp}
+        dimWhenDisabled={false}
         onPress={onPress}
-        style={[
+        edgeColor={
+          matched || open ? theme.colors.primary : theme.colors.outline
+        }
+        depth={3}
+        radius={14}
+        haptic="none"
+        style={s.cardTouch}
+        faceStyle={[
           s.card,
           open && s.cardOpen,
           matched && s.cardMatched,
@@ -48,7 +56,7 @@ function MemoryCard({
         ) : (
           <HelpCircle size={26} color={theme.colors.primary50} />
         )}
-      </TouchableOpacity>
+      </TactilePressable>
     </Animated.View>
   );
 }
@@ -91,9 +99,12 @@ export function MemoryGame({
     const card = cardById(cardId);
     if (matched.has(card.pairId)) return;
 
-    haptics.light();
     const next = [...flipped, cardId];
     setFlipped(next);
+
+    // One haptic per tap: a light tick for the first card; the second
+    // card's haptic is the success/error result below.
+    if (next.length === 1) haptics.light();
 
     if (next.length === 2) {
       setMoves((m) => m + 1);
@@ -160,12 +171,14 @@ const s = StyleSheet.create({
     width: "30%",
     aspectRatio: 1,
   },
+  cardTouch: {
+    flex: 1,
+  },
   card: {
     flex: 1,
     borderRadius: 14,
     backgroundColor: theme.colors.surfaceHigh,
     borderWidth: 2,
-    borderBottomWidth: 4,
     borderColor: theme.colors.outline,
     alignItems: "center",
     justifyContent: "center",
