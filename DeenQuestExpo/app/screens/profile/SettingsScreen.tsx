@@ -4,9 +4,9 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   Alert,
 } from "react-native";
+import { AnimatedPressable } from "../../components/ui";
 import {
   ChevronRight,
   User,
@@ -140,15 +140,14 @@ export function SettingsScreen({ navigation }: Props) {
   return (
     <ScreenWrapper>
       <View style={styles.header}>
-        <TouchableOpacity
+        <AnimatedPressable
           onPress={() => {
-            haptics.light();
             navigation.goBack();
           }}
           style={styles.backButton}
         >
           <ArrowLeft color={theme.colors.text} size={24} />
-        </TouchableOpacity>
+        </AnimatedPressable>
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={styles.backButton} />
       </View>
@@ -165,18 +164,13 @@ export function SettingsScreen({ navigation }: Props) {
             )}
             <View style={styles.sectionCard}>
               {section.items.map((item, itemIdx) => (
-                <TouchableOpacity
+                <AnimatedPressable
                   key={itemIdx}
                   style={[
                     styles.settingsRow,
                     itemIdx < section.items.length - 1 && styles.rowBorder,
                   ]}
                   onPress={() => {
-                    if (!item.danger) {
-                      haptics.light();
-                    } else {
-                      haptics.medium();
-                    }
                     item.onPress();
                   }}
                   disabled={isDeleting && item.label === "Delete Account"}
@@ -200,7 +194,7 @@ export function SettingsScreen({ navigation }: Props) {
                       <ChevronRight color={theme.colors.textMuted} size={18} />
                     )}
                   </View>
-                </TouchableOpacity>
+                </AnimatedPressable>
               ))}
             </View>
           </View>

@@ -5,10 +5,10 @@ import {
   Text,
   Image,
   ScrollView,
-  TouchableOpacity,
   StatusBar,
   Share,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../../components/ui";
 import {
   Flame,
   Settings,
@@ -17,7 +17,6 @@ import {
   Check,
   Crown,
 } from "lucide-react-native";
-import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { Header } from "../../components/Header";
@@ -191,13 +190,12 @@ export function ProfileScreen({ navigation }: Props) {
 
           {/* Leaderboard */}
           <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.leaderboardCard}
-              onPress={() => {
-                haptics.light();
-                navigation.navigate("Leaderboard");
-              }}
-              activeOpacity={0.7}
+            <TactilePressable
+              edgeColor={theme.colors.black20}
+              radius={16}
+              haptic="light"
+              faceStyle={styles.leaderboardCard}
+              onPress={() => navigation.navigate("Leaderboard")}
             >
               <View style={styles.leaderboardLeft}>
                 <View style={styles.crownCircle}>
@@ -219,7 +217,7 @@ export function ProfileScreen({ navigation }: Props) {
               <View style={styles.leaderboardArrow}>
                 <Text style={styles.leaderboardArrowText}>View</Text>
               </View>
-            </TouchableOpacity>
+            </TactilePressable>
           </View>
           {/* Streak History */}
           <View style={styles.streakCard}>
@@ -271,14 +269,13 @@ export function ProfileScreen({ navigation }: Props) {
                 {unlockedRewardsCount}/{rewards.length} unlocked
               </Text>
             </View>
-            <TouchableOpacity
+            <AnimatedPressable
               onPress={() => {
-                haptics.light();
                 navigation.navigate("RewardsScreen");
               }}
             >
               <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
+            </AnimatedPressable>
           </View>
 
           <View style={styles.rewardSummaryCard}>
@@ -447,13 +444,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
   },
   primaryButton: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.surfaceHigh,
     borderBottomColor: theme.colors.shadowGreen,
   },
   primaryButtonText: {
     fontFamily: "Lexend",
     fontWeight: "700",
-    color: theme.colors.onPrimary,
+    color: theme.colors.onSecondary,
   },
   secondaryButton: {
     backgroundColor: theme.colors.surfaceHigh,
@@ -462,7 +459,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: "Lexend",
     fontWeight: "700",
-    color: theme.colors.text,
+    color: theme.colors.onSecondary,
   },
   statsGrid: {
     flexDirection: "row",
@@ -752,8 +749,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     padding: 20,
     borderRadius: 16,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.black20,
   },
   leaderboardLeft: {
     flexDirection: "row",

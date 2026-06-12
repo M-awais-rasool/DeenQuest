@@ -5,11 +5,10 @@ import {
   Text,
   TextInput,
   ScrollView,
-  TouchableOpacity,
   Alert,
 } from "react-native";
+import { AnimatedPressable } from "../../components/ui";
 import { ArrowLeft } from "lucide-react-native";
-import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { TactileButton } from "../../components/TactileButton";
@@ -77,15 +76,14 @@ export function EditProfileScreen({ navigation }: Props) {
   return (
     <ScreenWrapper>
       <View style={styles.header}>
-        <TouchableOpacity
+        <AnimatedPressable
           onPress={() => {
-            haptics.light();
             navigation.goBack();
           }}
           style={styles.backButton}
         >
           <ArrowLeft color={theme.colors.text} size={24} />
-        </TouchableOpacity>
+        </AnimatedPressable>
         <Text style={styles.headerTitle}>Edit Profile</Text>
         <View style={styles.backButton} />
       </View>

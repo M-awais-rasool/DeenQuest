@@ -5,11 +5,10 @@ import {
   Text,
   TextInput,
   ScrollView,
-  TouchableOpacity,
   Alert,
 } from "react-native";
+import { AnimatedPressable } from "../../components/ui";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react-native";
-import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { TactileButton } from "../../components/TactileButton";
 import { theme } from "../../theme/themes";
@@ -60,15 +59,14 @@ export function ChangePasswordScreen({ navigation }: Props) {
   return (
     <ScreenWrapper>
       <View style={styles.header}>
-        <TouchableOpacity
+        <AnimatedPressable
           onPress={() => {
-            haptics.light();
             navigation.goBack();
           }}
           style={styles.backButton}
         >
           <ArrowLeft color={theme.colors.text} size={24} />
-        </TouchableOpacity>
+        </AnimatedPressable>
         <Text style={styles.headerTitle}>Change Password</Text>
         <View style={styles.backButton} />
       </View>
@@ -91,10 +89,9 @@ export function ChangePasswordScreen({ navigation }: Props) {
               secureTextEntry={!showCurrent}
               autoCapitalize="none"
             />
-            <TouchableOpacity
+            <AnimatedPressable
               style={styles.eyeButton}
               onPress={() => {
-                haptics.light();
                 setShowCurrent((v) => !v);
               }}
             >
@@ -103,7 +100,7 @@ export function ChangePasswordScreen({ navigation }: Props) {
               ) : (
                 <Eye color={theme.colors.textMuted} size={20} />
               )}
-            </TouchableOpacity>
+            </AnimatedPressable>
           </View>
         </View>
 
@@ -119,10 +116,9 @@ export function ChangePasswordScreen({ navigation }: Props) {
               secureTextEntry={!showNew}
               autoCapitalize="none"
             />
-            <TouchableOpacity
+            <AnimatedPressable
               style={styles.eyeButton}
               onPress={() => {
-                haptics.light();
                 setShowNew((v) => !v);
               }}
             >
@@ -131,7 +127,7 @@ export function ChangePasswordScreen({ navigation }: Props) {
               ) : (
                 <Eye color={theme.colors.textMuted} size={20} />
               )}
-            </TouchableOpacity>
+            </AnimatedPressable>
           </View>
         </View>
 

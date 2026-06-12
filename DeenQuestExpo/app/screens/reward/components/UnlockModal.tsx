@@ -4,11 +4,10 @@ import {
   Modal,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../../../components/ui";
 import { Star } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import { type NewlyGrantedReward } from "../../../store/services/api";
 import { RewardIcon } from "./RewardIcon";
@@ -34,9 +33,11 @@ export function UnlockModal({
   return (
     <Modal transparent animationType="none" onRequestClose={onClose}>
       <Animated.View style={[s.backdropWrap, { opacity: fadeAnim }]}>
-        <TouchableOpacity
+        <AnimatedPressable
           style={s.backdropTouch}
-          activeOpacity={1}
+          pressDepth={0}
+          pressScale={1}
+          haptic="none"
           onPress={onClose}
         >
           <Animated.View
@@ -82,18 +83,18 @@ export function UnlockModal({
               <Text style={s.bonusText}>+{reward.xp_bonus} XP bonus</Text>
             </View>
 
-            <TouchableOpacity
-              style={[s.awesomeBtn, { backgroundColor: rt.accent }]}
-              onPress={() => {
-                haptics.medium();
-                onClose();
-              }}
-              activeOpacity={0.88}
+            <TactilePressable
+              edgeColor={theme.colors.black35}
+              radius={14}
+              haptic="medium"
+              style={s.awesomeBtnWrap}
+              faceStyle={[s.awesomeBtn, { backgroundColor: rt.accent }]}
+              onPress={onClose}
             >
               <Text style={s.awesomeBtnText}>Awesome!</Text>
-            </TouchableOpacity>
+            </TactilePressable>
           </Animated.View>
-        </TouchableOpacity>
+        </AnimatedPressable>
       </Animated.View>
     </Modal>
   );
@@ -174,6 +175,9 @@ const s = StyleSheet.create({
     color: theme.colors.secondary,
     fontSize: 13,
     fontWeight: "900",
+  },
+  awesomeBtnWrap: {
+    width: "100%",
   },
   awesomeBtn: {
     width: "100%",

@@ -5,12 +5,11 @@ import {
   Text,
   Image,
   ScrollView,
-  TouchableOpacity,
   StatusBar,
 } from "react-native";
+import { AnimatedPressable } from "../../components/ui";
 import { ArrowLeft, Flame, Trophy, Heart } from "lucide-react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { theme } from "../../theme/themes";
@@ -57,15 +56,14 @@ export function PublicProfileScreen({ navigation, route }: Props) {
     return (
       <ScreenWrapper>
         <View style={styles.header}>
-          <TouchableOpacity
+          <AnimatedPressable
             onPress={() => {
-              haptics.light();
               handleBack();
             }}
             style={styles.backButton}
           >
             <ArrowLeft color={theme.colors.text} size={24} />
-          </TouchableOpacity>
+          </AnimatedPressable>
           <View style={styles.backButton} />
         </View>
         <View style={styles.errorContainer}>
@@ -88,15 +86,14 @@ export function PublicProfileScreen({ navigation, route }: Props) {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <AnimatedPressable
           onPress={() => {
-            haptics.light();
             handleBack();
           }}
           style={styles.backButton}
         >
           <ArrowLeft color={theme.colors.text} size={24} />
-        </TouchableOpacity>
+        </AnimatedPressable>
         <Text style={styles.headerTitle}>Profile</Text>
         <View style={styles.backButton} />
       </View>
