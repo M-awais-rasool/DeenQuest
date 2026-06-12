@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import { Volume2 } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
@@ -55,7 +56,6 @@ export function ListenGame({
     if (!q.audio) return;
     Speech.stop();
     setSpeaking(true);
-    haptics.light();
     Speech.speak(q.audio, {
       language: "ar",
       rate: 0.6,
@@ -113,9 +113,12 @@ export function ListenGame({
           {qIndex + 1} / {questions.length}
         </Text>
       )}
-      <TouchableOpacity
-        style={[s.speaker, speaking && s.speakerActive]}
-        activeOpacity={0.85}
+      <TactilePressable
+        edgeColor={speaking ? theme.colors.secondary : theme.colors.outline}
+        radius={20}
+        haptic="light"
+        style={s.speakerWrap}
+        faceStyle={[s.speaker, speaking && s.speakerActive]}
         onPress={speak}
       >
         <Volume2
@@ -125,7 +128,7 @@ export function ListenGame({
         <Text style={s.speakerLabel}>
           {speaking ? "Playing…" : "Tap to listen again"}
         </Text>
-      </TouchableOpacity>
+      </TactilePressable>
 
       <View style={s.options}>
         {q.options.map((opt, idx) => (
@@ -158,6 +161,9 @@ const s = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 8,
   },
+  speakerWrap: {
+    marginBottom: 22,
+  },
   speaker: {
     alignItems: "center",
     justifyContent: "center",
@@ -166,7 +172,6 @@ const s = StyleSheet.create({
     paddingVertical: 30,
     borderWidth: 2,
     borderColor: theme.colors.outline,
-    marginBottom: 22,
     gap: 10,
   },
   speakerActive: {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import { CheckCircle, Circle } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { FadeInView, ContinueButton } from "./shared";
@@ -15,7 +15,6 @@ export function PrayerChecklistComponent({
   const [checked, setChecked] = useState<Set<number>>(new Set());
 
   const toggle = (idx: number) => {
-    haptics.light();
     setChecked((prev) => {
       const next = new Set(prev);
       if (next.has(idx)) next.delete(idx);
@@ -32,10 +31,16 @@ export function PrayerChecklistComponent({
         const done = checked.has(idx);
         return (
           <FadeInView key={idx} delay={idx * 60}>
-            <TouchableOpacity
-              style={[s.item, done && s.itemDone]}
+            <TactilePressable
+              edgeColor={
+                done ? theme.colors.primary30 : theme.colors.outline
+              }
+              depth={3}
+              radius={14}
+              haptic="selection"
+              style={s.itemWrap}
+              faceStyle={[s.item, done && s.itemDone]}
               onPress={() => toggle(idx)}
-              activeOpacity={0.7}
             >
               {done ? (
                 <CheckCircle size={20} color={theme.colors.primary} />
@@ -43,7 +48,7 @@ export function PrayerChecklistComponent({
                 <Circle size={20} color={theme.colors.textMuted} />
               )}
               <Text style={[s.itemText, done && s.itemTextDone]}>{step}</Text>
-            </TouchableOpacity>
+            </TactilePressable>
           </FadeInView>
         );
       })}
@@ -58,6 +63,9 @@ export function PrayerChecklistComponent({
 }
 
 const s = StyleSheet.create({
+  itemWrap: {
+    marginBottom: 8,
+  },
   item: {
     flexDirection: "row",
     alignItems: "center",
@@ -65,7 +73,6 @@ const s = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: 14,
     padding: 16,
-    marginBottom: 8,
     borderWidth: 1,
     borderColor: theme.colors.outline,
   },

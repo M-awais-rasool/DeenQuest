@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import { Volume2 } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
@@ -33,13 +33,17 @@ export function PronunciationComponent({
     <View>
       {items.map((item, idx) => (
         <FadeInView key={idx} delay={idx * 80}>
-          <TouchableOpacity
-            style={[s.card, speakingIdx === idx && s.cardActive]}
-            onPress={() => {
-              haptics.light();
-              speak(item.arabic, idx);
-            }}
-            activeOpacity={0.7}
+          <TactilePressable
+            edgeColor={
+              speakingIdx === idx
+                ? theme.colors.primary
+                : theme.colors.outline
+            }
+            radius={16}
+            haptic="light"
+            style={s.cardWrap}
+            faceStyle={[s.card, speakingIdx === idx && s.cardActive]}
+            onPress={() => speak(item.arabic, idx)}
           >
             <Text style={[s.arabic, { fontFamily }]}>{item.arabic}</Text>
             <View style={s.soundRow}>
@@ -55,7 +59,7 @@ export function PronunciationComponent({
                 {speakingIdx === idx ? "Playing…" : "Tap to hear"}
               </Text>
             </View>
-          </TouchableOpacity>
+          </TactilePressable>
         </FadeInView>
       ))}
 
@@ -65,12 +69,14 @@ export function PronunciationComponent({
 }
 
 const s = StyleSheet.create({
+  cardWrap: {
+    marginBottom: 12,
+  },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     padding: 24,
     alignItems: "center",
-    marginBottom: 12,
     borderWidth: 1,
     borderColor: theme.colors.outline,
   },

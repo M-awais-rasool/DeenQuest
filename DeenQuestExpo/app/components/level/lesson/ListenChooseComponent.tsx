@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import { Volume2 } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
@@ -35,7 +36,6 @@ export function ListenChooseComponent({ lesson, onComplete }: LessonComponentPro
     if (!audio) return;
     Speech.stop();
     setSpeaking(true);
-    haptics.light();
     Speech.speak(audio, {
       language: "ar",
       rate: 0.6,
@@ -79,9 +79,12 @@ export function ListenChooseComponent({ lesson, onComplete }: LessonComponentPro
     <View>
       <Text style={s.instruction}>{instruction}</Text>
 
-      <TouchableOpacity
-        style={[s.speaker, speaking && s.speakerActive]}
-        activeOpacity={0.85}
+      <TactilePressable
+        edgeColor={speaking ? theme.colors.secondary : theme.colors.outline}
+        radius={20}
+        haptic="light"
+        style={s.speakerWrap}
+        faceStyle={[s.speaker, speaking && s.speakerActive]}
         onPress={speak}
       >
         <Volume2
@@ -91,7 +94,7 @@ export function ListenChooseComponent({ lesson, onComplete }: LessonComponentPro
         <Text style={s.speakerLabel}>
           {speaking ? "Playing…" : "Tap to listen again"}
         </Text>
-      </TouchableOpacity>
+      </TactilePressable>
 
       <View style={s.options}>
         {options.map((opt, idx) => (
@@ -124,6 +127,9 @@ const s = StyleSheet.create({
     marginBottom: 16,
     textAlign: "center",
   },
+  speakerWrap: {
+    marginBottom: 24,
+  },
   speaker: {
     alignItems: "center",
     justifyContent: "center",
@@ -132,7 +138,6 @@ const s = StyleSheet.create({
     paddingVertical: 32,
     borderWidth: 2,
     borderColor: theme.colors.outline,
-    marginBottom: 24,
     gap: 10,
   },
   speakerActive: {

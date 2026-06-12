@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { haptics } from "../../../utils/haptics";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { ContinueButton } from "./shared";
@@ -19,21 +19,23 @@ export function ReflectionComponent({
       <Text style={s.question}>{question}</Text>
 
       {options.map((option, idx) => (
-        <TouchableOpacity
+        <TactilePressable
           key={idx}
-          style={[s.option, selected === idx && s.optionSelected]}
-          onPress={() => {
-            haptics.selection();
-            setSelected(idx);
-          }}
-          activeOpacity={0.7}
+          edgeColor={
+            selected === idx ? theme.colors.primary : theme.colors.outline
+          }
+          radius={14}
+          haptic="selection"
+          style={s.optionWrap}
+          faceStyle={[s.option, selected === idx && s.optionSelected]}
+          onPress={() => setSelected(idx)}
         >
           <Text
             style={[s.optionText, selected === idx && s.optionTextSelected]}
           >
             {option}
           </Text>
-        </TouchableOpacity>
+        </TactilePressable>
       ))}
 
       {selected !== null && (
@@ -60,11 +62,13 @@ const s = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 26,
   },
+  optionWrap: {
+    marginBottom: 10,
+  },
   option: {
     backgroundColor: theme.colors.surface,
     borderRadius: 14,
     padding: 16,
-    marginBottom: 10,
     borderWidth: 2,
     borderColor: theme.colors.outline,
   },
@@ -92,23 +96,5 @@ const s = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
     lineHeight: 20,
-  },
-  continueBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 16,
-    borderRadius: 16,
-    marginTop: 16,
-    gap: 6,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.primaryContainer,
-  },
-  continueBtnText: {
-    color: theme.colors.onPrimary,
-    fontWeight: "900",
-    fontSize: 16,
-    letterSpacing: 1,
   },
 });

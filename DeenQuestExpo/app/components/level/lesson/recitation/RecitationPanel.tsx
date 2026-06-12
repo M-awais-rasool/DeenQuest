@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Animated,
   ActivityIndicator,
 } from "react-native";
+import { AnimatedPressable, TactilePressable } from "../../../ui";
 import {
   Volume2,
   Mic,
@@ -14,7 +14,6 @@ import {
   RotateCcw,
   Sparkles,
 } from "lucide-react-native";
-import { haptics } from "../../../../utils/haptics";
 import { theme } from "../../../../theme/themes";
 import type { RecitationWordResult } from "../../../../store/services/api";
 import type { UseRecitationReturn } from "./useRecitation";
@@ -257,26 +256,26 @@ export const RecitationPanel = React.memo(function RecitationPanel({
           <View style={s.controls}>
             {/* Speaker */}
             <View style={s.speakerWrap}>
-              <TouchableOpacity
-                onPress={() => {
-                  haptics.light();
-                  handlePlay();
-                }}
+              <TactilePressable
+                onPress={handlePlay}
                 disabled={isRecording || isProcessing}
-                style={[
+                edgeColor={theme.colors.outline}
+                depth={3}
+                radius={32}
+                haptic="light"
+                faceStyle={[
                   s.controlBtn,
                   isPlaying && {
                     borderColor: accent.color,
                     backgroundColor: accent.bg08,
                   },
                 ]}
-                activeOpacity={0.75}
               >
                 <Volume2
                   size={24}
                   color={isPlaying ? accent.color : theme.colors.text}
                 />
-              </TouchableOpacity>
+              </TactilePressable>
               <Text
                 style={[s.controlLabel, isPlaying && { color: accent.color }]}
               >
@@ -287,13 +286,14 @@ export const RecitationPanel = React.memo(function RecitationPanel({
             {/* Record (large, pulsing) */}
             <View style={s.recordWrap}>
               <PulsingRing active={isRecording} />
-              <TouchableOpacity
-                onPress={() => {
-                  haptics.medium();
-                  handleRecord();
-                }}
+              <TactilePressable
+                onPress={handleRecord}
                 disabled={isProcessing}
-                style={[
+                edgeColor={theme.colors.black35}
+                depth={3}
+                radius={32}
+                haptic="medium"
+                faceStyle={[
                   s.recordBtn,
                   {
                     backgroundColor: isRecording
@@ -304,7 +304,6 @@ export const RecitationPanel = React.memo(function RecitationPanel({
                       : accent.color,
                   },
                 ]}
-                activeOpacity={0.8}
               >
                 {isProcessing ? (
                   <ActivityIndicator
@@ -316,7 +315,7 @@ export const RecitationPanel = React.memo(function RecitationPanel({
                 ) : (
                   <Mic size={24} color={theme.colors.background} />
                 )}
-              </TouchableOpacity>
+              </TactilePressable>
               <Text style={s.recordLabel}>
                 {isProcessing
                   ? "Checking…"
@@ -384,17 +383,17 @@ export const RecitationPanel = React.memo(function RecitationPanel({
           ) : null}
 
           {/* Try Again */}
-          <TouchableOpacity
-            onPress={() => {
-              haptics.light();
-              handleRetry();
-            }}
-            style={s.retryBtn}
-            activeOpacity={0.8}
+          <TactilePressable
+            onPress={handleRetry}
+            edgeColor={theme.colors.outline}
+            depth={3}
+            radius={12}
+            haptic="light"
+            faceStyle={s.retryBtn}
           >
             <RotateCcw size={16} color={theme.colors.text} />
             <Text style={s.retryBtnText}>Try Again</Text>
-          </TouchableOpacity>
+          </TactilePressable>
         </Animated.View>
       )}
     </View>

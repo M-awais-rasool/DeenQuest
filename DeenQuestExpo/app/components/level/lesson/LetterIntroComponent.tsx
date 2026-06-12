@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import { Volume2 } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
@@ -45,13 +45,17 @@ export function LetterIntroComponent({
     <View>
       {letters.map((item, idx) => (
         <FadeInView key={idx} delay={idx * 90}>
-          <TouchableOpacity
-            style={[s.letterCard, speakingIdx === idx && s.letterCardActive]}
-            onPress={() => {
-              haptics.light();
-              speakLetter(item.letter, idx);
-            }}
-            activeOpacity={0.7}
+          <TactilePressable
+            edgeColor={
+              speakingIdx === idx
+                ? theme.colors.primary
+                : theme.colors.outline
+            }
+            radius={20}
+            haptic="light"
+            style={s.letterCardWrap}
+            faceStyle={[s.letterCard, speakingIdx === idx && s.letterCardActive]}
+            onPress={() => speakLetter(item.letter, idx)}
           >
             <Text style={[s.arabicLetter, { fontFamily }]}>{item.letter}</Text>
             {item.name ? <Text style={s.letterName}>{item.name}</Text> : null}
@@ -68,7 +72,7 @@ export function LetterIntroComponent({
                 {speakingIdx === idx ? "Playing…" : "Tap to hear"}
               </Text>
             </View>
-          </TouchableOpacity>
+          </TactilePressable>
         </FadeInView>
       ))}
 
@@ -92,12 +96,14 @@ export function LetterIntroComponent({
 }
 
 const s = StyleSheet.create({
+  letterCardWrap: {
+    marginBottom: 12,
+  },
   letterCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: 20,
     padding: 28,
     alignItems: "center",
-    marginBottom: 12,
     borderWidth: 1,
     borderColor: theme.colors.outline,
   },

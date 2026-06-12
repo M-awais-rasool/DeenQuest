@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated } from "react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
@@ -160,6 +160,7 @@ export function FillBlankComponent({ lesson, onComplete }: LessonComponentProps)
       {!solved && (
         <ContinueButton
           label="CHECK"
+          haptic="none"
           variant="primary"
           showChevron={false}
           disabled={!allFilled}

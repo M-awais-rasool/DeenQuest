@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { TactilePressable } from "../../ui";
 import { Award, ChevronRight } from "lucide-react-native";
-import { haptics } from "../../../utils/haptics";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { FadeInView } from "./shared";
@@ -29,16 +29,17 @@ export function CertificateComponent({
         )}
       </FadeInView>
 
-      <TouchableOpacity
-        style={s.continueBtn}
-        onPress={() => {
-          haptics.medium();
-          onComplete();
-        }}
+      <TactilePressable
+        edgeColor={theme.colors.goldDark}
+        radius={16}
+        haptic="medium"
+        style={s.continueBtnWrap}
+        faceStyle={s.continueBtn}
+        onPress={onComplete}
       >
         <Text style={s.continueBtnText}>CONTINUE</Text>
         <ChevronRight size={18} color={theme.colors.onPrimary} />
-      </TouchableOpacity>
+      </TactilePressable>
     </View>
   );
 }
@@ -99,6 +100,9 @@ const s = StyleSheet.create({
     fontWeight: "800",
     marginTop: 4,
   },
+  continueBtnWrap: {
+    marginTop: 24,
+  },
   continueBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -106,10 +110,7 @@ const s = StyleSheet.create({
     backgroundColor: theme.colors.secondary,
     paddingVertical: 16,
     borderRadius: 16,
-    marginTop: 24,
     gap: 6,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.goldDark,
   },
   continueBtnText: {
     color: theme.colors.onSecondary,
