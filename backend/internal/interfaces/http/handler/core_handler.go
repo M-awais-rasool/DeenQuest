@@ -43,8 +43,10 @@ func (h *CoreHandler) GetPublicProgress(c *gin.Context) {
 	response.OK(c, "public progress fetched", result)
 }
 
+const defaultLeaderboardLimit = 100
+
 func (h *CoreHandler) GetLeaderboard(c *gin.Context) {
-	limit := 0
+	limit := defaultLeaderboardLimit
 	rawLimit := c.Query("limit")
 	if rawLimit != "" {
 		parsed, err := strconv.Atoi(rawLimit)

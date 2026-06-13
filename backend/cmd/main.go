@@ -47,11 +47,23 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoURI))
+	mongoOpts := options.Client().
+		ApplyURI(cfg.MongoURI).
+		SetMinPoolSize(10).
+		SetMaxPoolSize(100).
+		SetMaxConnIdleTime(5 * time.Minute).
+		SetConnectTimeout(5 * time.Second).
+		SetServerSelectionTimeout(5 * time.Second).
+		SetCompressors([]string{"zstd", "snappy", "zlib"})
+
+	mongoClient, err := mongo.Connect(ctx, mongoOpts)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to connect MongoDB: %v", err))
 	}
 	defer func() { _ = mongoClient.Disconnect(context.Background()) }()
+	if err := mongoClient.Ping(ctx, nil); err != nil {
+		logger.Fatal(fmt.Sprintf("failed to ping MongoDB: %v", err))
+	}
 
 	db := mongoClient.Database(cfg.MongoDB)
 

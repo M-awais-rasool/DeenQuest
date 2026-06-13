@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/chawais/talent-flow/backend/internal/domain/progress"
 )
@@ -52,31 +53,30 @@ type LeaderboardEntry struct {
 
 // GetUserProgress returns XP, streak, and the last 7 days completion status.
 func (s *CoreService) GetUserProgress(ctx context.Context, userID string) (*ProgressResponse, error) {
-	prog, err := s.repo.GetProgress(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	if prog == nil {
-		prog = &progress.Progress{Level: 1}
-	}
-
-	streak, err := s.repo.GetStreak(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	if streak == nil {
-		streak = &progress.Streak{}
-	}
-
 	now := time.Now().UTC()
 	dates := make([]string, 7)
 	for i := 0; i < 7; i++ {
 		dates[i] = now.AddDate(0, 0, -(6 - i)).Format("2006-01-02")
 	}
 
-	completedDates, err := s.repo.GetCompletedDates(ctx, userID, dates)
-	if err != nil {
+	var (
+		prog           *progress.Progress
+		streak         *progress.Streak
+		completedDates map[string]bool
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() (err error) { prog, err = s.repo.GetProgress(gctx, userID); return })
+	g.Go(func() (err error) { streak, err = s.repo.GetStreak(gctx, userID); return })
+	g.Go(func() (err error) { completedDates, err = s.repo.GetCompletedDates(gctx, userID, dates); return })
+	if err := g.Wait(); err != nil {
 		return nil, err
+	}
+
+	if prog == nil {
+		prog = &progress.Progress{Level: 1}
+	}
+	if streak == nil {
+		streak = &progress.Streak{}
 	}
 
 	weekly := make([]bool, 7)
@@ -96,17 +96,19 @@ func (s *CoreService) GetUserProgress(ctx context.Context, userID string) (*Prog
 
 // GetPublicProgress returns the subset of progress data that is safe to show publicly.
 func (s *CoreService) GetPublicProgress(ctx context.Context, userID string) (*PublicProgressResponse, error) {
-	prog, err := s.repo.GetProgress(ctx, userID)
-	if err != nil {
+	var (
+		prog   *progress.Progress
+		streak *progress.Streak
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() (err error) { prog, err = s.repo.GetProgress(gctx, userID); return })
+	g.Go(func() (err error) { streak, err = s.repo.GetStreak(gctx, userID); return })
+	if err := g.Wait(); err != nil {
 		return nil, err
-	}
-	if prog == nil {
-		prog = &progress.Progress{Level: 1}
 	}
 
-	streak, err := s.repo.GetStreak(ctx, userID)
-	if err != nil {
-		return nil, err
+	if prog == nil {
+		prog = &progress.Progress{Level: 1}
 	}
 	currentStreak := 0
 	if streak != nil {
@@ -160,14 +162,17 @@ func (s *CoreService) GetDailyTasks(ctx context.Context, userID string) ([]progr
 	if err != nil {
 		return nil, fmt.Errorf("get user daily tasks: %w", err)
 	}
+	allTasks, err := s.repo.ListAllDailyTasks(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list all daily tasks: %w", err)
+	}
+	taskByID := make(map[string]progress.DailyTask, len(allTasks))
+	for _, t := range allTasks {
+		taskByID[t.ID] = t
+	}
 
 	// If no assignments exist, generate them.
 	if len(assignments) == 0 {
-		allTasks, err := s.repo.ListAllDailyTasks(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("list all daily tasks: %w", err)
-		}
-
 		var fixed []progress.DailyTask
 		var pool []progress.DailyTask
 		for _, t := range allTasks {
@@ -208,23 +213,15 @@ func (s *CoreService) GetDailyTasks(ctx context.Context, userID string) ([]progr
 		}
 	}
 
-	// Build the response by joining assignments with task templates.
-	completionMap := make(map[string]progress.UserDailyTask, len(assignments))
-	for _, a := range assignments {
-		completionMap[a.TaskID] = a
-	}
-
+	// Build the response by joining assignments with the task-template map.
 	results := make([]progress.DailyTaskWithStatus, 0, len(assignments))
 	for _, a := range assignments {
-		task, err := s.repo.GetDailyTaskByID(ctx, a.TaskID)
-		if err != nil {
-			return nil, err
-		}
-		if task == nil {
+		task, ok := taskByID[a.TaskID]
+		if !ok {
 			continue
 		}
 		results = append(results, progress.DailyTaskWithStatus{
-			DailyTask:   *task,
+			DailyTask:   task,
 			Completed:   a.Completed,
 			CompletedAt: a.CompletedAt,
 		})
@@ -252,10 +249,10 @@ func (s *CoreService) CompleteDailyTask(ctx context.Context, userID, taskID stri
 		return errors.New("task template not found")
 	}
 
-	if err := s.bumpProgress(ctx, userID, task.RewardXP, 0); err != nil {
+	if _, err := s.bumpProgress(ctx, userID, task.RewardXP, 0); err != nil {
 		return err
 	}
-	if err := s.bumpStreak(ctx, userID); err != nil {
+	if _, err := s.bumpStreak(ctx, userID); err != nil {
 		return err
 	}
 
@@ -271,25 +268,17 @@ func hashString(s string) uint32 {
 	return h
 }
 
-func (s *CoreService) bumpProgress(ctx context.Context, userID string, xpDelta int, barakahDelta int) error {
-	p, err := s.repo.GetProgress(ctx, userID)
-	if err != nil {
-		return err
-	}
-	if p == nil {
-		p = &progress.Progress{ID: uuid.NewString(), UserID: userID, Level: 1}
-	}
-	p.TotalXP += xpDelta
-	p.BarakahScore += barakahDelta
-	p.Level = (p.TotalXP / 100) + 1
-	p.UpdatedAt = time.Now().UTC()
-	return s.repo.UpsertProgress(ctx, p)
+// bumpProgress applies an XP/Barakah delta atomically and returns the updated
+// progress. It is race-free under concurrent completions (single $inc upsert).
+func (s *CoreService) bumpProgress(ctx context.Context, userID string, xpDelta int, barakahDelta int) (*progress.Progress, error) {
+	return s.repo.IncrementProgress(ctx, userID, xpDelta, barakahDelta)
 }
 
-func (s *CoreService) bumpStreak(ctx context.Context, userID string) error {
+// bumpStreak advances the user's daily streak and returns the updated streak.
+func (s *CoreService) bumpStreak(ctx context.Context, userID string) (*progress.Streak, error) {
 	streak, err := s.repo.GetStreak(ctx, userID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	now := time.Now().UTC()
 	if streak == nil {
@@ -310,7 +299,10 @@ func (s *CoreService) bumpStreak(ctx context.Context, userID string) error {
 		streak.LastCompletedAt = now
 		streak.UpdatedAt = now
 	}
-	return s.repo.UpsertStreak(ctx, streak)
+	if err := s.repo.UpsertStreak(ctx, streak); err != nil {
+		return nil, err
+	}
+	return streak, nil
 }
 
 // ─── Level Journey Methods ───
@@ -327,24 +319,29 @@ func (s *CoreService) SeedRewards(ctx context.Context) error {
 
 // GetRewards returns all rewards annotated with the user's unlock status and progress.
 func (s *CoreService) GetRewards(ctx context.Context, userID string) ([]progress.RewardWithStatus, error) {
-	allRewards, err := s.repo.ListAllRewards(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list rewards: %w", err)
+	var (
+		allRewards  []progress.Reward
+		userRewards []progress.UserReward
+		userLevels  []progress.UserLevel
+		prog        *progress.Progress
+		streak      *progress.Streak
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() (err error) { allRewards, err = s.repo.ListAllRewards(gctx); return })
+	g.Go(func() (err error) { userRewards, err = s.repo.GetUserRewards(gctx, userID); return })
+	g.Go(func() (err error) { userLevels, err = s.repo.GetUserLevels(gctx, userID); return })
+	g.Go(func() (err error) { prog, err = s.repo.GetProgress(gctx, userID); return })
+	g.Go(func() (err error) { streak, err = s.repo.GetStreak(gctx, userID); return })
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("load rewards data: %w", err)
 	}
 
-	userRewards, err := s.repo.GetUserRewards(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("get user rewards: %w", err)
-	}
 	grantedMap := make(map[string]progress.UserReward, len(userRewards))
 	for _, ur := range userRewards {
 		grantedMap[ur.RewardID] = ur
 	}
 
-	completedLevels, xp, streakDays, err := s.getUserMetrics(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
+	completedLevels, xp, streakDays := deriveMetrics(userLevels, prog, streak)
 
 	result := make([]progress.RewardWithStatus, 0, len(allRewards))
 	for _, rw := range allRewards {
@@ -362,30 +359,29 @@ func (s *CoreService) GetRewards(ctx context.Context, userID string) ([]progress
 	return result, nil
 }
 
-// checkAndGrantRewards evaluates all reward definitions against the user's current
-// metrics and grants any that are newly eligible. Returns the list of newly granted rewards.
-func (s *CoreService) checkAndGrantRewards(ctx context.Context, userID string) ([]progress.Reward, error) {
-	allRewards, err := s.repo.ListAllRewards(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list rewards: %w", err)
+func (s *CoreService) checkAndGrantRewards(ctx context.Context, userID string, xp, streakDays int) ([]progress.Reward, error) {
+	var (
+		allRewards  []progress.Reward
+		userRewards []progress.UserReward
+		userLevels  []progress.UserLevel
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() (err error) { allRewards, err = s.repo.ListAllRewards(gctx); return })
+	g.Go(func() (err error) { userRewards, err = s.repo.GetUserRewards(gctx, userID); return })
+	g.Go(func() (err error) { userLevels, err = s.repo.GetUserLevels(gctx, userID); return })
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("load reward-eligibility data: %w", err)
 	}
 	if len(allRewards) == 0 {
 		return nil, nil
 	}
 
-	userRewards, err := s.repo.GetUserRewards(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("get user rewards: %w", err)
-	}
 	granted := make(map[string]struct{}, len(userRewards))
 	for _, ur := range userRewards {
 		granted[ur.RewardID] = struct{}{}
 	}
 
-	completedLevels, xp, streakDays, err := s.getUserMetrics(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
+	completedLevels := countCompletedLevels(userLevels)
 
 	var newlyGranted []progress.Reward
 	for _, rw := range allRewards {
@@ -409,34 +405,27 @@ func (s *CoreService) checkAndGrantRewards(ctx context.Context, userID string) (
 	return newlyGranted, nil
 }
 
-// getUserMetrics fetches completed-levels count, total XP, and current streak for a user.
-func (s *CoreService) getUserMetrics(ctx context.Context, userID string) (completedLevels, xp, streakDays int, err error) {
-	userLevels, err := s.repo.GetUserLevels(ctx, userID)
-	if err != nil {
-		return 0, 0, 0, fmt.Errorf("get user levels: %w", err)
-	}
+// countCompletedLevels returns how many of the user's levels are completed.
+func countCompletedLevels(userLevels []progress.UserLevel) int {
+	completed := 0
 	for _, ul := range userLevels {
 		if ul.Completed {
-			completedLevels++
+			completed++
 		}
 	}
+	return completed
+}
 
-	prog, err := s.repo.GetProgress(ctx, userID)
-	if err != nil {
-		return 0, 0, 0, fmt.Errorf("get progress: %w", err)
-	}
+// deriveMetrics resolves the three reward metrics from already-fetched data.
+func deriveMetrics(userLevels []progress.UserLevel, prog *progress.Progress, streak *progress.Streak) (completedLevels, xp, streakDays int) {
+	completedLevels = countCompletedLevels(userLevels)
 	if prog != nil {
 		xp = prog.TotalXP
-	}
-
-	streak, err := s.repo.GetStreak(ctx, userID)
-	if err != nil {
-		return 0, 0, 0, fmt.Errorf("get streak: %w", err)
 	}
 	if streak != nil {
 		streakDays = streak.CurrentStreak
 	}
-	return completedLevels, xp, streakDays, nil
+	return completedLevels, xp, streakDays
 }
 
 // metricValue resolves the correct user metric for a given reward trigger.
@@ -500,7 +489,10 @@ func (s *CoreService) GetLevels(ctx context.Context, userID string, courseType p
 
 	results := make([]progress.LevelWithStatus, 0, len(levels))
 	for _, l := range levels {
-		lws := progress.LevelWithStatus{Level: l}
+		lws := progress.LevelWithStatus{Level: l, LessonCount: len(l.Lessons)}
+		lws.Lessons = []progress.Lesson{}
+		lws.MiniGame = progress.MiniGame{}
+		lws.Goal = ""
 		if ul, ok := ulMap[l.ID]; ok {
 			lws.LessonsComplete = ul.LessonsComplete
 			if ul.Completed {
@@ -537,7 +529,7 @@ func (s *CoreService) GetLevelDetail(ctx context.Context, userID string, levelID
 		return nil, err
 	}
 
-	lws := &progress.LevelWithStatus{Level: *level, Status: "available"}
+	lws := &progress.LevelWithStatus{Level: *level, Status: "available", LessonCount: len(level.Lessons)}
 	if ul != nil {
 		lws.LessonsComplete = ul.LessonsComplete
 		if ul.Completed {
@@ -649,15 +641,16 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 
 	// Award XP (fixed amount per level).
 	xp := level.XPReward
-	if err := s.bumpProgress(ctx, userID, xp, 5); err != nil {
+	updatedProg, err := s.bumpProgress(ctx, userID, xp, 5)
+	if err != nil {
 		return nil, err
 	}
-	if err := s.bumpStreak(ctx, userID); err != nil {
+	updatedStreak, err := s.bumpStreak(ctx, userID)
+	if err != nil {
 		return nil, err
 	}
 
-	// Check and auto-grant any newly eligible rewards.
-	newRewards, err := s.checkAndGrantRewards(ctx, userID)
+	newRewards, err := s.checkAndGrantRewards(ctx, userID, updatedProg.TotalXP, updatedStreak.CurrentStreak)
 	if err != nil {
 		// Non-fatal: log but don't fail the completion.
 		newRewards = nil

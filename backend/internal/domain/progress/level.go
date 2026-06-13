@@ -109,14 +109,15 @@ type LevelWithStatus struct {
 	Level           `bson:",inline"`
 	Status          string `json:"status"` // "locked", "available", "in_progress", "completed"
 	LessonsComplete int    `json:"lessons_complete"`
+	LessonCount     int    `json:"lesson_count"`
 }
 
 // LevelCompletionResult is returned when a user completes a level.
 type LevelCompletionResult struct {
-	XPEarned     int    `json:"xp_earned"`
-	UnlockReward string `json:"unlock_reward"`
-	TreasureOpen bool   `json:"treasure_open"` // true every 5 levels
-	NextLevelID  int    `json:"next_level_id"`
-	CourseType   string `json:"course_type"`
+	XPEarned     int      `json:"xp_earned"`
+	UnlockReward string   `json:"unlock_reward"`
+	TreasureOpen bool     `json:"treasure_open"` // true every 5 levels
+	NextLevelID  int      `json:"next_level_id"`
+	CourseType   string   `json:"course_type"`
 	NewRewards   []Reward `json:"new_rewards"` // rewards granted by this completion
 }

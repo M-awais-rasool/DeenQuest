@@ -6,23 +6,32 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/cache"
 )
 
-func RateLimit(redisClient *cache.RedisClient, limit int, window time.Duration) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		key := "rate_limit:" + c.ClientIP()
-		ctx := context.Background()
+var rateLimitScript = redis.NewScript(`
+local current = redis.call("INCR", KEYS[1])
+if current == 1 then
+	redis.call("PEXPIRE", KEYS[1], ARGV[1])
+end
+return current
+`)
 
-		count, err := redisClient.Client.Incr(ctx, key).Result()
+func RateLimit(redisClient *cache.RedisClient, limit int, window time.Duration) gin.HandlerFunc {
+	windowMS := window.Milliseconds()
+	return func(c *gin.Context) {
+		// Bound the limiter so a slow/unreachable Redis can never stall the request.
+		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		defer cancel()
+
+		key := "rate_limit:" + c.ClientIP()
+		count, err := rateLimitScript.Run(ctx, redisClient.Client, []string{key}, windowMS).Int64()
 		if err != nil {
+			// Fail open: never reject traffic because the limiter backend is degraded.
 			c.Next()
 			return
-		}
-
-		if count == 1 {
-			redisClient.Client.Expire(ctx, key, window)
 		}
 
 		if count > int64(limit) {

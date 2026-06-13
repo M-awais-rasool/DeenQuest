@@ -12,6 +12,7 @@ var ErrAlreadyCompleted = errors.New("task already completed")
 type CoreRepository interface {
 	GetProgress(ctx context.Context, userID string) (*Progress, error)
 	UpsertProgress(ctx context.Context, progress *Progress) error
+	IncrementProgress(ctx context.Context, userID string, xpDelta, barakahDelta int) (*Progress, error)
 	ListLeaderboardProgress(ctx context.Context, limit int) ([]Progress, error)
 	GetStreak(ctx context.Context, userID string) (*Streak, error)
 	UpsertStreak(ctx context.Context, streak *Streak) error

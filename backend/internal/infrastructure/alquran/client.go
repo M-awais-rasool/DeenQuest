@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/chawais/talent-flow/backend/internal/domain/quran"
 )
 
@@ -101,22 +103,35 @@ func (c *Client) GetSurahByID(ctx context.Context, id int, translationEdition st
 	}
 
 	const edition = "ar.alafasy"
+	translationEdition = strings.TrimSpace(translationEdition)
 
-	var envelope apiEnvelope[apiSurahDetail]
-	if err := c.get(ctx, fmt.Sprintf("/surah/%d/%s", id, edition), &envelope); err != nil {
+	var (
+		envelope     apiEnvelope[apiSurahDetail]
+		translations map[int]string
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		return c.get(gctx, fmt.Sprintf("/surah/%d/%s", id, edition), &envelope)
+	})
+	if translationEdition != "" {
+		g.Go(func() error {
+			t, err := c.getSurahTranslation(gctx, id, translationEdition)
+			if err != nil {
+				return err
+			}
+			translations = t
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 
 	detail := mapSurahDetail(envelope.Data)
-	translationEdition = strings.TrimSpace(translationEdition)
 	if translationEdition == "" {
 		return detail, nil
 	}
 
-	translations, err := c.getSurahTranslation(ctx, id, translationEdition)
-	if err != nil {
-		return nil, err
-	}
 	for i := range detail.Ayahs {
 		detail.Ayahs[i].Translation = translations[detail.Ayahs[i].NumberInSurah]
 	}

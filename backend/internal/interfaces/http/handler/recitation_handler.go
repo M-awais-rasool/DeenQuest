@@ -72,19 +72,12 @@ func (h *RecitationHandler) CheckRecitation(c *gin.Context) {
 		zap.Int64("size_bytes", header.Size),
 	)
 
-	audioData, err := io.ReadAll(io.LimitReader(file, maxAudioSize))
-	if err != nil {
-		logger.Error("Failed to read audio bytes", zap.Error(err))
-		response.InternalError(c, "failed to read audio file")
-		return
-	}
-
 	result, err := h.svc.CheckRecitation(
 		c.Request.Context(),
 		userID,
 		levelID,
 		lessonIndex,
-		audioData,
+		io.LimitReader(file, maxAudioSize),
 		header.Filename,
 	)
 	if err != nil {

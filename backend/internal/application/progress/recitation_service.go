@@ -1,7 +1,6 @@
 package progress
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -79,7 +78,7 @@ func (s *RecitationService) CheckRecitation(
 	userID string,
 	levelID int,
 	lessonIndex int,
-	audioData []byte,
+	audio io.Reader,
 	audioFilename string,
 ) (*progress.RecitationCheckResult, error) {
 	level, err := s.repo.GetLevelByID(ctx, levelID)
@@ -100,7 +99,7 @@ func (s *RecitationService) CheckRecitation(
 	}
 	baseXP := extractLessonXP(lesson)
 
-	transcript, err := s.callWhisper(ctx, audioData, audioFilename, arabicText)
+	transcript, err := s.callWhisper(ctx, audio, audioFilename, arabicText)
 	if err != nil {
 		logger.Error("Whisper call failed", zap.Error(err))
 		return nil, fmt.Errorf("transcription service unavailable: %w", err)
@@ -150,38 +149,34 @@ func (s *RecitationService) CheckRecitation(
 
 func (s *RecitationService) callWhisper(
 	ctx context.Context,
-	audioData []byte,
+	audio io.Reader,
 	filename string,
 	prompt string,
 ) (*whisperResponse, error) {
-	var buf bytes.Buffer
-	mw := multipart.NewWriter(&buf)
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
 
-	// Audio file field
-	fw, err := mw.CreateFormFile("audio", filename)
-	if err != nil {
-		return nil, fmt.Errorf("create form file: %w", err)
-	}
-	if _, err := fw.Write(audioData); err != nil {
-		return nil, fmt.Errorf("write audio: %w", err)
-	}
-
-	if prompt != "" {
-		pf, err := mw.CreateFormField("initial_prompt")
+	go func() {
+		fw, err := mw.CreateFormFile("audio", filename)
 		if err != nil {
-			return nil, fmt.Errorf("create prompt field: %w", err)
+			_ = pw.CloseWithError(fmt.Errorf("create form file: %w", err))
+			return
 		}
-		if _, err := pf.Write([]byte(prompt)); err != nil {
-			return nil, fmt.Errorf("write prompt: %w", err)
+		if _, err := io.Copy(fw, audio); err != nil {
+			_ = pw.CloseWithError(fmt.Errorf("write audio: %w", err))
+			return
 		}
-	}
-
-	if err := mw.Close(); err != nil {
-		return nil, fmt.Errorf("close multipart writer: %w", err)
-	}
+		if prompt != "" {
+			if err := mw.WriteField("initial_prompt", prompt); err != nil {
+				_ = pw.CloseWithError(fmt.Errorf("write prompt: %w", err))
+				return
+			}
+		}
+		_ = pw.CloseWithError(mw.Close())
+	}()
 
 	url := s.whisperURL + "/transcribe"
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &buf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, pr)
 	if err != nil {
 		return nil, fmt.Errorf("build request: %w", err)
 	}
@@ -206,16 +201,6 @@ func (s *RecitationService) callWhisper(
 }
 
 func (s *RecitationService) awardXP(ctx context.Context, userID string, xp int) error {
-	prog, err := s.repo.GetProgress(ctx, userID)
-	if err != nil {
-		return err
-	}
-	if prog == nil {
-		prog = &progress.Progress{
-			ID:     uuid.New().String(),
-			UserID: userID,
-		}
-	}
-	prog.TotalXP += xp
-	return s.repo.UpsertProgress(ctx, prog)
+	_, err := s.repo.IncrementProgress(ctx, userID, xp, 0)
+	return err
 }

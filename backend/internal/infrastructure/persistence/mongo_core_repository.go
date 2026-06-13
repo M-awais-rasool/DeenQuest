@@ -3,9 +3,12 @@ package persistence
 import (
 	"context"
 	"errors"
+	"sort"
+	"sync"
 	"time"
 
 	"github.com/chawais/talent-flow/backend/internal/domain/progress"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -21,6 +24,13 @@ type MongoCoreRepository struct {
 	rewards            *mongo.Collection
 	userRewards        *mongo.Collection
 	recitationAttempts *mongo.Collection
+	staticMu           sync.RWMutex
+	cachedLevels       []progress.Level
+	cachedTasks        []progress.DailyTask
+	cachedRewards      []progress.Reward
+	levelsLoaded       bool
+	tasksLoaded        bool
+	rewardsLoaded      bool
 }
 
 func NewMongoCoreRepository(db *mongo.Database) (*MongoCoreRepository, error) {
@@ -111,6 +121,146 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 	return nil
 }
 
+// ─── Static seed-data cache ───
+//
+// levels / daily_tasks / rewards are immutable between deploys. Each snapshot
+// loader serves a cached copy and only hits Mongo on a cold cache (first read
+// or after a re-seed). Returned slices are treated as read-only by callers, so
+// the underlying arrays can be shared safely without per-request copies.
+
+func (r *MongoCoreRepository) levelsSnapshot(ctx context.Context) ([]progress.Level, error) {
+	r.staticMu.RLock()
+	if r.levelsLoaded {
+		levels := r.cachedLevels
+		r.staticMu.RUnlock()
+		return levels, nil
+	}
+	r.staticMu.RUnlock()
+
+	r.staticMu.Lock()
+	defer r.staticMu.Unlock()
+	if r.levelsLoaded {
+		return r.cachedLevels, nil
+	}
+
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.levels.Find(timeoutCtx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]progress.Level, 0, 32)
+	for cur.Next(ctx) {
+		var l progress.Level
+		if err := cur.Decode(&l); err != nil {
+			return nil, err
+		}
+		normalizeLevelDefaults(&l)
+		out = append(out, l)
+	}
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+	r.cachedLevels = out
+	r.levelsLoaded = true
+	return r.cachedLevels, nil
+}
+
+func (r *MongoCoreRepository) tasksSnapshot(ctx context.Context) ([]progress.DailyTask, error) {
+	r.staticMu.RLock()
+	if r.tasksLoaded {
+		tasks := r.cachedTasks
+		r.staticMu.RUnlock()
+		return tasks, nil
+	}
+	r.staticMu.RUnlock()
+
+	r.staticMu.Lock()
+	defer r.staticMu.Unlock()
+	if r.tasksLoaded {
+		return r.cachedTasks, nil
+	}
+
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.dailyTasks.Find(timeoutCtx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]progress.DailyTask, 0, 16)
+	for cur.Next(ctx) {
+		var t progress.DailyTask
+		if err := cur.Decode(&t); err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+	r.cachedTasks = out
+	r.tasksLoaded = true
+	return r.cachedTasks, nil
+}
+
+func (r *MongoCoreRepository) rewardsSnapshot(ctx context.Context) ([]progress.Reward, error) {
+	r.staticMu.RLock()
+	if r.rewardsLoaded {
+		rewards := r.cachedRewards
+		r.staticMu.RUnlock()
+		return rewards, nil
+	}
+	r.staticMu.RUnlock()
+
+	r.staticMu.Lock()
+	defer r.staticMu.Unlock()
+	if r.rewardsLoaded {
+		return r.cachedRewards, nil
+	}
+
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	cur, err := r.rewards.Find(timeoutCtx, bson.M{}, options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}}))
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]progress.Reward, 0, 16)
+	for cur.Next(ctx) {
+		var rw progress.Reward
+		if err := cur.Decode(&rw); err != nil {
+			return nil, err
+		}
+		out = append(out, rw)
+	}
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+	r.cachedRewards = out
+	r.rewardsLoaded = true
+	return r.cachedRewards, nil
+}
+
+func (r *MongoCoreRepository) invalidateLevels() {
+	r.staticMu.Lock()
+	r.cachedLevels, r.levelsLoaded = nil, false
+	r.staticMu.Unlock()
+}
+
+func (r *MongoCoreRepository) invalidateTasks() {
+	r.staticMu.Lock()
+	r.cachedTasks, r.tasksLoaded = nil, false
+	r.staticMu.Unlock()
+}
+
+func (r *MongoCoreRepository) invalidateRewards() {
+	r.staticMu.Lock()
+	r.cachedRewards, r.rewardsLoaded = nil, false
+	r.staticMu.Unlock()
+}
+
 func (r *MongoCoreRepository) GetProgress(ctx context.Context, userID string) (*progress.Progress, error) {
 	timeoutCtx, cancel := withTimeout(ctx)
 	defer cancel()
@@ -130,6 +280,37 @@ func (r *MongoCoreRepository) UpsertProgress(ctx context.Context, prog *progress
 	defer cancel()
 	_, err := r.progress.UpdateOne(timeoutCtx, bson.M{"user_id": prog.UserID}, bson.M{"$set": prog}, options.Update().SetUpsert(true))
 	return err
+}
+
+func (r *MongoCoreRepository) IncrementProgress(ctx context.Context, userID string, xpDelta, barakahDelta int) (*progress.Progress, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	now := time.Now().UTC()
+	update := bson.M{
+		"$inc": bson.M{"total_xp": xpDelta, "barakah_score": barakahDelta},
+		"$set": bson.M{"updated_at": now},
+		"$setOnInsert": bson.M{
+			"_id":     uuid.NewString(),
+			"user_id": userID,
+		},
+	}
+	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+
+	var p progress.Progress
+	if err := r.progress.FindOneAndUpdate(timeoutCtx, bson.M{"user_id": userID}, update, opts).Decode(&p); err != nil {
+		return nil, err
+	}
+
+	if newLevel := (p.TotalXP / 100) + 1; newLevel != p.Level {
+		levelCtx, levelCancel := withTimeout(ctx)
+		defer levelCancel()
+		if _, err := r.progress.UpdateByID(levelCtx, p.ID, bson.M{"$set": bson.M{"level": newLevel}}); err != nil {
+			return nil, err
+		}
+		p.Level = newLevel
+	}
+	return &p, nil
 }
 
 func (r *MongoCoreRepository) ListLeaderboardProgress(ctx context.Context, limit int) ([]progress.Progress, error) {
@@ -219,40 +400,26 @@ func (r *MongoCoreRepository) SeedDailyTasks(ctx context.Context, tasks []progre
 			return err
 		}
 	}
+	r.invalidateTasks()
 	return nil
 }
 
 func (r *MongoCoreRepository) ListAllDailyTasks(ctx context.Context) ([]progress.DailyTask, error) {
-	timeoutCtx, cancel := withTimeout(ctx)
-	defer cancel()
-	cur, err := r.dailyTasks.Find(timeoutCtx, bson.M{})
-	if err != nil {
-		return nil, err
-	}
-	defer cur.Close(ctx)
-	out := make([]progress.DailyTask, 0, 10)
-	for cur.Next(ctx) {
-		var t progress.DailyTask
-		if err := cur.Decode(&t); err != nil {
-			return nil, err
-		}
-		out = append(out, t)
-	}
-	return out, cur.Err()
+	return r.tasksSnapshot(ctx)
 }
 
 func (r *MongoCoreRepository) GetDailyTaskByID(ctx context.Context, taskID string) (*progress.DailyTask, error) {
-	timeoutCtx, cancel := withTimeout(ctx)
-	defer cancel()
-	var t progress.DailyTask
-	err := r.dailyTasks.FindOne(timeoutCtx, bson.M{"_id": taskID}).Decode(&t)
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, nil
-	}
+	tasks, err := r.tasksSnapshot(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &t, nil
+	for i := range tasks {
+		if tasks[i].ID == taskID {
+			t := tasks[i]
+			return &t, nil
+		}
+	}
+	return nil, nil
 }
 
 func (r *MongoCoreRepository) GetUserDailyTasks(ctx context.Context, userID, date string) ([]progress.UserDailyTask, error) {
@@ -275,15 +442,21 @@ func (r *MongoCoreRepository) GetUserDailyTasks(ctx context.Context, userID, dat
 }
 
 func (r *MongoCoreRepository) UpsertUserDailyTask(ctx context.Context, assignments []progress.UserDailyTask) error {
+	if len(assignments) == 0 {
+		return nil
+	}
 	timeoutCtx, cancel := withTimeout(ctx)
 	defer cancel()
+	// One BulkWrite instead of N sequential UpdateByID round-trips.
+	models := make([]mongo.WriteModel, 0, len(assignments))
 	for _, a := range assignments {
-		_, err := r.userDailyTasks.UpdateByID(timeoutCtx, a.ID, bson.M{"$set": a}, options.Update().SetUpsert(true))
-		if err != nil {
-			return err
-		}
+		models = append(models, mongo.NewUpdateOneModel().
+			SetFilter(bson.M{"_id": a.ID}).
+			SetUpdate(bson.M{"$set": a}).
+			SetUpsert(true))
 	}
-	return nil
+	_, err := r.userDailyTasks.BulkWrite(timeoutCtx, models, options.BulkWrite().SetOrdered(false))
+	return err
 }
 
 func (r *MongoCoreRepository) CompleteUserDailyTask(ctx context.Context, userID, taskID, date string) error {
@@ -323,37 +496,8 @@ func (r *MongoCoreRepository) SeedLevels(ctx context.Context, levels []progress.
 			return err
 		}
 	}
+	r.invalidateLevels()
 	return nil
-}
-
-func levelCourseFilter(courseType progress.CourseType) bson.M {
-	if courseType == progress.CourseQaida {
-		return bson.M{
-			"$or": []bson.M{
-				{"course_type": courseType},
-				{"course_type": bson.M{"$exists": false}},
-			},
-		}
-	}
-	return bson.M{"course_type": courseType}
-}
-
-func nextCourseLevelFilter(courseType progress.CourseType, courseLevel int) bson.M {
-	if courseType != progress.CourseQaida {
-		return bson.M{"course_type": courseType, "course_level": bson.M{"$gt": courseLevel}}
-	}
-
-	return bson.M{
-		"$and": []bson.M{
-			levelCourseFilter(courseType),
-			{
-				"$or": []bson.M{
-					{"course_level": bson.M{"$gt": courseLevel}},
-					{"course_level": bson.M{"$exists": false}, "_id": bson.M{"$gt": courseLevel}},
-				},
-			},
-		},
-	}
 }
 
 func normalizeLevelDefaults(l *progress.Level) {
@@ -366,61 +510,63 @@ func normalizeLevelDefaults(l *progress.Level) {
 }
 
 func (r *MongoCoreRepository) ListLevelsByCourse(ctx context.Context, courseType progress.CourseType) ([]progress.Level, error) {
-	timeoutCtx, cancel := withTimeout(ctx)
-	defer cancel()
-	cur, err := r.levels.Find(
-		timeoutCtx,
-		levelCourseFilter(courseType),
-		options.Find().SetSort(bson.D{{Key: "course_level", Value: 1}, {Key: "_id", Value: 1}}),
-	)
+	levels, err := r.levelsSnapshot(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer cur.Close(ctx)
-	out := make([]progress.Level, 0, 20)
-	for cur.Next(ctx) {
-		var l progress.Level
-		if err := cur.Decode(&l); err != nil {
-			return nil, err
+	// Snapshot levels are normalized, so an unset course_type already reads as
+	// CourseQaida — a simple equality match reproduces the old Mongo filter.
+	out := make([]progress.Level, 0, len(levels))
+	for _, l := range levels {
+		if l.CourseType == courseType {
+			out = append(out, l)
 		}
-		normalizeLevelDefaults(&l)
-		out = append(out, l)
 	}
-	return out, cur.Err()
+	sortLevels(out)
+	return out, nil
 }
 
 func (r *MongoCoreRepository) GetLevelByID(ctx context.Context, levelID int) (*progress.Level, error) {
-	timeoutCtx, cancel := withTimeout(ctx)
-	defer cancel()
-	var l progress.Level
-	err := r.levels.FindOne(timeoutCtx, bson.M{"_id": levelID}).Decode(&l)
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, nil
-	}
+	levels, err := r.levelsSnapshot(ctx)
 	if err != nil {
 		return nil, err
 	}
-	normalizeLevelDefaults(&l)
-	return &l, nil
+	for i := range levels {
+		if levels[i].ID == levelID {
+			l := levels[i]
+			return &l, nil
+		}
+	}
+	return nil, nil
 }
 
 func (r *MongoCoreRepository) GetNextLevelByCourseLevel(ctx context.Context, courseType progress.CourseType, courseLevel int) (*progress.Level, error) {
-	timeoutCtx, cancel := withTimeout(ctx)
-	defer cancel()
-	var l progress.Level
-	err := r.levels.FindOne(
-		timeoutCtx,
-		nextCourseLevelFilter(courseType, courseLevel),
-		options.FindOne().SetSort(bson.D{{Key: "course_level", Value: 1}, {Key: "_id", Value: 1}}),
-	).Decode(&l)
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, nil
-	}
+	levels, err := r.levelsSnapshot(ctx)
 	if err != nil {
 		return nil, err
 	}
-	normalizeLevelDefaults(&l)
-	return &l, nil
+	var next *progress.Level
+	for i := range levels {
+		l := levels[i]
+		if l.CourseType != courseType || l.CourseLevel <= courseLevel {
+			continue
+		}
+		if next == nil || l.CourseLevel < next.CourseLevel || (l.CourseLevel == next.CourseLevel && l.ID < next.ID) {
+			lv := l
+			next = &lv
+		}
+	}
+	return next, nil
+}
+
+// sortLevels orders levels by (course_level, id) to match the previous Mongo sort.
+func sortLevels(levels []progress.Level) {
+	sort.Slice(levels, func(i, j int) bool {
+		if levels[i].CourseLevel != levels[j].CourseLevel {
+			return levels[i].CourseLevel < levels[j].CourseLevel
+		}
+		return levels[i].ID < levels[j].ID
+	})
 }
 
 func (r *MongoCoreRepository) GetUserLevels(ctx context.Context, userID string) ([]progress.UserLevel, error) {
@@ -503,26 +649,12 @@ func (r *MongoCoreRepository) SeedRewards(ctx context.Context, rewards []progres
 			return err
 		}
 	}
+	r.invalidateRewards()
 	return nil
 }
 
 func (r *MongoCoreRepository) ListAllRewards(ctx context.Context) ([]progress.Reward, error) {
-	timeoutCtx, cancel := withTimeout(ctx)
-	defer cancel()
-	cur, err := r.rewards.Find(timeoutCtx, bson.M{}, options.Find().SetSort(bson.D{{Key: "sort_order", Value: 1}}))
-	if err != nil {
-		return nil, err
-	}
-	defer cur.Close(ctx)
-	out := make([]progress.Reward, 0, 10)
-	for cur.Next(ctx) {
-		var rw progress.Reward
-		if err := cur.Decode(&rw); err != nil {
-			return nil, err
-		}
-		out = append(out, rw)
-	}
-	return out, cur.Err()
+	return r.rewardsSnapshot(ctx)
 }
 
 func (r *MongoCoreRepository) GetUserRewards(ctx context.Context, userID string) ([]progress.UserReward, error) {
