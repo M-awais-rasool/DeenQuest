@@ -237,7 +237,10 @@ export default function CourseCompletionScreen({
   const glowOpacity = glowPulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0.7] });
   const glowScale = glowPulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.08] });
 
-  const hasAchievements = newRewards.length > 0;
+  // The API sends `null` (not undefined) when no rewards were granted, so the
+  // destructuring default above doesn't apply — normalize defensively here.
+  const safeRewards = newRewards ?? [];
+  const hasAchievements = safeRewards.length > 0;
 
   return (
     <LinearGradient
@@ -339,7 +342,7 @@ export default function CourseCompletionScreen({
                 <Sparkles size={13} color={theme.colors.secondary} />
                 <Text style={styles.achieveHeading}>NEW ACHIEVEMENTS</Text>
               </View>
-              {newRewards.map((r) => {
+              {safeRewards.map((r) => {
                 const rt = rarityTheme(r.rarity);
                 return (
                   <View key={r.id} style={[styles.achieveCard, { borderColor: rt.border }]}>

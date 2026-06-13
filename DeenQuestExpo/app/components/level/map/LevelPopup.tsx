@@ -8,7 +8,11 @@ import {
 } from "react-native";
 import { TactilePressable } from "../../ui";
 import { theme } from "../../../theme/themes";
-import { LEVEL_GREEN, LEVEL_GREEN_DEEP } from "./constants";
+import {
+  DEFAULT_SECTION_COLORS,
+  hexToRgba,
+  type SectionColors,
+} from "./constants";
 import type { LevelWithStatus } from "../../../store/services/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -17,9 +21,16 @@ interface LevelPopupProps {
   level: LevelWithStatus;
   nodeOffset: number;
   onStart: () => void;
+  /** Color identity of the section this level belongs to. */
+  colors?: SectionColors;
 }
 
-export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
+export function LevelPopup({
+  level,
+  nodeOffset,
+  onStart,
+  colors = DEFAULT_SECTION_COLORS,
+}: LevelPopupProps) {
   // ── Entrance animations ──
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -234,7 +245,13 @@ export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
       {/* Pointer triangle */}
       <View style={styles.pointerContainer}>
         <View
-          style={[styles.pointer, { transform: [{ translateX: nodeOffset }] }]}
+          style={[
+            styles.pointer,
+            {
+              borderBottomColor: colors.base,
+              transform: [{ translateX: nodeOffset }],
+            },
+          ]}
         />
       </View>
 
@@ -243,6 +260,7 @@ export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
         style={[
           styles.glowRing,
           {
+            backgroundColor: hexToRgba(colors.base, 0.3),
             opacity: glowOpacity,
             transform: [{ scale: glowScale }],
           },
@@ -273,6 +291,7 @@ export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
         style={[
           styles.card,
           {
+            backgroundColor: colors.base,
             transform: [{ scale: cardPulse }],
           },
         ]}
@@ -298,19 +317,24 @@ export function LevelPopup({ level, nodeOffset, onStart }: LevelPopupProps) {
         >
           <TactilePressable
             onPress={onStart}
-            edgeColor={LEVEL_GREEN_DEEP}
+            edgeColor={colors.deep}
             depth={4}
             radius={14}
             haptic="medium"
             style={styles.buttonTouchable}
             faceStyle={styles.button}
           >
-            <Text style={styles.buttonText}>START +{xpReward} XP</Text>
+            <Text style={[styles.buttonText, { color: colors.deep }]}>
+              START +{xpReward} XP
+            </Text>
             <View style={styles.buttonBottomBase}>
               <Animated.View
                 style={[
                   styles.buttonBottomSlide,
-                  { transform: [{ translateX: slideAnim }] },
+                  {
+                    backgroundColor: hexToRgba(colors.base, 0.45),
+                    transform: [{ translateX: slideAnim }],
+                  },
                 ]}
               />
             </View>
@@ -344,7 +368,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderBottomColor: LEVEL_GREEN,
+    // borderBottomColor is set inline from the section color
   },
   glowRing: {
     position: "absolute",
@@ -352,7 +376,7 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH - 16,
     height: 90,
     borderRadius: 20,
-    backgroundColor: "rgba(67,160,71,0.30)",
+    // backgroundColor is set inline from the section color
     top: 18,
     zIndex: 0,
   },
@@ -401,7 +425,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: CARD_WIDTH,
-    backgroundColor: LEVEL_GREEN,
+    // backgroundColor is set inline from the section color
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingTop: 18,
@@ -447,11 +471,11 @@ const styles = StyleSheet.create({
     top: 0,
     width: CARD_WIDTH * 0.35,
     height: 4,
-    backgroundColor: "rgba(67,160,71,0.45)",
+    // backgroundColor is set inline from the section color
     borderRadius: 2,
   },
   buttonText: {
-    color: LEVEL_GREEN_DEEP,
+    // color is set inline from the section color
     fontSize: 15,
     fontWeight: "900",
     letterSpacing: 1,

@@ -73,7 +73,7 @@ export function MiniGamePlayerScreen() {
           timeString,
           unlockReward: apiRes.data?.unlock_reward ?? level.unlock_reward,
           treasureOpen: apiRes.data?.treasure_open,
-          newRewards: apiRes.data?.new_rewards,
+          newRewards: apiRes.data?.new_rewards ?? [],
         });
       } catch {
         setCompletionResult({

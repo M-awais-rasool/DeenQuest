@@ -1,67 +1,13 @@
-import React, { useCallback } from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
-import { theme } from "../../theme/themes";
-import type { AppStackParamList } from "../../navigators/navigationTypes";
+import React from "react";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
-
-import type { CourseConfig } from "../../components/level/learn/types";
-import { CoursesHeader } from "../../components/level/learn/CoursesHeader";
-import { COURSES } from "../../components/level/learn/courseData";
-import { CourseCard } from "../../components/level/learn/CourseCard";
-import { CardConnector } from "../../components/level/learn/CardConnector";
+import { LearningPathContent } from "../../components/level/path";
 
 export function LearnPathScreen() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<AppStackParamList>>();
-
-  const handlePress = useCallback(
-    (course: CourseConfig) => {
-      if (course.status === "locked") return;
-      if (!course.courseType) return;
-      navigation.navigate("LevelMap", {
-        courseType: course.courseType,
-        courseTitle: course.title,
-        courseSubtitle: course.subtitle,
-      });
-    },
-    [navigation],
-  );
-
   return (
-    <ScreenWrapper>
-      <ScrollView
-        contentContainerStyle={s.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <CoursesHeader />
-        <View style={s.list}>
-          {COURSES.map((course, index) => (
-            <React.Fragment key={course.id}>
-              <CourseCard
-                course={course}
-                index={index}
-                onPress={() => handlePress(course)}
-              />
-              {index < COURSES.length - 1 && <CardConnector />}
-            </React.Fragment>
-          ))}
-        </View>
-      </ScrollView>
+    <ScreenWrapper innerStyle={s.inner}>
+      <LearningPathContent courseType="qaida" courseTitle="Noorani Qaida" />
     </ScreenWrapper>
   );
 }
 
-const s = StyleSheet.create({
-  content: {
-    paddingBottom: 32,
-    backgroundColor: theme.colors.background,
-  },
-  list: {
-    paddingHorizontal: 18,
-    paddingTop: 4,
-    gap: 2,
-  },
-});
+const s = { inner: { flex: 1 } } as const;

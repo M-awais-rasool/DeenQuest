@@ -24,9 +24,6 @@ export type AppStackParamList = {
   Signup: undefined;
   Demo: NavigatorScreenParams<DemoTabParamList>;
   DailyTaskDetail: { task: DailyTask };
-  LevelMap:
-    | { courseType?: CourseType; courseTitle?: string; courseSubtitle?: string }
-    | undefined;
   LevelDetail: { levelId: number; courseType?: CourseType };
   LessonPlayer: {
     levelId: number;

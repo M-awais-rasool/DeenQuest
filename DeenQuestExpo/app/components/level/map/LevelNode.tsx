@@ -3,25 +3,37 @@ import { View, Text, TouchableOpacity, Animated } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Lock, Star, Trophy } from "lucide-react-native";
 import type { LevelWithStatus } from "../../../store/services/api";
-import { STATUS_CONFIG, getNodeOffset } from "./constants";
+import {
+  nodeVisual,
+  getNodeOffset,
+  DEFAULT_SECTION_COLORS,
+  type SectionColors,
+} from "./constants";
 import { TreasureBadge } from "./TreasureBadge";
 import { LevelPopup } from "./LevelPopup";
 import { s } from "./styles";
 
 export const LevelNode = memo(function LevelNode({
   level,
-  index,
+  offsetIndex,
+  appearIndex,
   isSelected,
   onPress,
   onStart,
+  colors = DEFAULT_SECTION_COLORS,
 }: {
   level: LevelWithStatus;
-  index: number;
+  /** Absolute position along the path — drives the winding zig-zag offset. */
+  offsetIndex: number;
+  /** Position used only to stagger the entrance animation (capped by caller). */
+  appearIndex: number;
   isSelected: boolean;
   onPress: () => void;
   onStart: () => void;
+  /** Color identity of the section this node belongs to. */
+  colors?: SectionColors;
 }) {
-  const config = STATUS_CONFIG[level.status];
+  const config = nodeVisual(level.status, colors);
   const isLocked = level.status === "locked";
   const isAvailable = level.status === "available";
   const isCompleted = level.status === "completed";
@@ -37,7 +49,7 @@ export const LevelNode = memo(function LevelNode({
   const pressDepth = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const delay = index * 60;
+    const delay = appearIndex * 60;
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -52,7 +64,7 @@ export const LevelNode = memo(function LevelNode({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fadeAnim, slideAnim, index]);
+  }, [fadeAnim, slideAnim, appearIndex]);
 
   useEffect(() => {
     if (!isAvailable) return;
@@ -109,7 +121,7 @@ export const LevelNode = memo(function LevelNode({
     ]).start();
   }, [scaleAnim, pressDepth]);
 
-  const offset = getNodeOffset(index);
+  const offset = getNodeOffset(offsetIndex);
 
   const POPUP_TOP = 90;
 
@@ -215,7 +227,12 @@ export const LevelNode = memo(function LevelNode({
             alignItems: "center",
           }}
         >
-          <LevelPopup level={level} nodeOffset={offset} onStart={onStart} />
+          <LevelPopup
+            level={level}
+            nodeOffset={offset}
+            onStart={onStart}
+            colors={colors}
+          />
         </View>
       )}
     </Animated.View>
