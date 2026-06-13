@@ -9,7 +9,10 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
-import { AnimatedPressable, TactilePressable } from "../../components/ui";
+import {
+  AnimatedPressable,
+  TactilePressable,
+} from "../../components/ui";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Mail, Eye, EyeOff, AlertCircle, Sparkles } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
@@ -145,10 +148,6 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.heroRow}>
-            <Image
-              source={require("../../../assets/login-logo.png")}
-              style={{ width: 100, height: 100 }}
-            />
             <View style={styles.heroBadge}>
               <Sparkles size={14} color={theme.colors.onSecondary} />
               <Text style={styles.heroBadgeText}>Welcome Back</Text>
@@ -322,12 +321,10 @@ const styles = StyleSheet.create({
   heroRow: {
     marginBottom: theme.spacing.lg,
     gap: 10,
-    alignItems: "flex-start",
     marginLeft: 5,
-    marginTop: Platform.OS === "ios" ? -10 : -40,
+    marginTop: Platform.OS === "ios" ? -10 : -20,
   },
   heroBadge: {
-    marginTop: -10,
     alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
