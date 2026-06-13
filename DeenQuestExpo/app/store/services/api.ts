@@ -5,7 +5,7 @@ import type { AyahTimingInput } from "../../types/quranSync";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.100.28:8080",
+  baseUrl: "http://192.168.100.34:8080",
   prepareHeaders: async (headers, { getState }) => {
     try {
       const stateToken = (getState() as any)?.main?.accessToken;
@@ -246,6 +246,7 @@ export interface Level {
 export interface LevelWithStatus extends Level {
   status: LevelStatus;
   lessons_complete: number;
+  lesson_count: number;
 }
 
 export interface UserLevel {

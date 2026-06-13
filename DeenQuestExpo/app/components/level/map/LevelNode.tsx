@@ -26,8 +26,8 @@ export const LevelNode = memo(function LevelNode({
   const isAvailable = level.status === "available";
   const isCompleted = level.status === "completed";
   const progress =
-    level.lessons.length > 0
-      ? level.lessons_complete / level.lessons.length
+    level.lesson_count > 0
+      ? level.lessons_complete / level.lesson_count
       : 0;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
