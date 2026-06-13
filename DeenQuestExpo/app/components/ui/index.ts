@@ -11,3 +11,7 @@ export {
   SocialAuthButton,
   type SocialProvider,
 } from "./SocialAuthButton";
+export {
+  FloatingMascot,
+  type FloatingMascotProps,
+} from "./FloatingMascot";

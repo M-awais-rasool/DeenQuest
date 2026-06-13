@@ -15,7 +15,7 @@ import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { SocialAuthButton, AnimatedPressable } from "../../components/ui";
 import { theme } from "../../theme/themes";
-import QuestMascot from "../../components/mascot/QuestMascot";
+import MascotHero from "../../components/mascot/MascotHero";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -59,10 +59,12 @@ export function WelcomeScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
-  // Scale the character with the viewport, clamped for tablets/small phones.
+  // Scale the mascot with the viewport. The hero stage renders ~1.78x this
+  // size (halo + orbit rings + accents), so we keep it conservative to leave
+  // breathing room on the sides and clamp it for tablets / small phones.
   const mascotSize = Math.min(
-    280,
-    Math.max(176, Math.min(width * 0.58, height * 0.3)),
+    220,
+    Math.max(150, Math.min(width * 0.5, height * 0.26)),
   );
 
   const handleGoogle = useCallback(() => {
@@ -94,7 +96,7 @@ export function WelcomeScreen() {
 
         {/* Hero */}
         <View style={s.hero}>
-          <QuestMascot size={mascotSize} />
+          <MascotHero size={mascotSize} />
         </View>
 
         <FadeSlide delay={260} style={s.heroText}>
@@ -161,6 +163,7 @@ const s = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 50,
   },
   heroText: {
     alignItems: "center",
