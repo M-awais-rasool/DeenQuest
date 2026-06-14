@@ -1,11 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, memo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Animated,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Animated } from "react-native";
 import { AnimatedPressable, TactilePressable } from "../../components/ui";
 import { X, ChevronRight } from "lucide-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -80,17 +74,17 @@ const LessonRenderer = memo(function LessonRenderer({
               </Text>
             ))}
         </View>
-          <TactilePressable
-            edgeColor={theme.colors.primaryContainer}
-            radius={16}
-            haptic="medium"
-            style={s.continueBtnWrap}
-            faceStyle={s.continueBtn}
-            onPress={onComplete}
-          >
-            <Text style={s.continueBtnText}>CONTINUE</Text>
-            <ChevronRight size={18} color={theme.colors.onPrimary} />
-          </TactilePressable>
+        <TactilePressable
+          edgeColor={theme.colors.primaryContainer}
+          radius={16}
+          haptic="medium"
+          style={s.continueBtnWrap}
+          faceStyle={s.continueBtn}
+          onPress={onComplete}
+        >
+          <Text style={s.continueBtnText}>CONTINUE</Text>
+          <ChevronRight size={18} color={theme.colors.onPrimary} />
+        </TactilePressable>
       </View>
     );
   }
@@ -122,9 +116,12 @@ export function LessonPlayerScreen() {
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scrollRef = useRef<ScrollView>(null);
+  const advancingRef = useRef(false);
 
   const handleComplete = useCallback(() => {
     if (!level) return;
+    if (advancingRef.current) return;
+    advancingRef.current = true;
 
     completeLesson({
       levelId: level.id,
@@ -151,7 +148,9 @@ export function LessonPlayerScreen() {
           toValue: 1,
           duration: 200,
           useNativeDriver: true,
-        }).start();
+        }).start(() => {
+          advancingRef.current = false;
+        });
       }
     });
   }, [courseType, level, currentIndex, completeLesson, navigation, fadeAnim]);
@@ -195,6 +194,7 @@ export function LessonPlayerScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <LessonRenderer
+              key={currentIndex}
               lesson={lesson}
               onComplete={handleComplete}
               levelId={levelId}
