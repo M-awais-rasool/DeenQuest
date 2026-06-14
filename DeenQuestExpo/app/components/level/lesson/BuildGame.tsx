@@ -3,10 +3,11 @@ import { View, Text, StyleSheet, Animated } from "react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
+import { useQuranFont } from "../../../hooks/useQuranFont";
 import type { MiniGame } from "../../../store/services/api";
 import { ArabicChip, ContinueButton, useShake, shuffle } from "./shared";
 
-type Round = { parts: string[]; meaning?: string };
+type Round = { parts: string[]; word?: string; meaning?: string };
 type Item = { id: number; text: string };
 
 export function BuildGame({
@@ -16,15 +17,18 @@ export function BuildGame({
   game: MiniGame;
   onFinish: (stats: { accuracy: number }) => void;
 }) {
+  const { fontFamily } = useQuranFont();
   const data = game.data as Record<string, any>;
   const rounds = useMemo<Round[]>(() => {
     if (Array.isArray(data.rounds) && data.rounds.length > 0) {
       return data.rounds.map((r: any) => ({
         parts: r.parts ?? [],
+        word: r.word,
         meaning: r.meaning,
       }));
     }
-    if (Array.isArray(data.parts)) return [{ parts: data.parts, meaning: data.meaning }];
+    if (Array.isArray(data.parts))
+      return [{ parts: data.parts, word: data.word, meaning: data.meaning }];
     return [];
   }, [data]);
 
@@ -35,6 +39,7 @@ export function BuildGame({
   const { shake, style: shakeStyle } = useShake();
 
   const round = rounds[roundIdx] ?? { parts: [] };
+  const target = round.word ?? round.parts.join("");
   const items = useMemo<Item[]>(
     () => round.parts.map((text, id) => ({ id, text })),
     [round.parts],
@@ -91,8 +96,18 @@ export function BuildGame({
     <View>
       <Text style={s.instruction}>
         {rounds.length > 1 ? `Round ${roundIdx + 1} of ${rounds.length} — ` : ""}
-        Arrange the words in the correct order
+        Arrange the tiles to build this word
       </Text>
+
+      {target ? (
+        <View style={s.goalCard}>
+          <Text style={s.goalLabel}>YOUR GOAL</Text>
+          <Text style={[s.goalWord, { fontFamily }]}>{target}</Text>
+          {round.meaning ? (
+            <Text style={s.goalMeaning}>{round.meaning}</Text>
+          ) : null}
+        </View>
+      ) : null}
 
       <Animated.View style={[s.answerBox, shakeStyle]}>
         {order.length === 0 ? (
@@ -137,9 +152,9 @@ export function BuildGame({
         />
       ) : (
         <View style={s.solvedBox}>
-          {round.meaning ? (
-            <Text style={s.meaning}>{round.meaning}</Text>
-          ) : null}
+          <Text style={s.meaning}>
+            MashaAllah! You built {target}
+          </Text>
           <ContinueButton
             label={isLastRound ? "FINISH" : "NEXT"}
             variant="success"
@@ -157,6 +172,36 @@ const s = StyleSheet.create({
     color: theme.colors.textMuted,
     fontWeight: "700",
     marginBottom: 16,
+  },
+  goalCard: {
+    alignItems: "center",
+    backgroundColor: theme.colors.primary08,
+    borderColor: theme.colors.primary25,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 18,
+  },
+  goalLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.5,
+    color: theme.colors.primary,
+    marginBottom: 6,
+  },
+  goalWord: {
+    fontSize: 46,
+    color: theme.colors.text,
+    writingDirection: "rtl",
+    textAlign: "center",
+  },
+  goalMeaning: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    fontWeight: "700",
+    marginTop: 6,
+    textAlign: "center",
   },
   answerBox: {
     minHeight: 88,

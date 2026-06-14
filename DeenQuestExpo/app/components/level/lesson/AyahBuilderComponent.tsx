@@ -10,6 +10,7 @@ import {
   ArabicChip,
   ContinueButton,
   FeedbackBanner,
+  HintCard,
   type FeedbackStatus,
   useShake,
   shuffle,
@@ -31,6 +32,8 @@ export function AyahBuilderComponent({ lesson, onComplete }: LessonComponentProp
   const parts: string[] = data.parts ?? [];
   const distractors: string[] = data.distractors ?? [];
   const meaning: string | undefined = data.meaning;
+  const hint: string | undefined =
+    data.hint ?? (meaning ? `Hint — it means: ${meaning}` : undefined);
   const instruction: string =
     data.instruction ?? "Tap the words in the correct order";
 
@@ -101,6 +104,8 @@ export function AyahBuilderComponent({ lesson, onComplete }: LessonComponentProp
   return (
     <View>
       <Text style={s.instruction}>{instruction}</Text>
+
+      <HintCard text={hint} />
 
       {/* Answer row (RTL) */}
       <Animated.View style={[s.answerBox, shakeStyle]}>

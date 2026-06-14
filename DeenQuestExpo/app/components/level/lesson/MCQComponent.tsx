@@ -7,11 +7,18 @@ import type { LessonComponentProps } from "./types";
 import {
   FeedbackBanner,
   type FeedbackStatus,
+  HintCard,
   OptionRow,
   type OptionState,
 } from "./shared";
 
-type Question = { question: string; options: string[]; correct: number };
+type Question = {
+  question: string;
+  options: string[];
+  correct: number;
+  hint?: string;
+  hintArabic?: string;
+};
 
 function normalize(data: Record<string, any>): Question[] {
   if (Array.isArray(data.questions) && data.questions.length > 0) {
@@ -19,6 +26,8 @@ function normalize(data: Record<string, any>): Question[] {
       question: q.question ?? "",
       options: q.options ?? [],
       correct: q.correct ?? 0,
+      hint: q.hint ?? data.hint,
+      hintArabic: q.hintArabic ?? data.hintArabic,
     }));
   }
   return [
@@ -26,6 +35,8 @@ function normalize(data: Record<string, any>): Question[] {
       question: data.question ?? "",
       options: data.options ?? [],
       correct: data.correct ?? 0,
+      hint: data.hint,
+      hintArabic: data.hintArabic,
     },
   ];
 }
@@ -82,6 +93,8 @@ export function MCQComponent({ lesson, onComplete }: LessonComponentProps) {
         </Text>
       )}
       <Text style={s.question}>{q.question}</Text>
+
+      {!answered && <HintCard text={q.hint} arabic={q.hintArabic} />}
 
       {q.options.map((opt, idx) => (
         <OptionRow

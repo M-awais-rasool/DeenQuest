@@ -151,7 +151,7 @@ func seedQaidaLevels() []Level {
 				{Type: LessonHadith, Title: "Kindness", Description: "Allah loves kindness", ScreenType: ScreenHadithCard, Component: "HadithComponent", Data: map[string]any{"hadith": "Allah is kind and loves kindness in all matters.", "reference": "Bukhari & Muslim"}},
 				{Type: LessonQuiz, Title: "Find the Dammah", Description: "Choose the correct letter", ScreenType: ScreenQuiz, Component: "MCQComponent", Data: map[string]any{"question": "Which letter has a Dammah (  ُ )?", "options": []string{"بَ", "بِ", "بُ"}, "correct": 2}},
 			},
-			MiniGame: MiniGame{Type: GameDragDrop, Description: "Build the harakat in order: Fathah, Kasrah, Dammah", Data: map[string]any{"rounds": []map[string]any{{"parts": []string{"بَ", "بِ", "بُ"}, "meaning": "Fathah · Kasrah · Dammah"}, {"parts": []string{"تَ", "تِ", "تُ"}, "meaning": "Fathah · Kasrah · Dammah"}}}},
+			MiniGame: MiniGame{Type: GameDragDrop, Description: "Build the harakat in order: Fathah, Kasrah, Dammah", Data: map[string]any{"rounds": []map[string]any{{"parts": []string{"بَ", "بِ", "بُ"}, "word": "بَ بِ بُ", "meaning": "Fathah · Kasrah · Dammah"}, {"parts": []string{"تَ", "تِ", "تُ"}, "word": "تَ تِ تُ", "meaning": "Fathah · Kasrah · Dammah"}}}},
 		},
 		{
 			ID:           8,
@@ -169,7 +169,7 @@ func seedQaidaLevels() []Level {
 				{Type: LessonQuiz, Title: "Word Meaning", Description: "Choose the right word", ScreenType: ScreenQuiz, Component: "MCQComponent", Data: map[string]any{"question": "Which word means 'from'?", "options": []string{"مِنْ", "مَنْ", "هَلْ"}, "correct": 0}},
 				{Type: LessonManners, Title: "Helping Others", Description: "The reward of helping", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Helping others is a form of صَدَقَة", "Even a smile is charity in Islam", "Help your family with daily chores", "Be the first to offer help"}}},
 			},
-			MiniGame: MiniGame{Type: GameDragDrop, Description: "Build each 2-letter word from its parts", Data: map[string]any{"rounds": []map[string]any{{"parts": []string{"مِ", "نْ"}, "meaning": "From"}, {"parts": []string{"قُ", "لْ"}, "meaning": "Say!"}, {"parts": []string{"هَ", "لْ"}, "meaning": "Question word"}}}},
+			MiniGame: MiniGame{Type: GameDragDrop, Description: "Build each 2-letter word from its parts", Data: map[string]any{"rounds": []map[string]any{{"parts": []string{"مِ", "نْ"}, "word": "مِنْ", "meaning": "From"}, {"parts": []string{"قُ", "لْ"}, "word": "قُلْ", "meaning": "Say!"}, {"parts": []string{"هَ", "لْ"}, "word": "هَلْ", "meaning": "Question word"}}}},
 		},
 		{
 			ID:           9,
@@ -187,7 +187,7 @@ func seedQaidaLevels() []Level {
 				{Type: LessonHadith, Title: "Truthfulness", Description: "Truthfulness leads to good", ScreenType: ScreenHadithCard, Component: "HadithComponent", Data: map[string]any{"hadith": "Truthfulness leads to righteousness and righteousness leads to Paradise.", "reference": "Bukhari & Muslim"}},
 				{Type: LessonDua, Title: "Leaving Home", Description: "A dua for leaving home", ScreenType: ScreenHadithCard, Component: "DuaCardComponent", Data: map[string]any{"arabic": "بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ", "meaning": "In the name of Allah, I place my trust in Allah", "context": "Say this when leaving your home"}},
 			},
-			MiniGame: MiniGame{Type: GameDragDrop, Description: "Build each 3-letter word", Data: map[string]any{"rounds": []map[string]any{{"parts": []string{"نَ", "صَ", "رَ"}, "meaning": "He helped"}, {"parts": []string{"ذَ", "هَ", "بَ"}, "meaning": "He went"}}}},
+			MiniGame: MiniGame{Type: GameDragDrop, Description: "Build each 3-letter word", Data: map[string]any{"rounds": []map[string]any{{"parts": []string{"نَ", "صَ", "رَ"}, "word": "نَصَرَ", "meaning": "He helped"}, {"parts": []string{"ذَ", "هَ", "بَ"}, "word": "ذَهَبَ", "meaning": "He went"}}}},
 		},
 		{
 			ID:           10,
@@ -200,12 +200,12 @@ func seedQaidaLevels() []Level {
 			Lessons: []Lesson{
 				{Type: LessonQaida, Title: "The Three Tanween", Description: "Double harakat at the end of a word", ScreenType: ScreenAction, Component: "LetterIntroComponent", Data: map[string]any{"letters": []map[string]any{{"letter": "ـً", "name": "تَنْوِين الفَتْح"}, {"letter": "ـٍ", "name": "تَنْوِين الكَسْر"}, {"letter": "ـٌ", "name": "تَنْوِين الضَّم"}}}},
 				{Type: LessonPronunciation, Title: "Read Tanween", Description: "Tap each word to hear it", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "كِتَابًا"}, {"arabic": "كِتَابٍ"}, {"arabic": "كِتَابٌ"}}}},
-				{Type: LessonQaida, Title: "Sort the Tanween", Description: "Fath or Damm?", ScreenType: ScreenAction, Component: "SortBucketsComponent", Data: map[string]any{"instruction": "Sort each word by its tanween", "buckets": []string{"تَنْوِين فَتْح", "تَنْوِين ضَم"}, "items": []map[string]any{{"text": "كِتَابًا", "bucket": 0}, {"text": "كِتَابٌ", "bucket": 1}, {"text": "نُورًا", "bucket": 0}, {"text": "عِلْمٌ", "bucket": 1}}}},
+				{Type: LessonQaida, Title: "Sort the Tanween", Description: "Fath or Damm?", ScreenType: ScreenAction, Component: "SortBucketsComponent", Data: map[string]any{"instruction": "Sort each word by its tanween", "hint": "Check the sign on the last letter, then drop the word in its matching bucket.", "bucketHints": []string{"ـً", "ـٌ"}, "buckets": []string{"تَنْوِين فَتْح", "تَنْوِين ضَم"}, "items": []map[string]any{{"text": "كِتَابًا", "bucket": 0}, {"text": "كِتَابٌ", "bucket": 1}, {"text": "نُورًا", "bucket": 0}, {"text": "عِلْمٌ", "bucket": 1}}}},
 				{Type: LessonQaida, Title: "Match the Tanween", Description: "Match each word to its tanween", ScreenType: ScreenAction, Component: "MatchPairsComponent", Data: map[string]any{"instruction": "Match each word to its tanween", "pairs": []map[string]any{{"left": "كِتَابًا", "right": "تَنْوِين الفَتْح"}, {"left": "كِتَابٍ", "right": "تَنْوِين الكَسْر"}, {"left": "كِتَابٌ", "right": "تَنْوِين الضَّم"}}}},
-				{Type: LessonQuiz, Title: "Find the Tanween", Description: "Choose the correct ending", ScreenType: ScreenQuiz, Component: "MCQComponent", Data: map[string]any{"question": "Which word has Tanween Fathah (ـً)?", "options": []string{"نُورًا", "نُورٍ", "نُورٌ"}, "correct": 0}},
+				{Type: LessonQuiz, Title: "Find the Tanween", Description: "Choose the correct ending", ScreenType: ScreenQuiz, Component: "MCQComponent", Data: map[string]any{"question": "Which word has Tanween Fathah (ـً)?", "hint": "Tanween Fathah is two slanted strokes above the last letter:", "hintArabic": "ـً", "options": []string{"نُورًا", "نُورٍ", "نُورٌ"}, "correct": 0}},
 				{Type: LessonManners, Title: "Respect Elders", Description: "Honour those older than you", ScreenType: ScreenTips, Component: "TipsComponent", Data: map[string]any{"tips": []string{"Stand and welcome elders with respect", "Speak softly and politely to them", "Listen without interrupting", "The Prophet ﷺ taught us to honour our elders"}}},
 			},
-			MiniGame: MiniGame{Type: GameMCQ, Description: "🎁 Treasure! Identify each Tanween ending", Data: map[string]any{"questions": []map[string]any{{"question": "Which word has Tanween Dammah (ـٌ)?", "options": []string{"عِلْمًا", "عِلْمٍ", "عِلْمٌ"}, "correct": 2}, {"question": "Which word has Tanween Kasrah (ـٍ)?", "options": []string{"نُورًا", "نُورٍ", "نُورٌ"}, "correct": 1}}}},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "🎁 Treasure! Identify each Tanween ending", Data: map[string]any{"questions": []map[string]any{{"question": "Which word has Tanween Dammah (ـٌ)?", "hint": "Tanween Dammah looks like a small doubled و above:", "hintArabic": "ـٌ", "options": []string{"عِلْمًا", "عِلْمٍ", "عِلْمٌ"}, "correct": 2}, {"question": "Which word has Tanween Kasrah (ـٍ)?", "hint": "Tanween Kasrah is two strokes below the last letter:", "hintArabic": "ـٍ", "options": []string{"نُورًا", "نُورٍ", "نُورٌ"}, "correct": 1}}}},
 		},
 
 		// ───────── LEVELS 11-15: Joining Letters & First Quran Words ─────────
@@ -225,7 +225,7 @@ func seedQaidaLevels() []Level {
 				{Type: LessonQaida, Title: "Match the Final Form", Description: "Match isolated to final form", ScreenType: ScreenAction, Component: "MatchPairsComponent", Data: map[string]any{"instruction": "Match each letter to its final form", "pairs": []map[string]any{{"left": "ب", "right": "ـب"}, {"left": "ت", "right": "ـت"}, {"left": "ن", "right": "ـن"}, {"left": "م", "right": "ـم"}}}},
 				{Type: LessonQuiz, Title: "Which Won't Connect?", Description: "Spot the non-connecting letter", ScreenType: ScreenQuiz, Component: "MCQComponent", Data: map[string]any{"question": "Which letter does NOT connect to the next letter?", "options": []string{"ب", "ت", "ر", "ن"}, "correct": 2}},
 			},
-			MiniGame: MiniGame{Type: GameDragDrop, Description: "Connect letters to form each word", Data: map[string]any{"rounds": []map[string]any{{"parts": []string{"ك", "ت", "ب"}, "meaning": "Forms: كَتَب"}, {"parts": []string{"ع", "ل", "م"}, "meaning": "Forms: عِلْم"}}}},
+			MiniGame: MiniGame{Type: GameDragDrop, Description: "Connect letters to form each word", Data: map[string]any{"rounds": []map[string]any{{"parts": []string{"ك", "ت", "ب"}, "word": "كَتَب", "meaning": "He wrote"}, {"parts": []string{"ع", "ل", "م"}, "word": "عِلْم", "meaning": "Knowledge"}}}},
 		},
 		{
 			ID:           12,
@@ -329,10 +329,10 @@ func seedQaidaLevels() []Level {
 				{Type: LessonQaida, Title: "Idghaam", Description: "The merging Noon", ScreenType: ScreenAction, Component: "LetterIntroComponent", Data: map[string]any{"letter": "مِنْ رَبِّ", "name": "الإِدْغَام", "note": "النُّون تُدْغَم في الراء"}},
 				{Type: LessonQaida, Title: "Qalqalah", Description: "The bouncing letters", ScreenType: ScreenAction, Component: "LetterIntroComponent", Data: map[string]any{"letter": "قُطْبُ جَدٍّ", "name": "القَلْقَلَة", "note": "حُرُوف القَلْقَلَة: ق ط ب ج د"}},
 				{Type: LessonQaida, Title: "Match the Rule", Description: "Match each phrase to its rule", ScreenType: ScreenAction, Component: "MatchPairsComponent", Data: map[string]any{"instruction": "Match each phrase to its tajweed rule", "pairs": []map[string]any{{"left": "مِنْ رَبِّ", "right": "إِدْغَام"}, {"left": "مِنْ بَعْدِ", "right": "إِخْفَاء"}, {"left": "أَحَدْ", "right": "قَلْقَلَة"}}}},
-				{Type: LessonQaida, Title: "Sort the Rules", Description: "Idghaam or Ikhfaa?", ScreenType: ScreenAction, Component: "SortBucketsComponent", Data: map[string]any{"instruction": "Sort each phrase by its tajweed rule", "buckets": []string{"إِدْغَام", "إِخْفَاء"}, "items": []map[string]any{{"text": "مِنْ رَبِّ", "bucket": 0}, {"text": "مِنْ قَبْلُ", "bucket": 1}, {"text": "مِنْ وَلِيّ", "bucket": 0}, {"text": "أَنتُمْ", "bucket": 1}}}},
-				{Type: LessonQuiz, Title: "Tajweed Check", Description: "Choose the correct rule", ScreenType: ScreenQuiz, Component: "MCQComponent", Data: map[string]any{"question": "What happens to Noon Sakin before ر?", "options": []string{"إِدْغَام", "إِخْفَاء", "إِظْهَار"}, "correct": 0}},
+				{Type: LessonQaida, Title: "Sort the Rules", Description: "Idghaam or Ikhfaa?", ScreenType: ScreenAction, Component: "SortBucketsComponent", Data: map[string]any{"instruction": "Sort each phrase by its tajweed rule", "hint": "Idghaam = the Noon merges into the next letter. Ikhfaa = the Noon is hidden with a nasal sound. Idghaam letters:", "hintArabic": "يَرْمَلُون", "buckets": []string{"إِدْغَام", "إِخْفَاء"}, "items": []map[string]any{{"text": "مِنْ رَبِّ", "bucket": 0}, {"text": "مِنْ قَبْلُ", "bucket": 1}, {"text": "مِنْ وَلِيّ", "bucket": 0}, {"text": "أَنتُمْ", "bucket": 1}}}},
+				{Type: LessonQuiz, Title: "Tajweed Check", Description: "Choose the correct rule", ScreenType: ScreenQuiz, Component: "MCQComponent", Data: map[string]any{"question": "What happens to Noon Sakin before ر?", "hint": "ر is one of the letters the Noon merges into:", "hintArabic": "يَرْمَلُون", "options": []string{"إِدْغَام", "إِخْفَاء", "إِظْهَار"}, "correct": 0}},
 			},
-			MiniGame: MiniGame{Type: GameMCQ, Description: "Identify the tajweed rule in each phrase", Data: map[string]any{"questions": []map[string]any{{"question": "Which rule applies in مِنْ رَبِّ?", "options": []string{"إِدْغَام", "إِخْفَاء", "قَلْقَلَة"}, "correct": 0}, {"question": "Which rule applies in أَحَدْ?", "options": []string{"قَلْقَلَة", "إِدْغَام", "مَدّ"}, "correct": 0}}}},
+			MiniGame: MiniGame{Type: GameMCQ, Description: "Identify the tajweed rule in each phrase", Data: map[string]any{"questions": []map[string]any{{"question": "Which rule applies in مِنْ رَبِّ?", "hint": "The Noon of مِنْ merges into the ر right after it.", "options": []string{"إِدْغَام", "إِخْفَاء", "قَلْقَلَة"}, "correct": 0}, {"question": "Which rule applies in أَحَدْ?", "hint": "The last letter carries a sukoon and bounces with an echo. Qalqalah letters:", "hintArabic": "قُطْبُ جَدّ", "options": []string{"قَلْقَلَة", "إِدْغَام", "مَدّ"}, "correct": 0}}}},
 		},
 		{
 			ID:           18,

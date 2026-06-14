@@ -9,6 +9,7 @@ import type { LessonComponentProps } from "./types";
 import {
   FeedbackBanner,
   type FeedbackStatus,
+  HintCard,
   StreakBadge,
   useShake,
   usePop,
@@ -27,6 +28,9 @@ export function SortBucketsComponent({ lesson, onComplete }: LessonComponentProp
   const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
   const buckets: string[] = data.buckets ?? [];
+  const bucketHints: string[] = data.bucketHints ?? [];
+  const hint: string | undefined = data.hint;
+  const hintArabic: string | undefined = data.hintArabic;
   const instruction: string = data.instruction ?? "Sort each one into its group";
 
   const items = useMemo<SortItem[]>(
@@ -86,6 +90,8 @@ export function SortBucketsComponent({ lesson, onComplete }: LessonComponentProp
         <StreakBadge streak={streak} />
       </View>
 
+      <HintCard text={hint} arabic={hintArabic} />
+
       <View style={s.stage}>
         {done ? (
           <Text style={s.doneMark}>🎉</Text>
@@ -118,6 +124,11 @@ export function SortBucketsComponent({ lesson, onComplete }: LessonComponentProp
               faceStyle={s.bucketFace}
             >
               <Text style={[s.bucketLabel, { fontFamily }]}>{label}</Text>
+              {bucketHints[i] ? (
+                <Text style={[s.bucketHint, { fontFamily }]}>
+                  {bucketHints[i]}
+                </Text>
+              ) : null}
               <Text style={[s.bucketItems, { fontFamily }]} numberOfLines={2}>
                 {collected[i].length > 0 ? collected[i].join("  ") : "—"}
               </Text>
@@ -201,6 +212,13 @@ const s = StyleSheet.create({
     color: theme.colors.primary,
     textAlign: "center",
     writingDirection: "rtl",
+  },
+  bucketHint: {
+    fontSize: 30,
+    color: theme.colors.secondary,
+    textAlign: "center",
+    writingDirection: "rtl",
+    marginTop: -2,
   },
   bucketItems: {
     fontSize: 18,
