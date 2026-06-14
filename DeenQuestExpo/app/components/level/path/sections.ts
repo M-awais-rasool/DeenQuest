@@ -25,6 +25,10 @@ const CURATED_META: Partial<Record<CourseType, SectionMeta[]>> = {
       title: "Reading the Qur'an",
       subtitle: "From joining letters to fluent recitation",
     },
+    {
+      title: "Learn to Pray",
+      subtitle: "Wudu, the postures & what to recite in salah",
+    },
   ],
 };
 

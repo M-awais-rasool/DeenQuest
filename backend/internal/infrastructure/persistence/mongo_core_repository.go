@@ -488,13 +488,22 @@ func withTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
 }
 
 func (r *MongoCoreRepository) SeedLevels(ctx context.Context, levels []progress.Level) error {
-	timeoutCtx, cancel := withTimeout(ctx)
-	defer cancel()
+	if len(levels) == 0 {
+		return nil
+	}
+	models := make([]mongo.WriteModel, 0, len(levels))
 	for _, l := range levels {
-		_, err := r.levels.UpdateByID(timeoutCtx, l.ID, bson.M{"$set": l}, options.Update().SetUpsert(true))
-		if err != nil {
-			return err
-		}
+		models = append(models, mongo.NewUpdateOneModel().
+			SetFilter(bson.M{"_id": l.ID}).
+			SetUpdate(bson.M{"$set": l}).
+			SetUpsert(true))
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	if _, err := r.levels.BulkWrite(timeoutCtx, models, options.BulkWrite().SetOrdered(false)); err != nil {
+		return err
 	}
 	r.invalidateLevels()
 	return nil
