@@ -43,6 +43,17 @@ type Config struct {
 	OllamaURL string
 
 	CORSAllowedOrigins string
+
+	// AdminEmails is a comma-separated allowlist of user emails permitted to
+	// access the /admin endpoints. Empty = open (dev convenience).
+	AdminEmails string
+
+	// Admin seed account — created on startup if it does not exist, so there is
+	// always a way to log into the admin panel. The seeded email is also added
+	// to the admin allowlist automatically.
+	AdminSeedEmail    string
+	AdminSeedPassword string
+	AdminSeedName     string
 }
 
 func Load() (*Config, error) {
@@ -72,6 +83,10 @@ func Load() (*Config, error) {
 		ExpoPushAccessToken: getEnv("EXPO_PUSH_ACCESS_TOKEN", ""),
 		OllamaURL:           getEnv("OLLAMA_URL", "http://127.0.0.1:11434"),
 		CORSAllowedOrigins:  getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
+		AdminEmails:         getEnv("ADMIN_EMAILS", ""),
+		AdminSeedEmail:      getEnv("ADMIN_SEED_EMAIL", "admin@deenquest.app"),
+		AdminSeedPassword:   getEnv("ADMIN_SEED_PASSWORD", "Admin@12345"),
+		AdminSeedName:       getEnv("ADMIN_SEED_NAME", "Admin"),
 	}
 
 	var err error
@@ -102,6 +117,28 @@ func (c *Config) GetKafkaBrokerList() []string {
 		}
 	}
 	return out
+}
+
+// AdminEmailList returns the configured admin emails plus the seeded admin
+// email, lower-cased, trimmed and de-duplicated. The seed email is always
+// included so the seeded account can reach the /admin endpoints out of the box.
+func (c *Config) AdminEmailList() []string {
+	parts := strings.Split(c.AdminEmails, ",")
+	parts = append(parts, c.AdminSeedEmail)
+	seen := make(map[string]struct{}, len(parts))
+	emails := make([]string, 0, len(parts))
+	for _, p := range parts {
+		v := strings.ToLower(strings.TrimSpace(p))
+		if v == "" {
+			continue
+		}
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		emails = append(emails, v)
+	}
+	return emails
 }
 
 func (c *Config) AllowedOrigins() []string {

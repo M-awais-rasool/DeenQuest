@@ -26,16 +26,25 @@ type CoreRepository interface {
 	GetUserDailyTasks(ctx context.Context, userID, date string) ([]UserDailyTask, error)
 	UpsertUserDailyTask(ctx context.Context, assignments []UserDailyTask) error
 	CompleteUserDailyTask(ctx context.Context, userID, taskID, date string) error
+	// Daily tasks — admin CRUD
+	CreateDailyTask(ctx context.Context, task *DailyTask) error
+	UpdateDailyTask(ctx context.Context, task *DailyTask) error
+	DeleteDailyTask(ctx context.Context, taskID string) error
 
 	// Levels
 	SeedLevels(ctx context.Context, levels []Level) error
 	ListLevelsByCourse(ctx context.Context, courseType CourseType) ([]Level, error)
+	ListAllLevels(ctx context.Context) ([]Level, error)
 	GetLevelByID(ctx context.Context, levelID int) (*Level, error)
 	GetNextLevelByCourseLevel(ctx context.Context, courseType CourseType, courseLevel int) (*Level, error)
 	GetUserLevels(ctx context.Context, userID string) ([]UserLevel, error)
 	GetUserLevelsByLevelIDs(ctx context.Context, userID string, levelIDs []int) ([]UserLevel, error)
 	GetUserLevel(ctx context.Context, userID string, levelID int) (*UserLevel, error)
 	UpsertUserLevel(ctx context.Context, ul *UserLevel) error
+	// Levels — admin CRUD
+	CreateLevel(ctx context.Context, level *Level) error
+	UpdateLevel(ctx context.Context, level *Level) error
+	DeleteLevel(ctx context.Context, levelID int) error
 
 	// Rewards
 	SeedRewards(ctx context.Context, rewards []Reward) error

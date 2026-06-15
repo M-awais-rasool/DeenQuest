@@ -64,6 +64,51 @@ func (s *AuthService) Signup(ctx context.Context, req *dto.SignupRequest) error 
 	return nil
 }
 
+func (s *AuthService) SeedAdmin(ctx context.Context, email, password, name string) (string, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
+	if email == "" || password == "" {
+		return "skipped", nil
+	}
+
+	existing, err := s.users.GetByEmail(ctx, email)
+	if err != nil {
+		return "", fmt.Errorf("check admin email: %w", err)
+	}
+
+	now := time.Now().UTC()
+	if existing != nil {
+		if existing.Role == "ADMIN" {
+			return "exists", nil
+		}
+		// Promote an existing account to admin.
+		existing.Role = "ADMIN"
+		existing.UpdatedAt = now
+		if err := s.users.Update(ctx, existing); err != nil {
+			return "", fmt.Errorf("promote admin: %w", err)
+		}
+		return "promoted", nil
+	}
+
+	hashedPassword, err := bcrypt.HashPassword(password)
+	if err != nil {
+		return "", fmt.Errorf("hash admin password: %w", err)
+	}
+	admin := &identity.User{
+		ID:           uuid.NewString(),
+		Email:        email,
+		PasswordHash: hashedPassword,
+		Role:         "ADMIN",
+		DisplayName:  name,
+		IsVerified:   true,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	if err := s.users.Create(ctx, admin); err != nil {
+		return "", fmt.Errorf("create admin: %w", err)
+	}
+	return "created", nil
+}
+
 func (s *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.AuthResponse, error) {
 	u, err := s.users.GetByEmail(ctx, strings.ToLower(req.Email))
 	if err != nil {

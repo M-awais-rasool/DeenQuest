@@ -104,6 +104,14 @@ func main() {
 		defer redisClient.Close()
 	}
 
+	if status, err := authService.SeedAdmin(context.Background(), cfg.AdminSeedEmail, cfg.AdminSeedPassword, cfg.AdminSeedName); err != nil {
+		logger.Warn("failed to seed admin user", zap.Error(err))
+	} else {
+		logger.Info("Admin user ready",
+			zap.String("email", cfg.AdminSeedEmail),
+			zap.String("status", status))
+	}
+
 	if err := coreService.SeedDailyTasks(context.Background()); err != nil {
 		log.Fatalf("failed to seed daily tasks: %v", err)
 	}
@@ -149,6 +157,8 @@ func main() {
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
 	coreHandler := handler.NewCoreHandler(coreService)
+	analyticsRepo := persistence.NewMongoAnalyticsRepository(db)
+	adminHandler := handler.NewAdminHandler(coreService, analyticsRepo)
 	recitationHandler := handler.NewRecitationHandler(recitationService)
 	notificationHandler := handler.NewNotificationHandler(notificationService)
 	quranClient := alquran.NewClient(cfg.AlQuranBaseURL, cfg.QuranAudioCDNURL, cfg.QuranAudioEdition, cfg.QuranAudioBitrate)
@@ -168,7 +178,7 @@ func main() {
 		r.Use(middleware.RateLimit(redisClient, 100, time.Minute))
 	}
 
-	router.SetupRoutes(r, authHandler, userHandler, coreHandler, recitationHandler, notificationHandler, quranHandler, jwtManager)
+	router.SetupRoutes(r, authHandler, userHandler, coreHandler, recitationHandler, notificationHandler, quranHandler, adminHandler, cfg.AdminEmailList(), jwtManager)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: r}

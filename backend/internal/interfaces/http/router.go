@@ -16,6 +16,8 @@ func SetupRoutes(
 	recitationHandler *handler.RecitationHandler,
 	notificationHandler *handler.NotificationHandler,
 	quranHandler *handler.QuranHandler,
+	adminHandler *handler.AdminHandler,
+	adminEmails []string,
 	jwtManager *jwt.JWTManager,
 ) {
 	v1 := r.Group("/api/v1")
@@ -61,6 +63,25 @@ func SetupRoutes(
 		authed.GET("/rewards", coreHandler.GetRewards)
 
 		authed.POST("/recitation/check", recitationHandler.CheckRecitation)
+	}
+
+	admin := v1.Group("/admin")
+	admin.Use(middleware.JWTAuth(jwtManager), middleware.AdminOnly(adminEmails))
+	{
+		admin.GET("/registry", adminHandler.GetRegistry)
+		admin.GET("/analytics", adminHandler.GetAnalytics)
+
+		admin.GET("/levels", adminHandler.ListLevels)
+		admin.POST("/levels", adminHandler.CreateLevel)
+		admin.GET("/levels/:id", adminHandler.GetLevel)
+		admin.PUT("/levels/:id", adminHandler.UpdateLevel)
+		admin.DELETE("/levels/:id", adminHandler.DeleteLevel)
+
+		admin.GET("/tasks", adminHandler.ListTasks)
+		admin.POST("/tasks", adminHandler.CreateTask)
+		admin.GET("/tasks/:id", adminHandler.GetTask)
+		admin.PUT("/tasks/:id", adminHandler.UpdateTask)
+		admin.DELETE("/tasks/:id", adminHandler.DeleteTask)
 	}
 }
 

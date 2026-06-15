@@ -389,16 +389,55 @@ func (r *MongoCoreRepository) GetCompletedDates(ctx context.Context, userID stri
 func (r *MongoCoreRepository) SeedDailyTasks(ctx context.Context, tasks []progress.DailyTask) error {
 	timeoutCtx, cancel := withTimeout(ctx)
 	defer cancel()
+	// Insert-if-absent (see SeedLevels) so CMS edits survive restarts.
 	for _, t := range tasks {
-		_, err := r.dailyTasks.ReplaceOne(
+		_, err := r.dailyTasks.UpdateOne(
 			timeoutCtx,
 			bson.M{"_id": t.ID},
-			t,
-			options.Replace().SetUpsert(true),
+			bson.M{"$setOnInsert": t},
+			options.Update().SetUpsert(true),
 		)
 		if err != nil {
 			return err
 		}
+	}
+	r.invalidateTasks()
+	return nil
+}
+
+func (r *MongoCoreRepository) CreateDailyTask(ctx context.Context, task *progress.DailyTask) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	if _, err := r.dailyTasks.InsertOne(timeoutCtx, task); err != nil {
+		return err
+	}
+	r.invalidateTasks()
+	return nil
+}
+
+func (r *MongoCoreRepository) UpdateDailyTask(ctx context.Context, task *progress.DailyTask) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	res, err := r.dailyTasks.ReplaceOne(timeoutCtx, bson.M{"_id": task.ID}, task)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("task not found")
+	}
+	r.invalidateTasks()
+	return nil
+}
+
+func (r *MongoCoreRepository) DeleteDailyTask(ctx context.Context, taskID string) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	res, err := r.dailyTasks.DeleteOne(timeoutCtx, bson.M{"_id": taskID})
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return errors.New("task not found")
 	}
 	r.invalidateTasks()
 	return nil
@@ -491,11 +530,14 @@ func (r *MongoCoreRepository) SeedLevels(ctx context.Context, levels []progress.
 	if len(levels) == 0 {
 		return nil
 	}
+	// Insert-if-absent: only create levels whose ID does not exist yet.
+	// $setOnInsert means a server restart never overwrites edits an admin made
+	// through the CMS, while a fresh DB (or a newly added seed ID) still seeds.
 	models := make([]mongo.WriteModel, 0, len(levels))
 	for _, l := range levels {
 		models = append(models, mongo.NewUpdateOneModel().
 			SetFilter(bson.M{"_id": l.ID}).
-			SetUpdate(bson.M{"$set": l}).
+			SetUpdate(bson.M{"$setOnInsert": l}).
 			SetUpsert(true))
 	}
 
@@ -504,6 +546,57 @@ func (r *MongoCoreRepository) SeedLevels(ctx context.Context, levels []progress.
 
 	if _, err := r.levels.BulkWrite(timeoutCtx, models, options.BulkWrite().SetOrdered(false)); err != nil {
 		return err
+	}
+	r.invalidateLevels()
+	return nil
+}
+
+func (r *MongoCoreRepository) ListAllLevels(ctx context.Context) ([]progress.Level, error) {
+	levels, err := r.levelsSnapshot(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]progress.Level, len(levels))
+	copy(out, levels)
+	sortLevels(out)
+	return out, nil
+}
+
+func (r *MongoCoreRepository) CreateLevel(ctx context.Context, level *progress.Level) error {
+	normalizeLevelDefaults(level)
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	if _, err := r.levels.InsertOne(timeoutCtx, level); err != nil {
+		return err
+	}
+	r.invalidateLevels()
+	return nil
+}
+
+func (r *MongoCoreRepository) UpdateLevel(ctx context.Context, level *progress.Level) error {
+	normalizeLevelDefaults(level)
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	res, err := r.levels.ReplaceOne(timeoutCtx, bson.M{"_id": level.ID}, level)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("level not found")
+	}
+	r.invalidateLevels()
+	return nil
+}
+
+func (r *MongoCoreRepository) DeleteLevel(ctx context.Context, levelID int) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	res, err := r.levels.DeleteOne(timeoutCtx, bson.M{"_id": levelID})
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return errors.New("level not found")
 	}
 	r.invalidateLevels()
 	return nil
