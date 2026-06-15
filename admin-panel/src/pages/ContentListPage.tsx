@@ -1,91 +1,46 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  PlusIcon,
-  DocumentDuplicateIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+import { PlusIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
 import api from "../lib/api";
 import DataTable from "../components/DataTable";
-import { StatusBadge, DifficultyBadge } from "../components/Badges";
-import type { Content, ContentType, ContentListResponse } from "../types";
-import toast from "react-hot-toast";
+import { DifficultyBadge } from "../components/Badges";
+import type { ContentType, DailyTask, Level } from "../types";
 
 interface Props {
   type: ContentType;
 }
 
 export default function ContentListPage({ type }: Props) {
-  const [data, setData] = useState<ContentListResponse | null>(null);
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [tasks, setTasks] = useState<DailyTask[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
   const navigate = useNavigate();
+
+  const isLevel = type === "level";
+  const base = isLevel ? "/v1/admin/levels" : "/v1/admin/tasks";
+  const label = isLevel ? "Levels" : "Tasks";
 
   const fetchContent = () => {
     setLoading(true);
-    const params = new URLSearchParams({
-      type,
-      page: String(page),
-      per_page: "20",
-    });
-    if (search) params.set("search", search);
-    if (statusFilter) params.set("status", statusFilter);
-
     api
-      .get(`/admin/content?${params}`)
-      .then((res) => setData(res.data.data))
-      .catch(() => toast.error("Failed to load content"))
+      .get(base)
+      .then((res) => {
+        const data = res.data.data ?? [];
+        if (isLevel) setLevels(data);
+        else setTasks(data);
+      })
+      .catch(() => toast.error(`Failed to load ${label.toLowerCase()}`))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => {
-    fetchContent();
-  }, [type, page, statusFilter]);
+  useEffect(fetchContent, [type]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    fetchContent();
-  };
-
-  const handlePublish = (id: string) => {
+  const handleDelete = (id: string | number, title: string) => {
+    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
     api
-      .post(`/admin/content/${id}/publish`)
-      .then(() => {
-        toast.success("Published!");
-        fetchContent();
-      })
-      .catch(() => toast.error("Failed to publish"));
-  };
-
-  const handleUnpublish = (id: string) => {
-    api
-      .post(`/admin/content/${id}/unpublish`)
-      .then(() => {
-        toast.success("Unpublished");
-        fetchContent();
-      })
-      .catch(() => toast.error("Failed to unpublish"));
-  };
-
-  const handleClone = (id: string, title: string) => {
-    api
-      .post(`/admin/content/${id}/clone`, { new_title: `${title} (Copy)` })
-      .then(() => {
-        toast.success("Cloned!");
-        fetchContent();
-      })
-      .catch(() => toast.error("Failed to clone"));
-  };
-
-  const handleDelete = (id: string) => {
-    if (!confirm("Are you sure you want to delete this content?")) return;
-    api
-      .delete(`/admin/content/${id}`)
+      .delete(`${base}/${id}`)
       .then(() => {
         toast.success("Deleted");
         fetchContent();
@@ -93,93 +48,112 @@ export default function ContentListPage({ type }: Props) {
       .catch(() => toast.error("Failed to delete"));
   };
 
-  const columns = [
+  const matches = (s: string) =>
+    !search || s.toLowerCase().includes(search.toLowerCase());
+
+  const levelColumns = [
+    { key: "id", label: "ID" },
     {
       key: "title",
       label: "Title",
-      render: (item: Content) => (
+      render: (l: Level) => (
         <button
-          onClick={() => navigate(`/content/${item.id}`)}
+          onClick={() => navigate(`/levels/${l.id}`)}
           className="text-emerald-400 hover:text-emerald-300 font-medium text-left"
         >
-          {item.title}
+          {l.title || "(untitled)"}
+        </button>
+      ),
+    },
+    { key: "course_level", label: "Course #" },
+    {
+      key: "difficulty",
+      label: "Difficulty",
+      render: (l: Level) => <DifficultyBadge difficulty={l.difficulty as any} />,
+    },
+    {
+      key: "lessons",
+      label: "Lessons",
+      render: (l: Level) => (
+        <span className="text-white/60">{l.lessons?.length ?? 0}</span>
+      ),
+    },
+    {
+      key: "xp_reward",
+      label: "XP",
+      render: (l: Level) => (
+        <span className="text-gold-400 font-semibold">{l.xp_reward}</span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (l: Level) => (
+        <RowActions
+          onEdit={() => navigate(`/levels/${l.id}`)}
+          onDelete={() => handleDelete(l.id, l.title)}
+        />
+      ),
+    },
+  ];
+
+  const taskColumns = [
+    {
+      key: "title",
+      label: "Title",
+      render: (t: DailyTask) => (
+        <button
+          onClick={() => navigate(`/tasks/${t.id}`)}
+          className="text-emerald-400 hover:text-emerald-300 font-medium text-left"
+        >
+          {t.title || "(untitled)"}
         </button>
       ),
     },
     {
       key: "category",
       label: "Category",
-      render: (item: Content) => (
+      render: (t: DailyTask) => (
         <span className="badge bg-white/5 text-white/60">
-          {item.category || "—"}
+          {t.category || "—"}
         </span>
       ),
     },
     {
-      key: "status",
-      label: "Status",
-      render: (item: Content) => <StatusBadge status={item.status} />,
-    },
-    {
       key: "difficulty",
       label: "Difficulty",
-      render: (item: Content) => (
-        <DifficultyBadge difficulty={item.difficulty} />
+      render: (t: DailyTask) => (
+        <DifficultyBadge difficulty={t.difficulty as any} />
       ),
     },
     {
-      key: "xp_reward",
+      key: "blocks",
+      label: "Blocks",
+      render: (t: DailyTask) => (
+        <span className="text-white/60">{t.blocks?.length ?? 0}</span>
+      ),
+    },
+    {
+      key: "reward_xp",
       label: "XP",
-      render: (item: Content) => (
-        <span className="text-gold-400 font-semibold">{item.xp_reward}</span>
+      render: (t: DailyTask) => (
+        <span className="text-gold-400 font-semibold">{t.reward_xp}</span>
       ),
-    },
-    {
-      key: "order",
-      label: "Order",
     },
     {
       key: "actions",
       label: "Actions",
-      render: (item: Content) => (
-        <div className="flex items-center gap-1">
-          {item.status === "draft" ? (
-            <button
-              onClick={() => handlePublish(item.id)}
-              className="p-1.5 rounded-lg hover:bg-emerald-500/20 text-emerald-400"
-              title="Publish"
-            >
-              <EyeIcon className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              onClick={() => handleUnpublish(item.id)}
-              className="p-1.5 rounded-lg hover:bg-yellow-500/20 text-yellow-400"
-              title="Unpublish"
-            >
-              <EyeSlashIcon className="w-4 h-4" />
-            </button>
-          )}
-          <button
-            onClick={() => handleClone(item.id, item.title)}
-            className="p-1.5 rounded-lg hover:bg-white/10 text-white/40"
-            title="Clone"
-          >
-            <DocumentDuplicateIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(item.id)}
-            className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400"
-            title="Delete"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
-        </div>
+      render: (t: DailyTask) => (
+        <RowActions
+          onEdit={() => navigate(`/tasks/${t.id}`)}
+          onDelete={() => handleDelete(t.id, t.title)}
+        />
       ),
     },
   ];
 
-  const label = type === "task" ? "Tasks" : "Levels";
+  const levelData = levels.filter((l) => matches(l.title));
+  const taskData = tasks.filter((t) => matches(t.title));
 
   return (
     <div className="space-y-6">
@@ -187,71 +161,57 @@ export default function ContentListPage({ type }: Props) {
         <div>
           <h1 className="text-2xl font-bold">{label}</h1>
           <p className="text-white/40 text-sm mt-1">
-            Manage your {label.toLowerCase()} content
+            Manage the {label.toLowerCase()} the app reads
           </p>
         </div>
         <button
-          onClick={() => navigate(`/content/new?type=${type}`)}
+          onClick={() => navigate(isLevel ? "/levels/new" : "/tasks/new")}
           className="btn-primary flex items-center gap-2"
         >
-          <PlusIcon className="w-5 h-5" /> New{" "}
-          {type === "task" ? "Task" : "Level"}
+          <PlusIcon className="w-5 h-5" /> New {isLevel ? "Level" : "Task"}
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-4">
-        <form onSubmit={handleSearch} className="flex-1">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={`Search ${label.toLowerCase()}...`}
-            className="input-field text-sm"
-          />
-        </form>
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setPage(1);
-          }}
-          className="input-field w-40 text-sm"
-        >
-          <option value="">All Status</option>
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-          <option value="archived">Archived</option>
-        </select>
-      </div>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder={`Search ${label.toLowerCase()}...`}
+        className="input-field text-sm max-w-sm"
+      />
 
-      {/* Table */}
-      <DataTable columns={columns} data={data?.items ?? []} loading={loading} />
-
-      {/* Pagination */}
-      {data && data.total_pages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-white/40">
-            Showing page {data.page} of {data.total_pages} ({data.total} items)
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page <= 1}
-              className="btn-secondary text-sm disabled:opacity-30"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setPage(Math.min(data.total_pages, page + 1))}
-              disabled={page >= data.total_pages}
-              className="btn-secondary text-sm disabled:opacity-30"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+      {isLevel ? (
+        <DataTable columns={levelColumns} data={levelData} loading={loading} />
+      ) : (
+        <DataTable columns={taskColumns} data={taskData} loading={loading} />
       )}
+    </div>
+  );
+}
+
+function RowActions({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={onEdit}
+        className="p-1.5 rounded-lg hover:bg-white/10 text-white/50"
+        title="Edit"
+      >
+        <PencilSquareIcon className="w-4 h-4" />
+      </button>
+      <button
+        onClick={onDelete}
+        className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400"
+        title="Delete"
+      >
+        <TrashIcon className="w-4 h-4" />
+      </button>
     </div>
   );
 }

@@ -3,7 +3,11 @@ import {
   UsersIcon,
   FireIcon,
   TrophyIcon,
-  ClockIcon,
+  SparklesIcon,
+  BookOpenIcon,
+  MicrophoneIcon,
+  CheckCircleIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import {
   Chart as ChartJS,
@@ -17,10 +21,10 @@ import {
   BarElement,
   Filler,
 } from "chart.js";
-import { Line, Doughnut } from "react-chartjs-2";
+import { Line, Doughnut, Bar } from "react-chartjs-2";
 import api from "../lib/api";
 import StatCard from "../components/StatCard";
-import type { AnalyticsSnapshot } from "../types";
+import type { AdminAnalytics } from "../types";
 
 ChartJS.register(
   ArcElement,
@@ -34,65 +38,25 @@ ChartJS.register(
   Filler,
 );
 
+const DIFFICULTY_COLORS: Record<string, string> = {
+  easy: "#10b981",
+  medium: "#f59e0b",
+  hard: "#fb7185",
+  unset: "#475569",
+};
+
 export default function DashboardPage() {
-  const [analytics, setAnalytics] = useState<AnalyticsSnapshot | null>(null);
+  const [a, setA] = useState<AdminAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     api
-      .get("/admin/analytics")
-      .then((res) => setAnalytics(res.data.data))
-      .catch(() => {})
+      .get("/v1/admin/analytics")
+      .then((res) => setA(res.data.data))
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
-
-  const lineData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    datasets: [
-      {
-        label: "Active Users",
-        data: [120, 190, 300, 250, 400, 350, analytics?.dau ?? 280],
-        borderColor: "#10b981",
-        backgroundColor: "rgba(16, 185, 129, 0.1)",
-        fill: true,
-        tension: 0.4,
-        pointRadius: 0,
-      },
-    ],
-  };
-
-  const doughnutData = {
-    labels: ["Completed", "In Progress", "Not Started"],
-    datasets: [
-      {
-        data: [
-          analytics?.tasks_completed ?? 65,
-          analytics?.levels_completed ?? 25,
-          10,
-        ],
-        backgroundColor: ["#10b981", "#f59e0b", "#374151"],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-    },
-    scales: {
-      x: {
-        grid: { color: "rgba(255,255,255,0.05)" },
-        ticks: { color: "rgba(255,255,255,0.3)" },
-      },
-      y: {
-        grid: { color: "rgba(255,255,255,0.05)" },
-        ticks: { color: "rgba(255,255,255,0.3)" },
-      },
-    },
-  };
 
   if (loading) {
     return (
@@ -102,133 +66,252 @@ export default function DashboardPage() {
     );
   }
 
+  if (error || !a) {
+    return (
+      <div className="glass-card p-12 text-center text-white/50">
+        Failed to load analytics. Is the API running and your account on the
+        admin allowlist?
+      </div>
+    );
+  }
+
+  const series = a.series ?? [];
+  const lineData = {
+    labels: series.map((p) => p.date.slice(5)),
+    datasets: [
+      {
+        label: "Levels completed",
+        data: series.map((p) => p.level_completions),
+        borderColor: "#10b981",
+        backgroundColor: "rgba(16,185,129,0.12)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 2,
+      },
+      {
+        label: "Tasks completed",
+        data: series.map((p) => p.task_completions),
+        borderColor: "#f59e0b",
+        backgroundColor: "rgba(245,158,11,0.10)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const diff = a.levels_by_difficulty ?? [];
+  const doughnutData = {
+    labels: diff.map((d) => d.label),
+    datasets: [
+      {
+        data: diff.map((d) => d.count),
+        backgroundColor: diff.map(
+          (d) => DIFFICULTY_COLORS[d.label] ?? "#64748b",
+        ),
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const top = a.top_levels ?? [];
+  const barData = {
+    labels: top.map((t) => t.label),
+    datasets: [
+      {
+        label: "Completions",
+        data: top.map((t) => t.count),
+        backgroundColor: "rgba(16,185,129,0.6)",
+        borderColor: "#10b981",
+        borderWidth: 1,
+        borderRadius: 6,
+        maxBarThickness: 38,
+      },
+    ],
+  };
+
+  const axisOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { color: "rgba(255,255,255,0.05)" },
+        ticks: { color: "rgba(255,255,255,0.35)", font: { size: 11 } },
+      },
+      y: {
+        grid: { color: "rgba(255,255,255,0.05)" },
+        ticks: {
+          color: "rgba(255,255,255,0.35)",
+          font: { size: 11 },
+          precision: 0,
+        },
+        beginAtZero: true,
+      },
+    },
+  } as const;
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-white/40 text-sm mt-1">
-          Overview of your DeenQuest platform
+          Live overview of your DeenQuest platform
         </p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Primary stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Users"
-          value={analytics?.total_users?.toLocaleString() ?? "0"}
-          subtitle="+12% this month"
+          value={a.total_users.toLocaleString()}
+          subtitle={`${a.active_week.toLocaleString()} active this week`}
           icon={<UsersIcon className="w-6 h-6 text-white" />}
           gradient="emerald"
         />
         <StatCard
-          title="DAU"
-          value={analytics?.dau?.toLocaleString() ?? "0"}
-          subtitle="Daily active users"
+          title="Active Today"
+          value={a.active_today.toLocaleString()}
+          subtitle="Users with activity today"
           icon={<FireIcon className="w-6 h-6 text-white" />}
           gradient="gold"
         />
         <StatCard
-          title="Tasks Completed"
-          value={analytics?.tasks_completed?.toLocaleString() ?? "0"}
-          subtitle="All time"
-          icon={<TrophyIcon className="w-6 h-6 text-white" />}
+          title="Completions"
+          value={(a.levels_completed + a.tasks_completed).toLocaleString()}
+          subtitle={`${a.levels_completed} levels · ${a.tasks_completed} tasks`}
+          icon={<CheckCircleIcon className="w-6 h-6 text-white" />}
           gradient="navy"
         />
         <StatCard
-          title="Avg Session"
-          value={
-            analytics?.avg_session_time
-              ? `${Math.round(analytics.avg_session_time / 60)}m`
-              : "0m"
-          }
-          subtitle={`${analytics?.retention_rate ?? 0}% retention`}
-          icon={<ClockIcon className="w-6 h-6 text-white" />}
+          title="Avg Streak"
+          value={a.avg_streak.toFixed(1)}
+          subtitle={`Longest: ${a.longest_streak} days`}
+          icon={<TrophyIcon className="w-6 h-6 text-white" />}
           gradient="purple"
         />
       </div>
 
-      {/* Charts Row */}
+      {/* Activity + difficulty */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass-card p-6">
-          <h3 className="text-sm font-semibold text-white/60 mb-4">
-            User Activity Trends
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-white/60">
+              Activity — last 14 days
+            </h3>
+            <div className="flex items-center gap-4 text-xs">
+              <LegendDot color="#10b981" label="Levels" />
+              <LegendDot color="#f59e0b" label="Tasks" />
+            </div>
+          </div>
           <div className="h-64">
-            <Line data={lineData} options={chartOptions} />
+            <Line data={lineData} options={axisOptions} />
           </div>
         </div>
         <div className="glass-card p-6">
           <h3 className="text-sm font-semibold text-white/60 mb-4">
-            Task Completion
+            Levels by Difficulty
           </h3>
           <div className="h-64 flex items-center justify-center">
-            <Doughnut
-              data={doughnutData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: "bottom",
-                    labels: {
-                      color: "rgba(255,255,255,0.5)",
-                      padding: 16,
-                      usePointStyle: true,
+            {diff.length ? (
+              <Doughnut
+                data={doughnutData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: "bottom",
+                      labels: {
+                        color: "rgba(255,255,255,0.5)",
+                        padding: 14,
+                        usePointStyle: true,
+                      },
                     },
                   },
-                },
-                cutout: "70%",
-              }}
-            />
+                  cutout: "68%",
+                }}
+              />
+            ) : (
+              <p className="text-white/30 text-sm">No levels yet</p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass-card p-6">
+      {/* Top levels + secondary stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 glass-card p-6">
           <h3 className="text-sm font-semibold text-white/60 mb-4">
-            Top Completed Tasks
+            Most Completed Levels
           </h3>
-          <div className="space-y-3">
-            {(
-              analytics?.top_completed_tasks ?? [
-                "Fajr Prayer",
-                "Daily Quran",
-                "Dhikr Counter",
-              ]
-            ).map((task, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold">
-                    {i + 1}
-                  </span>
-                  <span className="text-sm text-white/80">{task}</span>
-                </div>
-                <div className="w-24 h-2 bg-white/5 rounded-full overflow-hidden">
-                  <div
-                    className="h-full gradient-emerald rounded-full"
-                    style={{ width: `${100 - i * 20}%` }}
-                  />
-                </div>
+          <div className="h-64">
+            {top.length ? (
+              <Bar data={barData} options={axisOptions} />
+            ) : (
+              <div className="h-full flex items-center justify-center text-white/30 text-sm">
+                No level completions yet
               </div>
-            ))}
+            )}
           </div>
         </div>
-        <div className="glass-card p-6">
-          <h3 className="text-sm font-semibold text-white/60 mb-4">
-            Streak Overview
-          </h3>
-          <div className="flex items-center justify-center h-32">
-            <div className="text-center">
-              <p className="text-5xl font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent">
-                {analytics?.avg_streak?.toFixed(1) ?? "0"}
-              </p>
-              <p className="text-sm text-white/40 mt-2">Average User Streak</p>
-            </div>
-          </div>
+        <div className="grid grid-cols-2 gap-4 content-start">
+          <MiniStat
+            icon={<SparklesIcon className="w-5 h-5 text-gold-400" />}
+            label="Total XP"
+            value={a.total_xp.toLocaleString()}
+          />
+          <MiniStat
+            icon={<MicrophoneIcon className="w-5 h-5 text-emerald-400" />}
+            label="Recitations"
+            value={a.recitation_attempts.toLocaleString()}
+          />
+          <MiniStat
+            icon={<Squares2X2Icon className="w-5 h-5 text-emerald-400" />}
+            label="Levels"
+            value={a.total_levels.toLocaleString()}
+          />
+          <MiniStat
+            icon={<BookOpenIcon className="w-5 h-5 text-gold-400" />}
+            label="Daily Tasks"
+            value={a.total_tasks.toLocaleString()}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5 text-white/50">
+      <span
+        className="w-2.5 h-2.5 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      {label}
+    </span>
+  );
+}
+
+function MiniStat({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="glass-card p-4">
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <span className="text-xs text-white/40">{label}</span>
+      </div>
+      <p className="text-2xl font-bold">{value}</p>
     </div>
   );
 }
