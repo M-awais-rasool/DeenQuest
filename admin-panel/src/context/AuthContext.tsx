@@ -25,15 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (token) {
+      // Admin access is enforced server-side by the email allowlist on the
+      // /admin endpoints, so any authenticated user may load the panel; the
+      // API simply returns 403 for non-admins.
       api
         .get('/v1/users/me')
         .then((res) => {
-          const u = res.data.data
-          if (u.role !== 'ADMIN') {
-            logout()
-          } else {
-            setUser(u)
-          }
+          setUser(res.data.data)
         })
         .catch(() => {
           logout()
@@ -64,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         login,
         logout,
-        isAuthenticated: !!user && user.role === 'ADMIN',
+        isAuthenticated: !!user,
         isLoading,
       }}
     >
