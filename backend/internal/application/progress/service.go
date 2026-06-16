@@ -157,15 +157,17 @@ func (s *CoreService) SeedDailyTasks(ctx context.Context) error {
 func (s *CoreService) GetDailyTasks(ctx context.Context, userID string) ([]progress.DailyTaskWithStatus, error) {
 	today := time.Now().UTC().Format("2006-01-02")
 
-	// Check existing assignments for today.
-	assignments, err := s.repo.GetUserDailyTasks(ctx, userID, today)
-	if err != nil {
-		return nil, fmt.Errorf("get user daily tasks: %w", err)
+	var (
+		assignments []progress.UserDailyTask
+		allTasks    []progress.DailyTask
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() (err error) { assignments, err = s.repo.GetUserDailyTasks(gctx, userID, today); return })
+	g.Go(func() (err error) { allTasks, err = s.repo.ListAllDailyTasks(gctx); return })
+	if err := g.Wait(); err != nil {
+		return nil, fmt.Errorf("load daily tasks: %w", err)
 	}
-	allTasks, err := s.repo.ListAllDailyTasks(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list all daily tasks: %w", err)
-	}
+
 	taskByID := make(map[string]progress.DailyTask, len(allTasks))
 	for _, t := range allTasks {
 		taskByID[t.ID] = t

@@ -173,6 +173,7 @@ func main() {
 	r.Use(middleware.Recovery())
 	r.Use(middleware.RequestLogger())
 	r.Use(middleware.CORS(cfg.AllowedOrigins()))
+	r.Use(middleware.Gzip())
 
 	if redisClient != nil {
 		r.Use(middleware.RateLimit(redisClient, 100, time.Minute))
