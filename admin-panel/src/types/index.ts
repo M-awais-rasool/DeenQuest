@@ -87,15 +87,14 @@ export interface Theme {
 
 export interface Reward {
   id: string;
-  name: string;
-  type: string;
+  title: string;
   description: string;
-  xp_value: number;
-  icon: string;
-  rarity: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
+  icon: string; // trophy | crown | flame | gem | zap
+  rarity: string; // rare | epic | legendary
+  trigger: string; // levels_completed | xp | streak_days
+  required: number;
+  xp_bonus: number;
+  sort_order: number;
 }
 
 // ─── Event ───

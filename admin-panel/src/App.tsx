@@ -9,6 +9,7 @@ import ThemesPage from "./pages/ThemesPage";
 import RewardsPage from "./pages/RewardsPage";
 import EventsPage from "./pages/EventsPage";
 import AuditLogPage from "./pages/AuditLogPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -67,6 +68,7 @@ export default function App() {
                 <Route path="/rewards" element={<RewardsPage />} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/audit-logs" element={<AuditLogPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
