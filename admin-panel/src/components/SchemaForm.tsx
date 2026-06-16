@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SparklesIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type { ContentSchema, SchemaField } from "../types";
+import { ComponentIcon } from "../lib/componentIcons";
 
 interface Props {
   schema: ContentSchema;
@@ -21,11 +22,14 @@ export default function SchemaForm({ schema, value, onChange }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-white/80">
-            {schema.icon} {schema.label}
-          </p>
-          <p className="text-xs text-white/40 mt-0.5">{schema.description}</p>
+        <div className="flex items-start gap-2.5">
+          <div className="icon-tile h-9 w-9 flex-shrink-0">
+            <ComponentIcon name={schema.name} className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white/80">{schema.label}</p>
+            <p className="text-xs text-white/40 mt-0.5">{schema.description}</p>
+          </div>
         </div>
         <button
           type="button"

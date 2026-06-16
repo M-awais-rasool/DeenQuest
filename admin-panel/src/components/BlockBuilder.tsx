@@ -6,22 +6,23 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
 } from "@heroicons/react/24/outline";
+import { ComponentIcon } from "../lib/componentIcons";
 
-const BLOCK_TYPES: { type: BlockType; label: string; icon: string }[] = [
-  { type: "TextBlock", label: "Text", icon: "📝" },
-  { type: "AyahBlock", label: "Ayah", icon: "📖" },
-  { type: "HadithBlock", label: "Hadith", icon: "📜" },
-  { type: "CounterBlock", label: "Counter", icon: "🔢" },
-  { type: "QuizBlock", label: "Quiz", icon: "❓" },
-  { type: "AudioBlock", label: "Audio", icon: "🔊" },
-  { type: "ChecklistBlock", label: "Checklist", icon: "✅" },
-  { type: "FlashCardBlock", label: "Flash Card", icon: "🃏" },
-  { type: "DragDropBlock", label: "Drag & Drop", icon: "🔀" },
-  { type: "MatchBlock", label: "Match", icon: "🔗" },
-  { type: "RewardBlock", label: "Reward", icon: "🏆" },
-  { type: "ImageBlock", label: "Image", icon: "🖼️" },
-  { type: "VideoBlock", label: "Video", icon: "🎬" },
-  { type: "VoicePracticeBlock", label: "Voice Practice", icon: "🎤" },
+const BLOCK_TYPES: { type: BlockType; label: string }[] = [
+  { type: "TextBlock", label: "Text" },
+  { type: "AyahBlock", label: "Ayah" },
+  { type: "HadithBlock", label: "Hadith" },
+  { type: "CounterBlock", label: "Counter" },
+  { type: "QuizBlock", label: "Quiz" },
+  { type: "AudioBlock", label: "Audio" },
+  { type: "ChecklistBlock", label: "Checklist" },
+  { type: "FlashCardBlock", label: "Flash Card" },
+  { type: "DragDropBlock", label: "Drag & Drop" },
+  { type: "MatchBlock", label: "Match" },
+  { type: "RewardBlock", label: "Reward" },
+  { type: "ImageBlock", label: "Image" },
+  { type: "VideoBlock", label: "Video" },
+  { type: "VoicePracticeBlock", label: "Voice Practice" },
 ];
 
 interface BlockBuilderProps {
@@ -91,9 +92,11 @@ export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
               key={bt.type}
               type="button"
               onClick={() => addBlock(bt.type)}
-              className="flex flex-col items-center gap-1 p-3 rounded-xl hover:bg-white/10 transition-colors text-center"
+              className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/10 transition-colors text-center"
             >
-              <span className="text-2xl">{bt.icon}</span>
+              <span className="icon-tile h-9 w-9">
+                <ComponentIcon name={bt.type} className="h-5 w-5" />
+              </span>
               <span className="text-[10px] text-white/60 font-medium">
                 {bt.label}
               </span>
@@ -109,8 +112,10 @@ export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
           return (
             <div key={index} className="glass-card p-4 group">
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{meta?.icon ?? "📦"}</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="icon-tile h-8 w-8">
+                    <ComponentIcon name={block.type} className="h-4 w-4" />
+                  </span>
                   <span className="text-sm font-semibold text-white/80">
                     {meta?.label ?? block.type}
                   </span>

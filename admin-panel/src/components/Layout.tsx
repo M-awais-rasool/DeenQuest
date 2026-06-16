@@ -10,23 +10,37 @@ import {
   ClipboardDocumentCheckIcon,
   ArrowRightStartOnRectangleIcon,
   Cog6ToothIcon,
-  MoonIcon,
+  ChevronDoubleLeftIcon,
+  MagnifyingGlassIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { type ReactNode, useState } from "react";
 
-const navItems = [
-  { label: "Dashboard", path: "/", icon: HomeIcon },
-  { label: "Tasks", path: "/tasks", icon: ClipboardDocumentListIcon },
-  { label: "Levels", path: "/levels", icon: MapIcon },
-  { label: "Themes", path: "/themes", icon: SwatchIcon },
-  { label: "Rewards", path: "/rewards", icon: GiftIcon },
-  { label: "Events", path: "/events", icon: CalendarDaysIcon },
+const navGroups: {
+  heading: string;
+  items: { label: string; path: string; icon: typeof HomeIcon }[];
+}[] = [
   {
-    label: "Audit Logs",
-    path: "/audit-logs",
-    icon: ClipboardDocumentCheckIcon,
+    heading: "Overview",
+    items: [{ label: "Dashboard", path: "/", icon: HomeIcon }],
   },
-  { label: "Settings", path: "/settings", icon: Cog6ToothIcon },
+  {
+    heading: "Content",
+    items: [
+      { label: "Levels", path: "/levels", icon: MapIcon },
+      { label: "Tasks", path: "/tasks", icon: ClipboardDocumentListIcon },
+      { label: "Themes", path: "/themes", icon: SwatchIcon },
+      { label: "Rewards", path: "/rewards", icon: GiftIcon },
+    ],
+  },
+  {
+    heading: "System",
+    items: [
+      { label: "Events", path: "/events", icon: CalendarDaysIcon },
+      { label: "Audit Logs", path: "/audit-logs", icon: ClipboardDocumentCheckIcon },
+      { label: "Settings", path: "/settings", icon: Cog6ToothIcon },
+    ],
+  },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -45,19 +59,19 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside
         className={`${
           collapsed ? "w-20" : "w-64"
-        } flex flex-col bg-navy-900/50 border-r border-white/5 backdrop-blur-xl transition-all duration-300`}
+        } flex flex-col border-r border-white/5 bg-navy-950/40 backdrop-blur-2xl transition-all duration-300`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-6 border-b border-white/5">
-          <div className="w-10 h-10 rounded-xl gradient-emerald flex items-center justify-center font-bold text-lg shadow-lg shadow-emerald-500/20">
-            D
+        <div className="flex items-center gap-3 px-5 py-6">
+          <div className="grid h-10 w-10 place-items-center rounded-xl gradient-emerald shadow-lg shadow-emerald-500/25">
+            <SparklesIcon className="h-5 w-5 text-white" />
           </div>
           {!collapsed && (
             <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-gold-400 bg-clip-text text-transparent">
+              <h1 className="bg-gradient-to-r from-emerald-300 to-gold-300 bg-clip-text text-lg font-bold text-transparent">
                 DeenQuest
               </h1>
-              <p className="text-[10px] text-white/40 font-medium tracking-wider uppercase">
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
                 Admin Panel
               </p>
             </div>
@@ -65,66 +79,81 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === "/"}
-              className={({ isActive }) =>
-                `sidebar-link ${isActive ? "active" : "text-white/60"}`
-              }
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </NavLink>
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2">
+          {navGroups.map((group) => (
+            <div key={group.heading}>
+              {!collapsed && (
+                <p className="section-title px-3.5 pb-1.5">{group.heading}</p>
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end={item.path === "/"}
+                    title={item.label}
+                    className={({ isActive }) =>
+                      `sidebar-link ${isActive ? "active" : ""} ${
+                        collapsed ? "justify-center" : ""
+                      }`
+                    }
+                  >
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    {!collapsed && <span>{item.label}</span>}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-4 border-t border-white/5 space-y-2">
+        <div className="space-y-1 border-t border-white/5 px-3 py-4">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="sidebar-link text-white/40 w-full"
+            className={`sidebar-link w-full ${collapsed ? "justify-center" : ""}`}
           >
-            <MoonIcon className="w-5 h-5" />
+            <ChevronDoubleLeftIcon
+              className={`h-5 w-5 transition-transform ${collapsed ? "rotate-180" : ""}`}
+            />
             {!collapsed && <span>Collapse</span>}
           </button>
           <button
             onClick={handleLogout}
-            className="sidebar-link text-red-400 hover:bg-red-500/10 w-full"
+            className={`sidebar-link w-full text-red-400 hover:bg-red-500/10 hover:text-red-300 ${
+              collapsed ? "justify-center" : ""
+            }`}
           >
-            <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
+            <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
             {!collapsed && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="flex-1 overflow-y-auto">
-        {/* Top Bar */}
-        <header className="sticky top-0 z-10 flex items-center justify-between px-8 py-4 bg-navy-950/80 backdrop-blur-xl border-b border-white/5">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-white/5 bg-navy-950/60 px-8 py-4 backdrop-blur-xl">
           <div>
-            <h2 className="text-lg font-semibold text-white/90">
+            <h2 className="text-base font-semibold text-white/90">
               Welcome back, {user?.email?.split("@")[0] ?? "Admin"}
             </h2>
-            <p className="text-xs text-white/40">
-              Manage your DeenQuest content
-            </p>
+            <p className="text-xs text-white/40">Manage your DeenQuest content</p>
           </div>
           <div className="flex items-center gap-4">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="input-field w-64 text-sm py-2"
-            />
-            <div className="w-9 h-9 rounded-full gradient-emerald flex items-center justify-center text-sm font-bold shadow-lg shadow-emerald-500/20">
+            <div className="relative hidden sm:block">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+              <input
+                type="text"
+                placeholder="Search…"
+                className="input-field w-56 py-2 pl-9 text-sm"
+              />
+            </div>
+            <div className="grid h-9 w-9 place-items-center rounded-full gradient-emerald text-sm font-bold shadow-lg shadow-emerald-500/25">
               {user?.email?.[0]?.toUpperCase() ?? "A"}
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
         <div className="p-8">{children}</div>
       </main>
     </div>

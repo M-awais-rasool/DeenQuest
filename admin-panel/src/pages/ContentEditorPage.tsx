@@ -6,6 +6,8 @@ import api from "../lib/api";
 import { useRegistry, findSchema } from "../lib/useRegistry";
 import SchemaForm from "../components/SchemaForm";
 import LessonsEditor from "../components/LessonsEditor";
+import ComponentPicker from "../components/ComponentPicker";
+import LessonPreview from "../components/LessonPreview";
 import BlockBuilder from "../components/BlockBuilder";
 import type {
   ContentRegistry,
@@ -177,7 +179,6 @@ function EnumSelect({
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>
-          {o.icon ? `${o.icon} ` : ""}
           {o.label}
         </option>
       ))}
@@ -314,35 +315,31 @@ function MiniGameEditor({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Field label="Type">
-          <select
-            className="input-field"
-            value={game.type}
-            onChange={(e) => pickType(e.target.value)}
-          >
-            {registry.mini_games.map((g) => (
-              <option key={g.name} value={g.name}>
-                {g.icon} {g.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Description">
-          <input
-            className="input-field"
-            value={game.description}
-            onChange={(e) => onChange({ ...game, description: e.target.value })}
-          />
-        </Field>
-      </div>
+      <Field label="Choose the game">
+        <ComponentPicker
+          schemas={registry.mini_games}
+          value={game.type}
+          onPick={pickType}
+          columns={3}
+        />
+      </Field>
+      <Field label="Description (shown above the game)">
+        <input
+          className="input-field"
+          value={game.description}
+          onChange={(e) => onChange({ ...game, description: e.target.value })}
+        />
+      </Field>
       {schema && (
-        <div className="border-t border-white/10 pt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 border-t border-white/10 pt-4">
           <SchemaForm
             schema={schema}
             value={game.data ?? {}}
             onChange={(data) => onChange({ ...game, data })}
           />
+          <div className="lg:sticky lg:top-4 self-start">
+            <LessonPreview kind="mini_game" name={game.type} data={game.data ?? {}} />
+          </div>
         </div>
       )}
     </div>
