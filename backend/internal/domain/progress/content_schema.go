@@ -452,5 +452,22 @@ func registryEnums() map[string][]EnumOption {
 		"courses": {
 			{Value: "qaida", Label: "Qaida"},
 		},
+		"reward_icons": {
+			{Value: "trophy", Label: "Trophy"},
+			{Value: "crown", Label: "Crown"},
+			{Value: "flame", Label: "Flame"},
+			{Value: "gem", Label: "Gem"},
+			{Value: "zap", Label: "Lightning"},
+		},
+		"reward_rarities": {
+			{Value: "rare", Label: "Rare", Color: "#60a5fa"},
+			{Value: "epic", Label: "Epic", Color: "#c084fc"},
+			{Value: "legendary", Label: "Legendary", Color: "#fbbf24"},
+		},
+		"reward_triggers": {
+			{Value: "levels_completed", Label: "Levels completed"},
+			{Value: "xp", Label: "Total XP"},
+			{Value: "streak_days", Label: "Streak days"},
+		},
 	}
 }

@@ -10,13 +10,11 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/domain/progress"
 )
 
-// admin_service.go holds the CMS-facing operations used by the admin panel:
-// the content registry plus CRUD for the real Level and DailyTask models the
-// mobile app reads.
 
 var (
-	ErrValidation   = errors.New("validation failed")
-	ErrTaskNotFound = errors.New("task not found")
+	ErrValidation     = errors.New("validation failed")
+	ErrTaskNotFound   = errors.New("task not found")
+	ErrRewardNotFound = errors.New("reward not found")
 )
 
 // GetContentRegistry returns the component/mini-game/block schema catalog.
@@ -140,6 +138,57 @@ func (s *CoreService) AdminUpdateTask(ctx context.Context, id string, in *progre
 
 func (s *CoreService) AdminDeleteTask(ctx context.Context, id string) error {
 	return s.repo.DeleteDailyTask(ctx, id)
+}
+
+// ─── Rewards ─────────────────────────────────────────────────────────────────
+
+func (s *CoreService) AdminListRewards(ctx context.Context) ([]progress.Reward, error) {
+	return s.repo.ListAllRewards(ctx)
+}
+
+func (s *CoreService) AdminGetReward(ctx context.Context, id string) (*progress.Reward, error) {
+	reward, err := s.repo.GetRewardByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if reward == nil {
+		return nil, ErrRewardNotFound
+	}
+	return reward, nil
+}
+
+func (s *CoreService) AdminCreateReward(ctx context.Context, in *progress.Reward) (*progress.Reward, error) {
+	if in == nil || strings.TrimSpace(in.Title) == "" {
+		return nil, errors.New("title is required")
+	}
+	if in.ID == "" {
+		in.ID = slugify(in.Title)
+	}
+	if in.ID == "" {
+		return nil, errors.New("reward id or title is required")
+	}
+	if existing, _ := s.repo.GetRewardByID(ctx, in.ID); existing != nil {
+		return nil, errors.New("a reward with this id already exists")
+	}
+	if err := s.repo.CreateReward(ctx, in); err != nil {
+		return nil, err
+	}
+	return in, nil
+}
+
+func (s *CoreService) AdminUpdateReward(ctx context.Context, id string, in *progress.Reward) (*progress.Reward, error) {
+	if in == nil || strings.TrimSpace(in.Title) == "" {
+		return nil, errors.New("title is required")
+	}
+	in.ID = id
+	if err := s.repo.UpdateReward(ctx, in); err != nil {
+		return nil, err
+	}
+	return in, nil
+}
+
+func (s *CoreService) AdminDeleteReward(ctx context.Context, id string) error {
+	return s.repo.DeleteReward(ctx, id)
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

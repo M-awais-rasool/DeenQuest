@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,9 +14,6 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/domain/progress"
 )
 
-// MongoAnalyticsRepository computes the admin dashboard aggregates directly
-// from the live collections (no precomputed snapshots), so the dashboard always
-// reflects real data.
 type MongoAnalyticsRepository struct {
 	users          *mongo.Collection
 	progress       *mongo.Collection
@@ -25,6 +23,11 @@ type MongoAnalyticsRepository struct {
 	userLevels     *mongo.Collection
 	userDailyTasks *mongo.Collection
 	recitation     *mongo.Collection
+
+	mu       sync.Mutex
+	cached   *progress.AdminAnalytics
+	cachedAt time.Time
+	ttl      time.Duration
 }
 
 func NewMongoAnalyticsRepository(db *mongo.Database) *MongoAnalyticsRepository {
@@ -37,12 +40,21 @@ func NewMongoAnalyticsRepository(db *mongo.Database) *MongoAnalyticsRepository {
 		userLevels:     db.Collection("user_levels"),
 		userDailyTasks: db.Collection("user_daily_tasks"),
 		recitation:     db.Collection("recitation_attempts"),
+		ttl:            30 * time.Second,
 	}
 }
 
 const analyticsSeriesDays = 14
 
 func (r *MongoAnalyticsRepository) GetAdminAnalytics(ctx context.Context) (*progress.AdminAnalytics, error) {
+	r.mu.Lock()
+	if r.cached != nil && time.Since(r.cachedAt) < r.ttl {
+		cached := r.cached
+		r.mu.Unlock()
+		return cached, nil
+	}
+	r.mu.Unlock()
+
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
@@ -54,32 +66,50 @@ func (r *MongoAnalyticsRepository) GetAdminAnalytics(ctx context.Context) (*prog
 
 	out := &progress.AdminAnalytics{}
 
-	out.TotalUsers, _ = r.users.CountDocuments(ctx, bson.M{})
-	out.TotalLevels, _ = r.levels.CountDocuments(ctx, bson.M{})
-	out.TotalTasks, _ = r.dailyTasks.CountDocuments(ctx, bson.M{})
-	out.LevelsCompleted, _ = r.userLevels.CountDocuments(ctx, bson.M{"completed": true})
-	out.TasksCompleted, _ = r.userDailyTasks.CountDocuments(ctx, bson.M{"completed": true})
-	out.RecitationAttempts, _ = r.recitation.CountDocuments(ctx, bson.M{})
-
-	// Total XP across all users.
-	if v, err := r.sumInt(ctx, r.progress, "$total_xp", bson.M{}); err == nil {
-		out.TotalXP = v
+	var wg sync.WaitGroup
+	run := func(f func()) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			f()
+		}()
 	}
 
-	// Streak stats.
-	out.AvgStreak, out.LongestStreak = r.streakStats(ctx)
+	run(func() { out.TotalUsers, _ = r.users.EstimatedDocumentCount(ctx) })
+	run(func() { out.TotalLevels, _ = r.levels.EstimatedDocumentCount(ctx) })
+	run(func() { out.TotalTasks, _ = r.dailyTasks.EstimatedDocumentCount(ctx) })
+	run(func() { out.RecitationAttempts, _ = r.recitation.EstimatedDocumentCount(ctx) })
 
-	// Active users (proxy: distinct users with a daily-task assignment in window).
-	if ids, err := r.userDailyTasks.Distinct(ctx, "user_id", bson.M{"date": today}); err == nil {
-		out.ActiveToday = int64(len(ids))
-	}
-	if ids, err := r.userDailyTasks.Distinct(ctx, "user_id", bson.M{"date": bson.M{"$gte": weekAgo}}); err == nil {
-		out.ActiveWeek = int64(len(ids))
-	}
+	run(func() { out.LevelsCompleted, _ = r.userLevels.CountDocuments(ctx, bson.M{"completed": true}) })
+	run(func() { out.TasksCompleted, _ = r.userDailyTasks.CountDocuments(ctx, bson.M{"completed": true}) })
 
-	out.Series = r.activitySeries(ctx, seriesStart, seriesStartStr)
-	out.LevelsByDifficulty = r.levelsByDifficulty(ctx)
-	out.TopLevels = r.topLevels(ctx)
+	run(func() {
+		if v, err := r.sumInt(ctx, r.progress, "$total_xp", bson.M{}); err == nil {
+			out.TotalXP = v
+		}
+	})
+	run(func() { out.AvgStreak, out.LongestStreak = r.streakStats(ctx) })
+
+	run(func() {
+		if ids, err := r.userDailyTasks.Distinct(ctx, "user_id", bson.M{"date": today}); err == nil {
+			out.ActiveToday = int64(len(ids))
+		}
+	})
+	run(func() {
+		if ids, err := r.userDailyTasks.Distinct(ctx, "user_id", bson.M{"date": bson.M{"$gte": weekAgo}}); err == nil {
+			out.ActiveWeek = int64(len(ids))
+		}
+	})
+
+	run(func() { out.Series = r.activitySeries(ctx, seriesStart, seriesStartStr) })
+	run(func() { out.LevelsByDifficulty = r.levelsByDifficulty(ctx) })
+	run(func() { out.TopLevels = r.topLevels(ctx) })
+
+	wg.Wait()
+
+	r.mu.Lock()
+	r.cached, r.cachedAt = out, time.Now()
+	r.mu.Unlock()
 
 	return out, nil
 }

@@ -82,6 +82,12 @@ func SetupRoutes(
 		admin.GET("/tasks/:id", adminHandler.GetTask)
 		admin.PUT("/tasks/:id", adminHandler.UpdateTask)
 		admin.DELETE("/tasks/:id", adminHandler.DeleteTask)
+
+		admin.GET("/rewards", adminHandler.ListRewards)
+		admin.POST("/rewards", adminHandler.CreateReward)
+		admin.GET("/rewards/:id", adminHandler.GetReward)
+		admin.PUT("/rewards/:id", adminHandler.UpdateReward)
+		admin.DELETE("/rewards/:id", adminHandler.DeleteReward)
 	}
 }
 

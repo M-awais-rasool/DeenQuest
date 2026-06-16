@@ -118,6 +118,23 @@ func (r *MongoCoreRepository) ensureIndexes() error {
 		return err
 	}
 
+	// Admin analytics: completed-level counts, time series and top levels.
+	_, err = r.userLevels.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "completed", Value: 1}, {Key: "completed_at", Value: 1}},
+		Options: options.Index().SetBackground(true),
+	})
+	if err != nil {
+		return err
+	}
+	// Admin analytics: active-users by date and completed-task counts.
+	_, err = r.userDailyTasks.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "date", Value: 1}, {Key: "completed", Value: 1}},
+		Options: options.Index().SetBackground(true),
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -746,7 +763,7 @@ func (r *MongoCoreRepository) SeedRewards(ctx context.Context, rewards []progres
 	timeoutCtx, cancel := withTimeout(ctx)
 	defer cancel()
 	for _, rw := range rewards {
-		_, err := r.rewards.UpdateByID(timeoutCtx, rw.ID, bson.M{"$set": rw}, options.Update().SetUpsert(true))
+		_, err := r.rewards.UpdateByID(timeoutCtx, rw.ID, bson.M{"$setOnInsert": rw}, options.Update().SetUpsert(true))
 		if err != nil {
 			return err
 		}
@@ -757,6 +774,58 @@ func (r *MongoCoreRepository) SeedRewards(ctx context.Context, rewards []progres
 
 func (r *MongoCoreRepository) ListAllRewards(ctx context.Context) ([]progress.Reward, error) {
 	return r.rewardsSnapshot(ctx)
+}
+
+func (r *MongoCoreRepository) GetRewardByID(ctx context.Context, id string) (*progress.Reward, error) {
+	rewards, err := r.rewardsSnapshot(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range rewards {
+		if rewards[i].ID == id {
+			rw := rewards[i]
+			return &rw, nil
+		}
+	}
+	return nil, nil
+}
+
+func (r *MongoCoreRepository) CreateReward(ctx context.Context, reward *progress.Reward) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	if _, err := r.rewards.InsertOne(timeoutCtx, reward); err != nil {
+		return err
+	}
+	r.invalidateRewards()
+	return nil
+}
+
+func (r *MongoCoreRepository) UpdateReward(ctx context.Context, reward *progress.Reward) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	res, err := r.rewards.ReplaceOne(timeoutCtx, bson.M{"_id": reward.ID}, reward)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("reward not found")
+	}
+	r.invalidateRewards()
+	return nil
+}
+
+func (r *MongoCoreRepository) DeleteReward(ctx context.Context, id string) error {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+	res, err := r.rewards.DeleteOne(timeoutCtx, bson.M{"_id": id})
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return errors.New("reward not found")
+	}
+	r.invalidateRewards()
+	return nil
 }
 
 func (r *MongoCoreRepository) GetUserRewards(ctx context.Context, userID string) ([]progress.UserReward, error) {
