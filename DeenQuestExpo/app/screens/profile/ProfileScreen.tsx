@@ -51,7 +51,18 @@ export function ProfileScreen({ navigation }: Props) {
     [progress?.weekly_completions],
   );
 
-  const streakDays = ["M", "T", "W", "T", "F", "S", "S"];
+  // Day letters indexed by Date.getDay() (Sun..Sat). The weekly_completions
+  // array is relative to today (index 0 = 6 days ago, index 6 = today), so the
+  // labels must be derived from real dates rather than hardcoded Mon..Sun.
+  const streakDays = useMemo(() => {
+    const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
+    const today = new Date();
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (6 - i));
+      return { letter: DAY_LETTERS[d.getDay()] ?? "", isToday: i === 6 };
+    });
+  }, []);
 
   const unlockedRewardsCount = useMemo(
     () => rewards.filter((reward) => reward.unlocked).length,
@@ -242,11 +253,19 @@ export function ProfileScreen({ navigation }: Props) {
                 const isCompleted = weeklyCompletions[i] === true;
                 return (
                   <View key={i} style={styles.dayColumn}>
-                    <Text style={styles.dayLabel}>{day}</Text>
+                    <Text
+                      style={[
+                        styles.dayLabel,
+                        day.isToday && styles.dayLabelToday,
+                      ]}
+                    >
+                      {day.letter}
+                    </Text>
                     <View
                       style={[
                         styles.dayBox,
                         isCompleted ? styles.dayBoxActive : styles.dayBoxEmpty,
+                        day.isToday && styles.dayBoxToday,
                       ]}
                     >
                       {isCompleted && (
@@ -555,12 +574,19 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.colors.textMuted,
   },
+  dayLabelToday: {
+    color: theme.colors.secondary,
+  },
   dayBox: {
     width: 40,
     height: 40,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+  },
+  dayBoxToday: {
+    borderWidth: 2,
+    borderColor: theme.colors.secondary,
   },
   dayBoxActive: {
     backgroundColor: theme.colors.primary,
