@@ -89,7 +89,7 @@ func (s *Service) SendTestNotificationToAll(
 	if err != nil {
 		return fmt.Errorf("get tokens: %w", err)
 	}
-	
+
 	for _, token := range tokens {
 
 		if token.ExpoPushToken == "" {

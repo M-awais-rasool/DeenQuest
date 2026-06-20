@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	dlearning "github.com/chawais/talent-flow/backend/internal/domain/learning"
 	"github.com/chawais/talent-flow/backend/internal/domain/progress"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/logger"
 )
@@ -28,6 +29,7 @@ type RecitationService struct {
 	repo       progress.CoreRepository
 	whisperURL string // e.g. "http://whisper-service:8001"
 	httpClient *http.Client
+	emitter    EventEmitter
 }
 
 func NewRecitationService(repo progress.CoreRepository, whisperURL string) *RecitationService {
@@ -37,6 +39,9 @@ func NewRecitationService(repo progress.CoreRepository, whisperURL string) *Reci
 		httpClient: &http.Client{Timeout: 60 * time.Second},
 	}
 }
+
+// SetEventEmitter wires the Learning Agent's event publisher (optional).
+func (s *RecitationService) SetEventEmitter(e EventEmitter) { s.emitter = e }
 
 func extractArabicText(lesson progress.Lesson) (string, error) {
 	for _, key := range []string{"text", "arabic"} {
@@ -135,6 +140,26 @@ func (s *RecitationService) CheckRecitation(
 		if err := s.awardXP(ctx, userID, xpEarned); err != nil {
 			logger.Error("Failed to award XP", zap.Error(err))
 		}
+	}
+
+	if s.emitter != nil {
+		// Mispronounced/missing words are the richest weak-area signal we have.
+		var wrong []string
+		for _, w := range words {
+			if w.Status == progress.WordWrong || w.Status == progress.WordMissing {
+				wrong = append(wrong, w.Text)
+			}
+		}
+		s.emitter.Emit(context.Background(), dlearning.BehaviorEvent{
+			UserID:      userID,
+			Type:        dlearning.EventRecitationScored,
+			LevelID:     levelID,
+			LessonIndex: lessonIndex,
+			Score:       score,
+			Correct:     score >= 60,
+			WrongTokens: wrong,
+			SkillTags:   lesson.SkillTags,
+		})
 	}
 
 	return &progress.RecitationCheckResult{

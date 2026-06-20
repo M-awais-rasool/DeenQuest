@@ -10,9 +10,9 @@ import (
 )
 
 type UserFetcher struct {
-	streaks      *mongo.Collection
-	tokens       *mongo.Collection
-	dailyTasks   *mongo.Collection
+	streaks    *mongo.Collection
+	tokens     *mongo.Collection
+	dailyTasks *mongo.Collection
 }
 
 func NewUserFetcher(db *mongo.Database) *UserFetcher {
@@ -111,8 +111,8 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) 
 				"user_id": "$user_id",
 				"date":    "$date",
 			},
-			"total":   bson.M{"$sum": 1},
-			"done":    bson.M{"$sum": bson.M{"$cond": []interface{}{"$completed", 1, 0}}},
+			"total": bson.M{"$sum": 1},
+			"done":  bson.M{"$sum": bson.M{"$cond": []interface{}{"$completed", 1, 0}}},
 		}},
 	}
 
@@ -132,7 +132,7 @@ func (f *UserFetcher) FetchAllUsers(ctx context.Context, limit int, offset int) 
 	})
 	for taskCursor.Next(ctx) {
 		var doc struct {
-			ID    struct {
+			ID struct {
 				UserID string `bson:"user_id"`
 				Date   string `bson:"date"`
 			} `bson:"_id"`

@@ -10,7 +10,6 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/domain/progress"
 )
 
-
 var (
 	ErrValidation     = errors.New("validation failed")
 	ErrTaskNotFound   = errors.New("task not found")
