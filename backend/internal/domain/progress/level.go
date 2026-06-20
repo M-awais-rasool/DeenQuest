@@ -67,6 +67,7 @@ type Lesson struct {
 	ScreenType  ScreenType     `bson:"screen_type" json:"screen_type"`
 	Component   string         `bson:"component" json:"component"`
 	Data        map[string]any `bson:"data" json:"data"`
+	SkillTags   []string       `bson:"skill_tags,omitempty" json:"skill_tags,omitempty"`
 }
 
 // MiniGame is the interactive challenge at the end of a level.
@@ -74,6 +75,7 @@ type MiniGame struct {
 	Type        MiniGameType   `bson:"type" json:"type"`
 	Description string         `bson:"description" json:"description"`
 	Data        map[string]any `bson:"data" json:"data"`
+	SkillTags   []string       `bson:"skill_tags,omitempty" json:"skill_tags,omitempty"`
 }
 
 // Level is the master template for a single level in the learning journey.

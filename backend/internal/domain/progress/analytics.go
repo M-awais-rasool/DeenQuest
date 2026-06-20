@@ -28,7 +28,7 @@ type AdminAnalytics struct {
 	TotalLevels        int64                 `json:"total_levels"`
 	TotalTasks         int64                 `json:"total_tasks"`
 	RecitationAttempts int64                 `json:"recitation_attempts"`
-	Series             []AnalyticsTimePoint  `json:"series"`               // last 14 days, oldest first
+	Series             []AnalyticsTimePoint  `json:"series"` // last 14 days, oldest first
 	LevelsByDifficulty []AnalyticsLabelCount `json:"levels_by_difficulty"`
 	TopLevels          []AnalyticsLabelCount `json:"top_levels"`
 }

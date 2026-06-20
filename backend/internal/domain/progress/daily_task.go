@@ -42,6 +42,7 @@ type DailyTask struct {
 	RewardXP       int            `bson:"reward_xp" json:"reward_xp"`
 	Difficulty     Difficulty     `bson:"difficulty" json:"difficulty"`
 	IsFixed        bool           `bson:"is_fixed" json:"is_fixed"` // Fajr is always included
+	SkillTags      []string       `bson:"skill_tags,omitempty" json:"skill_tags,omitempty"`
 }
 
 // UserDailyTask tracks a user's assignment and completion for a specific day.
