@@ -11,3 +11,8 @@ export { HintCard } from "./HintCard";
 export { CelebrationOverlay } from "./CelebrationOverlay";
 export { StreakBadge } from "./StreakBadge";
 export { containsArabic, shuffle } from "./text";
+export {
+  LessonTelemetryProvider,
+  useLessonTelemetry,
+  type LessonTelemetry,
+} from "./lessonTelemetry";

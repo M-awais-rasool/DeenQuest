@@ -221,12 +221,14 @@ export interface Lesson {
   screen_type: ScreenType;
   component: string;
   data: Record<string, any>;
+  skill_tags?: string[];
 }
 
 export interface MiniGame {
   type: MiniGameType;
   description: string;
   data: Record<string, any>;
+  skill_tags?: string[];
 }
 
 export interface Level {
@@ -396,6 +398,77 @@ export interface QuranSurahRequest {
 }
 
 // API Service
+// ─── Learning Agent ───
+
+export type LearningEventType =
+  | "task_started"
+  | "task_completed"
+  | "task_abandoned"
+  | "answer_correct"
+  | "answer_wrong"
+  | "hint_used"
+  | "time_spent"
+  | "session_start";
+
+export interface BehaviorEventInput {
+  type: LearningEventType;
+  course_type?: string;
+  skill_tags?: string[];
+  level_id?: number;
+  lesson_index?: number;
+  task_id?: string;
+  correct?: boolean;
+  duration_ms?: number;
+}
+
+export interface LogEventsRequest {
+  events: BehaviorEventInput[];
+}
+
+export interface SkillStat {
+  attempts: number;
+  correct: number;
+  streak: number;
+  mastery: number;
+  ease: number;
+  interval_days: number;
+  due_at: string;
+  last_seen_at: string;
+}
+
+export interface LearnerState {
+  user_id: string;
+  course_type: string;
+  skills: Record<string, SkillStat>;
+  weak_areas: string[];
+  strong_areas: string[];
+  learning_speed: number;
+  avg_task_ms: number;
+  engagement: number;
+  dropout_risk: number;
+  segment: "weak" | "active" | "inactive" | "improving";
+  total_events: number;
+  motivation?: string;
+  motivation_at?: string;
+  last_event_at: string;
+}
+
+export interface Recommendation {
+  id: string;
+  user_id: string;
+  kind: "revision" | "new_content" | "reengage";
+  course_type: string;
+  level_id?: number;
+  skill_tags?: string[];
+  title: string;
+  reason: string;
+  difficulty: string;
+  priority: number;
+  message?: string;
+  status: string;
+  created_at: string;
+}
+
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
@@ -410,6 +483,7 @@ export const API = createApi({
     "Recitation",
     "Notifications",
     "Quran",
+    "Learning",
   ],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
@@ -651,6 +725,22 @@ export const API = createApi({
       ],
       keepUnusedDataFor: 604800,
     }),
+
+    logEvents: builder.mutation<APIResponse<{ accepted: number }>, LogEventsRequest>({
+      query: (body) => ({
+        url: "/api/v1/events",
+        method: "POST",
+        body,
+      }),
+    }),
+    getLearningState: builder.query<APIResponse<LearnerState | null>, void>({
+      query: () => ({ url: "/api/v1/learning/state", method: "GET" }),
+      providesTags: ["Learning"],
+    }),
+    getRecommendations: builder.query<APIResponse<Recommendation[]>, void>({
+      query: () => ({ url: "/api/v1/learning/recommendations", method: "GET" }),
+      providesTags: ["Learning"],
+    }),
   }),
 });
 
@@ -679,4 +769,7 @@ export const {
   useGetSurahsQuery,
   useGetSurahByIdQuery,
   useGetSurahAudioQuery,
+  useLogEventsMutation,
+  useGetLearningStateQuery,
+  useGetRecommendationsQuery,
 } = API;

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { TactilePressable } from "../../components/ui";
 import {
   Flame,
@@ -28,6 +29,7 @@ import {
 } from "../../store/services/api";
 import type { DailyTask } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
+import { NextBestActionCard } from "../../components/learning/NextBestActionCard";
 
 const CATEGORY_ICONS: Record<string, { icon: typeof Flame; color: string }> = {
   salah: { icon: Flame, color: theme.colors.primary },
@@ -78,8 +80,13 @@ export const HomeScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Streak Card ── */}
-        <View style={styles.streakCard}>
+        {/* ── Streak / stats hero ── */}
+        <LinearGradient
+          colors={["#242821", "#191C18"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.streakCard}
+        >
           <View style={styles.streakTopRow}>
             <View>
               <Text style={styles.greeting}>As-salamu Alaykum!</Text>
@@ -159,10 +166,9 @@ export const HomeScreen = () => {
               ]}
             />
           </View>
-          <Text style={styles.xpNext}>
-            {100 - (totalXP % 100)} XP to next level
-          </Text>
-        </View>
+        </LinearGradient>
+
+        <NextBestActionCard />
 
         {/* ── Daily Missions ── */}
         <View style={styles.sectionHeader}>
@@ -246,21 +252,20 @@ const styles = StyleSheet.create({
   },
 
   streakCard: {
-    backgroundColor: theme.colors.surfaceLow,
     borderRadius: theme.borderRadius.xl,
-    padding: 20,
+    padding: 16,
     borderWidth: 1,
     borderColor: theme.colors.outline25,
-    marginBottom: 28,
+    marginBottom: 16,
   },
   streakTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   greeting: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "900",
     color: theme.colors.text,
   },
@@ -303,18 +308,18 @@ const styles = StyleSheet.create({
   weekRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 14,
   },
   dayCol: {
     alignItems: "center",
     gap: 5,
   },
   dayCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: theme.colors.surfaceHigh,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: theme.colors.outline,
     justifyContent: "center",
     alignItems: "center",
@@ -350,7 +355,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 7,
   },
   levelBadge: {
     flexDirection: "row",
@@ -374,22 +379,15 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
   },
   xpBarTrack: {
-    height: 6,
+    height: 7,
     backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 3,
+    borderRadius: 4,
     overflow: "hidden",
-    marginBottom: 6,
   },
   xpBarFill: {
     height: "100%",
     backgroundColor: theme.colors.primary,
-    borderRadius: 3,
-  },
-  xpNext: {
-    fontSize: 11,
-    color: theme.colors.textMuted,
-    fontWeight: "600",
-    textAlign: "right",
+    borderRadius: 4,
   },
 
   // ── Missions ─────────────────────────────────────────────────────

@@ -26,6 +26,7 @@ import { MCQGame } from "../../components/level/lesson/MCQGame";
 import { MemoryGame } from "../../components/level/lesson/MemoryGame";
 import { BuildGame } from "../../components/level/lesson/BuildGame";
 import { ListenGame } from "../../components/level/lesson/ListenGame";
+import { LessonTelemetryProvider } from "../../components/level/lesson/shared";
 import type { MiniGameType, NewlyGrantedReward } from "../../store/services/api";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -150,7 +151,16 @@ export function MiniGamePlayerScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={s.gameTitle}>{game.description}</Text>
-          <GameComponent game={game} onFinish={handleFinish} />
+          <LessonTelemetryProvider
+            value={{
+              levelId: level.id,
+              lessonIndex: level.lessons.length,
+              courseType: level.course_type ?? courseType,
+              skillTags: game.skill_tags,
+            }}
+          >
+            <GameComponent game={game} onFinish={handleFinish} />
+          </LessonTelemetryProvider>
         </ScrollView>
       </View>
     </ScreenWrapper>

@@ -15,6 +15,8 @@ import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { LESSON_COMPONENT_MAP } from "../../components/level/lesson";
+import { LessonTelemetryProvider } from "../../components/level/lesson/shared";
+import { track } from "../../services/learningEvents";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "LessonPlayer">;
@@ -117,6 +119,17 @@ export function LessonPlayerScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scrollRef = useRef<ScrollView>(null);
   const advancingRef = useRef(false);
+  const lessonStartRef = useRef(Date.now());
+  const finishedRef = useRef(false);
+
+  useEffect(() => {
+    track.taskStarted({ level_id: levelId, course_type: courseType });
+    return () => {
+      if (!finishedRef.current) {
+        track.taskAbandoned({ level_id: levelId, course_type: courseType });
+      }
+    };
+  }, [levelId, courseType]);
 
   const handleComplete = useCallback(() => {
     if (!level) return;
@@ -129,7 +142,19 @@ export function LessonPlayerScreen() {
       courseType: level.course_type ?? courseType,
     }).catch(() => {});
 
+    const now = Date.now();
+    track.timeSpent(now - lessonStartRef.current, {
+      level_id: level.id,
+      lesson_index: currentIndex,
+      course_type: level.course_type ?? courseType,
+      skill_tags: level.lessons[currentIndex]?.skill_tags,
+    });
+    lessonStartRef.current = now;
+
     const isLast = currentIndex >= level.lessons.length - 1;
+    if (isLast) {
+      finishedRef.current = true; 
+    }
 
     Animated.timing(fadeAnim, {
       toValue: 0,
@@ -171,6 +196,14 @@ export function LessonPlayerScreen() {
 
   return (
     <ScreenWrapper innerStyle={{ flex: 1 }}>
+      <LessonTelemetryProvider
+        value={{
+          levelId: level.id,
+          lessonIndex: currentIndex,
+          courseType: level.course_type ?? courseType,
+          skillTags: lesson?.skill_tags,
+        }}
+      >
       <View style={s.container}>
         {/* Top bar */}
         <View style={s.topBar}>
@@ -203,6 +236,7 @@ export function LessonPlayerScreen() {
           </ScrollView>
         </Animated.View>
       </View>
+      </LessonTelemetryProvider>
     </ScreenWrapper>
   );
 }
