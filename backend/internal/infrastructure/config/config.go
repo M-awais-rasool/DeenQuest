@@ -42,6 +42,12 @@ type Config struct {
 
 	OllamaURL string
 
+	// Gemini (optional) — powers the Learning Agent's AI feedback/motivation
+	// layer. When GeminiAPIKey is empty, the AI consumer is not started and the
+	// deterministic learning core runs unchanged.
+	GeminiAPIKey string
+	GeminiModel  string
+
 	CORSAllowedOrigins string
 
 	// AdminEmails is a comma-separated allowlist of user emails permitted to
@@ -82,6 +88,8 @@ func Load() (*Config, error) {
 		ExpoPushURL:         getEnv("EXPO_PUSH_URL", "https://exp.host/--/api/v2/push/send"),
 		ExpoPushAccessToken: getEnv("EXPO_PUSH_ACCESS_TOKEN", ""),
 		OllamaURL:           getEnv("OLLAMA_URL", "http://127.0.0.1:11434"),
+		GeminiAPIKey:        getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:         getEnv("GEMINI_MODEL", ""),
 		CORSAllowedOrigins:  getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
 		AdminEmails:         getEnv("ADMIN_EMAILS", ""),
 		AdminSeedEmail:      getEnv("ADMIN_SEED_EMAIL", "admin@deenquest.app"),
