@@ -11,11 +11,12 @@
   <img src="https://img.shields.io/badge/React_Native-0.81-20232A?logo=react&logoColor=61DAFB" alt="React Native" />
   <img src="https://img.shields.io/badge/Expo-54-000020?logo=expo&logoColor=white" alt="Expo" />
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Go-1.22-00ADD8?logo=go&logoColor=white" alt="Go" />
+  <img src="https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white" alt="Go" />
   <img src="https://img.shields.io/badge/Gin-Framework-008ECF" alt="Gin" />
   <img src="https://img.shields.io/badge/MongoDB-7-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
   <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" alt="Redis" />
   <img src="https://img.shields.io/badge/Kafka-Event_Driven-231F20?logo=apachekafka&logoColor=white" alt="Kafka" />
+  <img src="https://img.shields.io/badge/Gemini-AI_Layer-8E75B2?logo=googlegemini&logoColor=white" alt="Gemini" />
   <img src="https://img.shields.io/badge/Vite-Admin_Panel-646CFF?logo=vite&logoColor=white" alt="Vite" />
 </p>
 
@@ -96,13 +97,15 @@ backend/
 │   │   ├── identity/                        #   User entity, UserRepository interface
 │   │   ├── progress/                        #   Progress, Streak, DailyTask, Level, Reward, Recitation
 │   │   ├── notification/                    #   UserToken, Message, TokenRepository interface
-│   │   └── intelligent/                     #   NotificationRule, NotificationLog, LogRepository interface
+│   │   ├── intelligent/                     #   NotificationRule, NotificationLog, LogRepository interface
+│   │   └── learning/                        #   LearnerState, SkillStat, Recommendation, BehaviorEvent
 │   ├── application/                         # Application Layer (use cases, application services)
 │   │   ├── auth/                            #   AuthService (signup, login)
 │   │   ├── user/                            #   UserService (profile, password)
 │   │   ├── progress/                        #   CoreService, RecitationService, ArabicMatcher
 │   │   ├── notification/                    #   NotificationService (token registration, push)
 │   │   ├── intelligent/                     #   Intelligent notification rules, scheduler, user fetcher
+│   │   ├── learning/                        #   Learning Agent: publisher, StateUpdater, Recommender, sweep, AI
 │   │   └── worker/                          #   Kafka consumer, daily reset scheduler
 │   ├── interfaces/                          # Interface Layer (HTTP handlers, DTOs, routing)
 │   │   └── http/
@@ -121,7 +124,8 @@ backend/
 │       ├── queue/                           #   Kafka producer/consumer
 │       ├── validator/                       #   Request validation
 │       ├── response/                        #   Standardized API responses
-│       └── ollama/                          #   Ollama LLM client
+│       ├── ollama/                          #   Ollama LLM client
+│       └── gemini/                          #   Gemini client (Learning Agent AI layer)
 ├── whisper-service/                         # Python speech-to-text microservice (FastAPI)
 ├── docs/                                    # API docs, workflows, project analysis
 ├── docker-compose.yml                       # Kafka + Redis infrastructure
@@ -147,7 +151,8 @@ flowchart LR
 |---|---|
 | Mobile | React Native, Expo, TypeScript, Redux Toolkit (RTK Query), AsyncStorage, Expo Notifications |
 | Admin | React 18, TypeScript, Vite, Tailwind CSS, Axios, Chart.js |
-| Backend | Go 1.22, Gin, JWT, MongoDB driver, Kafka, Redis, Cron |
+| Backend | Go 1.24, Gin, JWT, MongoDB driver, Kafka, Redis, Cron |
+| AI (optional) | Google Gemini (Learning Agent feedback/motivation), Whisper (recitation), Ollama client |
 | Infra | Docker, Docker Compose |
 
 ## Core Features
@@ -158,6 +163,10 @@ flowchart LR
 - Leaderboard ranking by level and XP.
 - Role-aware admin panel for content management.
 - Event-driven processing with Kafka.
+- **Adaptive Learning Agent** — listens to behavior events, maintains a per-user
+  learning state (weak/strong areas, learning speed, engagement, dropout risk),
+  and recommends the next best action (revision via spaced repetition or new
+  content). Deterministic core with an optional Gemini layer for motivation.
 - Intelligent notification system with template-based push notifications:
   - Daily task reminders for pending missions
   - Streak warnings to protect user consistency
@@ -188,6 +197,11 @@ Base prefix: `/api/v1`
   - `POST /levels/:id/complete`
   - `GET /rewards`
   - `POST /recitation/check`
+- Learning Agent
+  - `POST /events` — batched client behavior events
+  - `GET /learning/state` — the learner's evolving state
+  - `GET /learning/recommendations` — next-best-action set
+  - `GET /admin/learning/stats` — aggregate agent metrics (admin)
 - Notifications
   - `POST /notifications/register`
   - `POST /notifications/test`
@@ -261,6 +275,8 @@ Important keys:
 - `JWT_SECRET`, `JWT_ACCESS_EXPIRY`, `JWT_REFRESH_EXPIRY` — JWT configuration
 - `WHISPER_URL` — Python whisper service URL
 - `EXPO_PUSH_URL`, `EXPO_PUSH_ACCESS_TOKEN` — Push notifications
+- `GEMINI_API_KEY`, `GEMINI_MODEL` — optional Learning Agent AI layer (leave the
+  key empty to run the agent fully deterministic; defaults to `gemini-2.0-flash`)
 
 ## Documentation
 
@@ -271,7 +287,42 @@ Backend docs:
 - `backend/docs/daily-task-assignment.md` — Daily task assignment algorithm
 - `backend/docs/WORKFLOW.md` — Intelligent notification system workflow
 - `backend/docs/PROJECT_ANALYSIS.md` — Comprehensive project analysis
-- `backend/docs/LEARNING_AGENT.md` — Learning agent framework design
+- `backend/docs/learning-agent.md` — Learning Agent: how it works, step by step (plain English)
+
+Project-wide:
+
+- `ROADMAP.md` — Future features, improvements & new agents to build
+
+## Learning Agent
+
+An event-driven engine that personalizes each learner's journey in near real
+time. It listens to behavior events, maintains an evolving per-user state, and
+decides the next best action — all with a **deterministic, rule-based core** and
+an **optional Gemini layer** for motivational copy (the agent works unchanged
+with AI disabled).
+
+```mermaid
+flowchart LR
+  APP[App\nbehavior events] -->|POST /events| K[(Kafka\nlearning.events)]
+  PROG[Completion & recitation\nserver events] --> K
+  K -->|learning-state-group| SU[StateUpdater\nEWMA mastery + SM-2]
+  K -->|learning-ai-group| AI[Gemini AI\noptional motivation]
+  SU --> LS[(learner_states)]
+  AI --> LS
+  SWEEP[Pattern Sweep\ncron · 15m] --> REC[Recommender\nrules]
+  LS --> REC
+  REC --> RS[(recommendations)]
+  RS -->|GET /learning/recommendations| APP
+```
+
+What it detects per user: **weak/strong areas**, **learning speed**,
+**engagement**, **dropout risk**, and a **segment** (weak / active / inactive /
+improving). What it produces: ranked recommendations — overdue-skill **revisions**
+(spaced repetition) first, then **new content**, plus re-engagement for inactive
+learners. Admins get a live view (segments, due revisions, an interactive
+workflow canvas) on the **Learning Agent** page in the admin panel.
+
+Full walkthrough with examples: `backend/docs/learning-agent.md`.
 
 ## Intelligent Notification System
 
@@ -302,6 +353,16 @@ Key design decisions:
 | Profile | `IMG-2.PNG` | XP total, Barakah score, streak history |
 | Settings | `IMG-8.PNG` | Account settings, preferences, and app info |
 | Rank | — | Global leaderboard ranked by level then XP |
+
+## Roadmap
+
+We're expanding DeenQuest into a multi-agent learning platform. Planned work
+includes a Daily Review screen, streak freeze, offline mode, localization + RTL,
+and new agents — an Engagement Agent, a Pronunciation/Tajweed Coach, a Reflection
+Companion, a Parent/Teacher Agent, and a (scholar-reviewed) Q&A Knowledge Agent.
+
+See **[ROADMAP.md](ROADMAP.md)** for the full list of features, new agents, and
+how each one benefits learners.
 
 ## Contributing
 
