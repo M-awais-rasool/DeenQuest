@@ -17,6 +17,8 @@ func SetupRoutes(
 	notificationHandler *handler.NotificationHandler,
 	quranHandler *handler.QuranHandler,
 	adminHandler *handler.AdminHandler,
+	eventsHandler *handler.EventsHandler,
+	learningHandler *handler.LearningHandler,
 	adminEmails []string,
 	jwtManager *jwt.JWTManager,
 ) {
@@ -63,6 +65,11 @@ func SetupRoutes(
 		authed.GET("/rewards", coreHandler.GetRewards)
 
 		authed.POST("/recitation/check", recitationHandler.CheckRecitation)
+
+		// Learning Agent — client behavior-event ingestion + read surface.
+		authed.POST("/events", eventsHandler.Ingest)
+		authed.GET("/learning/state", learningHandler.GetState)
+		authed.GET("/learning/recommendations", learningHandler.GetRecommendations)
 	}
 
 	admin := v1.Group("/admin")
@@ -88,6 +95,9 @@ func SetupRoutes(
 		admin.GET("/rewards/:id", adminHandler.GetReward)
 		admin.PUT("/rewards/:id", adminHandler.UpdateReward)
 		admin.DELETE("/rewards/:id", adminHandler.DeleteReward)
+
+		// Learning Agent monitoring.
+		admin.GET("/learning/stats", learningHandler.GetAgentStats)
 	}
 }
 

@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	authsvc "github.com/chawais/talent-flow/backend/internal/application/auth"
-	"github.com/chawais/talent-flow/backend/internal/interfaces/http/dto"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/response"
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/validator"
+	"github.com/chawais/talent-flow/backend/internal/interfaces/http/dto"
 )
 
 type AuthHandler struct {
