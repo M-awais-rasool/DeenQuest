@@ -5,16 +5,74 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 
+	dlearning "github.com/chawais/talent-flow/backend/internal/domain/learning"
 	"github.com/chawais/talent-flow/backend/internal/domain/progress"
 )
 
+// EventEmitter publishes Learning Agent behavior events. The learning Publisher
+// satisfies it. Optional: when nil, completion events are simply not emitted, so
+// core flows are unaffected by the learning pipeline.
+type EventEmitter interface {
+	Emit(ctx context.Context, ev dlearning.BehaviorEvent)
+}
+
+// LearnerStateReader exposes the user's learning state so daily-task selection
+// can bias toward weak areas. The learning Repository satisfies it. Optional:
+// when nil, selection falls back to the original deterministic shuffle.
+type LearnerStateReader interface {
+	GetState(ctx context.Context, userID string) (*dlearning.LearnerState, error)
+}
+
 type CoreService struct {
-	repo progress.CoreRepository
+	repo    progress.CoreRepository
+	emitter EventEmitter
+	states  LearnerStateReader
+}
+
+// SetEventEmitter wires the Learning Agent's event publisher. Called once at startup.
+func (s *CoreService) SetEventEmitter(e EventEmitter) { s.emitter = e }
+
+// SetLearnerStateReader wires the Learning Agent's state store for personalized
+// daily-task selection. Called once at startup.
+func (s *CoreService) SetLearnerStateReader(r LearnerStateReader) { s.states = r }
+
+// emit fires a behavior event off the request lifecycle (context.Background so a
+// completed/canceled request can't drop the event). No-op when no emitter is set.
+func (s *CoreService) emit(ev dlearning.BehaviorEvent) {
+	if s.emitter == nil {
+		return
+	}
+	s.emitter.Emit(context.Background(), ev)
+}
+
+// levelSkillTags aggregates the de-duplicated skill tags across a level's
+// lessons and mini-game, used to attribute mastery on level completion.
+func levelSkillTags(level *progress.Level) []string {
+	seen := make(map[string]struct{})
+	var tags []string
+	add := func(ts []string) {
+		for _, t := range ts {
+			if t == "" {
+				continue
+			}
+			if _, ok := seen[t]; ok {
+				continue
+			}
+			seen[t] = struct{}{}
+			tags = append(tags, t)
+		}
+	}
+	for i := range level.Lessons {
+		add(level.Lessons[i].SkillTags)
+	}
+	add(level.MiniGame.SkillTags)
+	return tags
 }
 
 var (
@@ -189,6 +247,14 @@ func (s *CoreService) GetDailyTasks(ctx context.Context, userID string) ([]progr
 		rng := rand.New(rand.NewSource(int64(hashString(userID + today))))
 		rng.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })
 
+		// Personalize: float tasks that exercise the learner's weak areas to the
+		// front (stable, so the shuffle still varies order within each group).
+		if weak := s.weakAreaSet(ctx, userID); len(weak) > 0 {
+			sort.SliceStable(pool, func(i, j int) bool {
+				return taskMatchesWeak(pool[i], weak) && !taskMatchesWeak(pool[j], weak)
+			})
+		}
+
 		selected := make([]progress.DailyTask, 0, 5)
 		selected = append(selected, fixed...)
 		remaining := 5 - len(selected)
@@ -258,7 +324,41 @@ func (s *CoreService) CompleteDailyTask(ctx context.Context, userID, taskID stri
 		return err
 	}
 
+	s.emit(dlearning.BehaviorEvent{
+		UserID:    userID,
+		Type:      dlearning.EventTaskCompleted,
+		TaskID:    taskID,
+		SkillTags: task.SkillTags,
+	})
+
 	return nil
+}
+
+// weakAreaSet returns the user's weak-area skill tags as a set, or nil when no
+// learner state is available (new user, or reader not wired). Best-effort —
+// errors degrade to the default selection rather than failing the request.
+func (s *CoreService) weakAreaSet(ctx context.Context, userID string) map[string]struct{} {
+	if s.states == nil {
+		return nil
+	}
+	st, err := s.states.GetState(ctx, userID)
+	if err != nil || st == nil {
+		return nil
+	}
+	set := make(map[string]struct{}, len(st.WeakAreas))
+	for _, w := range st.WeakAreas {
+		set[w] = struct{}{}
+	}
+	return set
+}
+
+func taskMatchesWeak(t progress.DailyTask, weak map[string]struct{}) bool {
+	for _, tag := range t.SkillTags {
+		if _, ok := weak[tag]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 // hashString produces a simple hash for seeding the random shuffle.
@@ -582,6 +682,16 @@ func (s *CoreService) CompleteLessonInLevel(ctx context.Context, userID string, 
 	if err := s.repo.UpsertUserLevel(ctx, ul); err != nil {
 		return nil, err
 	}
+
+	s.emit(dlearning.BehaviorEvent{
+		UserID:      userID,
+		Type:        dlearning.EventLessonCompleted,
+		CourseType:  string(level.CourseType),
+		LevelID:     levelID,
+		LessonIndex: lessonIndex,
+		SkillTags:   level.Lessons[lessonIndex].SkillTags,
+	})
+
 	return ul, nil
 }
 
@@ -669,6 +779,14 @@ func (s *CoreService) CompleteLevel(ctx context.Context, userID string, levelID 
 	if nextLevel != nil {
 		nextLevelID = nextLevel.ID
 	}
+
+	s.emit(dlearning.BehaviorEvent{
+		UserID:     userID,
+		Type:       dlearning.EventLevelCompleted,
+		CourseType: string(level.CourseType),
+		LevelID:    levelID,
+		SkillTags:  levelSkillTags(level),
+	})
 
 	return &progress.LevelCompletionResult{
 		XPEarned:     xp,
