@@ -21,6 +21,7 @@ import (
 	notifiesvc "github.com/chawais/talent-flow/backend/internal/application/notification"
 	progresssvc "github.com/chawais/talent-flow/backend/internal/application/progress"
 	quransvc "github.com/chawais/talent-flow/backend/internal/application/quran"
+	reflectionsvc "github.com/chawais/talent-flow/backend/internal/application/reflection"
 	usersvc "github.com/chawais/talent-flow/backend/internal/application/user"
 	"github.com/chawais/talent-flow/backend/internal/application/worker"
 	dlearning "github.com/chawais/talent-flow/backend/internal/domain/learning"
@@ -85,6 +86,16 @@ func main() {
 		logger.Fatal(fmt.Sprintf("failed to initialize learning repository: %v", err))
 	}
 
+	mistakeRepo, err := persistence.NewMongoMistakeRepository(db)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to initialize mistake repository: %v", err))
+	}
+
+	reflectionRepo, err := persistence.NewMongoReflectionRepository(db)
+	if err != nil {
+		logger.Fatal(fmt.Sprintf("failed to initialize reflection repository: %v", err))
+	}
+
 	tokenRepo, err := persistence.NewMongoTokenRepository(db)
 	if err != nil {
 		logger.Fatal(fmt.Sprintf("failed to initialize notification repository: %v", err))
@@ -101,11 +112,6 @@ func main() {
 	recitationService := progresssvc.NewRecitationService(coreRepo, cfg.WhisperURL)
 	logger.Info("Recitation service initialized", zap.String("whisper_url", cfg.WhisperURL))
 
-	// ─── Learning Agent: event publisher ───
-	// Async, user-keyed producer for the learning.events topic: non-blocking
-	// publishes (HTTP never waits on broker acks) with per-user partition
-	// ordering. The writer connects lazily, so it is safe even when Kafka is
-	// down (publishes log + no-op).
 	learningProducer := queue.NewKafkaProducerAsync(cfg.GetKafkaBrokerList())
 	defer learningProducer.Close()
 	learningPublisher := learningsvc.NewPublisher(learningProducer)
@@ -113,8 +119,10 @@ func main() {
 	coreService.SetLearnerStateReader(learningRepo)
 	recitationService.SetEventEmitter(learningPublisher)
 
-	// Deterministic recommender (reads state + level landscape, writes recommendations).
 	learningRecommender := learningsvc.NewRecommenderService(learningRepo, coreRepo)
+	mistakeService := learningsvc.NewMistakeService(mistakeRepo)
+	curriculumService := learningsvc.NewCurriculumService(learningRepo, mistakeRepo)
+	reflectionService := reflectionsvc.NewService(reflectionRepo)
 
 	expoClient := push.NewExpoClient(cfg.ExpoPushURL, cfg.ExpoPushAccessToken)
 	notificationService := notifiesvc.NewService(tokenRepo, expoClient)
@@ -177,10 +185,6 @@ func main() {
 		}
 	}()
 
-	// ─── Learning Agent: StateUpdater reactor ───
-	// Independent consumer group on learning.events; evolves LearnerState on
-	// every behavior event. Other reactors (recommender, AI copy) consume the
-	// same topic under their own groups, staying loosely coupled.
 	learningStateService := learningsvc.NewStateService(learningRepo)
 	learningStateConsumer := queue.NewKafkaConsumerWithConfig(
 		cfg.GetKafkaBrokerList(), dlearning.TopicLearningEvents, "learning-state-group",
@@ -191,20 +195,32 @@ func main() {
 		_ = learningStateConsumer.Consume(runCtx, learningStateService.Handle)
 	}()
 
-	// ─── Learning Agent: pattern-sweep cron ───
-	// Re-evaluates segments/dropout-risk against the clock and refreshes
-	// recommendations from accumulated patterns, not single actions.
+	mistakeConsumer := queue.NewKafkaConsumerWithConfig(
+		cfg.GetKafkaBrokerList(), dlearning.TopicLearningEvents, "learning-mistakes-group",
+		queue.ConsumerConfig{MaxWait: 500 * time.Millisecond, CommitInterval: time.Second},
+	)
+	defer mistakeConsumer.Close()
+	go func() {
+		_ = mistakeConsumer.Consume(runCtx, mistakeService.Handle)
+	}()
+
+	geminiClient := gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel)
+	var engageGen learningsvc.Generator
+	if geminiClient != nil {
+		engageGen = geminiClient
+		recitationService.SetCoach(geminiClient) // Pronunciation/Tajweed Coach
+		reflectionService.SetCoach(geminiClient) // Reflection Companion
+	}
+
 	learningSweep := learningsvc.NewScheduler(learningRepo, learningRecommender)
+	learningSweep.SetNotifier(learningsvc.NewEngagementNotifier(learningRepo, notificationService, engageGen))
 	go func() {
 		if err := learningSweep.Start(runCtx); err != nil {
 			logger.Error("learning pattern sweep error", zap.Error(err))
 		}
 	}()
 
-	// ─── Learning Agent: optional Gemini AI copy reactor ───
-	// Enabled only when GEMINI_API_KEY is set. Narrates a few moments with
-	// motivational/feedback text; the deterministic core is unaffected if absent.
-	if geminiClient := gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel); geminiClient != nil {
+	if geminiClient != nil {
 		learningAIService := learningsvc.NewAIService(learningRepo, geminiClient)
 		learningAIConsumer := queue.NewKafkaConsumerWithConfig(
 			cfg.GetKafkaBrokerList(), dlearning.TopicLearningEvents, "learning-ai-group",
@@ -227,7 +243,8 @@ func main() {
 	recitationHandler := handler.NewRecitationHandler(recitationService)
 	notificationHandler := handler.NewNotificationHandler(notificationService)
 	eventsHandler := handler.NewEventsHandler(learningPublisher)
-	learningHandler := handler.NewLearningHandler(learningRecommender)
+	learningHandler := handler.NewLearningHandler(learningRecommender, mistakeService, curriculumService)
+	reflectionHandler := handler.NewReflectionHandler(reflectionService)
 	quranClient := alquran.NewClient(cfg.AlQuranBaseURL, cfg.QuranAudioCDNURL, cfg.QuranAudioEdition, cfg.QuranAudioBitrate)
 	quranService := quransvc.NewService(quranClient, redisClient)
 	quranHandler := handler.NewQuranHandler(quranService)
@@ -246,7 +263,7 @@ func main() {
 		r.Use(middleware.RateLimit(redisClient, 100, time.Minute))
 	}
 
-	router.SetupRoutes(r, authHandler, userHandler, coreHandler, recitationHandler, notificationHandler, quranHandler, adminHandler, eventsHandler, learningHandler, cfg.AdminEmailList(), jwtManager)
+	router.SetupRoutes(r, authHandler, userHandler, coreHandler, recitationHandler, notificationHandler, quranHandler, adminHandler, eventsHandler, learningHandler, reflectionHandler, cfg.AdminEmailList(), jwtManager)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: r}
