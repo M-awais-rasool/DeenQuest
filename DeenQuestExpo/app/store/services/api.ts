@@ -166,6 +166,8 @@ export interface UserProgress {
   barakah_score: number;
   current_streak: number;
   longest_streak: number;
+  /** Streak freezes available (auto-protect a missed day) */
+  freezes?: number;
   /** 7 booleans: index 0 = 6 days ago, index 6 = today */
   weekly_completions: boolean[];
 }
@@ -289,6 +291,13 @@ export interface RecitationWordResult {
   confidence: number;
 }
 
+export interface RecitationCoaching {
+  pass: boolean;
+  focus_words: string[];
+  tip: string;
+  explanation?: string;
+}
+
 export interface RecitationCheckResult {
   score: number; // 0–100
   words: RecitationWordResult[];
@@ -296,6 +305,7 @@ export interface RecitationCheckResult {
   xp_earned: number;
   transcript: string;
   attempt_num: number;
+  coaching?: RecitationCoaching;
 }
 
 export interface CheckRecitationRequest {
@@ -469,6 +479,37 @@ export interface Recommendation {
   created_at: string;
 }
 
+export interface Mistake {
+  id: string;
+  user_id: string;
+  course_type?: string;
+  level_id: number;
+  lesson_index: number;
+  skill_tags?: string[];
+  count: number;
+  resolved: boolean;
+  first_at: string;
+  last_at: string;
+}
+
+export interface ReflectionVerse {
+  arabic: string;
+  translation: string;
+  reference: string;
+  source: string;
+}
+
+export interface Reflection {
+  id: string;
+  user_id: string;
+  text: string;
+  mood?: string;
+  message: string;
+  verse?: ReflectionVerse;
+  created_at: string;
+}
+
+
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
@@ -484,6 +525,8 @@ export const API = createApi({
     "Notifications",
     "Quran",
     "Learning",
+    "Mistakes",
+    "Reflections",
   ],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
@@ -741,6 +784,32 @@ export const API = createApi({
       query: () => ({ url: "/api/v1/learning/recommendations", method: "GET" }),
       providesTags: ["Learning"],
     }),
+    getReview: builder.query<APIResponse<Recommendation[]>, void>({
+      query: () => ({ url: "/api/v1/learning/review", method: "GET" }),
+      providesTags: ["Learning"],
+    }),
+    getMistakes: builder.query<APIResponse<Mistake[]>, void>({
+      query: () => ({ url: "/api/v1/learning/mistakes", method: "GET" }),
+      providesTags: ["Mistakes"],
+    }),
+    resolveMistake: builder.mutation<APIResponse<{ id: string }>, string>({
+      query: (id) => ({
+        url: `/api/v1/learning/mistakes/${id}/resolve`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Mistakes"],
+    }),
+    createReflection: builder.mutation<
+      APIResponse<Reflection>,
+      { text: string; mood?: string }
+    >({
+      query: (body) => ({ url: "/api/v1/reflection", method: "POST", body }),
+      invalidatesTags: ["Reflections"],
+    }),
+    getReflections: builder.query<APIResponse<Reflection[]>, void>({
+      query: () => ({ url: "/api/v1/reflections", method: "GET" }),
+      providesTags: ["Reflections"],
+    }),
   }),
 });
 
@@ -772,4 +841,9 @@ export const {
   useLogEventsMutation,
   useGetLearningStateQuery,
   useGetRecommendationsQuery,
+  useGetReviewQuery,
+  useGetMistakesQuery,
+  useResolveMistakeMutation,
+  useCreateReflectionMutation,
+  useGetReflectionsQuery,
 } = API;
