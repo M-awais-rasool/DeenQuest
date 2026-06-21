@@ -24,6 +24,23 @@ type AgentStats = {
   total_events: number;
 };
 
+type SkillStruggle = {
+  tag: string;
+  learners: number;
+  weak_learners: number;
+  avg_mastery: number;
+};
+type LessonStruggle = {
+  level_id: number;
+  lesson_index: number;
+  mistakes: number;
+  learners: number;
+};
+type Curriculum = {
+  top_weak_skills: SkillStruggle[] | null;
+  top_missed_lessons: LessonStruggle[] | null;
+};
+
 const SEGMENTS: { key: string; label: string; color: string }[] = [
   { key: "improving", label: "Improving", color: "#34d399" },
   { key: "active", label: "Active", color: "#10b981" },
@@ -38,6 +55,7 @@ export default function LearningAgentPage() {
   const [s, setS] = useState<AgentStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [cur, setCur] = useState<Curriculum | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -51,6 +69,10 @@ export default function LearningAgentPage() {
         })
         .catch(() => alive && setError(true))
         .finally(() => alive && setLoading(false));
+      api
+        .get("/v1/admin/learning/curriculum")
+        .then((r) => alive && setCur(r.data.data))
+        .catch(() => {});
     };
     load();
     const t = setInterval(load, 30000); // light refresh; no heavy animation
@@ -165,6 +187,67 @@ export default function LearningAgentPage() {
           <span className="text-xs text-white/35">deterministic core · optional AI</span>
         </div>
         <WorkflowDiagram learners={s.total_learners} recs={s.active_recommendations} />
+      </div>
+
+      {/* Curriculum Agent insights */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className={`${CARD} p-5`}>
+          <p className="section-title mb-1">Hardest skills</p>
+          <p className="mb-4 text-xs text-white/35">Where learners are weakest right now</p>
+          {cur?.top_weak_skills?.length ? (
+            <div className="space-y-3">
+              {cur.top_weak_skills.map((sk) => {
+                const pct = Math.round((sk.avg_mastery || 0) * 100);
+                return (
+                  <div key={sk.tag} className="flex items-center gap-3">
+                    <div className="grid h-9 min-w-9 place-items-center rounded-lg border border-white/10 bg-white/[0.04] px-2 text-base text-white">
+                      {sk.tag.startsWith("level:") ? `L${sk.tag.slice(6)}` : sk.tag}
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-1 flex justify-between text-xs">
+                        <span className="text-white/50">{sk.weak_learners} weak / {sk.learners}</span>
+                        <span className="text-white/70">{pct}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${pct}%`, background: pct < 50 ? "#fb7185" : pct < 80 ? "#f59e0b" : "#10b981" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-white/35">No skill data yet.</p>
+          )}
+        </div>
+
+        <div className={`${CARD} p-5`}>
+          <p className="section-title mb-1">Most-missed lessons</p>
+          <p className="mb-4 text-xs text-white/35">Where learners fail the most</p>
+          {cur?.top_missed_lessons?.length ? (
+            <div className="space-y-2">
+              {cur.top_missed_lessons.map((l, i) => (
+                <div
+                  key={`${l.level_id}-${l.lesson_index}-${i}`}
+                  className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5"
+                >
+                  <span className="text-sm text-white/80">
+                    Level {l.level_id} · Lesson {l.lesson_index + 1}
+                  </span>
+                  <span className="flex items-center gap-3 text-xs">
+                    <span className="font-semibold text-rose-300">{l.mistakes} misses</span>
+                    <span className="text-white/40">{l.learners} learners</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-white/35">No mistakes recorded yet.</p>
+          )}
+        </div>
       </div>
     </div>
   );
