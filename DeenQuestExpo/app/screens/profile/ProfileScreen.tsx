@@ -29,6 +29,7 @@ import {
   type RewardWithStatus,
 } from "../../store/services/api";
 import { RewardIcon } from "../reward/components/RewardIcon";
+import { LearningToolsCard } from "../../components/learning/LearningToolsCard";
 import type { DemoTabScreenProps } from "../../navigators/navigationTypes";
 
 type Props = DemoTabScreenProps<"ProfileScreen">;
@@ -230,6 +231,10 @@ export function ProfileScreen({ navigation }: Props) {
               </View>
             </TactilePressable>
           </View>
+
+          {/* Learning tools (Daily Review · Mastery Map · Mistake Notebook) */}
+          <LearningToolsCard />
+
           {/* Streak History */}
           <View style={styles.streakCard}>
             <View style={styles.streakHeader}>
