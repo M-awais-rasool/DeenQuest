@@ -372,6 +372,26 @@ export const RecitationPanel = React.memo(function RecitationPanel({
           {/* Word breakdown — original Ayah words in fixed sequence */}
           <WordBreakdown words={result.words} />
 
+          {/* Pronunciation coach */}
+          {result.coaching && (result.coaching.tip || result.coaching.explanation) ? (
+            <View style={s.coachBox}>
+              <Text style={s.coachLabel}>PRONUNCIATION COACH</Text>
+              <Text style={s.coachTip}>{result.coaching.tip}</Text>
+              {result.coaching.focus_words?.length ? (
+                <View style={s.coachChips}>
+                  {result.coaching.focus_words.map((w, i) => (
+                    <View key={i} style={s.coachChip}>
+                      <Text style={s.coachChipText}>{w}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+              {result.coaching.explanation ? (
+                <Text style={s.coachExplain}>{result.coaching.explanation}</Text>
+              ) : null}
+            </View>
+          ) : null}
+
           {/* Transcript */}
           {result.transcript ? (
             <View style={s.transcriptBox}>
@@ -403,6 +423,37 @@ export const RecitationPanel = React.memo(function RecitationPanel({
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
+  coachBox: {
+    backgroundColor: theme.colors.surfaceHigh,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.secondary + "33",
+  },
+  coachLabel: {
+    color: theme.colors.secondary,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  coachTip: { color: theme.colors.text, fontSize: 14, fontWeight: "700", lineHeight: 20 },
+  coachChips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
+  coachChip: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+  },
+  coachChipText: { color: theme.colors.text, fontSize: 19, fontFamily: QURAN_FONT },
+  coachExplain: {
+    color: theme.colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 10,
+    fontStyle: "italic",
+  },
   // ── Panel wrapper ────────────────────────────────────────────────────────
   recitationSection: {
     backgroundColor: theme.colors.surface,

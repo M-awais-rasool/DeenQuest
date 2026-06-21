@@ -12,10 +12,13 @@ type Progress struct {
 }
 
 type Streak struct {
-	ID              string    `bson:"_id" json:"id"`
-	UserID          string    `bson:"user_id" json:"user_id"`
-	CurrentStreak   int       `bson:"current_streak" json:"current_streak"`
-	LongestStreak   int       `bson:"longest_streak" json:"longest_streak"`
+	ID            string `bson:"_id" json:"id"`
+	UserID        string `bson:"user_id" json:"user_id"`
+	CurrentStreak int    `bson:"current_streak" json:"current_streak"`
+	LongestStreak int    `bson:"longest_streak" json:"longest_streak"`
+	// Freezes protect the streak across a missed day. Earned on streak
+	// milestones (every 7 days, capped) and consumed automatically on a gap.
+	Freezes         int       `bson:"freezes" json:"freezes"`
 	LastCompletedAt time.Time `bson:"last_completed_at" json:"last_completed_at"`
 	UpdatedAt       time.Time `bson:"updated_at" json:"updated_at"`
 }

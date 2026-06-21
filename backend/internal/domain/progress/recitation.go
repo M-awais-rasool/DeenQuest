@@ -35,12 +35,22 @@ type RecitationAttempt struct {
 	CreatedAt   time.Time    `bson:"created_at" json:"created_at"`
 }
 
+// RecitationCoaching turns a raw score into actionable guidance — which words to
+// re-practice and a tip on how. Explanation is optional AI (Gemini) detail.
+type RecitationCoaching struct {
+	Pass        bool     `json:"pass"`                  // score met the pass threshold
+	FocusWords  []string `json:"focus_words"`           // mispronounced/missed words to redo
+	Tip         string   `json:"tip"`                   // deterministic next step
+	Explanation string   `json:"explanation,omitempty"` // optional AI how-to-fix detail
+}
+
 // RecitationCheckResult is the API response for POST /recitation/check.
 type RecitationCheckResult struct {
-	Score      int          `json:"score"`      // 0–100 percentage correct
-	Words      []WordResult `json:"words"`      // per-word breakdown
-	Message    string       `json:"message"`    // encouraging feedback
-	XPEarned   int          `json:"xp_earned"`  // XP awarded this attempt
-	Transcript string       `json:"transcript"` // what Whisper heard
-	AttemptNum int          `json:"attempt_num"`
+	Score      int                 `json:"score"`      // 0–100 percentage correct
+	Words      []WordResult        `json:"words"`      // per-word breakdown
+	Message    string              `json:"message"`    // encouraging feedback
+	XPEarned   int                 `json:"xp_earned"`  // XP awarded this attempt
+	Transcript string              `json:"transcript"` // what Whisper heard
+	AttemptNum int                 `json:"attempt_num"`
+	Coaching   *RecitationCoaching `json:"coaching,omitempty"`
 }

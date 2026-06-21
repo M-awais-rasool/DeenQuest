@@ -37,6 +37,10 @@ export type AppStackParamList = {
   ChangePassword: undefined;
   PublicProfile: { userId: string };
   Leaderboard: undefined;
+  DailyReview: undefined;
+  MistakeNotebook: undefined;
+  MasteryMap: undefined;
+  Reflection: undefined;
 };
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =

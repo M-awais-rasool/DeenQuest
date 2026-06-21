@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,11 +26,18 @@ type whisperResponse struct {
 
 const defaultLessonXP = 25
 
+// RecitationCoach generates a short, simple pronunciation tip. The Gemini client
+// satisfies it. Optional — when nil, coaching is deterministic only.
+type RecitationCoach interface {
+	Generate(ctx context.Context, system, userPrompt string) (string, error)
+}
+
 type RecitationService struct {
 	repo       progress.CoreRepository
 	whisperURL string // e.g. "http://whisper-service:8001"
 	httpClient *http.Client
 	emitter    EventEmitter
+	coach      RecitationCoach
 }
 
 func NewRecitationService(repo progress.CoreRepository, whisperURL string) *RecitationService {
@@ -42,6 +50,54 @@ func NewRecitationService(repo progress.CoreRepository, whisperURL string) *Reci
 
 // SetEventEmitter wires the Learning Agent's event publisher (optional).
 func (s *RecitationService) SetEventEmitter(e EventEmitter) { s.emitter = e }
+
+// SetCoach wires the optional AI pronunciation coach (Gemini).
+func (s *RecitationService) SetCoach(c RecitationCoach) { s.coach = c }
+
+const recitationPassScore = 60
+
+const recitationCoachPrompt = "You are a gentle Quran recitation (tajweed) coach for beginners. " +
+	"Given the Arabic words a learner mispronounced, give ONE short tip (max 25 words) on how to say them more clearly — " +
+	"mention the articulation point (makhraj) simply. Keep Arabic words in Arabic script. " +
+	"Do NOT give religious rulings. Plain text only."
+
+// buildCoaching derives deterministic coaching from the per-word results, then
+// optionally adds an AI explanation for the focus words.
+func (s *RecitationService) buildCoaching(ctx context.Context, score int, words []progress.WordResult) *progress.RecitationCoaching {
+	var focus []string
+	seen := make(map[string]struct{})
+	for _, w := range words {
+		if (w.Status == progress.WordWrong || w.Status == progress.WordMissing) && w.Text != "" {
+			if _, ok := seen[w.Text]; ok {
+				continue
+			}
+			seen[w.Text] = struct{}{}
+			focus = append(focus, w.Text)
+		}
+	}
+
+	pass := score >= recitationPassScore
+	c := &progress.RecitationCoaching{Pass: pass, FocusWords: focus}
+	switch {
+	case len(focus) == 0 && pass:
+		c.Tip = "Excellent recitation — you can move on."
+	case pass:
+		c.Tip = "Great! Polish these words: " + strings.Join(focus, "، ")
+	default:
+		c.Tip = "Let's practice these again, slowly: " + strings.Join(focus, "، ")
+	}
+
+	// Optional AI explanation for the focus words (short timeout; best-effort).
+	if s.coach != nil && len(focus) > 0 {
+		gctx, cancel := context.WithTimeout(ctx, 8*time.Second)
+		defer cancel()
+		prompt := "The learner mispronounced these words: " + strings.Join(focus, "، ") + ". Give one short tip to fix them."
+		if exp, err := s.coach.Generate(gctx, recitationCoachPrompt, prompt); err == nil {
+			c.Explanation = strings.TrimSpace(exp)
+		}
+	}
+	return c
+}
 
 func extractArabicText(lesson progress.Lesson) (string, error) {
 	for _, key := range []string{"text", "arabic"} {
@@ -169,6 +225,7 @@ func (s *RecitationService) CheckRecitation(
 		XPEarned:   xpEarned,
 		Transcript: transcript.Text,
 		AttemptNum: attemptNum,
+		Coaching:   s.buildCoaching(ctx, score, words),
 	}, nil
 }
 

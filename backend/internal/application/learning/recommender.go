@@ -30,6 +30,22 @@ func (s *RecommenderService) Stats(ctx context.Context) (*domain.AgentStats, err
 	return s.learningRepo.Stats(ctx, time.Now().UTC())
 }
 
+// Review returns just the due-revision recommendations — the "Daily Review" set.
+// Reuses Get (read-mostly: recomputes only when state changed) and filters.
+func (s *RecommenderService) Review(ctx context.Context, userID string) ([]domain.Recommendation, error) {
+	recs, err := s.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]domain.Recommendation, 0, len(recs))
+	for _, r := range recs {
+		if r.Kind == domain.RecRevision {
+			out = append(out, r)
+		}
+	}
+	return out, nil
+}
+
 // Get is the read-mostly path used by the HTTP API. It serves the user's cached
 // active recommendations and only recomputes (a write) when they are stale —
 // i.e. the learner's state changed after the recommendations were generated, or

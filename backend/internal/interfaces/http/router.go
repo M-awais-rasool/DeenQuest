@@ -19,6 +19,7 @@ func SetupRoutes(
 	adminHandler *handler.AdminHandler,
 	eventsHandler *handler.EventsHandler,
 	learningHandler *handler.LearningHandler,
+	reflectionHandler *handler.ReflectionHandler,
 	adminEmails []string,
 	jwtManager *jwt.JWTManager,
 ) {
@@ -70,6 +71,13 @@ func SetupRoutes(
 		authed.POST("/events", eventsHandler.Ingest)
 		authed.GET("/learning/state", learningHandler.GetState)
 		authed.GET("/learning/recommendations", learningHandler.GetRecommendations)
+		authed.GET("/learning/review", learningHandler.GetReview)
+		authed.GET("/learning/mistakes", learningHandler.GetMistakes)
+		authed.POST("/learning/mistakes/:id/resolve", learningHandler.ResolveMistake)
+
+		// Reflection Companion.
+		authed.POST("/reflection", reflectionHandler.Create)
+		authed.GET("/reflections", reflectionHandler.List)
 	}
 
 	admin := v1.Group("/admin")
@@ -96,8 +104,9 @@ func SetupRoutes(
 		admin.PUT("/rewards/:id", adminHandler.UpdateReward)
 		admin.DELETE("/rewards/:id", adminHandler.DeleteReward)
 
-		// Learning Agent monitoring.
+		// Learning Agent monitoring + Curriculum Agent insights.
 		admin.GET("/learning/stats", learningHandler.GetAgentStats)
+		admin.GET("/learning/curriculum", learningHandler.GetCurriculum)
 	}
 }
 

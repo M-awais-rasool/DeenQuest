@@ -281,6 +281,54 @@ func (r *MongoLearningRepository) Stats(ctx context.Context, now time.Time) (*le
 	return stats, nil
 }
 
+// SkillStruggles unwinds the per-user skills map and ranks each skill by how
+// many learners are weak in it (most-struggled first).
+func (r *MongoLearningRepository) SkillStruggles(ctx context.Context, limit int) ([]learning.SkillStruggle, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	if limit <= 0 {
+		limit = 20
+	}
+	pipeline := mongo.Pipeline{
+		{{Key: "$project", Value: bson.M{"skillsArr": bson.M{"$objectToArray": "$skills"}}}},
+		{{Key: "$unwind", Value: "$skillsArr"}},
+		{{Key: "$group", Value: bson.M{
+			"_id":        "$skillsArr.k",
+			"learners":   bson.M{"$sum": 1},
+			"avgMastery": bson.M{"$avg": "$skillsArr.v.mastery"},
+			"weak":       bson.M{"$sum": bson.M{"$cond": []interface{}{bson.M{"$lt": []interface{}{"$skillsArr.v.mastery", 0.5}}, 1, 0}}},
+		}}},
+		{{Key: "$sort", Value: bson.D{{Key: "weak", Value: -1}, {Key: "avgMastery", Value: 1}}}},
+		{{Key: "$limit", Value: int64(limit)}},
+	}
+
+	cur, err := r.states.Aggregate(timeoutCtx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	out := make([]learning.SkillStruggle, 0, limit)
+	for cur.Next(ctx) {
+		var row struct {
+			ID         string  `bson:"_id"`
+			Learners   int     `bson:"learners"`
+			AvgMastery float64 `bson:"avgMastery"`
+			Weak       int     `bson:"weak"`
+		}
+		if err := cur.Decode(&row); err != nil {
+			return nil, err
+		}
+		out = append(out, learning.SkillStruggle{
+			Tag:          row.ID,
+			Learners:     row.Learners,
+			WeakLearners: row.Weak,
+			AvgMastery:   row.AvgMastery,
+		})
+	}
+	return out, cur.Err()
+}
+
 func (r *MongoLearningRepository) SetMotivation(ctx context.Context, userID, message string) error {
 	timeoutCtx, cancel := withTimeout(ctx)
 	defer cancel()

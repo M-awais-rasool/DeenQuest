@@ -78,6 +78,29 @@ type AgentStats struct {
 	TotalEvents           int64          `json:"total_events"`
 }
 
+// SkillStruggle aggregates how a single skill is doing across all learners —
+// powers the admin Curriculum Agent insights.
+type SkillStruggle struct {
+	Tag          string  `json:"tag"`
+	Learners     int     `json:"learners"`      // learners who have touched this skill
+	WeakLearners int     `json:"weak_learners"` // learners below the weak threshold
+	AvgMastery   float64 `json:"avg_mastery"`
+}
+
+// LessonStruggle aggregates the most-missed (level, lesson) across all learners.
+type LessonStruggle struct {
+	LevelID     int `json:"level_id"`
+	LessonIndex int `json:"lesson_index"`
+	Mistakes    int `json:"mistakes"` // total wrong attempts
+	Learners    int `json:"learners"` // distinct learners affected
+}
+
+// CurriculumInsights is the admin Curriculum Agent read-model.
+type CurriculumInsights struct {
+	TopWeakSkills    []SkillStruggle  `json:"top_weak_skills"`
+	TopMissedLessons []LessonStruggle `json:"top_missed_lessons"`
+}
+
 // RecommendationKind is the type of next-best-action the recommender produced.
 type RecommendationKind string
 

@@ -16,6 +16,7 @@ import {
   Circle,
   Star,
   Zap,
+  Snowflake,
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -67,6 +68,7 @@ export const HomeScreen = () => {
   const totalXP = progress?.xp ?? 0;
   const level = progress?.level ?? 1;
   const currentStreak = progress?.current_streak ?? 0;
+  const freezes = progress?.freezes ?? 0;
   const weeklyCompletions =
     progress?.weekly_completions ?? new Array(7).fill(false);
 
@@ -148,13 +150,21 @@ export const HomeScreen = () => {
 
           {/* Level + XP bar */}
           <View style={styles.levelRow}>
-            <View style={styles.levelBadge}>
-              <Star
-                size={12}
-                color={theme.colors.secondary}
-                fill={theme.colors.secondary}
-              />
-              <Text style={styles.levelText}>Level {level}</Text>
+            <View style={styles.levelLeft}>
+              <View style={styles.levelBadge}>
+                <Star
+                  size={12}
+                  color={theme.colors.secondary}
+                  fill={theme.colors.secondary}
+                />
+                <Text style={styles.levelText}>Level {level}</Text>
+              </View>
+              {freezes > 0 && (
+                <View style={styles.freezeChip}>
+                  <Snowflake size={11} color={theme.colors.cyan} />
+                  <Text style={styles.freezeText}>{freezes}</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.xpLabel}>{totalXP} XP</Text>
           </View>
@@ -357,6 +367,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 7,
   },
+  levelLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
+  freezeChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: theme.colors.cyan + "1F",
+    borderWidth: 1,
+    borderColor: theme.colors.cyan + "40",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  freezeText: { color: theme.colors.cyan, fontSize: 12, fontWeight: "900" },
   levelBadge: {
     flexDirection: "row",
     alignItems: "center",

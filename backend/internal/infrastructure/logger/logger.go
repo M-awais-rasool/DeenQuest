@@ -5,7 +5,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var Log *zap.Logger
+// Log defaults to a no-op so calls before Init (e.g. in unit tests) never panic.
+// Init replaces it with the real configured logger.
+var Log = zap.NewNop()
 
 func Init(env string) {
 	var cfg zap.Config

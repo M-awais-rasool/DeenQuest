@@ -91,6 +91,7 @@ type ProgressResponse struct {
 	BarakahScore      int    `json:"barakah_score"`
 	CurrentStreak     int    `json:"current_streak"`
 	LongestStreak     int    `json:"longest_streak"`
+	Freezes           int    `json:"freezes"`            // streak freezes available
 	WeeklyCompletions []bool `json:"weekly_completions"` // index 0 = 6 days ago, index 6 = today
 }
 
@@ -148,6 +149,7 @@ func (s *CoreService) GetUserProgress(ctx context.Context, userID string) (*Prog
 		BarakahScore:      prog.BarakahScore,
 		CurrentStreak:     streak.CurrentStreak,
 		LongestStreak:     streak.LongestStreak,
+		Freezes:           streak.Freezes,
 		WeeklyCompletions: weekly,
 	}, nil
 }
@@ -376,35 +378,86 @@ func (s *CoreService) bumpProgress(ctx context.Context, userID string, xpDelta i
 	return s.repo.IncrementProgress(ctx, userID, xpDelta, barakahDelta)
 }
 
+// Streak-freeze tuning.
+const (
+	maxStreakFreezes = 2 // never hoard more than this
+	freezeEarnEvery  = 7 // earn one freeze each N-day milestone
+)
+
+func dayStartUTC(t time.Time) time.Time {
+	t = t.UTC()
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+// advanceStreak is the pure streak-transition function (no I/O): given the
+// previous streak and the current time, it returns the next streak. A missed day
+// is forgiven by consuming a freeze; freezes are earned on each 7-day milestone.
+// With zero freezes the behavior is identical to the original (reset on a gap),
+// so existing users see no change.
+func advanceStreak(prev progress.Streak, now time.Time) progress.Streak {
+	s := prev
+	if s.LastCompletedAt.IsZero() {
+		s.CurrentStreak = 1
+		if s.LongestStreak < 1 {
+			s.LongestStreak = 1
+		}
+		s.LastCompletedAt = now
+		s.UpdatedAt = now
+		return s
+	}
+
+	days := int(dayStartUTC(now).Sub(dayStartUTC(s.LastCompletedAt)).Hours() / 24)
+	switch {
+	case days <= 0:
+		// Same day (or clock skew) — no count change, no freeze earned.
+		s.LastCompletedAt = now
+		s.UpdatedAt = now
+		return s
+	case days == 1:
+		s.CurrentStreak++
+	default: // missed (days-1) full days
+		gap := days - 1
+		if s.Freezes >= gap {
+			s.Freezes -= gap // a freeze covers the missed day(s)
+			s.CurrentStreak++
+		} else {
+			s.CurrentStreak = 1
+		}
+	}
+
+	// Earn a freeze on each new milestone (capped).
+	if s.CurrentStreak%freezeEarnEvery == 0 && s.Freezes < maxStreakFreezes {
+		s.Freezes++
+	}
+	if s.CurrentStreak > s.LongestStreak {
+		s.LongestStreak = s.CurrentStreak
+	}
+	s.LastCompletedAt = now
+	s.UpdatedAt = now
+	return s
+}
+
 // bumpStreak advances the user's daily streak and returns the updated streak.
 func (s *CoreService) bumpStreak(ctx context.Context, userID string) (*progress.Streak, error) {
-	streak, err := s.repo.GetStreak(ctx, userID)
+	cur, err := s.repo.GetStreak(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	now := time.Now().UTC()
-	if streak == nil {
-		streak = &progress.Streak{ID: uuid.NewString(), UserID: userID, CurrentStreak: 1, LongestStreak: 1, LastCompletedAt: now, UpdatedAt: now}
-	} else {
-		last := streak.LastCompletedAt.UTC()
-		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-		lastDay := time.Date(last.Year(), last.Month(), last.Day(), 0, 0, 0, 0, time.UTC)
-		days := int(today.Sub(lastDay).Hours() / 24)
-		if days == 1 {
-			streak.CurrentStreak++
-		} else if days > 1 {
-			streak.CurrentStreak = 1
-		}
-		if streak.CurrentStreak > streak.LongestStreak {
-			streak.LongestStreak = streak.CurrentStreak
-		}
-		streak.LastCompletedAt = now
-		streak.UpdatedAt = now
+	prev := progress.Streak{ID: uuid.NewString(), UserID: userID}
+	if cur != nil {
+		prev = *cur
 	}
-	if err := s.repo.UpsertStreak(ctx, streak); err != nil {
+
+	next := advanceStreak(prev, time.Now().UTC())
+	if next.ID == "" {
+		next.ID = uuid.NewString()
+	}
+	next.UserID = userID
+
+	if err := s.repo.UpsertStreak(ctx, &next); err != nil {
 		return nil, err
 	}
-	return streak, nil
+	return &next, nil
 }
 
 // ─── Level Journey Methods ───

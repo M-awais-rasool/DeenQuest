@@ -8,13 +8,24 @@ import (
 )
 
 // LearningHandler exposes the Learning Agent's read surface: the user's evolving
-// state and their current next-best-action recommendations.
+// state, next-best-action recommendations, the daily review set, and the mistake
+// notebook.
 type LearningHandler struct {
 	recommender *learningapp.RecommenderService
+	mistakes    *learningapp.MistakeService
+	curriculum  *learningapp.CurriculumService
 }
 
-func NewLearningHandler(recommender *learningapp.RecommenderService) *LearningHandler {
-	return &LearningHandler{recommender: recommender}
+func NewLearningHandler(
+	recommender *learningapp.RecommenderService,
+	mistakes *learningapp.MistakeService,
+	curriculum *learningapp.CurriculumService,
+) *LearningHandler {
+	return &LearningHandler{
+		recommender: recommender,
+		mistakes:    mistakes,
+		curriculum:  curriculum,
+	}
 }
 
 // GetState returns the user's LearnerState (null for users with no events yet).
@@ -47,4 +58,53 @@ func (h *LearningHandler) GetRecommendations(c *gin.Context) {
 		return
 	}
 	response.OK(c, "recommendations fetched", recs)
+}
+
+// GetCurriculum returns the admin Curriculum Agent insights (struggle hotspots).
+func (h *LearningHandler) GetCurriculum(c *gin.Context) {
+	insights, err := h.curriculum.Insights(c.Request.Context())
+	if err != nil {
+		response.InternalError(c, "failed to fetch curriculum insights")
+		return
+	}
+	response.OK(c, "curriculum insights fetched", insights)
+}
+
+// GetReview returns just the due-revision set — the Daily Review.
+func (h *LearningHandler) GetReview(c *gin.Context) {
+	userID := c.GetString("user_id")
+	recs, err := h.recommender.Review(c.Request.Context(), userID)
+	if err != nil {
+		response.InternalError(c, "failed to fetch review")
+		return
+	}
+	response.OK(c, "review fetched", recs)
+}
+
+// GetMistakes returns the learner's mistake notebook (open by default; ?all=true
+// includes resolved ones).
+func (h *LearningHandler) GetMistakes(c *gin.Context) {
+	userID := c.GetString("user_id")
+	includeResolved := c.Query("all") == "true"
+	items, err := h.mistakes.List(c.Request.Context(), userID, includeResolved)
+	if err != nil {
+		response.InternalError(c, "failed to fetch mistakes")
+		return
+	}
+	response.OK(c, "mistakes fetched", items)
+}
+
+// ResolveMistake marks a mistake as revisited.
+func (h *LearningHandler) ResolveMistake(c *gin.Context) {
+	userID := c.GetString("user_id")
+	id := c.Param("id")
+	if id == "" {
+		response.BadRequest(c, "mistake id is required")
+		return
+	}
+	if err := h.mistakes.Resolve(c.Request.Context(), userID, id); err != nil {
+		response.InternalError(c, "failed to resolve mistake")
+		return
+	}
+	response.OK(c, "mistake resolved", gin.H{"id": id})
 }

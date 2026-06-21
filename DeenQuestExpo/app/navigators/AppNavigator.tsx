@@ -34,6 +34,10 @@ import OnboardingScreen from "../screens/auth/OnboardingScreen";
 import { SignupScreen } from "../screens/auth/SignupScreen";
 import { WelcomeScreen } from "../screens/auth/WelcomeScreen";
 import { SurahDetailScreen } from "../screens/quran/SurahDetailScreen";
+import { DailyReviewScreen } from "../screens/learning/DailyReviewScreen";
+import { MistakeNotebookScreen } from "../screens/learning/MistakeNotebookScreen";
+import { MasteryMapScreen } from "../screens/learning/MasteryMapScreen";
+import { ReflectionScreen } from "../screens/learning/ReflectionScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -149,6 +153,11 @@ const AppStack = () => {
           />
           <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
           <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+          <Stack.Screen name="DailyReview" component={DailyReviewScreen} />
+          <Stack.Screen name="MistakeNotebook" component={MistakeNotebookScreen} />
+          <Stack.Screen name="MasteryMap" component={MasteryMapScreen} />
+          <Stack.Screen name="Reflection" component={ReflectionScreen} />
+
         </>
       ) : (
         <>

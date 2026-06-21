@@ -28,4 +28,8 @@ type Repository interface {
 
 	// Stats returns aggregate metrics for the admin monitoring page.
 	Stats(ctx context.Context, now time.Time) (*AgentStats, error)
+
+	// SkillStruggles ranks skills by how many learners are weak in them — the
+	// admin Curriculum Agent's "what's hardest" view.
+	SkillStruggles(ctx context.Context, limit int) ([]SkillStruggle, error)
 }
