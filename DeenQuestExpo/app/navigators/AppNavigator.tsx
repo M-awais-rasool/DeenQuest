@@ -38,6 +38,9 @@ import { DailyReviewScreen } from "../screens/learning/DailyReviewScreen";
 import { MistakeNotebookScreen } from "../screens/learning/MistakeNotebookScreen";
 import { MasteryMapScreen } from "../screens/learning/MasteryMapScreen";
 import { ReflectionScreen } from "../screens/learning/ReflectionScreen";
+import { KnowledgeAskScreen } from "../screens/learning/KnowledgeAskScreen";
+import { WeeklyReportScreen } from "../screens/learning/WeeklyReportScreen";
+import { StudyPlanScreen } from "../screens/learning/StudyPlanScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -157,6 +160,9 @@ const AppStack = () => {
           <Stack.Screen name="MistakeNotebook" component={MistakeNotebookScreen} />
           <Stack.Screen name="MasteryMap" component={MasteryMapScreen} />
           <Stack.Screen name="Reflection" component={ReflectionScreen} />
+          <Stack.Screen name="KnowledgeAsk" component={KnowledgeAskScreen} />
+          <Stack.Screen name="WeeklyReport" component={WeeklyReportScreen} />
+          <Stack.Screen name="StudyPlan" component={StudyPlanScreen} />
 
         </>
       ) : (

@@ -41,6 +41,9 @@ export type AppStackParamList = {
   MistakeNotebook: undefined;
   MasteryMap: undefined;
   Reflection: undefined;
+  KnowledgeAsk: undefined;
+  WeeklyReport: undefined;
+  StudyPlan: undefined;
 };
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =
