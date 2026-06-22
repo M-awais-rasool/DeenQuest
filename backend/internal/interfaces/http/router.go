@@ -20,6 +20,8 @@ func SetupRoutes(
 	eventsHandler *handler.EventsHandler,
 	learningHandler *handler.LearningHandler,
 	reflectionHandler *handler.ReflectionHandler,
+	schedulingHandler *handler.SchedulingHandler,
+	knowledgeHandler *handler.KnowledgeHandler,
 	adminEmails []string,
 	jwtManager *jwt.JWTManager,
 ) {
@@ -72,6 +74,9 @@ func SetupRoutes(
 		authed.GET("/learning/state", learningHandler.GetState)
 		authed.GET("/learning/recommendations", learningHandler.GetRecommendations)
 		authed.GET("/learning/review", learningHandler.GetReview)
+		authed.GET("/learning/report", learningHandler.GetReport)
+		authed.GET("/scheduling/plan", schedulingHandler.Plan)
+		authed.POST("/knowledge/ask", knowledgeHandler.Ask)
 		authed.GET("/learning/mistakes", learningHandler.GetMistakes)
 		authed.POST("/learning/mistakes/:id/resolve", learningHandler.ResolveMistake)
 
@@ -107,6 +112,7 @@ func SetupRoutes(
 		// Learning Agent monitoring + Curriculum Agent insights.
 		admin.GET("/learning/stats", learningHandler.GetAgentStats)
 		admin.GET("/learning/curriculum", learningHandler.GetCurriculum)
+		admin.GET("/learning/report/:userId", learningHandler.GetUserReport)
 	}
 }
 

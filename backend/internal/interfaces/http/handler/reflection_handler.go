@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
 
 	reflectionsvc "github.com/chawais/talent-flow/backend/internal/application/reflection"
@@ -33,6 +35,10 @@ func (h *ReflectionHandler) Create(c *gin.Context) {
 	}
 	ref, err := h.svc.Respond(c.Request.Context(), userID, body.Text, body.Mood)
 	if err != nil {
+		if errors.Is(err, reflectionsvc.ErrUnsafe) {
+			response.BadRequest(c, "Please keep your reflection kind and appropriate.")
+			return
+		}
 		response.InternalError(c, "failed to save reflection")
 		return
 	}

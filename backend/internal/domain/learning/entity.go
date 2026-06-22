@@ -78,6 +78,27 @@ type AgentStats struct {
 	TotalEvents           int64          `json:"total_events"`
 }
 
+// WeeklyReport is the Parent/Teacher Agent read-model: a learner's week at a
+// glance. Combines learner_states + progress + streak.
+type WeeklyReport struct {
+	UserID          string   `json:"user_id"`
+	XP              int      `json:"xp"`
+	Level           int      `json:"level"`
+	CurrentStreak   int      `json:"current_streak"`
+	LongestStreak   int      `json:"longest_streak"`
+	Freezes         int      `json:"freezes"`
+	ActiveDays      int      `json:"active_days"` // out of the last 7
+	WeeklyActivity  []bool   `json:"weekly_activity"`
+	LevelsCompleted int      `json:"levels_completed"`
+	Segment         string   `json:"segment"`
+	Engagement      float64  `json:"engagement"`
+	DropoutRisk     float64  `json:"dropout_risk"`
+	WeakAreas       []string `json:"weak_areas"`
+	StrongCount     int      `json:"strong_count"`
+	Headline        string   `json:"headline"`
+	Narrative       string   `json:"narrative,omitempty"` // optional AI summary
+}
+
 // SkillStruggle aggregates how a single skill is doing across all learners —
 // powers the admin Curriculum Agent insights.
 type SkillStruggle struct {

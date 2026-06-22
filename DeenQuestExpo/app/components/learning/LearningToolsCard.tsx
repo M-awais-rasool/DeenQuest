@@ -5,6 +5,9 @@ import {
   BarChart3,
   BookMarked,
   Heart,
+  MessageCircleQuestion,
+  CalendarCheck,
+  Clock,
   ChevronRight,
 } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
@@ -61,6 +64,30 @@ export function LearningToolsCard() {
           title="Reflection"
           sub="A quiet moment with your companion"
           onPress={() => navigation.navigate("Reflection")}
+        />
+        <View style={s.divider} />
+        <Row
+          icon={MessageCircleQuestion}
+          color={theme.colors.lavender}
+          title="Ask a Question"
+          sub="Answers from a trusted source"
+          onPress={() => navigation.navigate("KnowledgeAsk")}
+        />
+        <View style={s.divider} />
+        <Row
+          icon={CalendarCheck}
+          color={theme.colors.primary}
+          title="Weekly Report"
+          sub="Your week at a glance"
+          onPress={() => navigation.navigate("WeeklyReport")}
+        />
+        <View style={s.divider} />
+        <Row
+          icon={Clock}
+          color={theme.colors.secondary}
+          title="Study Plan"
+          sub="Learn around your prayers"
+          onPress={() => navigation.navigate("StudyPlan")}
         />
       </View>
     </View>
