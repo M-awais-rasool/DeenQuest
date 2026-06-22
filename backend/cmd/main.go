@@ -17,11 +17,14 @@ import (
 
 	authsvc "github.com/chawais/talent-flow/backend/internal/application/auth"
 	intel "github.com/chawais/talent-flow/backend/internal/application/intelligent"
+	knowledgesvc "github.com/chawais/talent-flow/backend/internal/application/knowledge"
 	learningsvc "github.com/chawais/talent-flow/backend/internal/application/learning"
+	moderationsvc "github.com/chawais/talent-flow/backend/internal/application/moderation"
 	notifiesvc "github.com/chawais/talent-flow/backend/internal/application/notification"
 	progresssvc "github.com/chawais/talent-flow/backend/internal/application/progress"
 	quransvc "github.com/chawais/talent-flow/backend/internal/application/quran"
 	reflectionsvc "github.com/chawais/talent-flow/backend/internal/application/reflection"
+	schedulingsvc "github.com/chawais/talent-flow/backend/internal/application/scheduling"
 	usersvc "github.com/chawais/talent-flow/backend/internal/application/user"
 	"github.com/chawais/talent-flow/backend/internal/application/worker"
 	dlearning "github.com/chawais/talent-flow/backend/internal/domain/learning"
@@ -122,7 +125,12 @@ func main() {
 	learningRecommender := learningsvc.NewRecommenderService(learningRepo, coreRepo)
 	mistakeService := learningsvc.NewMistakeService(mistakeRepo)
 	curriculumService := learningsvc.NewCurriculumService(learningRepo, mistakeRepo)
+	reportService := learningsvc.NewReportService(learningRepo, coreRepo)
 	reflectionService := reflectionsvc.NewService(reflectionRepo)
+	moderationService := moderationsvc.NewService() // Safety/Moderation Agent
+	reflectionService.SetModerator(moderationService)
+	schedulingService := schedulingsvc.NewService() // Scheduling / Prayer-aware Agent
+	knowledgeService := knowledgesvc.NewService()   // Q&A / Knowledge Agent
 
 	expoClient := push.NewExpoClient(cfg.ExpoPushURL, cfg.ExpoPushAccessToken)
 	notificationService := notifiesvc.NewService(tokenRepo, expoClient)
@@ -208,8 +216,11 @@ func main() {
 	var engageGen learningsvc.Generator
 	if geminiClient != nil {
 		engageGen = geminiClient
-		recitationService.SetCoach(geminiClient) // Pronunciation/Tajweed Coach
-		reflectionService.SetCoach(geminiClient) // Reflection Companion
+		recitationService.SetCoach(geminiClient)      // Pronunciation/Tajweed Coach
+		reflectionService.SetCoach(geminiClient)      // Reflection Companion
+		moderationService.SetClassifier(geminiClient) // Safety/Moderation Agent
+		reportService.SetCoach(geminiClient)          // Parent/Teacher Weekly Report
+		knowledgeService.SetGenerator(geminiClient)   // Q&A / Knowledge Agent
 	}
 
 	learningSweep := learningsvc.NewScheduler(learningRepo, learningRecommender)
@@ -243,8 +254,10 @@ func main() {
 	recitationHandler := handler.NewRecitationHandler(recitationService)
 	notificationHandler := handler.NewNotificationHandler(notificationService)
 	eventsHandler := handler.NewEventsHandler(learningPublisher)
-	learningHandler := handler.NewLearningHandler(learningRecommender, mistakeService, curriculumService)
+	learningHandler := handler.NewLearningHandler(learningRecommender, mistakeService, curriculumService, reportService)
 	reflectionHandler := handler.NewReflectionHandler(reflectionService)
+	schedulingHandler := handler.NewSchedulingHandler(schedulingService)
+	knowledgeHandler := handler.NewKnowledgeHandler(knowledgeService)
 	quranClient := alquran.NewClient(cfg.AlQuranBaseURL, cfg.QuranAudioCDNURL, cfg.QuranAudioEdition, cfg.QuranAudioBitrate)
 	quranService := quransvc.NewService(quranClient, redisClient)
 	quranHandler := handler.NewQuranHandler(quranService)
@@ -263,7 +276,7 @@ func main() {
 		r.Use(middleware.RateLimit(redisClient, 100, time.Minute))
 	}
 
-	router.SetupRoutes(r, authHandler, userHandler, coreHandler, recitationHandler, notificationHandler, quranHandler, adminHandler, eventsHandler, learningHandler, reflectionHandler, cfg.AdminEmailList(), jwtManager)
+	router.SetupRoutes(r, authHandler, userHandler, coreHandler, recitationHandler, notificationHandler, quranHandler, adminHandler, eventsHandler, learningHandler, reflectionHandler, schedulingHandler, knowledgeHandler, cfg.AdminEmailList(), jwtManager)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	srv := &http.Server{Addr: addr, Handler: r}
