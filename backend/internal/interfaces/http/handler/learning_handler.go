@@ -14,17 +14,20 @@ type LearningHandler struct {
 	recommender *learningapp.RecommenderService
 	mistakes    *learningapp.MistakeService
 	curriculum  *learningapp.CurriculumService
+	report      *learningapp.ReportService
 }
 
 func NewLearningHandler(
 	recommender *learningapp.RecommenderService,
 	mistakes *learningapp.MistakeService,
 	curriculum *learningapp.CurriculumService,
+	report *learningapp.ReportService,
 ) *LearningHandler {
 	return &LearningHandler{
 		recommender: recommender,
 		mistakes:    mistakes,
 		curriculum:  curriculum,
+		report:      report,
 	}
 }
 
@@ -58,6 +61,32 @@ func (h *LearningHandler) GetRecommendations(c *gin.Context) {
 		return
 	}
 	response.OK(c, "recommendations fetched", recs)
+}
+
+// GetReport returns the current user's weekly report (parent/teacher friendly).
+func (h *LearningHandler) GetReport(c *gin.Context) {
+	userID := c.GetString("user_id")
+	rep, err := h.report.Weekly(c.Request.Context(), userID)
+	if err != nil {
+		response.InternalError(c, "failed to build report")
+		return
+	}
+	response.OK(c, "report built", rep)
+}
+
+// GetUserReport returns any learner's weekly report (admin / teacher view).
+func (h *LearningHandler) GetUserReport(c *gin.Context) {
+	userID := c.Param("userId")
+	if userID == "" {
+		response.BadRequest(c, "user id is required")
+		return
+	}
+	rep, err := h.report.Weekly(c.Request.Context(), userID)
+	if err != nil {
+		response.InternalError(c, "failed to build report")
+		return
+	}
+	response.OK(c, "report built", rep)
 }
 
 // GetCurriculum returns the admin Curriculum Agent insights (struggle hotspots).
