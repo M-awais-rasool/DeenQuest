@@ -5,7 +5,7 @@ import type { AyahTimingInput } from "../../types/quranSync";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.18.16:8080",
+  baseUrl: "http://192.168.18.15:8080",
   prepareHeaders: async (headers, { getState }) => {
     try {
       const stateToken = (getState() as any)?.main?.accessToken;
@@ -509,6 +509,50 @@ export interface Reflection {
   created_at: string;
 }
 
+// ─── Q&A / Knowledge Agent ───
+export interface KnowledgeAnswer {
+  text: string;
+  source?: string;
+  matched: boolean;
+  referral: boolean;
+}
+
+// ─── Weekly Report (Parent/Teacher Agent) ───
+export interface WeeklyReport {
+  user_id: string;
+  xp: number;
+  level: number;
+  current_streak: number;
+  longest_streak: number;
+  freezes: number;
+  active_days: number;
+  weekly_activity: boolean[];
+  levels_completed: number;
+  segment: string;
+  engagement: number;
+  dropout_risk: number;
+  weak_areas: string[];
+  strong_count: number;
+  headline: string;
+  narrative?: string;
+}
+
+// ─── Scheduling / Prayer-aware Agent ───
+export interface PrayerTimes {
+  fajr: string;
+  sunrise: string;
+  dhuhr: string;
+  asr: string;
+  maghrib: string;
+  isha: string;
+}
+export interface StudyPlan {
+  date: string;
+  prayer_times: PrayerTimes;
+  suggested_slot: string;
+  suggested_time: string;
+  tip: string;
+}
 
 export const API = createApi({
   reducerPath: "API",
@@ -810,6 +854,23 @@ export const API = createApi({
       query: () => ({ url: "/api/v1/reflections", method: "GET" }),
       providesTags: ["Reflections"],
     }),
+    askKnowledge: builder.mutation<APIResponse<KnowledgeAnswer>, { question: string }>({
+      query: (body) => ({ url: "/api/v1/knowledge/ask", method: "POST", body }),
+    }),
+    getWeeklyReport: builder.query<APIResponse<WeeklyReport>, void>({
+      query: () => ({ url: "/api/v1/learning/report", method: "GET" }),
+      providesTags: ["Learning"],
+    }),
+    getStudyPlan: builder.query<
+      APIResponse<StudyPlan>,
+      { lat: number; lng: number; tz: number }
+    >({
+      query: ({ lat, lng, tz }) => ({
+        url: "/api/v1/scheduling/plan",
+        method: "GET",
+        params: { lat, lng, tz },
+      }),
+    }),
   }),
 });
 
@@ -846,4 +907,7 @@ export const {
   useResolveMistakeMutation,
   useCreateReflectionMutation,
   useGetReflectionsQuery,
+  useAskKnowledgeMutation,
+  useGetWeeklyReportQuery,
+  useGetStudyPlanQuery,
 } = API;
