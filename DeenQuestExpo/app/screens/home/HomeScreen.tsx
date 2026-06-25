@@ -1,522 +1,407 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { TactilePressable } from "../../components/ui";
 import {
   Flame,
-  CheckCircle2,
+  Trophy,
+  Check,
   BookOpen,
-  GraduationCap,
-  Bolt,
-  Circle,
-  Star,
-  Zap,
-  Snowflake,
+  BookMarked,
+  RotateCw,
+  AudioLines,
+  Feather,
 } from "lucide-react-native";
+import type { LucideIcon } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Header } from "../../components/Header";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
-import { theme } from "../../theme/themes";
+import { dq } from "../../theme/designTokens";
 import {
   useGetDailyTasksQuery,
   useGetProgressQuery,
+  useGetProfileQuery,
 } from "../../store/services/api";
 import type { DailyTask } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { NextBestActionCard } from "../../components/learning/NextBestActionCard";
 
-const CATEGORY_ICONS: Record<string, { icon: typeof Flame; color: string }> = {
-  salah: { icon: Flame, color: theme.colors.primary },
-  quran: { icon: BookOpen, color: theme.colors.secondary },
-  dhikr: { icon: Circle, color: theme.colors.lavender },
-  learning: { icon: GraduationCap, color: theme.colors.pink },
-  character: { icon: Bolt, color: theme.colors.primary },
-  social: { icon: CheckCircle2, color: theme.colors.cyan },
-  reflection: { icon: Circle, color: theme.colors.yellowSoft },
+// Icon shown on each mission row, keyed by the task's category.
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  salah: Flame,
+  quran: BookMarked,
+  dhikr: RotateCw,
+  learning: BookOpen,
+  character: AudioLines,
+  social: Check,
+  reflection: Feather,
 };
 
-function buildWeekDays(): string[] {
-  const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const days: string[] = [];
-  const now = new Date();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - i);
-    days.push(i === 0 ? "Today" : labels[d.getDay()]);
-  }
-  return days;
+const XP_PER_LEVEL = 500;
+
+// Day letters indexed by Date.getDay() (Sun..Sat). weekly_completions is
+// relative to today (index 0 = 6 days ago, index 6 = today), so the labels are
+// derived from real dates rather than a fixed Mon..Sun.
+function buildWeek(): { letter: string; isToday: boolean }[] {
+  const LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
+  const today = new Date();
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (6 - i));
+    return { letter: LETTERS[d.getDay()] ?? "", isToday: i === 6 };
+  });
 }
 
-const WEEK_LABELS = buildWeekDays();
+const WEEK = buildWeek();
+
+function rankWord(title?: string): string {
+  const first = (title || "Seeker").trim().split(/\s+/)[0] || "Seeker";
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
 
 export const HomeScreen = () => {
   const { data: tasksData, isLoading: tasksLoading } = useGetDailyTasksQuery();
   const { data: progressData } = useGetProgressQuery();
+  const { data: profileData } = useGetProfileQuery();
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   const tasks = tasksData?.data ?? [];
   const progress = progressData?.data;
+  const profile = profileData?.data;
+
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalXP = progress?.xp ?? 0;
   const level = progress?.level ?? 1;
   const currentStreak = progress?.current_streak ?? 0;
-  const freezes = progress?.freezes ?? 0;
+  const longestStreak = progress?.longest_streak ?? currentStreak;
   const weeklyCompletions =
     progress?.weekly_completions ?? new Array(7).fill(false);
+
+  const displayName =
+    profile?.display_name || profile?.email?.split("@")[0] || "Explorer";
+  const initial = displayName.charAt(0).toUpperCase();
+  const xpInLevel = totalXP % XP_PER_LEVEL;
+  const xpPct = (xpInLevel / XP_PER_LEVEL) * 100;
 
   const handleTaskPress = (task: DailyTask) => {
     navigation.navigate("DailyTaskDetail", { task });
   };
+
   return (
-    <ScreenWrapper>
-      <Header title="DeenQuest" xp={totalXP} />
+    <ScreenWrapper innerStyle={styles.wrapper}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Streak / stats hero ── */}
-        <LinearGradient
-          colors={["#242821", "#191C18"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.streakCard}
-        >
-          <View style={styles.streakTopRow}>
-            <View>
-              <Text style={styles.greeting}>As-salamu Alaykum!</Text>
-              <Text style={styles.streakSub}>
-                Keep your <Text style={styles.highlight}>streak alive</Text>
-                {currentStreak > 0 ? ` — ${currentStreak} days strong!` : "!"}
-              </Text>
-            </View>
-            <View style={styles.streakBubble}>
-              <Flame
-                size={18}
-                color={theme.colors.onPrimary}
-                fill={theme.colors.onPrimary}
-              />
-              <Text style={styles.streakBubbleNumber}>{currentStreak}</Text>
-              <Text style={styles.streakBubbleLabel}>Streak</Text>
-            </View>
+        {/* ── Greeting ── */}
+        <View style={styles.greetingRow}>
+          <View style={{ gap: 2 }}>
+            <Text style={styles.salaam}>Assalamu alaikum</Text>
+            <Text style={styles.name}>{displayName}</Text>
           </View>
-
-          {/* 7-day row */}
-          <View style={styles.weekRow}>
-            {WEEK_LABELS.map((label, i) => {
-              const done = weeklyCompletions[i] === true;
-              const isToday = i === 6;
-              return (
-                <View key={i} style={styles.dayCol}>
-                  <View
-                    style={[
-                      styles.dayCircle,
-                      done && styles.dayCircleDone,
-                      isToday && !done && styles.dayCircleToday,
-                    ]}
-                  >
-                    {done ? (
-                      <CheckCircle2
-                        size={16}
-                        color={theme.colors.onPrimary}
-                        fill={theme.colors.onPrimary}
-                      />
-                    ) : isToday ? (
-                      <Zap
-                        size={14}
-                        color={theme.colors.onPrimary}
-                        fill={theme.colors.onPrimary}
-                      />
-                    ) : (
-                      <View style={styles.dayDot} />
-                    )}
-                  </View>
-                  <Text
-                    style={[styles.dayLabel, isToday && styles.dayLabelToday]}
-                  >
-                    {label}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-
-          {/* Level + XP bar */}
-          <View style={styles.levelRow}>
-            <View style={styles.levelLeft}>
-              <View style={styles.levelBadge}>
-                <Star
-                  size={12}
-                  color={theme.colors.secondary}
-                  fill={theme.colors.secondary}
-                />
-                <Text style={styles.levelText}>Level {level}</Text>
-              </View>
-              {freezes > 0 && (
-                <View style={styles.freezeChip}>
-                  <Snowflake size={11} color={theme.colors.cyan} />
-                  <Text style={styles.freezeText}>{freezes}</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.xpLabel}>{totalXP} XP</Text>
-          </View>
-          <View style={styles.xpBarTrack}>
-            <View
-              style={[
-                styles.xpBarFill,
-                { width: `${Math.min(((totalXP % 100) / 100) * 100, 100)}%` },
-              ]}
-            />
-          </View>
-        </LinearGradient>
-
-        <NextBestActionCard />
-
-        {/* ── Daily Missions ── */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Daily Missions</Text>
-          <View style={styles.missionCountBadge}>
-            <Text style={styles.missionCountText}>
-              {completedCount}/{tasks.length}
-            </Text>
+          <View style={styles.avatarRing}>
+            <LinearGradient
+              colors={[dq.green, dq.greenDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatar}
+            >
+              <Text style={styles.avatarText}>{initial}</Text>
+            </LinearGradient>
           </View>
         </View>
 
-        {tasksLoading ? (
-          <Loader />
-        ) : (
-          <View style={styles.missionList}>
-            {tasks.map((task) => {
-              const catConf = CATEGORY_ICONS[task.category] ?? {
-                icon: Circle,
-                color: theme.colors.primary,
-              };
-              const IconComp = catConf.icon;
+        {/* ── Streak hero ── */}
+        <View style={styles.heroCard}>
+          <View style={styles.heroTopRow}>
+            <View style={styles.heroStreak}>
+              <Flame size={30} color={dq.gold} />
+              <View>
+                <Text style={styles.heroStreakNum}>{currentStreak}</Text>
+                <Text style={styles.heroStreakLabel}>day streak</Text>
+              </View>
+            </View>
+            <View style={styles.bestPill}>
+              <Trophy size={13} color={dq.gold} />
+              <Text style={styles.bestText}>Best {longestStreak}</Text>
+            </View>
+          </View>
+
+          {/* week dots */}
+          <View style={styles.weekRow}>
+            {WEEK.map((day, i) => {
+              const done = weeklyCompletions[i] === true;
+              const isToday = day.isToday;
               return (
-                <TactilePressable
-                  key={task.id}
-                  edgeColor={theme.colors.black35}
-                  depth={3}
-                  radius={theme.borderRadius.md}
-                  haptic="light"
-                  faceStyle={[
-                    styles.missionCard,
-                    task.completed && styles.missionCardDone,
-                  ]}
-                  onPress={() => handleTaskPress(task)}
-                >
-                  <View
+                <View key={i} style={styles.dayCol}>
+                  <Text
                     style={[
-                      styles.missionIcon,
-                      {
-                        backgroundColor: catConf.color + "18",
-                        borderColor: catConf.color + "35",
-                      },
+                      styles.dayLetter,
+                      isToday && { color: dq.gold },
                     ]}
                   >
-                    <IconComp size={22} color={catConf.color} />
+                    {day.letter}
+                  </Text>
+                  <View
+                    style={[
+                      styles.dayDot,
+                      done && styles.dayDotDone,
+                      isToday && !done && styles.dayDotToday,
+                      !done && !isToday && styles.dayDotEmpty,
+                    ]}
+                  >
+                    {done ? (
+                      <Check size={15} color={dq.onGreenAlt} />
+                    ) : isToday ? (
+                      <Flame size={14} color={dq.gold} />
+                    ) : null}
                   </View>
-                  <View style={styles.missionInfo}>
-                    <Text style={styles.missionTitle} numberOfLines={1}>
-                      {task.title}
-                    </Text>
-                    <View style={styles.missionMeta}>
-                      <Text style={styles.missionCategory}>
-                        {task.category.toUpperCase()}
-                      </Text>
-                      <View style={styles.dot} />
-                      <Text style={styles.missionXP}>+{task.reward_xp} XP</Text>
-                    </View>
-                  </View>
-                  {task.completed ? (
-                    <View style={styles.doneCheck}>
-                      <CheckCircle2 size={22} color={theme.colors.primary} />
-                    </View>
-                  ) : (
-                    <View style={styles.startBtn}>
-                      <Text style={styles.startBtnText}>Start</Text>
-                    </View>
-                  )}
-                </TactilePressable>
+                </View>
               );
             })}
           </View>
-        )}
 
+          {/* xp */}
+          <View style={{ gap: 9 }}>
+            <View style={styles.xpRow}>
+              <Text style={styles.levelText}>
+                Level {level} · {rankWord(profile?.title)}
+              </Text>
+              <Text style={styles.xpText}>
+                {xpInLevel} / {XP_PER_LEVEL} XP
+              </Text>
+            </View>
+            <View style={styles.xpTrack}>
+              <LinearGradient
+                colors={[dq.greenDark, dq.green]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.xpFill, { width: `${xpPct}%` }]}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* ── Recommended for you ── */}
+        <NextBestActionCard />
+
+        {/* ── Daily Missions ── */}
+        <View>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Daily Missions</Text>
+            <View style={styles.missionCountPill}>
+              <Text style={styles.missionCountText}>
+                {completedCount} / {tasks.length}
+              </Text>
+            </View>
+          </View>
+
+          {tasksLoading ? (
+            <Loader />
+          ) : (
+            <View style={styles.missionCard}>
+              {tasks.map((task, i) => {
+                const Icon = CATEGORY_ICONS[task.category] ?? Feather;
+                const last = i === tasks.length - 1;
+                return (
+                  <Pressable
+                    key={task.id}
+                    onPress={() => handleTaskPress(task)}
+                    style={({ pressed }) => [
+                      styles.missionRow,
+                      !last && styles.missionRowBorder,
+                      pressed && { opacity: 0.6 },
+                    ]}
+                  >
+                    <View style={styles.missionIcon}>
+                      <Icon size={18} color={dq.green} />
+                    </View>
+                    <View style={styles.missionBody}>
+                      <Text style={styles.missionTitle} numberOfLines={1}>
+                        {task.title}
+                      </Text>
+                      <Text style={styles.missionSub} numberOfLines={1}>
+                        {task.description || task.category}
+                      </Text>
+                    </View>
+                    {task.completed ? (
+                      <View style={styles.missionCheck}>
+                        <Check size={15} color={dq.onGreenAlt} />
+                      </View>
+                    ) : (
+                      <View style={styles.missionXpPill}>
+                        <Text style={styles.missionXpText}>
+                          +{task.reward_xp} XP
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+        </View>
       </ScrollView>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    padding: theme.spacing.lg,
+  wrapper: { flex: 1 },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    paddingBottom: 90,
+    gap: 20,
   },
 
-  streakCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.outline25,
-    marginBottom: 16,
-  },
-  streakTopRow: {
+  // Greeting
+  greetingRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  greeting: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: theme.colors.text,
-  },
-  streakSub: {
-    fontSize: 13,
-    color: theme.colors.textMuted,
-    fontWeight: "500",
-    marginTop: 3,
-  },
-  highlight: {
-    color: theme.colors.primary,
-    fontWeight: "700",
-  },
-  streakBubble: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
     alignItems: "center",
-    borderBottomWidth: 3,
-    borderBottomColor: theme.colors.primaryContainer,
-    minWidth: 60,
-  },
-  streakBubbleNumber: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: theme.colors.onPrimary,
-    lineHeight: 24,
-  },
-  streakBubbleLabel: {
-    fontSize: 9,
-    fontWeight: "900",
-    color: theme.colors.onPrimary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    opacity: 0.8,
-  },
-
-  // 7-day row
-  weekRow: {
-    flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 14,
   },
-  dayCol: {
+  salaam: { fontSize: 13, fontWeight: "700", color: dq.muted },
+  name: { fontSize: 22, fontWeight: "900", color: dq.white },
+  avatarRing: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: dq.gold55,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: { fontSize: 18, fontWeight: "900", color: dq.onGreen },
+
+  // Hero card
+  heroCard: {
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.cardBorder,
+    borderRadius: 18,
+    padding: 20,
+    gap: 18,
+  },
+  heroTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  heroStreak: { flexDirection: "row", alignItems: "center", gap: 12 },
+  heroStreakNum: { fontSize: 28, fontWeight: "900", color: dq.white, lineHeight: 28 },
+  heroStreakLabel: { fontSize: 12, fontWeight: "700", color: dq.muted, marginTop: 2 },
+  bestPill: {
+    flexDirection: "row",
     alignItems: "center",
     gap: 5,
+    backgroundColor: dq.gold12,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 99,
   },
-  dayCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.surfaceHigh,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dayCircleDone: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  dayCircleToday: {
-    backgroundColor: theme.colors.secondary,
-    borderColor: theme.colors.secondary,
-  },
+  bestText: { fontSize: 12, fontWeight: "800", color: dq.gold },
+
+  weekRow: { flexDirection: "row", justifyContent: "space-between" },
+  dayCol: { alignItems: "center", gap: 7 },
+  dayLetter: { fontSize: 11, fontWeight: "800", color: dq.faint },
   dayDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.outline,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  dayLabel: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: theme.colors.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
+  dayDotDone: { backgroundColor: dq.green },
+  dayDotToday: {
+    backgroundColor: dq.gold12,
+    borderWidth: 2,
+    borderColor: dq.gold,
   },
-  dayLabelToday: {
-    color: theme.colors.secondary,
-    fontWeight: "900",
+  dayDotEmpty: {
+    backgroundColor: dq.lockFill,
+    borderWidth: 1,
+    borderColor: dq.lockBorder,
   },
 
-  // Level / XP
-  levelRow: {
+  xpRow: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 7,
   },
-  levelLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
-  freezeChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: theme.colors.cyan + "1F",
-    borderWidth: 1,
-    borderColor: theme.colors.cyan + "40",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
-  freezeText: { color: theme.colors.cyan, fontSize: 12, fontWeight: "900" },
-  levelBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: theme.colors.secondary12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: theme.colors.secondary25,
-  },
-  levelText: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: theme.colors.secondary,
-  },
-  xpLabel: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: theme.colors.textMuted,
-  },
-  xpBarTrack: {
-    height: 7,
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 4,
+  levelText: { fontSize: 13, fontWeight: "800", color: dq.text },
+  xpText: { fontSize: 12, fontWeight: "700", color: dq.muted },
+  xpTrack: {
+    height: 10,
+    borderRadius: 99,
+    backgroundColor: dq.trackWhite06,
     overflow: "hidden",
   },
-  xpBarFill: {
-    height: "100%",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 4,
-  },
+  xpFill: { height: "100%", borderRadius: 99 },
 
-  // ── Missions ─────────────────────────────────────────────────────
+  // Missions
   sectionHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: theme.colors.primary90,
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-  },
-  missionCountBadge: {
-    backgroundColor: theme.colors.surfaceHigh,
+  sectionTitle: { fontSize: 17, fontWeight: "800", color: dq.white },
+  missionCountPill: {
+    backgroundColor: dq.trackGreenTint,
     paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 999,
+    paddingVertical: 4,
+    borderRadius: 99,
   },
-  missionCountText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: theme.colors.textMuted,
-    letterSpacing: 0.5,
-  },
-  missionList: {
-    gap: 10,
-    marginBottom: 38,
-  },
+  missionCountText: { fontSize: 13, fontWeight: "800", color: dq.green },
   missionCard: {
-    backgroundColor: theme.colors.surfaceLow,
-    padding: 14,
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.cardBorder,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+  },
+  missionRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 12,
+    paddingVertical: 13,
   },
-  missionCardDone: {
-    opacity: 0.55,
+  missionRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: dq.rowBorder,
   },
   missionIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: theme.borderRadius.sm,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-  },
-  missionInfo: {
-    flex: 1,
-  },
-  missionTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: theme.colors.text,
-  },
-  missionMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 3,
-  },
-  missionCategory: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: theme.colors.textMuted,
-    letterSpacing: 0.5,
-  },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: theme.colors.outline,
-  },
-  missionXP: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: theme.colors.primary,
-  },
-  doneCheck: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: theme.colors.primary12,
-    borderWidth: 1.5,
-    borderColor: theme.colors.primary,
-    justifyContent: "center",
+    borderRadius: 11,
+    backgroundColor: dq.trackGreenTint,
     alignItems: "center",
+    justifyContent: "center",
   },
-  startBtn: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderBottomWidth: 3,
-    borderBottomColor: theme.colors.primaryContainer,
+  missionBody: { flex: 1, gap: 1 },
+  missionTitle: { fontSize: 14, fontWeight: "700", color: dq.text },
+  missionSub: { fontSize: 12, fontWeight: "600", color: dq.muted },
+  missionCheck: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: dq.green,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  startBtnText: {
-    fontSize: 11,
-    fontWeight: "900",
-    color: theme.colors.onPrimary,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+  missionXpPill: {
+    backgroundColor: dq.gold12,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: 99,
   },
-
+  missionXpText: { fontSize: 12, fontWeight: "800", color: dq.gold },
 });
