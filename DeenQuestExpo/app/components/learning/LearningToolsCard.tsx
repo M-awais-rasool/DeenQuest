@@ -1,20 +1,19 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import {
-  RefreshCw,
-  BarChart3,
-  BookMarked,
-  Heart,
-  MessageCircleQuestion,
-  CalendarCheck,
-  Clock,
+  RotateCw,
+  Map,
+  NotebookPen,
+  Feather,
+  MessageCircle,
+  TrendingUp,
+  CalendarDays,
   ChevronRight,
 } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { TactilePressable } from "../ui";
-import { theme } from "../../theme/themes";
+import { dq } from "../../theme/designTokens";
 import { useGetReviewQuery, useGetMistakesQuery } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 
@@ -28,155 +27,123 @@ export function LearningToolsCard() {
   const reviewCount = review?.data?.length ?? 0;
   const mistakeCount = mistakes?.data?.length ?? 0;
 
+  const rows: {
+    icon: LucideIcon;
+    title: string;
+    sub: string;
+    onPress: () => void;
+  }[] = [
+    {
+      icon: RotateCw,
+      title: "Daily Review",
+      sub: `${reviewCount} cards due`,
+      onPress: () => navigation.navigate("DailyReview"),
+    },
+    {
+      icon: Map,
+      title: "Mastery Map",
+      sub: "See your progress",
+      onPress: () => navigation.navigate("MasteryMap"),
+    },
+    {
+      icon: NotebookPen,
+      title: "Mistake Notebook",
+      sub: `${mistakeCount} to revisit`,
+      onPress: () => navigation.navigate("MistakeNotebook"),
+    },
+    {
+      icon: Feather,
+      title: "Reflection",
+      sub: "Today's prompt",
+      onPress: () => navigation.navigate("Reflection"),
+    },
+    {
+      icon: MessageCircle,
+      title: "Ask a Question",
+      sub: "Get help anytime",
+      onPress: () => navigation.navigate("KnowledgeAsk"),
+    },
+    {
+      icon: TrendingUp,
+      title: "Weekly Report",
+      sub: "Updated Sunday",
+      onPress: () => navigation.navigate("WeeklyReport"),
+    },
+    {
+      icon: CalendarDays,
+      title: "Study Plan",
+      sub: "15 min / day",
+      onPress: () => navigation.navigate("StudyPlan"),
+    },
+  ];
+
   return (
     <View style={s.section}>
       <Text style={s.heading}>Your Learning</Text>
       <View style={s.card}>
-        <Row
-          icon={RefreshCw}
-          color={theme.colors.secondary}
-          title="Daily Review"
-          sub="Practice what's due"
-          badge={reviewCount}
-          onPress={() => navigation.navigate("DailyReview")}
-        />
-        <View style={s.divider} />
-        <Row
-          icon={BarChart3}
-          color={theme.colors.primary}
-          title="Mastery Map"
-          sub="Your strong & weak skills"
-          onPress={() => navigation.navigate("MasteryMap")}
-        />
-        <View style={s.divider} />
-        <Row
-          icon={BookMarked}
-          color={theme.colors.pink}
-          title="Mistake Notebook"
-          sub="Revisit your mistakes"
-          badge={mistakeCount}
-          onPress={() => navigation.navigate("MistakeNotebook")}
-        />
-        <View style={s.divider} />
-        <Row
-          icon={Heart}
-          color={theme.colors.cyan}
-          title="Reflection"
-          sub="A quiet moment with your companion"
-          onPress={() => navigation.navigate("Reflection")}
-        />
-        <View style={s.divider} />
-        <Row
-          icon={MessageCircleQuestion}
-          color={theme.colors.lavender}
-          title="Ask a Question"
-          sub="Answers from a trusted source"
-          onPress={() => navigation.navigate("KnowledgeAsk")}
-        />
-        <View style={s.divider} />
-        <Row
-          icon={CalendarCheck}
-          color={theme.colors.primary}
-          title="Weekly Report"
-          sub="Your week at a glance"
-          onPress={() => navigation.navigate("WeeklyReport")}
-        />
-        <View style={s.divider} />
-        <Row
-          icon={Clock}
-          color={theme.colors.secondary}
-          title="Study Plan"
-          sub="Learn around your prayers"
-          onPress={() => navigation.navigate("StudyPlan")}
-        />
+        {rows.map((row, i) => {
+          const Icon = row.icon;
+          const last = i === rows.length - 1;
+          return (
+            <Pressable
+              key={row.title}
+              onPress={row.onPress}
+              style={({ pressed }) => [
+                s.row,
+                !last && s.rowBorder,
+                pressed && { opacity: 0.6 },
+              ]}
+            >
+              <View style={s.iconChip}>
+                <Icon size={18} color={dq.green} />
+              </View>
+              <View style={s.body}>
+                <Text style={s.title}>{row.title}</Text>
+                <Text style={s.sub}>{row.sub}</Text>
+              </View>
+              <ChevronRight size={18} color={dq.chevron} />
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
 }
 
-function Row({
-  icon: Icon,
-  color,
-  title,
-  sub,
-  badge,
-  onPress,
-}: {
-  icon: LucideIcon;
-  color: string;
-  title: string;
-  sub: string;
-  badge?: number;
-  onPress: () => void;
-}) {
-  return (
-    <TactilePressable
-      edgeColor={theme.colors.black20}
-      radius={14}
-      depth={2}
-      haptic="light"
-      faceStyle={s.row}
-      onPress={onPress}
-    >
-      <View style={[s.iconChip, { backgroundColor: color + "1F" }]}>
-        <Icon size={20} color={color} />
-      </View>
-      <View style={s.body}>
-        <Text style={s.title}>{title}</Text>
-        <Text style={s.sub}>{sub}</Text>
-      </View>
-      {badge && badge > 0 ? (
-        <View style={[s.badge, { backgroundColor: color }]}>
-          <Text style={s.badgeText}>{badge}</Text>
-        </View>
-      ) : null}
-      <ChevronRight size={18} color={theme.colors.textMuted} />
-    </TactilePressable>
-  );
-}
-
 const s = StyleSheet.create({
-  // This card lives inside the Profile "Bento Stats Grid" (a row+wrap layout),
-  // so it must claim a full row explicitly — otherwise it shrinks to its content.
-  section: { width: "100%", marginBottom: 24 },
+  section: { width: "100%" },
   heading: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "900",
+    color: dq.white,
+    fontSize: 17,
+    fontWeight: "800",
     marginBottom: 12,
   },
   card: {
-    backgroundColor: theme.colors.surfaceLow,
-    borderRadius: 18,
-    padding: 8,
+    backgroundColor: dq.card,
     borderWidth: 1,
-    borderColor: theme.colors.outline25,
+    borderColor: dq.cardBorder,
+    borderRadius: 18,
+    paddingHorizontal: 16,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 10,
-    borderRadius: 14,
+    paddingVertical: 13,
+  },
+  rowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: dq.rowBorder,
   },
   iconChip: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  body: { flex: 1 },
-  title: { color: theme.colors.text, fontSize: 15, fontWeight: "800" },
-  sub: { color: theme.colors.textMuted, fontSize: 12, marginTop: 1 },
-  badge: {
-    minWidth: 22,
-    height: 22,
+    width: 38,
+    height: 38,
     borderRadius: 11,
-    paddingHorizontal: 6,
-    justifyContent: "center",
+    backgroundColor: dq.trackGreenTint,
     alignItems: "center",
+    justifyContent: "center",
   },
-  badgeText: { color: theme.colors.onPrimary, fontSize: 12, fontWeight: "900" },
-  divider: { height: 1, backgroundColor: theme.colors.outline25, marginVertical: 2 },
+  body: { flex: 1, gap: 1 },
+  title: { color: dq.text, fontSize: 14, fontWeight: "700" },
+  sub: { color: dq.muted, fontSize: 12, fontWeight: "600" },
 });

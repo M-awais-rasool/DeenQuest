@@ -1,31 +1,25 @@
 import React, { useMemo } from "react";
+import { StyleSheet, View, Text, ScrollView, Share, Pressable } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import {
-  StyleSheet,
-  View,
-  Text,
-  Image,
-  ScrollView,
-  StatusBar,
-  Share,
-} from "react-native";
-import { AnimatedPressable, TactilePressable } from "../../components/ui";
-import {
-  Flame,
-  Settings,
+  Star,
+  Pencil,
+  Share2,
+  Zap,
+  Sparkles,
   Trophy,
-  Heart,
-  Check,
-  Crown,
+  Settings,
+  ChevronRight,
 } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
-import { Header } from "../../components/Header";
-import { TactileButton } from "../../components/TactileButton";
-import { theme } from "../../theme/themes";
+import { TactilePressable } from "../../components/ui";
+import { dq } from "../../theme/designTokens";
 import {
   useGetProfileQuery,
   useGetProgressQuery,
   useGetRewardsQuery,
+  useGetLeaderboardQuery,
   type RewardWithStatus,
 } from "../../store/services/api";
 import { RewardIcon } from "../reward/components/RewardIcon";
@@ -34,53 +28,60 @@ import type { DemoTabScreenProps } from "../../navigators/navigationTypes";
 
 type Props = DemoTabScreenProps<"ProfileScreen">;
 
+function rankWord(title?: string): string {
+  const first = (title || "Seeker").trim().split(/\s+/)[0] || "Seeker";
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+function GoldCircle({
+  size,
+  children,
+  style,
+}: {
+  size: number;
+  children: React.ReactNode;
+  style?: any;
+}) {
+  return (
+    <LinearGradient
+      colors={[dq.badgeGoldFrom, dq.badgeGoldTo]}
+      start={{ x: 0.3, y: 0.28 }}
+      end={{ x: 1, y: 1 }}
+      style={[
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        style,
+      ]}
+    >
+      {children}
+    </LinearGradient>
+  );
+}
+
 export function ProfileScreen({ navigation }: Props) {
   const { data: profileData, isLoading: profileLoading } = useGetProfileQuery();
-  const { data: progressData, isLoading: progressLoading } =
-    useGetProgressQuery();
+  const { data: progressData, isLoading: progressLoading } = useGetProgressQuery();
   const { data: rewardsData, isLoading: rewardsLoading } = useGetRewardsQuery();
+  const { data: leaderboardData } = useGetLeaderboardQuery(undefined);
 
   const profile = profileData?.data;
   const progress = progressData?.data;
   const rewards: RewardWithStatus[] = rewardsData?.data ?? [];
 
-  const weeklyCompletions = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, index) =>
-        progress?.weekly_completions?.[index] === true ? true : false,
-      ),
-    [progress?.weekly_completions],
-  );
-
-  // Day letters indexed by Date.getDay() (Sun..Sat). The weekly_completions
-  // array is relative to today (index 0 = 6 days ago, index 6 = today), so the
-  // labels must be derived from real dates rather than hardcoded Mon..Sun.
-  const streakDays = useMemo(() => {
-    const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
-    const today = new Date();
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() - (6 - i));
-      return { letter: DAY_LETTERS[d.getDay()] ?? "", isToday: i === 6 };
-    });
-  }, []);
-
-  const unlockedRewardsCount = useMemo(
-    () => rewards.filter((reward) => reward.unlocked).length,
+  const unlockedRewards = useMemo(
+    () => rewards.filter((r) => r.unlocked),
     [rewards],
   );
 
-  const rewardsProgressPct = useMemo(
-    () => (rewards.length ? (unlockedRewardsCount / rewards.length) * 100 : 0),
-    [rewards.length, unlockedRewardsCount],
-  );
-
-  const nextReward = useMemo(
-    () => rewards.find((reward) => !reward.unlocked),
-    [rewards],
-  );
-
-  const rewardPreview = useMemo(() => rewards.slice(0, 4), [rewards]);
+  const myRank = useMemo(() => {
+    const me = leaderboardData?.data?.find((u) => u.user_id === profile?.id);
+    return me?.rank;
+  }, [leaderboardData, profile?.id]);
 
   if (profileLoading || progressLoading || rewardsLoading) {
     return (
@@ -92,287 +93,192 @@ export function ProfileScreen({ navigation }: Props) {
 
   const displayName =
     profile?.display_name || profile?.email?.split("@")[0] || "Explorer";
-  const userTitle = profile?.title || "SEEKER OF KNOWLEDGE";
+  const initial = displayName.charAt(0).toUpperCase();
   const totalXP = progress?.xp ?? 0;
   const level = progress?.level ?? 1;
   const currentStreak = progress?.current_streak ?? 0;
+  const longestStreak = progress?.longest_streak ?? currentStreak;
   const barakahScore = progress?.barakah_score ?? 0;
 
   const handleShareProfile = async () => {
     if (!profile?.id) return;
     const deepLink = `deenquest://profile/${profile.id}`;
-    const shareText = `Check out ${displayName}'s profile on DeenQuest!\n${deepLink}`;
     try {
-      await Share.share(
-        {
-          title: `${displayName}'s DeenQuest Profile`,
-          message: shareText,
-          url: deepLink,
-        },
-        {
-          excludedActivityTypes: [],
-        },
-      );
+      await Share.share({
+        title: `${displayName}'s DeenQuest Profile`,
+        message: `Check out ${displayName}'s profile on DeenQuest!\n${deepLink}`,
+        url: deepLink,
+      });
     } catch {}
   };
 
-  return (
-    <ScreenWrapper>
-      <StatusBar barStyle="light-content" />
-      <Header
-        title="DEENQUEST"
-        xp={totalXP}
-        Icon={Settings}
-        onSettingsPress={() => navigation.navigate("Settings")}
-      />
+  const previewBadges = unlockedRewards.slice(0, 3);
+  const extraBadges = unlockedRewards.length - previewBadges.length;
 
+  return (
+    <ScreenWrapper innerStyle={styles.wrapper}>
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Section */}
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatarGradient}>
-              <Image
-                source={{
-                  uri:
-                    profile?.avatar_url ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=88D982&color=003909&size=300`,
-                }}
-                style={styles.avatar}
-              />
-            </View>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>LEVEL {level}</Text>
-            </View>
-          </View>
-
-          <View style={styles.nameContainer}>
-            <Text style={styles.name}>{displayName}</Text>
-            <Text style={styles.title}>{userTitle.toUpperCase()}</Text>
-          </View>
-
-          <View style={styles.buttonRow}>
-            <TactileButton
-              title="Edit Profile"
-              onPress={() => navigation.navigate("EditProfile")}
-              style={styles.secondaryButton}
-              textStyle={styles.buttonText}
-            />
-            <TactileButton
-              title="Share Stats"
-              onPress={handleShareProfile}
-              style={styles.primaryButton}
-              textStyle={styles.primaryButtonText}
-            />
-          </View>
+        {/* header */}
+        <View style={styles.headerRow}>
+          <Text style={styles.screenTitle}>Profile</Text>
+          <TactilePressable
+            faceStyle={styles.gear}
+            edgeColor="rgba(0,0,0,0.4)"
+            faceUnderlayColor={dq.screen}
+            radius={17}
+            depth={3}
+            haptic="light"
+            onPress={() => navigation.navigate("Settings")}
+          >
+            <Settings size={17} color="#9aa39a" />
+          </TactilePressable>
         </View>
 
-        {/* Bento Stats Grid */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Trophy
-              color={theme.colors.white05}
-              size={80}
-              style={styles.bgIcon}
-            />
-            <Text style={styles.statLabel}>TOTAL XP</Text>
-            <Text style={[styles.statValue, { color: theme.colors.secondary }]}>
-              {totalXP >= 1000 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}
-            </Text>
-            <Text style={styles.statSubtext}>Level {level}</Text>
+        {/* identity */}
+        <View style={styles.identityCard}>
+          <View style={styles.identityRow}>
+            <View style={styles.avatarRing}>
+              <LinearGradient
+                colors={[dq.green, dq.greenDark]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatar}
+              >
+                <Text style={styles.avatarText}>{initial}</Text>
+              </LinearGradient>
+            </View>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={styles.name}>{displayName}</Text>
+              <View style={styles.levelPill}>
+                <Star size={12} color={dq.gold} fill={dq.gold} />
+                <Text style={styles.levelPillText}>
+                  Level {level} · {rankWord(profile?.title)}
+                </Text>
+              </View>
+            </View>
           </View>
 
-          <View style={styles.statCard}>
-            <Heart
-              color={theme.colors.white05}
-              size={80}
-              style={styles.bgIcon}
-            />
-            <Text style={styles.statLabel}>BARAKAH SCORE</Text>
-            <Text style={styles.statValue}>
-              {barakahScore >= 1000
-                ? `${(barakahScore / 1000).toFixed(1)}k`
-                : barakahScore}
-            </Text>
-            <Text style={styles.statSubtext}>Points for good deeds</Text>
-          </View>
-
-          {/* Leaderboard */}
-          <View style={styles.section}>
+          <View style={styles.btnRow}>
             <TactilePressable
-              edgeColor={theme.colors.black20}
-              radius={16}
+              style={styles.btnFlex}
+              faceStyle={styles.editBtn}
+              edgeColor="rgba(0,0,0,0.45)"
+              faceUnderlayColor={dq.card}
+              radius={13}
+              depth={3}
               haptic="light"
-              faceStyle={styles.leaderboardCard}
-              onPress={() => navigation.navigate("Leaderboard")}
+              onPress={() => navigation.navigate("EditProfile")}
             >
-              <View style={styles.leaderboardLeft}>
-                <View style={styles.crownCircle}>
-                  <Crown
-                    size={24}
-                    color={theme.colors.secondary}
-                    fill={theme.colors.secondary}
-                  />
-                </View>
-                <View>
-                  <Text style={styles.leaderboardTitle}>
-                    Global Leaderboard
-                  </Text>
-                  <Text style={styles.leaderboardSub}>
-                    See how you rank among other seekers
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.leaderboardArrow}>
-                <Text style={styles.leaderboardArrowText}>View</Text>
-              </View>
+              <Pencil size={14} color={dq.text} />
+              <Text style={styles.editText}>Edit</Text>
+            </TactilePressable>
+            <TactilePressable
+              style={styles.btnFlex}
+              faceStyle={styles.shareBtn}
+              edgeColor="#2E7D32"
+              faceUnderlayColor={dq.green}
+              radius={13}
+              depth={3}
+              haptic="light"
+              onPress={handleShareProfile}
+            >
+              <Share2 size={14} color={dq.onGreen} />
+              <Text style={styles.shareText}>Share</Text>
             </TactilePressable>
           </View>
+        </View>
 
-          {/* Learning tools (Daily Review · Mastery Map · Mistake Notebook) */}
-          <LearningToolsCard />
+        {/* stats grid */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Zap size={18} color={dq.gold} />
+            <Text style={styles.statValue}>{totalXP.toLocaleString()}</Text>
+            <Text style={styles.statLabel}>Total XP</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Sparkles size={18} color={dq.green} />
+            <Text style={styles.statValue}>{barakahScore.toLocaleString()}</Text>
+            <Text style={styles.statLabel}>Barakah</Text>
+          </View>
+          <Pressable
+            style={({ pressed }) => [styles.statCard, pressed && { opacity: 0.8 }]}
+            onPress={() => navigation.navigate("Leaderboard")}
+          >
+            <Trophy size={18} color={dq.gold} />
+            <Text style={styles.statValue}>{myRank ? `#${myRank}` : "—"}</Text>
+            <Text style={styles.statLabel}>Leaderboard</Text>
+          </Pressable>
+        </View>
 
-          {/* Streak History */}
-          <View style={styles.streakCard}>
-            <View style={styles.streakHeader}>
-              <View>
-                <Text style={styles.sectionTitle}>Streak History</Text>
-                <Text style={styles.sectionSubtext}>
-                  Your consistency this week
-                </Text>
-              </View>
-              <View style={styles.streakBadge}>
-                <Flame
-                  color={theme.colors.secondary}
-                  fill={theme.colors.secondary}
-                  size={14}
+        {/* your learning */}
+        <LearningToolsCard />
+
+        {/* streak history */}
+        <View style={styles.streakCard}>
+          <View style={styles.streakHeader}>
+            <Text style={styles.streakTitle}>Streak history</Text>
+            <Text style={styles.streakMeta}>
+              Current {currentStreak} · Best {longestStreak}
+            </Text>
+          </View>
+          <View style={styles.squareRow}>
+            {Array.from({ length: 14 }, (_, i) => {
+              const fromEnd = 13 - i;
+              const isToday = i === 13;
+              const active = fromEnd < currentStreak;
+              return (
+                <View
+                  key={i}
+                  style={[
+                    styles.square,
+                    isToday
+                      ? styles.squareToday
+                      : active
+                        ? styles.squareActive
+                        : styles.squareEmpty,
+                  ]}
                 />
-                <Text style={styles.streakBadgeText}>{currentStreak} Days</Text>
-              </View>
-            </View>
-            <View style={styles.daysGrid}>
-              {streakDays.map((day, i) => {
-                const isCompleted = weeklyCompletions[i] === true;
-                return (
-                  <View key={i} style={styles.dayColumn}>
-                    <Text
-                      style={[
-                        styles.dayLabel,
-                        day.isToday && styles.dayLabelToday,
-                      ]}
-                    >
-                      {day.letter}
-                    </Text>
-                    <View
-                      style={[
-                        styles.dayBox,
-                        isCompleted ? styles.dayBoxActive : styles.dayBoxEmpty,
-                        day.isToday && styles.dayBoxToday,
-                      ]}
-                    >
-                      {isCompleted && (
-                        <Check color={theme.colors.onPrimary} size={16} />
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
+              );
+            })}
           </View>
         </View>
 
-        {/* Rewards Summary */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderRow}>
-            <View>
-              <Text style={styles.sectionTitle}>Reward Vault</Text>
-              <Text style={styles.sectionSubtext}>
-                {unlockedRewardsCount}/{rewards.length} unlocked
-              </Text>
-            </View>
-            <AnimatedPressable
-              onPress={() => {
-                navigation.navigate("RewardsScreen");
-              }}
+        {/* reward vault */}
+        <View style={styles.vaultCard}>
+          <View style={styles.vaultHeader}>
+            <Text style={styles.vaultTitle}>Reward Vault</Text>
+            <Pressable
+              style={styles.vaultView}
+              onPress={() => navigation.navigate("RewardsScreen")}
+              hitSlop={8}
             >
-              <Text style={styles.viewAllText}>View All</Text>
-            </AnimatedPressable>
+              <Text style={styles.vaultViewText}>View</Text>
+              <ChevronRight size={14} color={dq.green} />
+            </Pressable>
           </View>
-
-          <View style={styles.rewardSummaryCard}>
-            <View style={styles.rewardSummaryTop}>
-              <View>
-                <Text style={styles.rewardSummaryLabel}>Next milestone</Text>
-                <Text style={styles.rewardSummaryTitle}>
-                  {nextReward?.title ?? "All rewards unlocked"}
-                </Text>
-              </View>
-              <View style={styles.rewardSummaryBadge}>
-                <Trophy
-                  size={18}
-                  color={theme.colors.secondary}
-                  fill={theme.colors.secondary}
-                />
-                <Text style={styles.rewardSummaryBadgeText}>
-                  {rewards.length > 0
-                    ? `${Math.round(rewardsProgressPct)}%`
-                    : "0%"}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.heroProgressTrack}>
-              <View
-                style={[
-                  styles.heroProgressFill,
-                  { width: `${Math.min(rewardsProgressPct, 100)}%` },
-                ]}
-              />
-            </View>
-            <Text style={styles.rewardProgressText}>
-              {rewards.length > 0
-                ? `${unlockedRewardsCount} of ${rewards.length} milestones completed`
-                : "No rewards available yet."}
-            </Text>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.rewardPreviewScroll}
-            >
-              {rewardPreview.map((reward) => (
-                <View
+          <View style={styles.vaultRow}>
+            <View style={styles.vaultBadges}>
+              {previewBadges.map((reward, i) => (
+                <GoldCircle
                   key={reward.id}
-                  style={[
-                    styles.rewardPreviewPill,
-                    reward.unlocked
-                      ? styles.rewardPreviewPillActive
-                      : styles.rewardPreviewPillLocked,
-                  ]}
+                  size={34}
+                  style={[styles.vaultBadge, i > 0 && { marginLeft: -9 }]}
                 >
-                  <RewardIcon
-                    icon={reward.icon}
-                    color={
-                      reward.unlocked
-                        ? theme.colors.secondary
-                        : theme.colors.textMuted
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.rewardPreviewLabel,
-                      reward.unlocked && { color: theme.colors.secondary },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {reward.title}
-                  </Text>
-                </View>
+                  <RewardIcon icon={reward.icon} color={dq.onBadgeGold} size={15} />
+                </GoldCircle>
               ))}
-            </ScrollView>
+              {extraBadges > 0 && (
+                <View style={[styles.vaultBadge, styles.vaultExtra, { marginLeft: -9 }]}>
+                  <Text style={styles.vaultExtraText}>+{extraBadges}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.vaultCount}>
+              {unlockedRewards.length} of {rewards.length} unlocked
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -381,479 +287,169 @@ export function ProfileScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
+  wrapper: { flex: 1 },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    paddingBottom: 90,
+    gap: 18,
+  },
+
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  screenTitle: { fontSize: 26, fontWeight: "900", color: dq.white },
+  gear: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.07)",
+    alignItems: "center",
     justifyContent: "center",
+  },
+
+  // identity
+  identityCard: {
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.cardBorder,
+    borderRadius: 18,
+    padding: 20,
+    gap: 16,
+  },
+  identityRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  avatarRing: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: dq.gold55,
     alignItems: "center",
-  },
-  scrollView: {},
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 50,
-  },
-  profileSection: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  avatarContainer: {
-    position: "relative",
-    marginBottom: 16,
-  },
-  avatarGradient: {
-    width: 128,
-    height: 128,
-    borderRadius: 64,
-    padding: 4,
-    backgroundColor: theme.colors.primary, // Simplified gradient for StyleSheet
+    justifyContent: "center",
   },
   avatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 60,
-    borderWidth: 4,
-    borderColor: theme.colors.background,
-  },
-  levelBadge: {
-    position: "absolute",
-    bottom: -8,
-    alignSelf: "center",
-    backgroundColor: theme.colors.secondary,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    borderRadius: 20,
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  levelText: {
-    fontFamily: "Lexend",
-    fontWeight: "900",
-    fontSize: 10,
-    color: theme.colors.onSecondary,
-    letterSpacing: 1,
-  },
-  nameContainer: {
-    alignItems: "center",
-    marginTop: 8,
-  },
-  name: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    fontSize: 32,
-    color: theme.colors.white,
-  },
-  title: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    fontSize: 12,
-    color: theme.colors.primary,
-    letterSpacing: 3,
-    marginTop: 4,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    width: "100%",
-    marginTop: 24,
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    borderBottomWidth: 4,
-  },
-  primaryButton: {
-    backgroundColor: theme.colors.surfaceHigh,
-    borderBottomColor: theme.colors.shadowGreen,
-  },
-  primaryButtonText: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    color: theme.colors.onSecondary,
-  },
-  secondaryButton: {
-    backgroundColor: theme.colors.surfaceHigh,
-    borderBottomColor: theme.colors.black,
-  },
-  buttonText: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    color: theme.colors.onSecondary,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
-    marginBottom: 32,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: "45%",
-    backgroundColor: theme.colors.surfaceLow,
-    padding: 24,
-    borderRadius: 16,
-    position: "relative",
-    overflow: "hidden",
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.black20,
-  },
-  bgIcon: {
-    position: "absolute",
-    right: -16,
-    top: -16,
-  },
-  statLabel: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    fontSize: 10,
-    color: theme.colors.textMuted,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  statValue: {
-    fontFamily: "Lexend",
-    fontWeight: "900",
-    fontSize: 36,
-    color: theme.colors.white,
-  },
-  statSubtext: {
-    fontSize: 10,
-    color: theme.colors.textMuted,
-    fontWeight: "700",
-    marginTop: 8,
-  },
-  streakCard: {
-    width: "100%",
-    backgroundColor: theme.colors.surface,
-    padding: 24,
-    borderRadius: 16,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.black20,
-  },
-  streakHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    fontSize: 18,
-    color: theme.colors.white,
-  },
-  sectionSubtext: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-  },
-  streakBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.secondary10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  streakBadgeText: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    fontSize: 14,
-    color: theme.colors.secondary,
-    marginLeft: 6,
-  },
-  daysGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  dayColumn: {
-    alignItems: "center",
-    gap: 4,
-  },
-  dayLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: theme.colors.textMuted,
-  },
-  dayLabelToday: {
-    color: theme.colors.secondary,
-  },
-  dayBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dayBoxToday: {
-    borderWidth: 2,
-    borderColor: theme.colors.secondary,
-  },
-  dayBoxActive: {
-    backgroundColor: theme.colors.primary,
-  },
-  dayBoxEmpty: {
-    backgroundColor: theme.colors.surfaceHigh,
-    opacity: 0.4,
-  },
-  section: {},
-  goalCardContainer: {
-    marginTop: 16,
-    gap: 12,
-  },
-  goalCard: {
-    backgroundColor: theme.colors.surface,
-    padding: 20,
-    borderRadius: 16,
-    borderLeftWidth: 4,
-  },
-  goalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  goalTitle: {
-    fontWeight: "700",
-    color: theme.colors.white,
-    fontSize: 16,
-  },
-  goalSubtext: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-  },
-  goalPercent: {
-    fontFamily: "Lexend",
-    fontWeight: "900",
-    fontSize: 16,
-  },
-  progressBarBg: {
-    height: 12,
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 6,
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 6,
-  },
-  rewardSummaryCard: {
-    backgroundColor: theme.colors.surface,
-    padding: 20,
-    borderRadius: 16,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.black20,
-    gap: 14,
-    marginBottom: 20,
-  },
-  rewardSummaryTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-    alignItems: "center",
-  },
-  rewardSummaryLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: theme.colors.textMuted,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-    marginBottom: 6,
-  },
-  rewardSummaryTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: theme.colors.white,
-  },
-  rewardSummaryBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: theme.colors.surfaceHigh,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  rewardSummaryBadgeText: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: theme.colors.secondary,
-  },
-  heroProgressTrack: {
-    width: "100%",
-    height: 8,
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 6,
-    overflow: "hidden",
-    marginTop: 8,
-  },
-  heroProgressFill: {
-    height: "100%",
-    backgroundColor: theme.colors.secondary,
-    borderRadius: 6,
-  },
-  rewardProgressText: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-    marginTop: 8,
-  },
-  rewardPreviewScroll: {
-    marginTop: 14,
-  },
-  rewardPreviewPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: theme.colors.surfaceHigh,
-    backgroundColor: theme.colors.surfaceLow,
-    marginRight: 12,
-  },
-  rewardPreviewPillActive: {
-    borderColor: theme.colors.secondary,
-  },
-  rewardPreviewPillLocked: {
-    opacity: 0.62,
-  },
-  rewardPreviewLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: theme.colors.text,
-    maxWidth: 120,
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 4,
-    marginBottom: 10,
-  },
-  viewAllText: {
-    color: theme.colors.primary,
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 1,
-  },
-  badgeScroll: {
-    marginTop: 16,
-  },
-  badgeItem: {
-    width: 80,
-    alignItems: "center",
-    marginRight: 16,
-  },
-  badgeIconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
-    marginBottom: 8,
+    justifyContent: "center",
   },
-  badgeUnlocked: {
-    backgroundColor: theme.colors.surfaceHigh,
-    borderColor: theme.colors.surfaceBright,
+  avatarText: { fontSize: 26, fontWeight: "900", color: dq.onGreen },
+  name: { fontSize: 20, fontWeight: "900", color: dq.white },
+  levelPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 5,
+    backgroundColor: dq.gold12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 99,
   },
-  badgeLocked: {
-    backgroundColor: theme.colors.background,
-    borderColor: theme.colors.surfaceHigh,
-    borderStyle: "dashed",
+  levelPillText: { fontSize: 11, fontWeight: "800", color: dq.gold },
+
+  btnRow: { flexDirection: "row", gap: 10 },
+  btnFlex: { flex: 1 },
+  editBtn: {
+    height: 42,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
-  badgeLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    textAlign: "center",
-    color: theme.colors.textMuted,
+  editText: { fontSize: 13, fontWeight: "800", color: dq.text },
+  shareBtn: {
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: dq.green,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
   },
-  leaderboardCard: {
+  shareText: { fontSize: 13, fontWeight: "800", color: dq.onGreen },
+
+  // stats
+  statsGrid: { flexDirection: "row", gap: 10 },
+  statCard: {
+    flex: 1,
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.cardBorder,
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    alignItems: "flex-start",
+    gap: 9,
+  },
+  statValue: { fontSize: 20, fontWeight: "900", color: dq.white, lineHeight: 20 },
+  statLabel: { fontSize: 11, fontWeight: "600", color: dq.muted },
+
+  // streak history
+  streakCard: {
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.cardBorder,
+    borderRadius: 18,
+    padding: 16,
+    gap: 12,
+  },
+  streakHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: theme.colors.surface,
-    padding: 20,
-    borderRadius: 16,
   },
-  leaderboardLeft: {
+  streakTitle: { fontSize: 14, fontWeight: "800", color: dq.text },
+  streakMeta: { fontSize: 12, fontWeight: "700", color: dq.muted },
+  squareRow: { flexDirection: "row", gap: 4 },
+  square: { flex: 1, aspectRatio: 1, borderRadius: 6 },
+  squareActive: { backgroundColor: dq.green },
+  squareEmpty: { backgroundColor: dq.squareEmpty },
+  squareToday: {
+    backgroundColor: dq.gold18,
+    borderWidth: 1.5,
+    borderColor: dq.gold,
+  },
+
+  // reward vault
+  vaultCard: {
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.cardBorder,
+    borderRadius: 18,
+    padding: 16,
+    gap: 13,
+  },
+  vaultHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    justifyContent: "space-between",
   },
-  crownCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.surfaceHigh,
+  vaultTitle: { fontSize: 14, fontWeight: "800", color: dq.text },
+  vaultView: { flexDirection: "row", alignItems: "center", gap: 3 },
+  vaultViewText: { fontSize: 12, fontWeight: "700", color: dq.green },
+  vaultRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  vaultBadges: { flexDirection: "row", alignItems: "center" },
+  vaultBadge: {
+    borderWidth: 2,
+    borderColor: dq.card,
+  },
+  vaultExtra: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: dq.lockBadge,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
   },
-  leaderboardTitle: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    fontSize: 16,
-    color: theme.colors.white,
-  },
-  leaderboardSub: {
-    fontSize: 12,
-    color: theme.colors.textMuted,
-    marginTop: 2,
-  },
-  leaderboardArrow: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  leaderboardArrowText: {
-    fontFamily: "Lexend",
-    fontWeight: "700",
-    fontSize: 12,
-    color: theme.colors.onPrimary,
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 32,
-    backgroundColor: theme.colors.background,
-    borderTopWidth: 4,
-    borderTopColor: theme.colors.surface,
-  },
-  navItem: {
-    alignItems: "center",
-    padding: 8,
-  },
-  navItemActive: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.colors.primary,
-    paddingHorizontal: 16,
-  },
-  navLabel: {
-    fontFamily: "Lexend",
-    fontWeight: "900",
-    fontSize: 10,
-    color: theme.colors.text,
-    textTransform: "uppercase",
-    marginTop: 4,
-    opacity: 0.6,
-  },
-  navLabelActive: {
-    color: theme.colors.primary,
-    opacity: 1,
-  },
+  vaultExtraText: { fontSize: 11, fontWeight: "800", color: dq.muted },
+  vaultCount: { fontSize: 12, fontWeight: "700", color: dq.muted },
 });

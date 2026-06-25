@@ -1,45 +1,80 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Sparkles, RefreshCw, Compass, ArrowRight } from "lucide-react-native";
+import { Play, RotateCw, Compass, Sparkles } from "lucide-react-native";
+import type { LucideIcon } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AnimatedPressable } from "../ui";
-import { theme } from "../../theme/themes";
+import { dq } from "../../theme/designTokens";
 import {
   useGetRecommendationsQuery,
-  useGetLearningStateQuery,
   type Recommendation,
 } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
-const META: Record<
-  Recommendation["kind"],
-  { accent: string; label: string; cta: string; icon: typeof Sparkles }
-> = {
-  revision: { accent: theme.colors.secondary, label: "Revision", cta: "Practice", icon: RefreshCw },
-  new_content: { accent: theme.colors.primary, label: "Next up", cta: "Start", icon: Compass },
-  reengage: { accent: theme.colors.lavender, label: "Welcome back", cta: "Resume", icon: Sparkles },
+type KindMeta = {
+  badge: string;
+  badgeBg: string;
+  badgeText: string;
+  coverIcon: LucideIcon;
+  cta: string;
+  ctaIcon: LucideIcon;
+  sub: string;
 };
 
-const CARD_W = 212;
+const META: Record<Recommendation["kind"], KindMeta> = {
+  new_content: {
+    badge: "NEXT UP",
+    badgeBg: dq.gold,
+    badgeText: "#1a1400",
+    coverIcon: Compass,
+    cta: "Start lesson",
+    ctaIcon: Play,
+    sub: "Lesson",
+  },
+  revision: {
+    badge: "REVIEW",
+    badgeBg: "rgba(255,255,255,0.1)",
+    badgeText: "#cfd6cd",
+    coverIcon: RotateCw,
+    cta: "Review",
+    ctaIcon: RotateCw,
+    sub: "Practice",
+  },
+  reengage: {
+    badge: "RESUME",
+    badgeBg: dq.green,
+    badgeText: dq.onGreen,
+    coverIcon: Sparkles,
+    cta: "Resume",
+    ctaIcon: Play,
+    sub: "Continue",
+  },
+};
+
 const MAX_CARDS = 6;
-const CARD_GRAD = ["#262A23", "#191C18"] as const; // subtle, brand-tinted dark
 
 function masteryPct(reason: string): number | null {
   const m = reason.match(/(\d+)\s*%/);
   return m ? Math.max(0, Math.min(100, Number(m[1]))) : null;
 }
 
+function cap(s?: string): string {
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function RecCard({ rec }: { rec: Recommendation }) {
   const navigation = useNavigation<Nav>();
   const meta = META[rec.kind] ?? META.new_content;
-  const Icon = meta.icon;
-  const accent = meta.accent;
+  const CoverIcon = meta.coverIcon;
+  const CtaIcon = meta.ctaIcon;
   const pct = rec.kind === "revision" ? masteryPct(rec.reason) : null;
   const title = rec.title.replace(/^(Revise:|Continue:)\s*/, "");
+  const course = cap(rec.course_type as string | undefined);
+  const sub = course ? `${course} · ${meta.sub}` : meta.sub;
 
   const onPress = () => {
     if (rec.level_id) {
@@ -51,176 +86,139 @@ function RecCard({ rec }: { rec: Recommendation }) {
   };
 
   return (
-    <AnimatedPressable
+    <Pressable
       onPress={onPress}
       disabled={!rec.level_id}
-      haptic="light"
-      style={[s.cardShadow, { shadowColor: accent }]}
+      style={({ pressed }) => [s.card, pressed && { opacity: 0.85 }]}
     >
       <LinearGradient
-        colors={CARD_GRAD}
+        colors={["rgba(136,217,130,0.16)", "rgba(136,217,130,0.03)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[s.card, { borderColor: accent + "33" }]}
+        style={s.cover}
       >
-        <View style={s.top}>
-          <View style={[s.iconChip, { backgroundColor: accent + "26" }]}>
-            <Icon size={18} color={accent} />
-          </View>
-          <Text style={[s.kind, { color: accent }]}>{meta.label.toUpperCase()}</Text>
+        <View style={[s.badge, { backgroundColor: meta.badgeBg }]}>
+          <Text style={[s.badgeText, { color: meta.badgeText }]}>
+            {meta.badge}
+          </Text>
+        </View>
+        <CoverIcon size={42} color={dq.green} />
+      </LinearGradient>
+
+      <View style={s.body}>
+        <View style={{ gap: 2 }}>
+          <Text style={s.cardTitle} numberOfLines={1}>
+            {title}
+          </Text>
+          <Text style={s.cardSub} numberOfLines={1}>
+            {sub}
+          </Text>
         </View>
 
-        <Text style={s.title} numberOfLines={2}>
-          {title}
-        </Text>
-        <Text style={s.reason} numberOfLines={2}>
-          {rec.message || rec.reason}
-        </Text>
-
-        {pct !== null && (
-          <View style={s.track}>
-            <View style={[s.fill, { width: `${pct}%`, backgroundColor: accent }]} />
+        {pct !== null ? (
+          <View style={{ gap: 5 }}>
+            <View style={s.track}>
+              <View style={[s.fill, { width: `${pct}%` }]} />
+            </View>
+            <Text style={s.progressText}>{pct}% complete</Text>
+          </View>
+        ) : (
+          <View style={s.ctaRow}>
+            <CtaIcon size={13} color={dq.green} />
+            <Text style={s.ctaText}>{meta.cta}</Text>
           </View>
         )}
-
-        <View style={s.footer}>
-          <Text style={[s.cta, { color: accent }]}>{meta.cta}</Text>
-          <View style={[s.ctaCircle, { backgroundColor: accent + "22" }]}>
-            <ArrowRight size={14} color={accent} />
-          </View>
-        </View>
-      </LinearGradient>
-    </AnimatedPressable>
+      </View>
+    </Pressable>
   );
 }
 
 export function NextBestActionCard() {
+  const navigation = useNavigation<Nav>();
   const { data: recRes } = useGetRecommendationsQuery();
-  const { data: stateRes } = useGetLearningStateQuery();
 
   const recs = recRes?.data ?? [];
   if (recs.length === 0) return null;
 
-  const motivation = stateRes?.data?.motivation;
   const visible = recs.slice(0, MAX_CARDS);
 
   return (
-    <View style={s.wrap}>
-      <View style={s.headerRow}>
-        <Sparkles size={15} color={theme.colors.secondary} />
-        <Text style={s.header}>Recommended for you</Text>
-        {recs.length > 1 && <Text style={s.count}>{recs.length}</Text>}
+    <View>
+      <View style={s.header}>
+        <Text style={s.headerTitle}>Recommended for you</Text>
+        <Pressable
+          onPress={() => navigation.navigate("Demo", { screen: "PathScreen" })}
+          hitSlop={8}
+        >
+          <Text style={s.seeAll}>See all</Text>
+        </Pressable>
       </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        decelerationRate="fast"
-        snapToInterval={CARD_W + 12}
-        contentContainerStyle={s.scroll}
+        style={s.scroller}
+        contentContainerStyle={s.scrollerContent}
       >
         {visible.map((rec) => (
           <RecCard key={rec.id} rec={rec} />
         ))}
       </ScrollView>
-
-      {motivation ? (
-        <View style={s.motivationWrap}>
-          <Sparkles size={13} color={theme.colors.secondary} />
-          <Text style={s.motivation}>{motivation}</Text>
-        </View>
-      ) : null}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  wrap: { marginBottom: 18 },
-  headerRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 10,
-    paddingHorizontal: 2,
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
-  header: { color: theme.colors.text, fontSize: 16, fontWeight: "900", letterSpacing: 0.2 },
-  count: {
-    marginLeft: 2,
-    minWidth: 20,
-    textAlign: "center",
-    color: theme.colors.onPrimary,
-    backgroundColor: theme.colors.secondary,
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    fontSize: 12,
-    fontWeight: "900",
-    overflow: "hidden",
-  },
-  scroll: { paddingRight: 16, paddingVertical: 2 },
+  headerTitle: { fontSize: 17, fontWeight: "800", color: dq.white },
+  seeAll: { fontSize: 13, fontWeight: "700", color: dq.green },
 
-  cardShadow: {
-    width: CARD_W,
-    marginRight: 12,
-    borderRadius: 20,
-  },
+  // bleed out of the screen's 20px horizontal padding so cards reach the edge
+  scroller: { marginHorizontal: -20 },
+  scrollerContent: { gap: 12, paddingHorizontal: 20, paddingTop: 2, paddingBottom: 4 },
+
   card: {
-    borderRadius: 20,
-    padding: 15,
+    width: 158,
+    backgroundColor: dq.card,
     borderWidth: 1,
-    minHeight: 146,
-    justifyContent: "space-between",
+    borderColor: dq.cardBorder,
+    borderRadius: 18,
     overflow: "hidden",
   },
-  top: { flexDirection: "row", alignItems: "center", gap: 9, marginBottom: 11 },
-  iconChip: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    justifyContent: "center",
+  cover: {
+    height: 94,
     alignItems: "center",
+    justifyContent: "center",
   },
-  kind: { fontSize: 11, fontWeight: "900", letterSpacing: 0.7 },
-  title: { color: "#ECEFEA", fontSize: 16.5, fontWeight: "900", lineHeight: 21, marginBottom: 4 },
-  reason: { color: "#98A093", fontSize: 12, lineHeight: 16 },
+  badge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 99,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.45,
+  },
+  body: { padding: 12, gap: 8 },
+  cardTitle: { fontSize: 14, fontWeight: "800", color: dq.text },
+  cardSub: { fontSize: 12, fontWeight: "600", color: dq.muted },
   track: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    marginTop: 11,
+    height: 5,
+    borderRadius: 99,
+    backgroundColor: dq.trackWhite08,
     overflow: "hidden",
   },
-  fill: { height: "100%", borderRadius: 3 },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 12,
-  },
-  cta: { fontSize: 13, fontWeight: "900", letterSpacing: 0.3 },
-  ctaCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  motivationWrap: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    marginTop: 12,
-    paddingHorizontal: 13,
-    paddingVertical: 11,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 14,
-  },
-  motivation: {
-    flex: 1,
-    color: theme.colors.textMuted,
-    fontSize: 13,
-    fontStyle: "italic",
-    lineHeight: 18,
-  },
+  fill: { height: "100%", borderRadius: 99, backgroundColor: dq.green },
+  progressText: { fontSize: 11, fontWeight: "700", color: dq.muted },
+  ctaRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  ctaText: { fontSize: 12, fontWeight: "800", color: dq.green },
 });
