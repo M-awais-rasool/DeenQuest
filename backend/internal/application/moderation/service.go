@@ -1,7 +1,3 @@
-// Package moderation is the Safety/Moderation Agent: it screens user-generated
-// text before it is stored or shown. Deterministic checks run first (fast, free,
-// predictable); an optional AI classifier catches nuanced cases. Reusable by any
-// feature that accepts user text (today: reflections; later: community).
 package moderation
 
 import (
@@ -14,14 +10,11 @@ const maxLen = 2000
 
 var urlRe = regexp.MustCompile(`(?i)\b(https?://|www\.)\S+`)
 
-// bannedWords is a minimal, generic profanity/abuse list. Kept short on purpose;
-// the optional AI classifier handles the long tail.
 var bannedWords = []string{
 	"fuck", "shit", "bitch", "asshole", "bastard", "cunt", "dick", "slut",
 	"nigger", "faggot", "retard",
 }
 
-// Classifier is the optional AI moderation backend (Gemini satisfies it).
 type Classifier interface {
 	Generate(ctx context.Context, system, userPrompt string) (string, error)
 }
@@ -32,16 +25,12 @@ type Service struct {
 
 func NewService() *Service { return &Service{} }
 
-// SetClassifier wires the optional AI moderation pass.
 func (s *Service) SetClassifier(c Classifier) { s.ai = c }
 
 const modSystem = "You are a strict content-safety classifier for a children's Islamic learning app. " +
 	"Reply with exactly one word: SAFE or UNSAFE. Mark UNSAFE if the text contains profanity, hate, sexual content, " +
 	"violence, self-harm, personal contact details, spam, or anything inappropriate for children."
 
-// Check returns whether the text is allowed, and a short reason when it is not.
-// Deterministic first; AI only as a second opinion for text that passed the
-// cheap checks (so the AI call is skipped for obviously-bad input).
 func (s *Service) Check(ctx context.Context, text string) (bool, string) {
 	t := strings.TrimSpace(text)
 	if t == "" {

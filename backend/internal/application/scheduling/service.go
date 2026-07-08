@@ -1,6 +1,3 @@
-// Package scheduling is the Scheduling / Prayer-aware Agent: it computes the
-// day's prayer times and suggests a study slot anchored to salah, so learning
-// fits the Islamic daily rhythm. Pure + deterministic (no external API).
 package scheduling
 
 import (
@@ -9,12 +6,11 @@ import (
 	"github.com/chawais/talent-flow/backend/internal/infrastructure/prayer"
 )
 
-// Plan is the agent's output: today's prayer times plus a suggested study slot.
 type Plan struct {
 	Date          string       `json:"date"`
 	PrayerTimes   prayer.Times `json:"prayer_times"`
-	SuggestedSlot string       `json:"suggested_slot"` // e.g. "After Fajr"
-	SuggestedTime string       `json:"suggested_time"` // "HH:MM" to anchor a reminder
+	SuggestedSlot string       `json:"suggested_slot"` 
+	SuggestedTime string       `json:"suggested_time"` 
 	Tip           string       `json:"tip"`
 }
 
@@ -22,9 +18,6 @@ type Service struct{}
 
 func NewService() *Service { return &Service{} }
 
-// Plan computes prayer times for (lat, lng, tz) on the given local time and
-// recommends the best calm slot to study. After-Fajr is preferred for focus;
-// after-Isha is offered later in the day.
 func (s *Service) Plan(lat, lng, tz float64, now time.Time) Plan {
 	y, m, d := now.Date()
 	times := prayer.Compute(y, int(m), d, lat, lng, tz, prayer.Default())
