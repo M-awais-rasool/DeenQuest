@@ -53,10 +53,10 @@ lint: fmt vet test
 
 build:
 	@mkdir -p build
-	$(GO) build -o build/deenquest-api ./cmd/
+	$(GO) build -o build/deenquest-api ./cmd/api
 
 run:
-	WHISPER_URL=http://localhost:8001 $(GO) run ./cmd/
+	WHISPER_URL=http://localhost:8001 $(GO) run ./cmd/api
 
 compose-up:
 	$(COMPOSE) up -d

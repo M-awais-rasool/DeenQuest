@@ -7,7 +7,7 @@ asynchronously through a goroutine in the monolith.
 
 | Topic | Producer | Consumer | Purpose |
 |-------|----------|----------|---------|
-| `notification.send` | Any service that needs async notification delivery | Worker Consumer (`internal/application/worker/consumer.go`) | Looks up the user's registered Expo token and sends the message |
+| `notification.send` | Any service that needs async notification delivery | Worker Consumer (`internal/notification/jobs_consumer.go`) | Looks up the user's registered Expo token and sends the message |
 
 Old logging-only consumers such as `user.created`, `habit.completed`, and
 `streak.updated` were removed because they did not affect product behavior.
