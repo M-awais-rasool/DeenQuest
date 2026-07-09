@@ -12,7 +12,6 @@ import (
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 	"github.com/chawais/deenquest/backend/internal/platform/gemini"
 	"github.com/chawais/deenquest/backend/internal/platform/jwt"
-	"github.com/chawais/deenquest/backend/internal/platform/kafka"
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
 	"github.com/chawais/deenquest/backend/internal/platform/push"
 )
@@ -27,10 +26,6 @@ type Infra struct {
 	// Redis is nil when unavailable — callers must nil-check. The app then runs
 	// without response caching and rate limiting.
 	Redis *cache.RedisClient
-
-	// Kafka is the shared async producer used to publish learning behavior
-	// events (fire-and-forget, keyed by user for per-user ordering).
-	Kafka *kafka.Producer
 
 	// Gemini is nil when GEMINI_API_KEY is unset. Every AI feature checks for
 	// nil and falls back to its deterministic behavior.
@@ -71,7 +66,6 @@ func connectInfra(cfg *config.Config) (*Infra, error) {
 		Mongo:  mongoClient,
 		DB:     mongoClient.Database(cfg.MongoDB),
 		Redis:  redisClient,
-		Kafka:  kafka.NewProducerAsync(cfg.GetKafkaBrokerList()),
 		Gemini: gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel),
 		Expo:   push.NewExpoClient(cfg.ExpoPushURL, cfg.ExpoPushAccessToken),
 		JWT:    jwt.NewJWTManager(cfg.JWTSecret, cfg.JWTAccessExpiry, cfg.JWTRefreshExpiry),
@@ -80,7 +74,6 @@ func connectInfra(cfg *config.Config) (*Infra, error) {
 
 // Close releases every connection in reverse dependency order.
 func (i *Infra) Close() {
-	_ = i.Kafka.Close()
 	if i.Redis != nil {
 		_ = i.Redis.Close()
 	}

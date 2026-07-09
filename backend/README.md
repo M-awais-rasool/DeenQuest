@@ -8,8 +8,8 @@ then open [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 > **Everything that belongs to a feature lives in that feature's folder.**
 
-Want to understand the learning agent? Open `internal/learning/` — its data
-types, business logic, MongoDB code, Kafka consumers, HTTP handlers, and routes
+Want to understand notifications? Open `internal/notification/` — its data
+types, business logic, MongoDB code, Kafka consumer, HTTP handlers, and routes
 are all there. No jumping between four layer folders.
 
 ## Layout
@@ -20,9 +20,9 @@ backend/
 │
 ├── internal/app/          # ⚙️  COMPOSITION ROOT — how everything fits together
 │   ├── app.go             #    App lifecycle: New() + Run() + graceful shutdown
-│   ├── infra.go           #    connects MongoDB, Redis, Kafka, Gemini, Expo, JWT
+│   ├── infra.go           #    connects MongoDB, Redis, Gemini, Expo, JWT
 │   ├── modules.go         #    builds every module + cross-module wiring
-│   ├── workers.go         #    ALL background workers (Kafka consumers, crons)
+│   ├── workers.go         #    ALL background workers (Kafka consumer, crons)
 │   ├── http.go            #    middleware + mounts every module's routes
 │   └── seed.go            #    startup data seeding
 │
@@ -31,15 +31,8 @@ backend/
 │   ├── user/              #    user entity, profiles, account management
 │   ├── progress/          #    streaks, daily tasks, levels, rewards, recitation, admin CRUD
 │   ├── quran/             #    surah reading + audio (AlQuran API client, Redis cache)
-│   ├── learning/          #    🤖 Learning Agent (see below)
-│   │   └── model/         #    shared learning types (events, learner state)
-│   ├── notification/      #    push tokens, Expo delivery, notification job log
-│   │   └── smart/         #    rules engine: daily-task reminders, streak savers
-│   ├── reflection/        #    reflection journal + AI companion
-│   ├── knowledge/         #    Q&A over curated FAQ entries
-│   ├── scheduling/        #    prayer-aware study plan
-│   │   └── prayer/        #    prayer-time calculation
-│   └── moderation/        #    content safety checks
+│   └── notification/      #    push tokens, Expo delivery, notification job log
+│       └── smart/         #    rules engine: daily-task reminders, streak savers
 │
 └── internal/platform/     # 🧰 SHARED TOOLBOX (reusable, feature-agnostic)
     ├── config/  logger/  cache/    (Redis)  kafka/  gemini/  ollama/
@@ -49,8 +42,8 @@ backend/
 
 **Dependency direction (never violated):**
 `cmd → app → feature modules → platform`. Modules may import each other's
-public types (e.g. `learning` reads `progress` data), but `platform` never
-imports a module, and no module imports `app`.
+public types, but `platform` never imports a module, and no module imports
+`app`.
 
 ## Anatomy of a module
 
@@ -72,32 +65,27 @@ HTTP request → app/http.go middleware → module routes.go → handler.go
             → service.go → repository (Mongo) → response
 ```
 
-## How the Kafka pipeline flows (Learning Agent)
+## Background workers
 
-```
-user acts (task/lesson/recitation)
-  → progress service emits BehaviorEvent ──► Kafka topic "learning.events"
-                                                │
-      ┌─────────────────────────────────────────┼──────────────────────────┐
-      ▼ consumer group                          ▼ consumer group           ▼ consumer group
-learning/state_service.go               learning/mistakes_service.go   learning/ai_service.go
-(mastery, streak risk — deterministic)  (mistake notebook)             (Gemini copy — optional)
-```
+All started in `app/workers.go` (read it top to bottom to see everything that
+runs outside a request):
 
-Each consumer group reads the same topic independently — one slow consumer
-never blocks the others. All consumers are started in `app/workers.go`.
+1. **notification.send Kafka consumer** — delivers pushes via Expo, logs to the job log
+2. **Job-log heartbeat** — daily ticker
+3. **Smart notification cron** — every minute, evaluates `notification/smart`
+   rules (daily-task reminders, streak savers) against all users
 
 ## Run it
 
 ```bash
 go run ./cmd/api            # needs MongoDB; Kafka/Redis/Gemini are optional
+make build                  # binary at build/deenquest-api
 go test ./...
-go build ./...
 ```
 
 Optional integrations degrade gracefully: no Redis → no rate limit/cache; no
-Kafka → events are dropped with a warning; no `GEMINI_API_KEY` → AI features
-fall back to deterministic behavior.
+Kafka → the notification consumer just logs read errors; no `GEMINI_API_KEY` →
+the recitation coach falls back to deterministic tips.
 
 ## Adding a new feature (checklist)
 

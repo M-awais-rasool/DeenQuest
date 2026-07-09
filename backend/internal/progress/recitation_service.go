@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/chawais/deenquest/backend/internal/learning/model"
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
 )
 
@@ -35,7 +34,6 @@ type RecitationService struct {
 	repo       CoreRepository
 	whisperURL string // e.g. "http://whisper-service:8001"
 	httpClient *http.Client
-	emitter    EventEmitter
 	coach      RecitationCoach
 }
 
@@ -46,9 +44,6 @@ func NewRecitationService(repo CoreRepository, whisperURL string) *RecitationSer
 		httpClient: &http.Client{Timeout: 60 * time.Second},
 	}
 }
-
-// SetEventEmitter wires the Learning Agent's event publisher (optional).
-func (s *RecitationService) SetEventEmitter(e EventEmitter) { s.emitter = e }
 
 // SetCoach wires the optional AI pronunciation coach (Gemini).
 func (s *RecitationService) SetCoach(c RecitationCoach) { s.coach = c }
@@ -195,26 +190,6 @@ func (s *RecitationService) CheckRecitation(
 		if err := s.awardXP(ctx, userID, xpEarned); err != nil {
 			logger.Error("Failed to award XP", zap.Error(err))
 		}
-	}
-
-	if s.emitter != nil {
-		// Mispronounced/missing words are the richest weak-area signal we have.
-		var wrong []string
-		for _, w := range words {
-			if w.Status == WordWrong || w.Status == WordMissing {
-				wrong = append(wrong, w.Text)
-			}
-		}
-		s.emitter.Emit(context.Background(), model.BehaviorEvent{
-			UserID:      userID,
-			Type:        model.EventRecitationScored,
-			LevelID:     levelID,
-			LessonIndex: lessonIndex,
-			Score:       score,
-			Correct:     score >= 60,
-			WrongTokens: wrong,
-			SkillTags:   lesson.SkillTags,
-		})
 	}
 
 	return &RecitationCheckResult{

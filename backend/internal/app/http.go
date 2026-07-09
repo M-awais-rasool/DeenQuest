@@ -6,15 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/chawais/deenquest/backend/internal/auth"
-	"github.com/chawais/deenquest/backend/internal/knowledge"
-	"github.com/chawais/deenquest/backend/internal/learning"
 	"github.com/chawais/deenquest/backend/internal/notification"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 	"github.com/chawais/deenquest/backend/internal/platform/middleware"
 	"github.com/chawais/deenquest/backend/internal/progress"
 	"github.com/chawais/deenquest/backend/internal/quran"
-	"github.com/chawais/deenquest/backend/internal/reflection"
-	"github.com/chawais/deenquest/backend/internal/scheduling"
 	"github.com/chawais/deenquest/backend/internal/user"
 )
 
@@ -57,13 +53,6 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	quran.RegisterRoutes(r.Group("/api/quran"), m.QuranHandler) // legacy path used by older clients
 
 	notification.RegisterRoutes(authed, m.NotificationHandler)
-
-	learning.RegisterRoutes(authed, m.LearningHandler, m.EventsHandler)
-	learning.RegisterAdminRoutes(admin, m.LearningHandler)
-
-	reflection.RegisterRoutes(authed, m.ReflectionHandler)
-	scheduling.RegisterRoutes(authed, m.SchedulingHandler)
-	knowledge.RegisterRoutes(authed, m.KnowledgeHandler)
 
 	return r
 }
