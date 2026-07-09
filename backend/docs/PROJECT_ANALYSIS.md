@@ -1,3 +1,5 @@
+> ⚠️ **Historical snapshot.** This analysis describes the old four-layer DDD structure (pre July 2026). The backend has since been reorganized into a modular monolith — see [ARCHITECTURE.md](ARCHITECTURE.md) for the current layout. Business logic, endpoints, and data described here are still accurate.
+
 # DeenQuest — Complete Project Analysis
 
 > **Date**: 2026-05-30  

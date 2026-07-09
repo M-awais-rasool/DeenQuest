@@ -9,18 +9,18 @@ This system sends smart notifications to users who haven't used the app recently
 ## File Structure (DDD Monolith)
 
 ```
-internal/domain/intelligent/         → Data shapes (NotificationRule, UserContext, NotificationLog)
+internal/notification/smart/         → Data shapes (NotificationRule, UserContext, NotificationLog)
 ├── entity.go                        → Structs and types
 └── repository.go                    → LogRepository interface
 
-internal/application/intelligent/    → Intelligent notification orchestration
+internal/notification/smart/    → Intelligent notification orchestration
 ├── service.go                       → Main brain: loops users, checks rules, sends
 ├── rules.go                         → 3 rule definitions with message templates
 ├── user_fetcher.go                  → Fetches all users + their data from DB
 └── scheduler.go                     → Cron job that runs every 60 seconds
 
-internal/infrastructure/persistence/
-└── mongo_notification_log_repository.go  → MongoDB implementation of LogRepository
+internal/notification/smart/
+└── mongo_log_repository.go  → MongoDB implementation of LogRepository
 ```
 
 ---
@@ -29,13 +29,13 @@ internal/infrastructure/persistence/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  internal/application/intelligent/scheduler.go                  │
+│  internal/notification/smart/scheduler.go                  │
 │  "Runs every 60 seconds, tells service to start working"        │
 └────────────────────────┬────────────────────────────────────────┘
                          │ calls
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  internal/application/intelligent/service.go                    │
+│  internal/notification/smart/service.go                    │
 │  "The boss: fetches users, checks rules, sends messages"        │
 └───┬──────────────────────┬──────────────────────┬───────────────┘
     │                      │                      │
@@ -55,7 +55,7 @@ internal/infrastructure/persistence/
        │                    │                           │
        ▼                    ▼                           ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│  internal/domain/intelligent/entity.go + repository.go          │
+│  internal/notification/smart/entity.go + repository.go          │
 │  "Defines all data shapes used by every file above"             │
 │  - UserContext: user's streak, tasks, rank, token               │
 │  - NotificationRule: rule + template for one type               │
@@ -72,7 +72,7 @@ internal/infrastructure/persistence/
                     ┌───────────────────────────────────────┐
                     │  Cron Scheduler                       │
                     │  (every 60 seconds)                   │
-                    │  internal/application/intelligent/    │
+                    │  internal/notification/smart/    │
                     │         scheduler.go                  │
                     └─────────┬─────────────────────────────┘
                               │
@@ -80,7 +80,7 @@ internal/infrastructure/persistence/
                     ┌───────────────────────────────────────┐
                     │  service.go                            │
                     │  ProcessAllNotifications()             │
-                    │  internal/application/intelligent/    │
+                    │  internal/notification/smart/    │
                     └─────────┬─────────────────────────────┘
                               │
            ┌──────────────────┼──────────────────┐
@@ -100,7 +100,7 @@ internal/infrastructure/persistence/
                     ┌───────────────────────────────────────┐
                     │  Push Sent via Expo Push API          │
                     │  (to user's phone)                    │
-                    │  internal/infrastructure/push/expo.go │
+                    │  internal/platform/push/expo.go │
                     └───────────────────────────────────────┘
 ```
 
@@ -149,7 +149,7 @@ For each user, the system checks 3 rules:
 └─────────────────────────────┴─────────────────────────────────────────────┘
 ```
 
-### Step 4: Check Cooldown (mongo_notification_log_repository.go)
+### Step 4: Check Cooldown (mongo_log_repository.go)
 
 Before sending, check: "Did we already send this type of notification recently?"
 
@@ -175,7 +175,7 @@ Each rule has a `BuildMessage` function that creates a personalized message:
 Send via Expo Push API → User's phone receives notification
 ```
 
-### Step 7: Save Log (mongo_notification_log_repository.go)
+### Step 7: Save Log (mongo_log_repository.go)
 
 ```
 Save to notification_logs collection:
