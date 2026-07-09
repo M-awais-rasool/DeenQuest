@@ -24,7 +24,6 @@ import {
 } from "../../store/services/api";
 import type { DailyTask } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
-import { NextBestActionCard } from "../../components/learning/NextBestActionCard";
 
 // Icon shown on each mission row, keyed by the task's category.
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -183,8 +182,6 @@ export const HomeScreen = () => {
           </View>
         </View>
 
-        {/* ── Recommended for you ── */}
-        <NextBestActionCard />
 
         {/* ── Daily Missions ── */}
         <View>

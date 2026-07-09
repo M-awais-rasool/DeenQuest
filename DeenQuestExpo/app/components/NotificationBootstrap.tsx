@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useRegisterNotificationTokenMutation } from "../store/services/api";
 import { useAppSelector } from "../store/hooks";
 import { getExpoPushRegistrationAsync } from "../services/notificationService";
-import { track } from "../services/learningEvents";
 import * as Notifications from "expo-notifications";
 import { Linking } from "react-native";
 
@@ -49,7 +48,6 @@ export function NotificationBootstrap() {
 
     if (isAuthenticated) {
       registerToken();
-      track.sessionStart();
     }
 
     return () => {

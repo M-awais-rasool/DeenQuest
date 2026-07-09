@@ -4,8 +4,6 @@ import { CheckCircle2, XCircle, ChevronRight } from "lucide-react-native";
 import { theme } from "../../../../theme/themes";
 import { TactilePressable } from "../../../ui";
 import { CelebrationOverlay } from "./CelebrationOverlay";
-import { useLessonTelemetry } from "./lessonTelemetry";
-import { track } from "../../../../services/learningEvents";
 
 export type FeedbackStatus = "correct" | "wrong" | null;
 type ButtonVariant = "primary" | "success" | "error" | "neutral";
@@ -69,14 +67,9 @@ export function FeedbackBanner({
 }) {
   const progress = useRef(new Animated.Value(0)).current;
   const [burst, setBurst] = useState(0);
-  const telemetry = useLessonTelemetry();
-  const emittedRef = useRef(false);
 
   useEffect(() => {
-    if (!status) {
-      emittedRef.current = false; // reset for the next question
-      return;
-    }
+    if (!status) return;
     progress.setValue(0);
     Animated.timing(progress, {
       toValue: 1,
@@ -85,22 +78,9 @@ export function FeedbackBanner({
       useNativeDriver: true,
     }).start();
 
-    // Learning Agent: report this answer's correctness exactly once. This is the
-    // single choke point every task component shares, so wrong answers (the
-    // weak-area signal) reach the agent without per-component wiring.
-    if (!emittedRef.current && telemetry) {
-      emittedRef.current = true;
-      track.answer(status === "correct", {
-        skill_tags: telemetry.skillTags,
-        level_id: telemetry.levelId,
-        lesson_index: telemetry.lessonIndex,
-        course_type: telemetry.courseType,
-      });
-    }
-
     // Reward moment: a star burst over the banner on every correct answer.
     if (status === "correct") setBurst((b) => b + 1);
-  }, [status, progress, telemetry]);
+  }, [status, progress]);
 
   if (!status) return null;
 
