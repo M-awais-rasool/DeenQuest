@@ -1,4 +1,4 @@
-module github.com/chawais/talent-flow/backend
+module github.com/chawais/deenquest/backend
 
 go 1.24
 
