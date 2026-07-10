@@ -9,6 +9,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/amiri": "^0.4.1",
+    "@expo-google-fonts/nunito": "^0.4.2",
     "@react-native-async-storage/async-storage": "^3.0.2",
     "@react-native/new-app-screen": "^0.80.3",
     "@react-navigation/bottom-tabs": "^7.15.9",
