@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 20,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     color: theme.colors.primary,
     textTransform: "uppercase",
   },
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   },
   xpText: {
     color: theme.colors.primary,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     fontSize: 16,
     textTransform: "uppercase",
   },

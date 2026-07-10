@@ -122,7 +122,7 @@ const s = StyleSheet.create({
   instruction: {
     fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     marginBottom: 16,
     textAlign: "center",
   },

@@ -568,5 +568,47 @@ func seedQaidaLevels() []Level {
 			},
 			MiniGame: MiniGame{Type: GameMemoryCards, Description: "🎁 Grand Treasure! Match every posture to its saying", Data: map[string]any{"pairs": []map[string]any{{"left": "التَّكْبِير", "right": "اللَّهُ أَكْبَر"}, {"left": "الْقِيَام", "right": "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ"}, {"left": "الرُّكُوع", "right": "سُبْحَانَ رَبِّيَ الْعَظِيم"}, {"left": "السُّجُود", "right": "سُبْحَانَ رَبِّيَ الْأَعْلَى"}, {"left": "الْجُلُوس", "right": "رَبِّ اغْفِرْ لِي"}, {"left": "التَّسْلِيم", "right": "السَّلَامُ عَلَيْكُم"}}}},
 		},
+		// ───────── LEVELS 31-32: Grand Review & Daily Duas ─────────
+		// These levels showcase every interactive task screen from the new
+		// design (Letter Hunt, Sort Buckets, True/False, Listen & Choose,
+		// Fill-in-the-blank, Lightning Round, Dua Card, Prayer Checklist,
+		// Ayah Builder, Pronunciation, Certificate). New IDs seed into
+		// existing databases too (insert-if-absent is keyed by level ID).
+		{
+			ID:           31,
+			Title:        "Grand Review: Letters & Sounds",
+			Theme:        "Everything You Learned",
+			Goal:         "Revise the alphabet, harakat and reading skills",
+			Difficulty:   LevelHard,
+			XPReward:     280,
+			UnlockReward: "title:review_champion",
+			Lessons: []Lesson{
+				{Type: LessonQaida, Title: "Letter Hunt", Description: "Find every نُون in the grid", ScreenType: ScreenAction, Component: "LetterHuntComponent", SkillTags: []string{"ن"}, Data: map[string]any{"instruction": "Tap every ن — watch out for lookalikes!", "target": "ن", "grid": []string{"ب", "ن", "ت", "ن", "ث", "ي", "ن", "ب", "ن", "ت", "ي", "ن"}}},
+				{Type: LessonQaida, Title: "Sort the Dots", Description: "Dots above or below?", ScreenType: ScreenAction, Component: "SortBucketsComponent", Data: map[string]any{"instruction": "Sort each letter: dots above or below?", "buckets": []string{"نُقَط فَوْق", "نُقَط تَحْت"}, "items": []map[string]any{{"text": "ت", "bucket": 0}, {"text": "ن", "bucket": 0}, {"text": "ب", "bucket": 1}, {"text": "ي", "bucket": 1}}}},
+				{Type: LessonQuiz, Title: "True or False?", Description: "Check each letter carefully", ScreenType: ScreenQuiz, Component: "TrueFalseComponent", Data: map[string]any{"rounds": []map[string]any{{"prompt": "This letter has two dots above it", "arabic": "ت", "answer": true}, {"prompt": "This letter has three dots above it", "arabic": "ب", "answer": false}, {"prompt": "This letter has two dots below it", "arabic": "ي", "answer": true}, {"prompt": "This letter has no dots", "arabic": "ن", "answer": false}}}},
+				{Type: LessonPronunciation, Title: "Listen & Choose", Description: "Listen, then tap the letter you heard", ScreenType: ScreenAction, Component: "ListenChooseComponent", Data: map[string]any{"audio": "م", "options": []string{"م", "ن", "و"}, "correct": 0}},
+				{Type: LessonQuiz, Title: "Complete the Basmalah", Description: "Fill in the missing word", ScreenType: ScreenQuiz, Component: "FillBlankComponent", Data: map[string]any{"instruction": "Complete the Basmalah", "sentence": []map[string]any{{"text": "بِسْمِ"}, {"text": "اللَّهِ"}, {"blank": true, "answer": "الرَّحْمَٰنِ"}, {"text": "الرَّحِيمِ"}}, "bank": []string{"الرَّحْمَٰنِ", "الْعَالَمِينَ", "الرَّحِيمِ"}, "meaning": "In the name of Allah, the Most Gracious, the Most Merciful"}},
+				{Type: LessonRevision, Title: "Lightning Review", Description: "Beat the clock!", ScreenType: ScreenQuiz, Component: "LightningRoundComponent", Data: map[string]any{"seconds": 7, "questions": []map[string]any{{"question": "Tap the letter نُون", "options": []string{"ن", "ب", "ت"}, "correct": 0}, {"question": "Tap the letter يَاء", "options": []string{"ت", "ي", "ن"}, "correct": 1}, {"question": "Tap the letter مِيم", "options": []string{"و", "ن", "م"}, "correct": 2}, {"question": "Which letter has three dots?", "options": []string{"ث", "ت", "ب"}, "correct": 0}}}},
+			},
+			MiniGame: MiniGame{Type: GameTapMatch, Description: "Match each letter to its name", SkillTags: []string{"ن", "م", "ي", "و"}, Data: map[string]any{"pairs": []map[string]any{{"left": "ن", "right": "نُون"}, {"left": "م", "right": "مِيم"}, {"left": "ي", "right": "يَاء"}, {"left": "و", "right": "وَاو"}}}},
+		},
+		{
+			ID:           32,
+			Title:        "Duas for Your Day",
+			Theme:        "Living with Remembrance",
+			Goal:         "Learn the duas of your day and earn your final certificate",
+			Difficulty:   LevelMedium,
+			XPReward:     300,
+			UnlockReward: "title:dua_master",
+			Lessons: []Lesson{
+				{Type: LessonDua, Title: "Morning Dua", Description: "Start your day with remembrance", ScreenType: ScreenHadithCard, Component: "DuaCardComponent", Data: map[string]any{"arabic": "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ", "meaning": "We have entered the morning, and all dominion belongs to Allah", "context": "Say this when you wake up in the morning"}},
+				{Type: LessonPronunciation, Title: "Say the Dua", Description: "Tap each part to hear it", ScreenType: ScreenAction, Component: "PronunciationComponent", Data: map[string]any{"items": []map[string]any{{"arabic": "أَصْبَحْنَا"}, {"arabic": "وَأَصْبَحَ"}, {"arabic": "الْمُلْكُ"}, {"arabic": "لِلَّهِ"}}}},
+				{Type: LessonQaida, Title: "Build the Dua", Description: "Arrange the words in order", ScreenType: ScreenAction, Component: "AyahBuilderComponent", Data: map[string]any{"instruction": "Build the dua for more knowledge — one word is a decoy", "parts": []string{"رَبِّ", "زِدْنِي", "عِلْمًا"}, "distractors": []string{"كَثِيرًا"}, "meaning": "My Lord, increase me in knowledge"}},
+				{Type: LessonQaida, Title: "Your Daily Adhkar", Description: "Tick off each dua of the day", ScreenType: ScreenChecklist, Component: "PrayerChecklistComponent", Data: map[string]any{"steps": []string{"Waking up — أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ", "Before eating — بِسْمِ اللَّهِ", "Leaving home — بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ", "Entering home — السَّلَامُ عَلَيْكُم", "Before sleep — بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا"}}},
+				{Type: LessonQuiz, Title: "Which Dua?", Description: "Choose the correct dua", ScreenType: ScreenQuiz, Component: "MCQComponent", Data: map[string]any{"question": "Which dua do you say before eating?", "options": []string{"بِسْمِ اللَّهِ", "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ", "رَبِّ زِدْنِي عِلْمًا"}, "correct": 0}},
+				{Type: LessonRevision, Title: "Certificate Ceremony", Description: "Congratulations — you did it!", ScreenType: ScreenAction, Component: "CertificateComponent", Data: map[string]any{"title": "Dua Master", "message": "MashaAllah! You learned the duas of your day — waking up, eating, leaving home and sleeping — and you can read them all in Arabic. Keep your tongue moist with the remembrance of Allah!", "next_phase": "Keep your streak alive with Daily Missions"}},
+			},
+			MiniGame: MiniGame{Type: GameListenChoose, Description: "Listen to each word of the dua and choose it", Data: map[string]any{"questions": []map[string]any{{"audio": "رَبِّ", "options": []string{"رَبِّ", "زِدْنِي", "عِلْمًا"}, "correct": 0}, {"audio": "عِلْمًا", "options": []string{"زِدْنِي", "عِلْمًا", "رَبِّ"}, "correct": 1}, {"audio": "بِسْمِ اللَّهِ", "options": []string{"بِسْمِ اللَّهِ", "السَّلَامُ عَلَيْكُم", "اللَّهُ أَكْبَر"}, "correct": 0}}}},
+		},
 	}
 }

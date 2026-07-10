@@ -80,7 +80,7 @@ const s = StyleSheet.create({
   surahName: {
     fontSize: 13,
     color: theme.colors.primary,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
   },
 
   ayahCard: {
@@ -148,7 +148,7 @@ const s = StyleSheet.create({
   },
   continueBtnText: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

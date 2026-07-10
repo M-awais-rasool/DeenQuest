@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     color: theme.colors.text,
     textTransform: "uppercase",
     letterSpacing: 1,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     color: theme.colors.textMuted,
     letterSpacing: 1.5,
     marginBottom: theme.spacing.sm,

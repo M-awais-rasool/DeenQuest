@@ -58,7 +58,7 @@ const s = StyleSheet.create({
   question: {
     fontSize: 18,
     color: theme.colors.text,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     marginBottom: 20,
     lineHeight: 26,
   },
@@ -79,7 +79,7 @@ const s = StyleSheet.create({
   optionText: {
     fontSize: 15,
     color: theme.colors.text,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
   optionTextSelected: {
     color: theme.colors.primary,
@@ -94,7 +94,7 @@ const s = StyleSheet.create({
     fontSize: 14,
     color: theme.colors.primary,
     textAlign: "center",
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     lineHeight: 20,
   },
 });

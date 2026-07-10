@@ -158,7 +158,7 @@ const s = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
   stage: {
     alignItems: "center",
@@ -186,7 +186,7 @@ const s = StyleSheet.create({
     marginTop: 8,
     color: theme.colors.textMuted,
     fontSize: 12,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     letterSpacing: 1,
   },
   bucketRow: {

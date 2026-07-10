@@ -99,7 +99,7 @@ const s = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textMuted,
     letterSpacing: 0.5,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
   tapHintActive: {
     color: theme.colors.secondary,
