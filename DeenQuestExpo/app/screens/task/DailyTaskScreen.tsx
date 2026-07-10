@@ -6,6 +6,7 @@ import {
   ScrollView,
 } from "react-native";
 import { AnimatedPressable } from "../../components/ui";
+import { ChevronLeft } from "lucide-react-native";
 import { theme } from "../../theme/themes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import type { DailyTask } from "../../store/services/api";
@@ -37,16 +38,15 @@ export function DailyTaskScreen({
           }}
           style={s.backBtn}
         >
-          <Text style={s.backText}>← Back</Text>
+          <ChevronLeft size={18} color={theme.colors.text} strokeWidth={2.5} />
         </AnimatedPressable>
+        <Text style={s.headerTitle} numberOfLines={1}>
+          {task.title}
+        </Text>
         <XPBadge xp={task.reward_xp} />
+        <CategoryBadge category={task.category} />
       </View>
       <ScrollView contentContainerStyle={s.scroll}>
-        <View style={s.titleRow}>
-          <CategoryBadge category={task.category} />
-          <Text style={s.difficultyText}>{task.difficulty.toUpperCase()}</Text>
-        </View>
-        <Text style={s.taskTitle}>{task.title}</Text>
         <Text style={s.taskDesc}>{task.description}</Text>
         <BlockRenderer
           task={task}
@@ -61,35 +61,34 @@ export function DailyTaskScreen({
 const s = StyleSheet.create({
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    gap: 10,
+    paddingHorizontal: 22,
+    paddingTop: 14,
+    paddingBottom: 4,
   },
-  backBtn: { padding: 4 },
-  backText: { color: theme.colors.primary, fontSize: 16, fontWeight: "700" },
-  scroll: { padding: theme.spacing.lg, paddingBottom: 100 },
-  titleRow: {
-    flexDirection: "row",
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
     alignItems: "center",
-    gap: 12,
-    marginBottom: 8,
+    justifyContent: "center",
   },
-  taskTitle: {
-    fontSize: 28,
-    fontWeight: "900",
+  headerTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontFamily: "Nunito_900Black",
     color: theme.colors.text,
-    marginBottom: 4,
   },
+  scroll: { padding: theme.spacing.lg, paddingBottom: 100 },
   taskDesc: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-    marginBottom: 24,
-  },
-  difficultyText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: theme.colors.textMuted,
-    letterSpacing: 1,
+    fontSize: 15,
+    lineHeight: 24,
+    color: "#B7C8C6",
+    fontFamily: "Nunito_600SemiBold",
+    marginBottom: 22,
   },
 });

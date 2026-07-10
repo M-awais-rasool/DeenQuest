@@ -141,7 +141,7 @@ export function UnlockModal({
           haptic="light"
           onPress={onClose}
         >
-          <X size={17} color="#9aa39a" />
+          <X size={17} color="#8DA5A3" />
         </TactilePressable>
 
         {/* content */}
@@ -149,12 +149,12 @@ export function UnlockModal({
           <Animated.View style={[s.medallion, { transform: [{ scale: popAnim }] }]}>
             <View style={s.dashedRing} />
             <LinearGradient
-              colors={["#FFF0C2", "#F0B93B", "#D2922A"]}
+              colors={["#F9DDA0", "#EFB65A", "#C98F35"]}
               start={{ x: 0.34, y: 0.28 }}
               end={{ x: 1, y: 1 }}
               style={s.medallionCore}
             >
-              <RewardIcon icon={reward.icon} color="#6e4a06" size={54} />
+              <RewardIcon icon={reward.icon} color="#3A2A08" size={54} />
             </LinearGradient>
             <Sparkles size={22} color={dq.gold} style={s.sparkTop} />
             <Sparkle size={15} color={dq.gold} style={s.sparkBottom} />
@@ -174,7 +174,7 @@ export function UnlockModal({
         <View style={s.actions}>
           <TactilePressable
             faceStyle={s.claimBtn}
-            edgeColor="#2E7D32"
+            edgeColor="#1B9484"
             faceUnderlayColor={dq.green}
             radius={16}
             depth={4}
@@ -279,22 +279,22 @@ const s = StyleSheet.create({
 
   eyebrow: {
     fontSize: 12,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 2.1,
     color: dq.gold,
   },
   title: {
     fontSize: 28,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     color: dq.white,
     marginTop: 8,
     textAlign: "center",
   },
   desc: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     lineHeight: 21,
-    color: "#a7b0a6",
+    color: "#8DA5A3",
     textAlign: "center",
     marginTop: 12,
     maxWidth: 260,
@@ -311,7 +311,7 @@ const s = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 99,
   },
-  xpText: { fontSize: 14, fontWeight: "900", color: dq.gold },
+  xpText: { fontSize: 14, fontFamily: "Nunito_900Black", color: dq.gold },
 
   actions: {
     paddingHorizontal: 24,
@@ -331,7 +331,7 @@ const s = StyleSheet.create({
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 8 },
   },
-  claimText: { fontSize: 15, fontWeight: "800", color: dq.onGreen },
+  claimText: { fontSize: 15, fontFamily: "Nunito_800ExtraBold", color: dq.onGreen },
   shareBtn: {
     height: 50,
     borderRadius: 16,
@@ -342,5 +342,5 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  shareText: { fontSize: 14, fontWeight: "800", color: dq.text },
+  shareText: { fontSize: 14, fontFamily: "Nunito_800ExtraBold", color: dq.text },
 });

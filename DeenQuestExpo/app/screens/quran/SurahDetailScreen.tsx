@@ -112,19 +112,15 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
         </AnimatedPressable>
         <TactilePressable
           onPress={() => setShowTranslation((value) => !value)}
-          edgeColor={
-            showTranslation ? theme.colors.primary30 : theme.colors.primary25
-          }
+          edgeColor="#24505F"
           depth={3}
-          radius={theme.borderRadius.sm}
+          radius={14}
           haptic="selection"
           faceStyle={[s.translateBtn, showTranslation && s.translateBtnActive]}
         >
           <Languages
-            size={18}
-            color={
-              showTranslation ? theme.colors.onPrimary : theme.colors.primary
-            }
+            size={16}
+            color={showTranslation ? "#0E2A3A" : "#9AD5F2"}
           />
           <Text
             style={[
@@ -132,7 +128,7 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
               showTranslation && s.translateTextActive,
             ]}
           >
-            Translation
+            EN
           </Text>
         </TactilePressable>
       </View>
@@ -156,46 +152,45 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
 
 const s = StyleSheet.create({
   topBar: {
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: 22,
     paddingVertical: theme.spacing.md,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline25,
   },
   backBtn: {
     width: 42,
     height: 42,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.surfaceLow,
+    borderRadius: 14,
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: theme.colors.outline25,
+    borderColor: theme.colors.outline,
   },
   translateBtn: {
     height: 42,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.primary12,
-    borderWidth: 1,
-    borderColor: theme.colors.primary25,
+    borderRadius: 14,
+    backgroundColor: "#12303A",
+    borderWidth: 1.5,
+    borderColor: "#6EC1E8",
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   translateBtnActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
+    backgroundColor: "#6EC1E8",
+    borderColor: "#6EC1E8",
   },
   translateText: {
-    color: theme.colors.primary,
-    fontWeight: "900",
-    fontSize: 12,
+    color: "#9AD5F2",
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 11,
+    letterSpacing: 0.5,
   },
   translateTextActive: {
-    color: theme.colors.onPrimary,
+    color: "#0E2A3A",
   },
   errorState: {
     flex: 1,
@@ -206,6 +201,6 @@ const s = StyleSheet.create({
   errorTitle: {
     color: theme.colors.error,
     fontSize: 18,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
   },
 });

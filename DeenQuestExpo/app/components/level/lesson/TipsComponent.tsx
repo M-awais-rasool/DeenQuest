@@ -57,7 +57,7 @@ const s = StyleSheet.create({
   },
   continueBtnText: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     color: theme.colors.text,
     textTransform: "uppercase",
     letterSpacing: 1,
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: theme.colors.textMuted,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
   scrollView: {},
   scrollContent: {
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   levelText: {
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 10,
     color: theme.colors.onSecondary,
     letterSpacing: 1,
@@ -263,12 +263,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   name: {
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     fontSize: 32,
     color: theme.colors.white,
   },
   title: {
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     fontSize: 12,
     color: theme.colors.primary,
     letterSpacing: 3,
@@ -304,21 +304,21 @@ const styles = StyleSheet.create({
     top: -16,
   },
   statLabel: {
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     fontSize: 10,
     color: theme.colors.textMuted,
     letterSpacing: 1.5,
     marginBottom: 4,
   },
   statValue: {
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 36,
     color: theme.colors.white,
   },
   statSubtext: {
     fontSize: 10,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     marginTop: 8,
   },
   streakCard: {
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   sectionTitle: {
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     fontSize: 18,
     color: theme.colors.white,
   },
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   streakBadgeText: {
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     fontSize: 14,
     color: theme.colors.secondary,
     marginLeft: 6,

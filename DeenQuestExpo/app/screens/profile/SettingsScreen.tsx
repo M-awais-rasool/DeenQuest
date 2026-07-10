@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     color: theme.colors.text,
     textTransform: "uppercase",
     letterSpacing: 1,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     color: theme.colors.textMuted,
     letterSpacing: 1.5,
     marginBottom: theme.spacing.sm,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     color: theme.colors.text,
   },
   rowRight: {

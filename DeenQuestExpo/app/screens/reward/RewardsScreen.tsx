@@ -334,8 +334,8 @@ const s = StyleSheet.create({
     gap: 18,
   },
 
-  title: { fontSize: 26, fontWeight: "900", color: dq.white },
-  subtitle: { fontSize: 13, fontWeight: "600", color: dq.muted },
+  title: { fontSize: 26, fontFamily: "Nunito_900Black", color: dq.white },
+  subtitle: { fontSize: 13, fontFamily: "Nunito_600SemiBold", color: dq.muted },
 
   // ring card
   ringCard: {
@@ -354,10 +354,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  ringCount: { fontSize: 24, fontWeight: "900", color: dq.white, lineHeight: 24 },
-  ringOf: { fontSize: 11, fontWeight: "700", color: dq.muted, marginTop: 1 },
+  ringCount: { fontSize: 24, fontFamily: "Nunito_900Black", color: dq.white, lineHeight: 24 },
+  ringOf: { fontSize: 11, fontFamily: "Nunito_700Bold", color: dq.muted, marginTop: 1 },
   ringInfo: { flex: 1, gap: 8 },
-  ringInfoTitle: { fontSize: 18, fontWeight: "900", color: dq.white },
+  ringInfoTitle: { fontSize: 18, fontFamily: "Nunito_900Black", color: dq.white },
   tierPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -368,8 +368,8 @@ const s = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 99,
   },
-  tierText: { fontSize: 11, fontWeight: "800", color: dq.gold },
-  ringHint: { fontSize: 12, fontWeight: "600", color: dq.muted },
+  tierText: { fontSize: 11, fontFamily: "Nunito_800ExtraBold", color: dq.gold },
+  ringHint: { fontSize: 12, fontFamily: "Nunito_600SemiBold", color: dq.muted },
 
   // celebration banner
   celebration: {
@@ -387,9 +387,9 @@ const s = StyleSheet.create({
     borderColor: dq.gold55,
   },
   celebrationTopRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  celebrationEyebrow: { fontSize: 14, fontWeight: "900", color: dq.gold },
-  celebrationTitle: { fontSize: 13, fontWeight: "700", color: dq.text },
-  celebrationHint: { fontSize: 12, fontWeight: "600", color: "#a99a6a" },
+  celebrationEyebrow: { fontSize: 14, fontFamily: "Nunito_900Black", color: dq.gold },
+  celebrationTitle: { fontSize: 13, fontFamily: "Nunito_700Bold", color: dq.text },
+  celebrationHint: { fontSize: 12, fontFamily: "Nunito_600SemiBold", color: "#8DA5A3" },
 
   // milestones
   milestonesHeader: {
@@ -398,8 +398,8 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  milestonesTitle: { fontSize: 17, fontWeight: "800", color: dq.white },
-  milestonesCount: { fontSize: 13, fontWeight: "700", color: dq.muted },
+  milestonesTitle: { fontSize: 17, fontFamily: "Nunito_800ExtraBold", color: dq.white },
+  milestonesCount: { fontSize: 13, fontFamily: "Nunito_700Bold", color: dq.muted },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -449,15 +449,15 @@ const s = StyleSheet.create({
     borderWidth: 2,
     borderColor: dq.screen,
   },
-  newBadgeText: { fontSize: 8, fontWeight: "900", color: "#1a1400", letterSpacing: 0.3 },
+  newBadgeText: { fontSize: 8, fontFamily: "Nunito_900Black", color: "#3A2A08", letterSpacing: 0.3 },
   cellTitle: {
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: dq.text,
     textAlign: "center",
     lineHeight: 14,
   },
-  unlockedLabel: { fontSize: 9, fontWeight: "800", color: dq.green, letterSpacing: 0.4 },
+  unlockedLabel: { fontSize: 9, fontFamily: "Nunito_800ExtraBold", color: dq.green, letterSpacing: 0.4 },
   cellProgress: { alignItems: "center", gap: 4 },
   cellTrack: {
     width: 56,
@@ -467,7 +467,7 @@ const s = StyleSheet.create({
     overflow: "hidden",
   },
   cellFill: { height: "100%", backgroundColor: dq.green },
-  cellProgressText: { fontSize: 9, fontWeight: "700", color: dq.faint },
+  cellProgressText: { fontSize: 9, fontFamily: "Nunito_700Bold", color: dq.faint },
 
   empty: { fontSize: 14, color: dq.muted, textAlign: "center", paddingTop: 12 },
 });

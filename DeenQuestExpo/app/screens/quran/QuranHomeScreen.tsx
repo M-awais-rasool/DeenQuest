@@ -6,8 +6,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { TactilePressable } from "../../components/ui";
-import { BookOpen, Search } from "lucide-react-native";
+import { AnimatedPressable } from "../../components/ui";
+import { Search } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { theme } from "../../theme/themes";
@@ -43,22 +43,17 @@ export const QuranHomeScreen = ({ navigation }: Props) => {
   return (
     <ScreenWrapper>
       <View style={s.header}>
-        <View>
-          <Text style={s.eyebrow}>Quran</Text>
-          <Text style={s.title}>Read & Listen</Text>
-        </View>
-        <View style={s.headerIcon}>
-          <BookOpen size={24} color={theme.colors.primary} />
-        </View>
+        <Text style={s.title}>The Holy Qur'an</Text>
+        <Text style={s.subtitle}>114 surahs · read & listen</Text>
       </View>
 
       <View style={s.searchWrap}>
-        <Search size={18} color={theme.colors.textMuted} />
+        <Search size={17} color="#5F7E7C" strokeWidth={2.4} />
         <TextInput
           value={search}
           onChangeText={setSearch}
           placeholder="Search Surah"
-          placeholderTextColor={theme.colors.textMuted}
+          placeholderTextColor="#5F7E7C"
           style={s.searchInput}
           autoCapitalize="none"
           autoCorrect={false}
@@ -76,32 +71,24 @@ export const QuranHomeScreen = ({ navigation }: Props) => {
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TactilePressable
-              edgeColor={theme.colors.outline}
-              depth={3}
-              radius={theme.borderRadius.md}
-              haptic="light"
-              faceStyle={s.surahRow}
+            <AnimatedPressable
+              style={s.surahRow}
               onPress={() => handleOpen(item)}
+              haptic="light"
             >
               <View style={s.numberBadge}>
                 <Text style={s.numberText}>{item.number}</Text>
               </View>
               <View style={s.surahInfo}>
                 <Text style={s.surahName}>{item.english_name}</Text>
-                <Text style={s.surahMeaning} numberOfLines={1}>
-                  {item.english_name_translation}
+                <Text style={s.surahMeta} numberOfLines={1}>
+                  {item.number_of_ayahs} ayahs · {item.revelation_type}
                 </Text>
               </View>
-              <View style={s.trailing}>
-                <Text style={s.arabicName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={s.metaText}>
-                  {item.number_of_ayahs} ayahs • {item.revelation_type}
-                </Text>
-              </View>
-            </TactilePressable>
+              <Text style={s.arabicName} numberOfLines={1}>
+                {item.name}
+              </Text>
+            </AnimatedPressable>
           )}
           ListEmptyComponent={
             <View style={s.empty}>
@@ -116,85 +103,70 @@ export const QuranHomeScreen = ({ navigation }: Props) => {
 
 const s = StyleSheet.create({
   header: {
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: 24,
     paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.sm,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  eyebrow: {
-    color: theme.colors.primary,
-    fontSize: 12,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
   },
   title: {
     color: theme.colors.text,
-    fontSize: 28,
-    fontWeight: "900",
-    marginTop: 2,
+    fontSize: 24,
+    fontFamily: "Nunito_900Black",
   },
-  headerIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.primary12,
-    borderWidth: 1,
-    borderColor: theme.colors.primary25,
-    alignItems: "center",
-    justifyContent: "center",
+  subtitle: {
+    color: theme.colors.textMuted,
+    fontSize: 13.5,
+    fontFamily: "Nunito_600SemiBold",
+    marginTop: 3,
   },
   searchWrap: {
-    marginHorizontal: theme.spacing.lg,
-    marginTop: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
-    height: 48,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: theme.colors.outline25,
+    marginHorizontal: 22,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 17,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1.5,
+    borderColor: theme.colors.outline,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
-    gap: 10,
+    paddingHorizontal: 17,
+    paddingVertical: 14,
+    gap: 11,
   },
   searchInput: {
     flex: 1,
     color: theme.colors.text,
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     padding: 0,
   },
   listContent: {
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: 22,
     paddingBottom: 120,
-    gap: 10,
   },
   surahRow: {
-    minHeight: 76,
-    backgroundColor: theme.colors.surfaceLow,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.outline25,
-    padding: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
+    paddingVertical: 15,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.surface,
   },
   numberBadge: {
     width: 42,
     height: 42,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.surfaceHigh,
+    borderRadius: 13,
+    backgroundColor: "#12303A",
+    borderWidth: 1.5,
+    borderColor: "#24505F",
     alignItems: "center",
     justifyContent: "center",
+    transform: [{ rotate: "45deg" }],
   },
   numberText: {
-    color: theme.colors.primary,
-    fontWeight: "900",
-    fontSize: 15,
+    color: "#6EC1E8",
+    fontFamily: "Nunito_900Black",
+    fontSize: 14,
+    transform: [{ rotate: "-45deg" }],
   },
   surahInfo: {
     flex: 1,
@@ -202,31 +174,21 @@ const s = StyleSheet.create({
   },
   surahName: {
     color: theme.colors.text,
-    fontWeight: "900",
-    fontSize: 16,
+    fontFamily: "Nunito_800ExtraBold",
+    fontSize: 15.5,
   },
-  surahMeaning: {
-    color: theme.colors.textMuted,
+  surahMeta: {
+    color: "#5F7E7C",
     fontSize: 12,
-    fontWeight: "600",
-    marginTop: 3,
-  },
-  trailing: {
-    alignItems: "flex-end",
-    maxWidth: "38%",
+    fontFamily: "Nunito_600SemiBold",
+    marginTop: 2,
   },
   arabicName: {
-    color: theme.colors.secondary,
-    fontSize: 17,
-    fontWeight: "800",
-    writingDirection: "rtl",
-  },
-  metaText: {
     color: theme.colors.textMuted,
-    fontSize: 10,
-    fontWeight: "700",
-    marginTop: 4,
-    textAlign: "right",
+    fontSize: 22,
+    fontFamily: "Amiri_700Bold",
+    writingDirection: "rtl",
+    maxWidth: "34%",
   },
   empty: {
     padding: theme.spacing.xl,
@@ -234,6 +196,6 @@ const s = StyleSheet.create({
   },
   emptyText: {
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
 });
