@@ -3,7 +3,6 @@ import { StyleSheet, Text, View } from "react-native";
 import type { QuranAyah } from "../../store/services/api";
 import { theme } from "../../theme/themes";
 import { toArabicNumber } from "../../utils/arabicNumbers";
-import { AYAH_MARKER_PREFIX } from "./constants";
 
 interface Props {
   ayah: QuranAyah;
@@ -26,33 +25,42 @@ export const AyahRow = memo(
 
     return (
       <View style={[s.container, isHighlighted && s.containerHighlighted]}>
-        <View style={s.ayahBlock}>
-          <Text style={[s.ayahText, isHighlighted && s.ayahTextHighlighted]}>
-            <Text style={[s.ayahTextContent, fontStyle]}>{ayah.text}</Text>
+        <View style={s.row}>
+          <Text
+            style={[
+              s.ayahText,
+              fontStyle,
+              isHighlighted && s.ayahTextHighlighted,
+            ]}
+          >
+            {ayah.text}
+          </Text>
+          <View style={[s.numBadge, isHighlighted && s.numBadgeHighlighted]}>
             <Text
-              style={[
-                s.ayahMarker,
-                isHighlighted && s.ayahMarkerHighlighted,
-              ]}
+              style={[s.numText, isHighlighted && s.numTextHighlighted]}
             >
-              {" "}
-              {AYAH_MARKER_PREFIX}
               {toArabicNumber(ayah.number_in_surah)}
             </Text>
-          </Text>
-        </View>
-        {showTranslation && ayah.translation ? (
-          <View style={s.translationBlock}>
-            <Text
-              style={[
-                s.translationText,
-                isHighlighted && s.translationTextHighlighted,
-              ]}
-            >
-              {ayah.translation}
-            </Text>
           </View>
+        </View>
+
+        {showTranslation && ayah.translation ? (
+          <Text
+            style={[
+              s.translationText,
+              isHighlighted && s.translationTextHighlighted,
+            ]}
+          >
+            {ayah.translation}
+          </Text>
         ) : null}
+
+        {isHighlighted && (
+          <View style={s.nowPlayingRow}>
+            <View style={s.nowPlayingDot} />
+            <Text style={s.nowPlayingText}>NOW PLAYING</Text>
+          </View>
+        )}
       </View>
     );
   },
@@ -67,58 +75,89 @@ export const AyahRow = memo(
 
 const s = StyleSheet.create({
   container: {
-    marginBottom: 4,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "transparent",
-    backgroundColor: "transparent",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 18,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.surface,
+    borderRadius: 0,
   },
   containerHighlighted: {
-    borderColor: "#24505F",
+    paddingHorizontal: 8,
+    marginVertical: 10,
     backgroundColor: "rgba(18, 48, 58, 0.4)",
+    borderWidth: 1,
+    borderColor: "#24505F",
+    borderBottomColor: "#24505F",
+    borderRadius: 18,
   },
-  ayahBlock: {
-    marginBottom: 4,
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+  },
+  numBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: "#12303A",
+    borderWidth: 1,
+    borderColor: "#24505F",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    transform: [{ rotate: "45deg" }],
+  },
+  numBadgeHighlighted: {
+    backgroundColor: "#6EC1E8",
+    borderColor: "#6EC1E8",
+  },
+  numText: {
+    fontSize: 11,
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#6EC1E8",
+    transform: [{ rotate: "-45deg" }],
+  },
+  numTextHighlighted: {
+    color: "#0E2A3A",
   },
   ayahText: {
-    fontSize: 38,
-    lineHeight: 82,
+    flex: 1,
+    fontSize: 27,
+    lineHeight: 54,
     writingDirection: "rtl",
-    textAlign: "center",
+    textAlign: "right",
     color: theme.colors.text,
   },
   ayahTextHighlighted: {
     color: "#D9F0FC",
-  },
-  ayahTextContent: {
-    fontSize: 38,
-    lineHeight: 82,
-  },
-  ayahMarker: {
-    fontSize: 28,
-    lineHeight: 82,
-    color: theme.colors.textMuted,
-  },
-  ayahMarkerHighlighted: {
-    color: "#6EC1E8",
-  },
-  translationBlock: {
-    marginBottom: 18,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.outline10,
   },
   translationText: {
     color: theme.colors.textMuted,
     fontSize: 13.5,
     lineHeight: 22,
     fontFamily: "Nunito_600SemiBold",
-    textAlign: "center",
+    marginTop: 8,
+    paddingRight: 44,
   },
   translationTextHighlighted: {
     color: "#9AD5F2",
+  },
+  nowPlayingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    marginTop: 10,
+  },
+  nowPlayingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#6EC1E8",
+  },
+  nowPlayingText: {
+    fontSize: 10.5,
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#6EC1E8",
+    letterSpacing: 1,
   },
 });

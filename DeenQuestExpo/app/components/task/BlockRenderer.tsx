@@ -45,8 +45,6 @@ export const BlockRenderer = ({ task, onComplete, loading }: Props) => {
     setReadyToComplete(ready);
   }, []);
 
-  const showButton = readyToComplete;
-
   const blocks = task.blocks ?? [];
 
   return (
@@ -65,13 +63,18 @@ export const BlockRenderer = ({ task, onComplete, loading }: Props) => {
           />
         );
       })}
-      {showButton && (
-        <CompleteButton
-          onPress={onComplete}
-          loading={loading}
-          disabled={task.completed}
-        />
-      )}
+      <CompleteButton
+        onPress={onComplete}
+        loading={loading}
+        completed={task.completed}
+        locked={!readyToComplete}
+        label={`COMPLETE · CLAIM ${task.reward_xp} XP`}
+        helper={
+          !readyToComplete && !task.completed
+            ? "Finish the task above to unlock"
+            : undefined
+        }
+      />
     </View>
   );
 };

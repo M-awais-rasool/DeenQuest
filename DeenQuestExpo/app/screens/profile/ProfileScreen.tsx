@@ -1,19 +1,10 @@
 import React, { useMemo } from "react";
 import { StyleSheet, View, Text, ScrollView, Share, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  Star,
-  Pencil,
-  Share2,
-  Zap,
-  Sparkles,
-  Trophy,
-  Settings,
-  ChevronRight,
-} from "lucide-react-native";
+import { Flame, Share2, Settings, Check } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
-import { TactilePressable } from "../../components/ui";
+import { AnimatedPressable } from "../../components/ui";
 import { dq } from "../../theme/designTokens";
 import {
   useGetProfileQuery,
@@ -32,36 +23,6 @@ function rankWord(title?: string): string {
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
 
-function GoldCircle({
-  size,
-  children,
-  style,
-}: {
-  size: number;
-  children: React.ReactNode;
-  style?: any;
-}) {
-  return (
-    <LinearGradient
-      colors={[dq.badgeGoldFrom, dq.badgeGoldTo]}
-      start={{ x: 0.3, y: 0.28 }}
-      end={{ x: 1, y: 1 }}
-      style={[
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          alignItems: "center",
-          justifyContent: "center",
-        },
-        style,
-      ]}
-    >
-      {children}
-    </LinearGradient>
-  );
-}
-
 export function ProfileScreen({ navigation }: Props) {
   const { data: profileData, isLoading: profileLoading } = useGetProfileQuery();
   const { data: progressData, isLoading: progressLoading } = useGetProgressQuery();
@@ -74,6 +35,10 @@ export function ProfileScreen({ navigation }: Props) {
 
   const unlockedRewards = useMemo(
     () => rewards.filter((r) => r.unlocked),
+    [rewards],
+  );
+  const lockedRewards = useMemo(
+    () => rewards.filter((r) => !r.unlocked),
     [rewards],
   );
 
@@ -98,6 +63,8 @@ export function ProfileScreen({ navigation }: Props) {
   const currentStreak = progress?.current_streak ?? 0;
   const longestStreak = progress?.longest_streak ?? currentStreak;
   const barakahScore = progress?.barakah_score ?? 0;
+  const weeklyCompletions: boolean[] =
+    progress?.weekly_completions ?? new Array(7).fill(false);
 
   const handleShareProfile = async () => {
     if (!profile?.id) return;
@@ -111,8 +78,10 @@ export function ProfileScreen({ navigation }: Props) {
     } catch {}
   };
 
-  const previewBadges = unlockedRewards.slice(0, 3);
-  const extraBadges = unlockedRewards.length - previewBadges.length;
+  // Vault preview: up to 3 unlocked gold medallions, then dashed locked
+  // slots to fill the 5-circle row (F1 mock).
+  const vaultUnlocked = unlockedRewards.slice(0, 3);
+  const vaultLocked = lockedRewards.slice(0, 5 - vaultUnlocked.length);
 
   return (
     <ScreenWrapper innerStyle={styles.wrapper}>
@@ -123,160 +92,132 @@ export function ProfileScreen({ navigation }: Props) {
         {/* header */}
         <View style={styles.headerRow}>
           <Text style={styles.screenTitle}>Profile</Text>
-          <TactilePressable
-            faceStyle={styles.gear}
-            edgeColor="rgba(0,0,0,0.4)"
-            faceUnderlayColor={dq.screen}
-            radius={17}
-            depth={3}
-            haptic="light"
+          <AnimatedPressable
+            style={styles.gear}
             onPress={() => navigation.navigate("Settings")}
           >
-            <Settings size={17} color="#8DA5A3" />
-          </TactilePressable>
+            <Settings size={18} color={dq.muted} strokeWidth={2} />
+          </AnimatedPressable>
         </View>
 
         {/* identity */}
         <View style={styles.identityCard}>
-          <View style={styles.identityRow}>
-            <View style={styles.avatarRing}>
-              <LinearGradient
-                colors={[dq.green, dq.greenDark]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.avatar}
-              >
-                <Text style={styles.avatarText}>{initial}</Text>
-              </LinearGradient>
-            </View>
-            <View style={{ flex: 1, gap: 4 }}>
-              <Text style={styles.name}>{displayName}</Text>
-              <View style={styles.levelPill}>
-                <Star size={12} color={dq.gold} fill={dq.gold} />
-                <Text style={styles.levelPillText}>
-                  Level {level} · {rankWord(profile?.title)}
-                </Text>
-              </View>
-            </View>
+          <LinearGradient
+            colors={[dq.green, dq.gold]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.avatar}
+          >
+            <Text style={styles.avatarText}>{initial}</Text>
+          </LinearGradient>
+          <View style={styles.identityBody}>
+            <Text style={styles.name} numberOfLines={1}>
+              {displayName}
+            </Text>
+            <Text style={styles.rankLine}>
+              Level {level} · {rankWord(profile?.title)}
+            </Text>
+            {!!profile?.bio && (
+              <Text style={styles.joinLine} numberOfLines={1}>
+                {profile.bio}
+              </Text>
+            )}
           </View>
-
-          <View style={styles.btnRow}>
-            <TactilePressable
-              style={styles.btnFlex}
-              faceStyle={styles.editBtn}
-              edgeColor="rgba(0,0,0,0.45)"
-              faceUnderlayColor={dq.card}
-              radius={13}
-              depth={3}
-              haptic="light"
-              onPress={() => navigation.navigate("EditProfile")}
-            >
-              <Pencil size={14} color={dq.text} />
-              <Text style={styles.editText}>Edit</Text>
-            </TactilePressable>
-            <TactilePressable
-              style={styles.btnFlex}
-              faceStyle={styles.shareBtn}
-              edgeColor="#1B9484"
-              faceUnderlayColor={dq.green}
-              radius={13}
-              depth={3}
-              haptic="light"
-              onPress={handleShareProfile}
-            >
-              <Share2 size={14} color={dq.onGreen} />
-              <Text style={styles.shareText}>Share</Text>
-            </TactilePressable>
-          </View>
+          <AnimatedPressable style={styles.shareChip} onPress={handleShareProfile}>
+            <Share2 size={13} color="#5EE0CE" strokeWidth={2.4} />
+            <Text style={styles.shareChipText}>SHARE</Text>
+          </AnimatedPressable>
         </View>
 
         {/* stats grid */}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Zap size={18} color={dq.gold} />
-            <Text style={styles.statValue}>{totalXP.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>Total XP</Text>
+            <Text style={[styles.statValue, { color: dq.gold }]}>
+              {totalXP.toLocaleString()}
+            </Text>
+            <Text style={styles.statLabel}>TOTAL XP</Text>
           </View>
           <View style={styles.statCard}>
-            <Sparkles size={18} color={dq.green} />
-            <Text style={styles.statValue}>{barakahScore.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>Barakah</Text>
+            <Text style={[styles.statValue, { color: dq.green }]}>
+              {barakahScore.toLocaleString()}
+            </Text>
+            <Text style={styles.statLabel}>BARAKAH</Text>
           </View>
           <Pressable
             style={({ pressed }) => [styles.statCard, pressed && { opacity: 0.8 }]}
             onPress={() => navigation.navigate("Leaderboard")}
           >
-            <Trophy size={18} color={dq.gold} />
-            <Text style={styles.statValue}>{myRank ? `#${myRank}` : "—"}</Text>
-            <Text style={styles.statLabel}>Leaderboard</Text>
+            <Text style={[styles.statValue, { color: "#A78BFA" }]}>
+              {myRank ? `#${myRank}` : "—"}
+            </Text>
+            <Text style={styles.statLabel}>RANK</Text>
           </Pressable>
         </View>
 
-
-        {/* streak history */}
+        {/* streak card */}
         <View style={styles.streakCard}>
           <View style={styles.streakHeader}>
-            <Text style={styles.streakTitle}>Streak history</Text>
-            <Text style={styles.streakMeta}>
-              Current {currentStreak} · Best {longestStreak}
-            </Text>
+            <View style={styles.streakTitleRow}>
+              <Flame size={22} color={dq.gold} fill={dq.gold} />
+              <Text style={styles.streakTitle}>
+                {currentStreak}-day streak
+              </Text>
+            </View>
+            <Text style={styles.streakMeta}>Longest: {longestStreak}</Text>
           </View>
-          <View style={styles.squareRow}>
-            {Array.from({ length: 14 }, (_, i) => {
-              const fromEnd = 13 - i;
-              const isToday = i === 13;
-              const active = fromEnd < currentStreak;
+          <View style={styles.weekRow}>
+            {weeklyCompletions.map((done, i) => {
+              const isToday = i === 6;
               return (
                 <View
                   key={i}
                   style={[
-                    styles.square,
-                    isToday
-                      ? styles.squareToday
-                      : active
-                        ? styles.squareActive
-                        : styles.squareEmpty,
+                    styles.dayDot,
+                    done
+                      ? styles.dayDotDone
+                      : isToday
+                        ? styles.dayDotToday
+                        : styles.dayDotEmpty,
                   ]}
-                />
+                >
+                  {done ? (
+                    <Check size={12} color={dq.green} strokeWidth={3.5} />
+                  ) : isToday ? (
+                    <Text style={styles.todayDotMark}>•</Text>
+                  ) : null}
+                </View>
               );
             })}
           </View>
         </View>
 
         {/* reward vault */}
-        <View style={styles.vaultCard}>
-          <View style={styles.vaultHeader}>
-            <Text style={styles.vaultTitle}>Reward Vault</Text>
-            <Pressable
-              style={styles.vaultView}
-              onPress={() => navigation.navigate("RewardsScreen")}
-              hitSlop={8}
+        <View style={styles.vaultHeader}>
+          <Text style={styles.vaultTitle}>Reward Vault</Text>
+          <Pressable
+            onPress={() => navigation.navigate("RewardsScreen")}
+            hitSlop={8}
+          >
+            <Text style={styles.vaultSeeAll}>See all →</Text>
+          </Pressable>
+        </View>
+        <View style={styles.vaultRow}>
+          {vaultUnlocked.map((reward) => (
+            <LinearGradient
+              key={reward.id}
+              colors={[dq.gold, dq.goldDark]}
+              start={{ x: 0.2, y: 0 }}
+              end={{ x: 0.9, y: 1 }}
+              style={styles.vaultBadge}
             >
-              <Text style={styles.vaultViewText}>View</Text>
-              <ChevronRight size={14} color={dq.green} />
-            </Pressable>
-          </View>
-          <View style={styles.vaultRow}>
-            <View style={styles.vaultBadges}>
-              {previewBadges.map((reward, i) => (
-                <GoldCircle
-                  key={reward.id}
-                  size={34}
-                  style={[styles.vaultBadge, i > 0 && { marginLeft: -9 }]}
-                >
-                  <RewardIcon icon={reward.icon} color={dq.onBadgeGold} size={15} />
-                </GoldCircle>
-              ))}
-              {extraBadges > 0 && (
-                <View style={[styles.vaultBadge, styles.vaultExtra, { marginLeft: -9 }]}>
-                  <Text style={styles.vaultExtraText}>+{extraBadges}</Text>
-                </View>
-              )}
+              <RewardIcon icon={reward.icon} color={dq.onGold} size={24} />
+            </LinearGradient>
+          ))}
+          {vaultLocked.map((reward) => (
+            <View key={reward.id} style={styles.vaultLocked}>
+              <RewardIcon icon={reward.icon} color="#5F7E7C" size={20} />
             </View>
-            <Text style={styles.vaultCount}>
-              {unlockedRewards.length} of {rewards.length} unlocked
-            </Text>
-          </View>
+          ))}
         </View>
       </ScrollView>
     </ScreenWrapper>
@@ -287,43 +228,39 @@ const styles = StyleSheet.create({
   wrapper: { flex: 1 },
   scroll: {
     paddingHorizontal: 20,
-    paddingTop: 6,
+    paddingTop: 8,
     paddingBottom: 90,
-    gap: 18,
   },
 
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: 4,
   },
-  screenTitle: { fontSize: 26, fontFamily: "Nunito_900Black", color: dq.white },
+  screenTitle: { fontSize: 22, fontFamily: "Nunito_900Black", color: dq.text },
   gear: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "rgba(255,255,255,0.07)",
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.cardBorder,
     alignItems: "center",
     justifyContent: "center",
   },
 
   // identity
   identityCard: {
+    marginTop: 16,
     backgroundColor: dq.card,
     borderWidth: 1,
     borderColor: dq.cardBorder,
-    borderRadius: 18,
+    borderRadius: 22,
     padding: 20,
-    gap: 16,
-  },
-  identityRow: { flexDirection: "row", alignItems: "center", gap: 14 },
-  avatarRing: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: dq.gold55,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 16,
   },
   avatar: {
     width: 64,
@@ -333,120 +270,124 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarText: { fontSize: 26, fontFamily: "Nunito_900Black", color: dq.onGreen },
-  name: { fontSize: 20, fontFamily: "Nunito_900Black", color: dq.white },
-  levelPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    gap: 5,
-    backgroundColor: dq.gold12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 99,
+  identityBody: { flex: 1, minWidth: 0 },
+  name: { fontSize: 19, fontFamily: "Nunito_900Black", color: dq.text },
+  rankLine: {
+    fontSize: 12.5,
+    fontFamily: "Nunito_800ExtraBold",
+    color: dq.green,
+    marginTop: 1,
   },
-  levelPillText: { fontSize: 11, fontFamily: "Nunito_800ExtraBold", color: dq.gold },
-
-  btnRow: { flexDirection: "row", gap: 10 },
-  btnFlex: { flex: 1 },
-  editBtn: {
-    height: 42,
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+  joinLine: {
+    fontSize: 11.5,
+    fontFamily: "Nunito_600SemiBold",
+    color: dq.faint,
+    marginTop: 2,
+  },
+  shareChip: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     gap: 6,
-  },
-  editText: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", color: dq.text },
-  shareBtn: {
-    height: 42,
+    backgroundColor: dq.greenTint,
+    borderWidth: 1.5,
+    borderColor: dq.green,
     borderRadius: 13,
-    backgroundColor: dq.green,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  shareText: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", color: dq.onGreen },
+  shareChipText: {
+    fontSize: 11,
+    fontFamily: "Nunito_900Black",
+    color: "#5EE0CE",
+  },
 
   // stats
-  statsGrid: { flexDirection: "row", gap: 10 },
+  statsGrid: { flexDirection: "row", gap: 12, marginTop: 14 },
   statCard: {
     flex: 1,
     backgroundColor: dq.card,
     borderWidth: 1,
     borderColor: dq.cardBorder,
     borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 16,
-    alignItems: "flex-start",
-    gap: 9,
+    paddingVertical: 14,
+    alignItems: "center",
+    gap: 3,
   },
-  statValue: { fontSize: 20, fontFamily: "Nunito_900Black", color: dq.white, lineHeight: 20 },
-  statLabel: { fontSize: 11, fontFamily: "Nunito_600SemiBold", color: dq.muted },
+  statValue: { fontSize: 19, fontFamily: "Nunito_900Black" },
+  statLabel: {
+    fontSize: 10,
+    fontFamily: "Nunito_800ExtraBold",
+    color: dq.faint,
+    letterSpacing: 0.8,
+  },
 
-  // streak history
+  // streak
   streakCard: {
+    marginTop: 14,
     backgroundColor: dq.card,
     borderWidth: 1,
     borderColor: dq.cardBorder,
-    borderRadius: 18,
-    padding: 16,
-    gap: 12,
+    borderRadius: 22,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
   },
   streakHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  streakTitle: { fontSize: 14, fontFamily: "Nunito_800ExtraBold", color: dq.text },
-  streakMeta: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.muted },
-  squareRow: { flexDirection: "row", gap: 4 },
-  square: { flex: 1, aspectRatio: 1, borderRadius: 6 },
-  squareActive: { backgroundColor: dq.green },
-  squareEmpty: { backgroundColor: dq.squareEmpty },
-  squareToday: {
-    backgroundColor: dq.gold18,
-    borderWidth: 1.5,
-    borderColor: dq.gold,
+  streakTitleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  streakTitle: { fontSize: 15, fontFamily: "Nunito_900Black", color: dq.text },
+  streakMeta: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.faint },
+  weekRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 14,
+  },
+  dayDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dayDotDone: { backgroundColor: dq.greenTint },
+  dayDotToday: { borderWidth: 2, borderColor: dq.gold },
+  dayDotEmpty: { borderWidth: 2, borderColor: "#2C464C" },
+  todayDotMark: {
+    fontSize: 11,
+    fontFamily: "Nunito_900Black",
+    color: dq.gold,
+    lineHeight: 13,
   },
 
-  // reward vault
-  vaultCard: {
-    backgroundColor: dq.card,
-    borderWidth: 1,
-    borderColor: dq.cardBorder,
-    borderRadius: 18,
-    padding: 16,
-    gap: 13,
-  },
+  // vault
   vaultHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 20,
+    paddingHorizontal: 4,
   },
-  vaultTitle: { fontSize: 14, fontFamily: "Nunito_800ExtraBold", color: dq.text },
-  vaultView: { flexDirection: "row", alignItems: "center", gap: 3 },
-  vaultViewText: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.green },
-  vaultRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  vaultBadges: { flexDirection: "row", alignItems: "center" },
+  vaultTitle: { fontSize: 15, fontFamily: "Nunito_900Black", color: dq.text },
+  vaultSeeAll: { fontSize: 12, fontFamily: "Nunito_800ExtraBold", color: dq.green },
+  vaultRow: { flexDirection: "row", gap: 12, marginTop: 12 },
   vaultBadge: {
-    borderWidth: 2,
-    borderColor: dq.card,
-  },
-  vaultExtra: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: dq.lockBadge,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: "center",
     justifyContent: "center",
   },
-  vaultExtraText: { fontSize: 11, fontFamily: "Nunito_800ExtraBold", color: dq.muted },
-  vaultCount: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.muted },
+  vaultLocked: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: dq.card,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderColor: "#2C464C",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

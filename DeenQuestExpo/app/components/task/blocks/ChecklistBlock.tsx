@@ -66,9 +66,11 @@ const s = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.surfaceLow,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     gap: 14,
   },
   rowDone: { opacity: 0.6 },

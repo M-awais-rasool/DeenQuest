@@ -187,32 +187,23 @@ export function LevelDetailScreen() {
                 Level {courseLevel} · {level.title}
               </Text>
               <Text style={s.levelTheme}>{level.theme}</Text>
+
+              {/* Progress lives inside the hero card (C2 mock) */}
+              <View style={s.progressBlock}>
+                <Text style={s.progressCount}>
+                  {done} / {total} lessons
+                </Text>
+                <View style={s.progressTrack}>
+                  <View style={[s.progressFill, { width: `${pct}%` }]} />
+                </View>
+              </View>
             </FadeInView>
           </LinearGradient>
 
           {/* ── Body ─────────────────────────────────────────────── */}
           <View style={s.body}>
-            {/* Progress */}
-            <View style={s.progressBlock}>
-              <View style={s.progressTop}>
-                <Text style={s.progressLabel}>Lesson progress</Text>
-                <Text style={s.progressCount}>
-                  {done} / {total} lessons
-                </Text>
-              </View>
-              <View style={s.progressTrack}>
-                <LinearGradient
-                  colors={[dq.greenDark, dq.green]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={[s.progressFill, { width: `${pct}%` }]}
-                />
-              </View>
-            </View>
-
             {/* Path */}
             <View>
-              <Text style={s.pathHeading}>Your path</Text>
               <View style={s.path}>
                 <View style={s.pathLine} />
 
@@ -463,24 +454,21 @@ const s = StyleSheet.create({
   body: { paddingHorizontal: 20, paddingTop: 18, gap: 20 },
 
   // Progress
-  progressBlock: { gap: 9 },
-  progressTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  progressLabel: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", color: dq.text },
-  progressCount: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.muted },
+  progressBlock: { marginTop: 16, gap: 7 },
+  progressCount: { fontSize: 12, fontFamily: "Nunito_800ExtraBold", color: dq.muted },
   progressTrack: {
     height: 10,
     borderRadius: 6,
     backgroundColor: dq.screen,
     overflow: "hidden",
   },
-  progressFill: { height: "100%", borderRadius: 6 },
+  progressFill: {
+    height: "100%",
+    borderRadius: 6,
+    backgroundColor: dq.green,
+  },
 
   // Path
-  pathHeading: { fontSize: 17, fontFamily: "Nunito_800ExtraBold", color: dq.white, marginBottom: 14 },
   path: { position: "relative", gap: 12 },
   pathLine: {
     position: "absolute",

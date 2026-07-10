@@ -9,16 +9,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Defs, RadialGradient, Stop, Rect, Line, G } from "react-native-svg";
-import {
-  Trophy,
-  Star,
-  Target,
-  Clock,
-  ArrowRight,
-  Sparkles,
-  Sparkle,
-} from "lucide-react-native";
+import Svg, { Defs, RadialGradient, Stop, Rect } from "react-native-svg";
 import { TactilePressable } from "../../ui";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
@@ -35,32 +26,43 @@ interface CourseCompletionScreenProps {
   unlockReward?: string;
   treasureOpen?: boolean;
   newRewards?: NewlyGrantedReward[];
+  /** "5/5" lessons chip (C5 mock) — hidden when not provided. */
+  lessonsDone?: number;
+  lessonsTotal?: number;
   onContinue: () => void;
 }
 
 const SPRING = { friction: 7, tension: 120, useNativeDriver: true };
 
-// Sunburst rays drawn from the centre outward (matches the mockup conic burst).
-const RAYS = Array.from({ length: 18 }, (_, i) => i * 20);
-
-// Confetti positions lifted from the mockup.
-const CONFETTI: { top: number; left: number; size: number; square?: boolean; color: string }[] = [
-  { top: 108, left: 54, size: 9, color: dq.green },
-  { top: 168, left: 336, size: 8, square: true, color: dq.gold },
-  { top: 240, left: 38, size: 8, square: true, color: dq.gold },
-  { top: 96, left: 248, size: 7, color: dq.gold },
-  { top: 210, left: 78, size: 7, square: true, color: dq.green },
-  { top: 300, left: 352, size: 9, color: dq.green },
-  { top: 88, left: 120, size: 7, square: true, color: dq.gold },
+// Multicolour confetti positions lifted from the C5 mockup — small rotated
+// rectangles plus a few dots in the brand accent colours.
+const CONFETTI: {
+  top: number;
+  left?: number;
+  right?: number;
+  w: number;
+  h: number;
+  rotate?: string;
+  round?: boolean;
+  color: string;
+}[] = [
+  { top: 120, left: 52, w: 10, h: 14, rotate: "24deg", color: "#EFB65A" },
+  { top: 88, right: 74, w: 9, h: 13, rotate: "-18deg", color: "#2CC9B5" },
+  { top: 190, left: 98, w: 8, h: 8, round: true, color: "#F27FB2" },
+  { top: 160, right: 44, w: 9, h: 13, rotate: "40deg", color: "#A78BFA" },
+  { top: 260, left: 38, w: 9, h: 13, rotate: "-32deg", color: "#6EC1E8" },
+  { top: 236, right: 96, w: 8, h: 8, round: true, color: "#EFB65A" },
+  { top: 330, left: 120, w: 7, h: 11, rotate: "12deg", color: "#F27FB2" },
+  { top: 308, right: 52, w: 9, h: 13, rotate: "-45deg", color: "#2CC9B5" },
 ];
 
-// Gold / purple / green medallion themes for the "new rewards" cards.
+// Gold / purple / teal medallion themes for the "new rewards" cards.
 type Medal = { from: string; to: string; border: string; on: string; pillBg: string; pillText: string };
 const MEDALS: Record<string, Medal> = {
-  legendary: { from: dq.badgeGoldFrom, to: dq.badgeGoldTo, border: "rgba(255,219,60,0.5)", on: dq.onBadgeGold, pillBg: "rgba(255,219,60,0.12)", pillText: dq.gold },
-  rare: { from: dq.badgeGoldFrom, to: dq.badgeGoldTo, border: "rgba(255,219,60,0.5)", on: dq.onBadgeGold, pillBg: "rgba(255,219,60,0.12)", pillText: dq.gold },
-  epic: { from: "#D9C4F2", to: "#9D7BD6", border: "rgba(181,156,224,0.5)", on: "#34225a", pillBg: "rgba(181,156,224,0.14)", pillText: "#B59CE0" },
-  common: { from: "#A8E9A2", to: dq.greenDark, border: "rgba(136,217,130,0.5)", on: dq.onGreen, pillBg: "rgba(136,217,130,0.12)", pillText: dq.green },
+  legendary: { from: dq.badgeGoldFrom, to: dq.badgeGoldTo, border: "rgba(239,182,90,0.5)", on: dq.onBadgeGold, pillBg: "rgba(239,182,90,0.12)", pillText: dq.gold },
+  rare: { from: dq.badgeGoldFrom, to: dq.badgeGoldTo, border: "rgba(239,182,90,0.5)", on: dq.onBadgeGold, pillBg: "rgba(239,182,90,0.12)", pillText: dq.gold },
+  epic: { from: "#C4B2FF", to: "#7B5BD6", border: "rgba(167,139,250,0.5)", on: "#241A45", pillBg: "rgba(167,139,250,0.14)", pillText: "#A78BFA" },
+  common: { from: "#5EE0CE", to: "#1B9484", border: "rgba(44,201,181,0.5)", on: dq.onGreen, pillBg: "rgba(44,201,181,0.12)", pillText: dq.green },
 };
 const medalFor = (rarity: string): Medal => MEDALS[rarity] ?? MEDALS.rare;
 
@@ -148,6 +150,8 @@ export default function CourseCompletionScreen({
   levelTitle,
   unlockReward,
   newRewards = [],
+  lessonsDone,
+  lessonsTotal,
   onContinue,
 }: CourseCompletionScreenProps) {
   const insets = useSafeAreaInsets();
@@ -221,60 +225,35 @@ export default function CourseCompletionScreen({
 
   return (
     <View style={styles.root}>
-      {/* ambient glow */}
+      {/* ambient glow — teal halo at the top (C5 mock radial background) */}
       <View style={styles.glow} pointerEvents="none">
         <Svg width="100%" height="100%">
           <Defs>
-            <RadialGradient id="dq-glow" cx="50%" cy="24%" r="62%">
-              <Stop offset="0%" stopColor={dq.gold} stopOpacity={0.18} />
-              <Stop offset="45%" stopColor={dq.gold} stopOpacity={0.05} />
-              <Stop offset="70%" stopColor={dq.screen} stopOpacity={0} />
+            <RadialGradient id="dq-glow" cx="50%" cy="30%" r="62%">
+              <Stop offset="0%" stopColor="#1A3A33" stopOpacity={1} />
+              <Stop offset="65%" stopColor={dq.screen} stopOpacity={0} />
             </RadialGradient>
           </Defs>
           <Rect x="0" y="0" width="100%" height="100%" fill="url(#dq-glow)" />
         </Svg>
       </View>
 
-      {/* sunburst */}
-      <Animated.View
-        style={[styles.sunburst, { opacity: glowOpacity, transform: [{ scale: glowScale }] }]}
-        pointerEvents="none"
-      >
-        <Svg width={340} height={340} viewBox="0 0 340 340">
-          <G>
-            {RAYS.map((deg) => {
-              const rad = (deg * Math.PI) / 180;
-              return (
-                <Line
-                  key={deg}
-                  x1={170 + Math.cos(rad) * 50}
-                  y1={170 + Math.sin(rad) * 50}
-                  x2={170 + Math.cos(rad) * 140}
-                  y2={170 + Math.sin(rad) * 140}
-                  stroke={dq.gold}
-                  strokeOpacity={0.12}
-                  strokeWidth={8}
-                />
-              );
-            })}
-          </G>
-        </Svg>
-      </Animated.View>
-
       {/* confetti */}
       {CONFETTI.map((c, i) => (
-        <View
+        <Animated.View
           key={i}
           pointerEvents="none"
           style={{
             position: "absolute",
             top: c.top,
             left: c.left,
-            width: c.size,
-            height: c.size,
+            right: c.right,
+            width: c.w,
+            height: c.h,
             backgroundColor: c.color,
-            borderRadius: c.square ? 0 : c.size / 2,
-            transform: c.square ? [{ rotate: "45deg" }] : undefined,
+            borderRadius: c.round ? c.w / 2 : 2,
+            opacity: glowOpacity,
+            transform: [{ rotate: c.rotate ?? "0deg" }, { scale: glowScale }],
           }}
         />
       ))}
@@ -289,31 +268,34 @@ export default function CourseCompletionScreen({
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* trophy */}
+        {/* gold check badge */}
         <Animated.View
           style={[styles.trophyFrame, { opacity: badgeOpacity, transform: [{ scale: badgeScale }, { translateY: floatY }] }]}
         >
-          <View style={styles.dashedRing} />
           <LinearGradient
-            colors={["#FFF0C2", "#F0B93B", "#D2922A"]}
-            start={{ x: 0.34, y: 0.28 }}
-            end={{ x: 1, y: 1 }}
+            colors={[dq.gold, dq.goldDark]}
+            start={{ x: 0.2, y: 0 }}
+            end={{ x: 0.9, y: 1 }}
             style={styles.trophyCore}
           >
-            <Trophy size={52} color="#6e4a06" />
+            <Text style={styles.checkMark}>✓</Text>
           </LinearGradient>
-          <Sparkles size={22} color={dq.gold} style={styles.sparkTop} />
-          <Sparkle size={15} color={dq.gold} style={styles.sparkBottom} />
         </Animated.View>
 
         {/* headline */}
         <Animated.View
           style={[styles.headline, { opacity: headlineOpacity, transform: [{ translateY: headlineY }] }]}
         >
-          <Text style={styles.eyebrow}>LEVEL COMPLETE</Text>
-          <Text style={styles.title}>MashaAllah!</Text>
-          <Text style={styles.subtitle}>
-            {levelTitle ? `You finished ${levelTitle}` : "Beautifully done"}
+          <Text style={styles.title}>Level complete!</Text>
+          {!!levelTitle && <Text style={styles.subtitle}>{levelTitle}</Text>}
+        </Animated.View>
+
+        {/* XP count-up */}
+        <Animated.View
+          style={[styles.xpBlock, { opacity: statsOpacity, transform: [{ translateY: statsY }] }]}
+        >
+          <Text style={styles.xpNumber}>
+            +{displayXP} <Text style={styles.xpSuffix}>XP</Text>
           </Text>
         </Animated.View>
 
@@ -322,71 +304,69 @@ export default function CourseCompletionScreen({
           style={[styles.statsRow, { opacity: statsOpacity, transform: [{ translateY: statsY }] }]}
         >
           <View style={styles.statTile}>
-            <Star size={19} color={dq.gold} />
-            <Text style={styles.statValue}>{displayXP}</Text>
-            <Text style={styles.statLabel}>XP earned</Text>
+            <Text style={[styles.statValue, { color: dq.green }]}>
+              {displayAccuracy}%
+            </Text>
+            <Text style={styles.statLabel}>ACCURACY</Text>
           </View>
           <View style={styles.statTile}>
-            <Target size={19} color={dq.green} />
-            <Text style={styles.statValue}>{displayAccuracy}%</Text>
-            <Text style={styles.statLabel}>Accuracy</Text>
+            <Text style={[styles.statValue, { color: "#6EC1E8" }]}>
+              {timeString}
+            </Text>
+            <Text style={styles.statLabel}>TIME</Text>
           </View>
-          <View style={styles.statTile}>
-            <Clock size={19} color={dq.gold} />
-            <Text style={styles.statValue}>{timeString}</Text>
-            <Text style={styles.statLabel}>Time</Text>
-          </View>
+          {lessonsTotal != null && lessonsTotal > 0 && (
+            <View style={styles.statTile}>
+              <Text style={[styles.statValue, { color: "#F27FB2" }]}>
+                {lessonsDone ?? lessonsTotal}/{lessonsTotal}
+              </Text>
+              <Text style={styles.statLabel}>LESSONS</Text>
+            </View>
+          )}
         </Animated.View>
 
-        {/* new rewards */}
-        {(safeRewards.length > 0 || unlockReward) && (
+        {/* unlock chip */}
+        {!!unlockReward && (
+          <Animated.View
+            style={[styles.unlockChip, { opacity: rewardsOpacity, transform: [{ translateY: rewardsY }] }]}
+          >
+            <Text style={styles.unlockStar}>✦</Text>
+            <Text style={styles.unlockText}>
+              {formatReward(unlockReward)} unlocked
+            </Text>
+          </Animated.View>
+        )}
+
+        {/* new badges */}
+        {safeRewards.length > 0 && (
           <Animated.View
             style={[styles.rewardsBlock, { opacity: rewardsOpacity, transform: [{ translateY: rewardsY }] }]}
           >
-            <Text style={styles.rewardsHeading}>NEW REWARDS</Text>
+            <Text style={styles.rewardsHeading}>NEW BADGES</Text>
             <View style={styles.rewardsRow}>
-              {safeRewards.length > 0
-                ? safeRewards.map((r) => {
-                    const m = medalFor(r.rarity);
-                    return (
-                      <View key={r.id} style={styles.rewardCard}>
-                        <LinearGradient
-                          colors={[m.from, m.to]}
-                          start={{ x: 0.32, y: 0.28 }}
-                          end={{ x: 1, y: 1 }}
-                          style={[styles.rewardMedal, { borderColor: m.border, shadowColor: m.pillText }]}
-                        >
-                          <RewardIcon icon={r.icon} color={m.on} size={22} />
-                        </LinearGradient>
-                        <Text style={styles.rewardTitle} numberOfLines={2}>
-                          {r.title}
-                        </Text>
-                        <View style={[styles.rarityPill, { backgroundColor: m.pillBg }]}>
-                          <Text style={[styles.rarityText, { color: m.pillText }]}>
-                            {r.rarity.toUpperCase()}
-                          </Text>
-                        </View>
-                      </View>
-                    );
-                  })
-                : (
-                  <View style={styles.rewardCard}>
+              {safeRewards.map((r) => {
+                const m = medalFor(r.rarity);
+                return (
+                  <View key={r.id} style={styles.rewardCard}>
                     <LinearGradient
-                      colors={[dq.badgeGoldFrom, dq.badgeGoldTo]}
+                      colors={[m.from, m.to]}
                       start={{ x: 0.32, y: 0.28 }}
                       end={{ x: 1, y: 1 }}
-                      style={[styles.rewardMedal, { borderColor: "rgba(255,219,60,0.5)", shadowColor: dq.gold }]}
+                      style={[styles.rewardMedal, { borderColor: m.border, shadowColor: m.pillText }]}
                     >
-                      <Trophy size={22} color={dq.onBadgeGold} />
+                      <RewardIcon icon={r.icon} color={m.on} size={22} />
                     </LinearGradient>
                     <Text style={styles.rewardTitle} numberOfLines={2}>
-                      {formatReward(unlockReward)}
+                      {r.title}
                     </Text>
-                    <View style={[styles.rarityPill, { backgroundColor: "rgba(255,219,60,0.12)" }]}>
-                      <Text style={[styles.rarityText, { color: dq.gold }]}>UNLOCKED</Text>
+                    <View style={[styles.rarityPill, { backgroundColor: m.pillBg }]}>
+                      <Text style={[styles.rarityText, { color: m.pillText }]}>
+                        {r.rarity.toUpperCase()}
+                      </Text>
                     </View>
                   </View>
-                )}
+                );
+              })}
             </View>
           </Animated.View>
         )}
@@ -409,7 +389,6 @@ export default function CourseCompletionScreen({
           onPress={onContinue}
         >
           <Text style={styles.continueText}>CONTINUE</Text>
-          <ArrowRight size={18} color={dq.onGreen} />
         </TactilePressable>
       </Animated.View>
     </View>
@@ -420,68 +399,85 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: dq.screen, overflow: "hidden" },
 
   glow: { position: "absolute", top: 0, left: 0, right: 0, height: 520 },
-  sunburst: { position: "absolute", top: 70, left: 0, right: 0, alignItems: "center" },
 
   scrollView: { flex: 1 },
-  scroll: { alignItems: "center", paddingHorizontal: 24, paddingTop: 14, paddingBottom: 16 },
+  scroll: { alignItems: "center", paddingHorizontal: 24, paddingTop: 40, paddingBottom: 16 },
 
-  // trophy
+  // gold check badge
   trophyFrame: {
-    width: 148,
-    height: 148,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
     marginBottom: 26,
   },
-  dashedRing: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    right: 8,
-    bottom: 8,
-    borderRadius: 70,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,219,60,0.4)",
-    borderStyle: "dashed",
-  },
   trophyCore: {
-    width: 118,
-    height: 118,
-    borderRadius: 59,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 3,
-    borderColor: "rgba(255,233,168,0.7)",
     shadowColor: dq.gold,
-    shadowOpacity: 0.4,
-    shadowRadius: 26,
+    shadowOpacity: 0.35,
+    shadowRadius: 60,
     shadowOffset: { width: 0, height: 0 },
+    elevation: 12,
   },
-  sparkTop: { position: "absolute", top: 6, right: 8 },
-  sparkBottom: { position: "absolute", bottom: 12, left: 4 },
+  checkMark: {
+    fontSize: 52,
+    lineHeight: 62,
+    fontFamily: "Nunito_900Black",
+    color: dq.onGold,
+  },
 
   // headline
   headline: { alignItems: "center" },
-  eyebrow: { fontSize: 12, fontFamily: "Nunito_900Black", letterSpacing: 2.16, color: dq.gold },
-  title: { fontSize: 30, fontFamily: "Nunito_900Black", color: dq.white, marginTop: 8 },
-  subtitle: { fontSize: 14, fontFamily: "Nunito_600SemiBold", color: "#a7b0a6", marginTop: 8 },
+  title: { fontSize: 30, fontFamily: "Nunito_900Black", color: dq.text },
+  subtitle: { fontSize: 15, fontFamily: "Nunito_700Bold", color: dq.muted, marginTop: 5 },
+
+  // XP hero number
+  xpBlock: { marginTop: 28 },
+  xpNumber: {
+    fontSize: 54,
+    lineHeight: 56,
+    fontFamily: "Nunito_900Black",
+    color: dq.gold,
+  },
+  xpSuffix: { fontSize: 26 },
 
   // stat tiles
-  statsRow: { flexDirection: "row", gap: 10, width: "100%", marginTop: 26 },
+  statsRow: { flexDirection: "row", gap: 12, marginTop: 26 },
   statTile: {
-    flex: 1,
     backgroundColor: dq.card,
     borderWidth: 1,
     borderColor: dq.cardBorder,
-    borderRadius: 18,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     alignItems: "center",
-    gap: 8,
+    gap: 2,
   },
-  statValue: { fontSize: 20, lineHeight: 20, fontFamily: "Nunito_900Black", color: dq.white },
-  statLabel: { fontSize: 11, fontFamily: "Nunito_600SemiBold", color: dq.muted },
+  statValue: { fontSize: 19, lineHeight: 24, fontFamily: "Nunito_900Black", color: dq.text },
+  statLabel: {
+    fontSize: 10.5,
+    fontFamily: "Nunito_800ExtraBold",
+    color: dq.faint,
+    letterSpacing: 0.8,
+  },
+
+  // unlock chip
+  unlockChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: dq.goldTint,
+    borderWidth: 1,
+    borderColor: dq.goldBorder,
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    marginTop: 22,
+  },
+  unlockStar: { fontSize: 18, color: dq.gold },
+  unlockText: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", color: dq.gold },
 
   // new rewards
   rewardsBlock: { width: "100%", marginTop: 24, gap: 14 },
@@ -522,18 +518,12 @@ const styles = StyleSheet.create({
   // continue
   footer: { paddingHorizontal: 24, paddingTop: 18 },
   continueBtn: {
-    height: 54,
-    borderRadius: 16,
+    height: 56,
+    borderRadius: 18,
     backgroundColor: dq.green,
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    shadowColor: dq.green,
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 8 },
   },
-  continueText: { fontSize: 15, fontFamily: "Nunito_900Black", letterSpacing: 0.6, color: dq.onGreen },
+  continueText: { fontSize: 16, fontFamily: "Nunito_900Black", letterSpacing: 1.2, color: dq.onGreen },
   risingXp: { position: "absolute", fontSize: 13, fontFamily: "Nunito_900Black", zIndex: 1 },
 });

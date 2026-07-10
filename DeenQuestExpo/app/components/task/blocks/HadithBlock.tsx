@@ -17,24 +17,27 @@ export const HadithBlock = ({ content }: BlockComponentProps) => {
 
 const s = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.surfaceLow,
-    padding: 24,
-    borderRadius: 16,
+    backgroundColor: theme.colors.surface,
+    padding: 22,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: theme.colors.secondary20,
+    borderColor: theme.colors.outline,
     marginBottom: 12,
+    alignItems: "center",
   },
   quote: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "Nunito_700Bold",
     color: theme.colors.text,
-    fontStyle: "italic",
-    lineHeight: 28,
+    lineHeight: 26,
     marginBottom: 12,
+    textAlign: "center",
   },
   ref: {
-    fontSize: 13,
-    color: theme.colors.textMuted,
-    fontFamily: "Nunito_600SemiBold",
+    fontSize: 11.5,
+    color: theme.colors.secondary,
+    fontFamily: "Nunito_800ExtraBold",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
   },
 });

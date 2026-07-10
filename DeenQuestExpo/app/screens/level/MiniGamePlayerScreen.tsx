@@ -107,10 +107,12 @@ export function MiniGamePlayerScreen() {
           accuracy={completionResult.accuracy}
           timeString={completionResult.timeString}
           currentTotalXP={currentTotalXP}
-          levelTitle={level.title}
+          levelTitle={`Level ${level.course_level || level.id} · ${level.title}`}
           unlockReward={completionResult.unlockReward}
           treasureOpen={completionResult.treasureOpen}
           newRewards={completionResult.newRewards}
+          lessonsDone={level.lessons_complete}
+          lessonsTotal={level.lessons.length}
           onContinue={handleContinue}
         />
       </ScreenWrapper>

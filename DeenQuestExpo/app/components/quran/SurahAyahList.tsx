@@ -65,33 +65,17 @@ export const SurahAyahList = memo(
     );
 
     const header = useMemo(
-      () => (
-        <View>
-          <View style={s.surahHeader}>
-            <Text style={[s.surahNameArabic, fontStyle]}>{surah.name}</Text>
-            <Text style={s.surahNameEnglish}>{surah.english_name}</Text>
-            <Text style={s.surahMeta}>
-              {revelationLabel} · {surah.number_of_ayahs} verses
-            </Text>
+      () =>
+        showBasmalah ? (
+          <View style={s.bismillahContainer}>
+            <View style={s.bismillahLine} />
+            <Text style={[s.bismillahText, fontStyle]}>{BASMALAH}</Text>
+            <View style={s.bismillahLine} />
           </View>
-
-          {showBasmalah ? (
-            <View style={s.bismillahContainer}>
-              <View style={s.bismillahLine} />
-              <Text style={[s.bismillahText, fontStyle]}>{BASMALAH}</Text>
-              <View style={s.bismillahLine} />
-            </View>
-          ) : null}
-        </View>
-      ),
-      [
-        fontStyle,
-        revelationLabel,
-        showBasmalah,
-        surah.english_name,
-        surah.name,
-        surah.number_of_ayahs,
-      ],
+        ) : (
+          <View style={s.headerSpacer} />
+        ),
+      [fontStyle, showBasmalah],
     );
 
     return (
@@ -134,33 +118,8 @@ const s = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
   },
-  surahHeader: {
-    alignItems: "center",
-    paddingVertical: 28,
-    paddingHorizontal: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline25,
-  },
-  surahNameArabic: {
-    fontSize: 32,
-    lineHeight: 56,
-    color: theme.colors.text,
-    writingDirection: "rtl",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  surahNameEnglish: {
-    fontSize: 20,
-    fontFamily: "Nunito_700Bold",
-    color: theme.colors.white,
-    letterSpacing: 0.3,
-  },
-  surahMeta: {
-    fontSize: 13,
-    fontFamily: "Nunito_600SemiBold",
-    color: theme.colors.textMuted,
-    marginTop: 6,
-    letterSpacing: 0.5,
+  headerSpacer: {
+    height: 14,
   },
   bismillahContainer: {
     flexDirection: "row",

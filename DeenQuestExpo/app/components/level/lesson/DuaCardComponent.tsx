@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { useRecitation, RecitationPanel } from "./recitation";
@@ -24,16 +25,26 @@ export function DuaCardComponent({
   return (
     <View style={s.root}>
       {/* ── Dua card ─────────────────────────────────────────────────────── */}
-      <FadeInView style={s.card}>
-        <Text style={[s.arabic, { fontFamily }]}>{arabicText}</Text>
-        <View style={s.divider} />
-        {data.meaning ? <Text style={s.meaning}>{data.meaning}</Text> : null}
-        {data.context ? (
-          <View style={s.contextBox}>
-            <Text style={s.contextText}>{data.context}</Text>
-          </View>
-        ) : null}
+      <FadeInView>
+        <LinearGradient
+          colors={["#241E10", "#16272B"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.4, y: 1 }}
+          style={s.card}
+        >
+          <Text style={[s.cornerStar, s.cornerLeft]}>✦</Text>
+          <Text style={[s.cornerStar, s.cornerRight]}>✦</Text>
+          <Text style={[s.arabic, { fontFamily }]}>{arabicText}</Text>
+          {data.meaning ? <Text style={s.meaning}>"{data.meaning}"</Text> : null}
+        </LinearGradient>
       </FadeInView>
+
+      {data.context ? (
+        <View style={s.contextBox}>
+          <Text style={s.contextStar}>✦</Text>
+          <Text style={s.contextText}>{data.context}</Text>
+        </View>
+      ) : null}
 
       {/* ── Recitation panel (secondary / gold variant) ───────────────────── */}
       {hasRecitation && <RecitationPanel {...rec} variant="secondary" />}
@@ -59,52 +70,58 @@ const s = StyleSheet.create({
   root: { gap: 16 },
 
   card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 20,
-    padding: 28,
+    borderRadius: 24,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: theme.colors.secondary20,
+    borderColor: "#4A3E28",
   },
-  arabic: {
-    fontSize: 32,
-    color: theme.colors.secondary,
-    textAlign: "center",
-    lineHeight: 48,
-    marginBottom: 16,
-    writingDirection: "rtl",
-  },
-  divider: {
-    width: 40,
-    height: 2,
-    backgroundColor: theme.colors.outline,
-    marginBottom: 16,
-  },
-  transliteration: {
-    fontSize: 16,
-    color: theme.colors.text,
-    fontStyle: "italic",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  meaning: {
-    fontSize: 14,
-    color: theme.colors.textMuted,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  contextBox: {
-    marginTop: 16,
-    backgroundColor: theme.colors.secondary08,
-    borderRadius: 10,
-    padding: 12,
-    width: "100%",
-  },
-  contextText: {
+  cornerStar: {
+    position: "absolute",
+    top: 14,
     fontSize: 13,
     color: theme.colors.secondary,
+    opacity: 0.6,
+  },
+  cornerLeft: { left: 16 },
+  cornerRight: { right: 16 },
+  arabic: {
+    fontSize: 27,
+    color: "#F5CE8A",
     textAlign: "center",
+    lineHeight: 54,
+    writingDirection: "rtl",
+  },
+  meaning: {
+    fontSize: 13.5,
     fontFamily: "Nunito_600SemiBold",
+    color: theme.colors.textMuted,
+    textAlign: "center",
+    lineHeight: 22,
+    marginTop: 12,
+  },
+  contextBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    borderRadius: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+  },
+  contextStar: {
+    fontSize: 15,
+    color: theme.colors.secondary,
+  },
+  contextText: {
+    flex: 1,
+    fontSize: 12.5,
+    lineHeight: 19,
+    color: theme.colors.textMuted,
+    fontFamily: "Nunito_700Bold",
   },
 
   continueBtn: {

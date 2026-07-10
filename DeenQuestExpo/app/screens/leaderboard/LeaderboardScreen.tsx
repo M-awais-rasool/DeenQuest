@@ -363,6 +363,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryContainer,
     borderWidth: 2,
     borderColor: theme.colors.primary,
+    shadowColor: "#0E2C29",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
   },
   rankText: {
     width: 24,

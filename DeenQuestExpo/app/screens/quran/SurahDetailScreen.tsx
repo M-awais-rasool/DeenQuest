@@ -108,8 +108,17 @@ export const SurahDetailScreen = ({ route, navigation }: Props) => {
           }}
           style={s.backBtn}
         >
-          <ArrowLeft size={22} color={theme.colors.text} />
+          <ArrowLeft size={18} color={theme.colors.text} strokeWidth={2.5} />
         </AnimatedPressable>
+        <View style={s.titleBlock}>
+          <Text style={s.titleLine} numberOfLines={1}>
+            {surah?.english_name ?? ""}{" "}
+            <Text style={s.titleArabic}>{surah?.name ?? ""}</Text>
+          </Text>
+          <Text style={s.titleMeta}>
+            {surah ? `${surah.number_of_ayahs} ayahs · ${revelationLabel}` : ""}
+          </Text>
+        </View>
         <TactilePressable
           onPress={() => setShowTranslation((value) => !value)}
           edgeColor="#24505F"
@@ -167,6 +176,27 @@ const s = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: theme.colors.outline,
+  },
+  titleBlock: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+  titleLine: {
+    fontSize: 18,
+    fontFamily: "Nunito_900Black",
+    color: theme.colors.text,
+  },
+  titleArabic: {
+    fontSize: 19,
+    fontFamily: "Amiri_700Bold",
+    color: theme.colors.textMuted,
+  },
+  titleMeta: {
+    fontSize: 11.5,
+    fontFamily: "Nunito_600SemiBold",
+    color: "#5F7E7C",
+    marginTop: 1,
   },
   translateBtn: {
     height: 42,

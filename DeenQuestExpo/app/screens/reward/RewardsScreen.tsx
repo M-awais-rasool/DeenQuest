@@ -10,15 +10,12 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Circle } from "react-native-svg";
-import { ChevronRight, Lock, Medal, Sparkles } from "lucide-react-native";
 import { haptics } from "../../utils/haptics";
 import { dq } from "../../theme/designTokens";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import {
   useGetRewardsQuery,
-  useGetProgressQuery,
   type NewlyGrantedReward,
   type RewardWithStatus,
 } from "../../store/services/api";
@@ -28,10 +25,34 @@ import { RewardIcon } from "./components/RewardIcon";
 import { UnlockModal } from "./components/UnlockModal";
 
 const TIERS = [
-  { name: "Bronze", min: 0 },
-  { name: "Silver", min: 12 },
-  { name: "Gold", min: 18 },
-  { name: "Platinum", min: 24 },
+  {
+    name: "Bronze",
+    min: 0,
+    gradient: ["#D9A06B", "#95602F"] as [string, string],
+    iconColor: "#3A2008",
+    glow: "rgba(217,160,107,0.18)",
+  },
+  {
+    name: "Silver",
+    min: 12,
+    gradient: ["#C9D4D9", "#8FA0A8"] as [string, string],
+    iconColor: "#3B4A52",
+    glow: "rgba(201,212,217,0.18)",
+  },
+  {
+    name: "Gold",
+    min: 18,
+    gradient: ["#F9DDA0", "#C98F35"] as [string, string],
+    iconColor: "#3A2A08",
+    glow: "rgba(239,182,90,0.22)",
+  },
+  {
+    name: "Platinum",
+    min: 24,
+    gradient: ["#D9F0FC", "#6EC1E8"] as [string, string],
+    iconColor: "#0E2A3A",
+    glow: "rgba(110,193,232,0.2)",
+  },
 ];
 
 function tierInfo(unlocked: number, total: number) {
@@ -43,94 +64,55 @@ function tierInfo(unlocked: number, total: number) {
   else if (next && next.min <= total)
     hint = `${next.min - unlocked} more to reach ${next.name}`;
   else hint = `${Math.max(total - unlocked, 0)} more to collect them all`;
-  return { tier: current.name, hint };
+  return { tier: current, hint };
 }
 
-/** A circular gold medallion used for unlocked badges. */
-function GoldCircle({
-  size,
-  children,
-  style,
-}: {
-  size: number;
-  children: React.ReactNode;
-  style?: any;
-}) {
-  return (
-    <LinearGradient
-      colors={[dq.badgeGoldFrom, dq.badgeGoldTo]}
-      start={{ x: 0.3, y: 0.28 }}
-      end={{ x: 1, y: 1 }}
-      style={[
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          alignItems: "center",
-          justifyContent: "center",
-        },
-        style,
-      ]}
-    >
-      {children}
-    </LinearGradient>
-  );
-}
-
-function ProgressRing({ pct, count, total }: { pct: number; count: number; total: number }) {
-  const r = 39;
-  const c = 2 * Math.PI * r;
-  return (
-    <View style={s.ringWrap}>
-      <Svg width={92} height={92} viewBox="0 0 92 92">
-        <Circle cx={46} cy={46} r={r} stroke="rgba(255,255,255,0.07)" strokeWidth={9} fill="none" />
-        <Circle
-          cx={46}
-          cy={46}
-          r={r}
-          stroke={dq.green}
-          strokeWidth={9}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c * (1 - pct)}
-          transform="rotate(-90 46 46)"
-        />
-      </Svg>
-      <View style={s.ringCenter}>
-        <Text style={s.ringCount}>{count}</Text>
-        <Text style={s.ringOf}>of {total}</Text>
-      </View>
-    </View>
-  );
-}
-
-function MilestoneCell({
+function BadgeCell({
   reward,
   isNew,
   width,
+  onPress,
 }: {
   reward: RewardWithStatus;
   isNew: boolean;
   width: number;
+  onPress?: () => void;
 }) {
+  const pct = Math.min(Math.max(reward.progress, 0), 1);
+  const progressLabel =
+    reward.required > 0
+      ? `${reward.current} / ${reward.required}`
+      : `${Math.round(pct * 100)}%`;
+
   return (
-    <View style={[s.cell, { width }]}>
+    <Pressable
+      style={({ pressed }) => [
+        s.cell,
+        { width },
+        !reward.unlocked && s.cellLocked,
+        pressed && reward.unlocked && { opacity: 0.85 },
+      ]}
+      onPress={onPress}
+      disabled={!reward.unlocked}
+    >
+      {isNew && (
+        <View style={s.newTag}>
+          <Text style={s.newTagText}>NEW</Text>
+        </View>
+      )}
+
       {reward.unlocked ? (
-        <GoldCircle size={62} style={s.badgeUnlocked}>
-          <RewardIcon icon={reward.icon} color={dq.onBadgeGold} size={24} />
-          {isNew && (
-            <View style={s.newBadge}>
-              <Text style={s.newBadgeText}>NEW</Text>
-            </View>
-          )}
-        </GoldCircle>
+        <LinearGradient
+          colors={[dq.gold, dq.goldDark]}
+          start={{ x: 0.2, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+          style={[s.medal, isNew && s.medalGlow]}
+        >
+          <RewardIcon icon={reward.icon} color={dq.onGold} size={24} />
+        </LinearGradient>
       ) : (
-        <View style={s.badgeLocked}>
-          <RewardIcon icon={reward.icon} color={dq.lockIcon} size={23} />
-          <View style={s.lockSub}>
-            <Lock size={10} color={dq.muted} />
-          </View>
+        <View style={s.medalLocked}>
+          <RewardIcon icon={reward.icon} color="#5F7E7C" size={20} />
         </View>
       )}
 
@@ -144,18 +126,14 @@ function MilestoneCell({
       {reward.unlocked ? (
         <Text style={s.unlockedLabel}>UNLOCKED</Text>
       ) : (
-        <View style={s.cellProgress}>
+        <>
           <View style={s.cellTrack}>
-            <View
-              style={[s.cellFill, { width: `${Math.round(reward.progress * 100)}%` }]}
-            />
+            <View style={[s.cellFill, { width: `${Math.round(pct * 100)}%` }]} />
           </View>
-          <Text style={s.cellProgressText}>
-            {reward.current} / {reward.required}
-          </Text>
-        </View>
+          <Text style={s.cellProgressText}>{progressLabel}</Text>
+        </>
       )}
-    </View>
+    </Pressable>
   );
 }
 
@@ -165,16 +143,14 @@ export function RewardsScreen() {
   const pendingUnlocks = useAppSelector((state) => state.main.pendingRewardUnlocks);
 
   const { data: rewardsRes, isLoading: rewardsLoading } = useGetRewardsQuery();
-  const { data: progressRes } = useGetProgressQuery();
 
   const rewards: RewardWithStatus[] = rewardsRes?.data ?? [];
 
   const unlocked = rewards.filter((r) => r.unlocked).length;
   const total = rewards.length;
-  const pct = total > 0 ? unlocked / total : 0;
   const { tier, hint } = tierInfo(unlocked, total);
 
-  // The most recently unlocked badge gets the "NEW" flair + celebration banner.
+  // The most recently unlocked badge gets the "NEW" tag.
   const newest = useMemo(() => {
     const unlockedRewards = rewards.filter((r) => r.unlocked && r.unlocked_at);
     if (unlockedRewards.length === 0) return undefined;
@@ -183,8 +159,8 @@ export function RewardsScreen() {
     )[0];
   }, [rewards]);
 
-  // grid cell width: screen − 40px padding − 2×8px gaps, split 3 ways
-  const cellWidth = (width - 40 - 16) / 3;
+  // grid cell width: screen − 2×22px padding − 2×14px gaps, split 3 ways
+  const cellWidth = (width - 44 - 28) / 3;
 
   const [activeUnlock, setActiveUnlock] = useState<NewlyGrantedReward | null>(null);
   const popAnim = useRef(new Animated.Value(0.75)).current;
@@ -226,15 +202,14 @@ export function RewardsScreen() {
     );
   }, [fadeAnim]);
 
-  const handleBannerPress = () => {
-    if (!newest) return;
+  const handleBadgePress = (reward: RewardWithStatus) => {
     openCelebration({
-      id: newest.id,
-      title: newest.title,
-      description: newest.description,
-      icon: newest.icon,
-      rarity: newest.rarity,
-      xp_bonus: newest.xp_bonus,
+      id: reward.id,
+      title: reward.title,
+      description: reward.description,
+      icon: reward.icon,
+      rarity: reward.rarity,
+      xp_bonus: reward.xp_bonus,
     });
   };
 
@@ -244,72 +219,44 @@ export function RewardsScreen() {
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* header */}
-        <View style={{ gap: 3 }}>
-          <Text style={s.title}>Rewards</Text>
-          <Text style={s.subtitle}>Collect badges as you learn</Text>
-        </View>
-
-        {/* ring card */}
-        <View style={s.ringCard}>
-          <ProgressRing pct={pct} count={unlocked} total={total} />
-          <View style={s.ringInfo}>
-            <Text style={s.ringInfoTitle}>Badges unlocked</Text>
-            <View style={s.tierPill}>
-              <Medal size={12} color={dq.gold} />
-              <Text style={s.tierText}>{tier} tier</Text>
-            </View>
-            <Text style={s.ringHint}>{hint}</Text>
-          </View>
-        </View>
-
-        {/* celebration banner */}
-        {newest && (
-          <Pressable
-            onPress={handleBannerPress}
-            style={({ pressed }) => [s.celebration, pressed && { opacity: 0.9 }]}
+        {/* tier header */}
+        <View style={s.tierHeader}>
+          <LinearGradient
+            colors={tier.gradient}
+            start={{ x: 0.2, y: 0 }}
+            end={{ x: 0.9, y: 1 }}
+            style={[s.tierMedal, { shadowColor: tier.gradient[0] }]}
           >
-            <GoldCircle size={54} style={s.celebrationIcon}>
-              <RewardIcon icon={newest.icon} color={dq.onBadgeGold} size={24} />
-            </GoldCircle>
-            <View style={{ flex: 1, gap: 2 }}>
-              <View style={s.celebrationTopRow}>
-                <Sparkles size={14} color={dq.gold} />
-                <Text style={s.celebrationEyebrow}>New badge unlocked!</Text>
-              </View>
-              <Text style={s.celebrationTitle}>{newest.title}</Text>
-              <Text style={s.celebrationHint}>Tap to view your reward</Text>
-            </View>
-            <ChevronRight size={20} color={dq.gold} />
-          </Pressable>
-        )}
-
-        {/* milestones */}
-        <View>
-          <View style={s.milestonesHeader}>
-            <Text style={s.milestonesTitle}>Milestones</Text>
-            <Text style={s.milestonesCount}>
-              {unlocked} of {total}
-            </Text>
+            <Text style={[s.tierMedalIcon, { color: tier.iconColor }]}>✦</Text>
+          </LinearGradient>
+          <Text style={s.tierTitle}>{tier.name} Collector</Text>
+          <Text style={s.tierSub}>
+            {unlocked} / {total} badges unlocked
+          </Text>
+          <View style={s.hintChip}>
+            <Text style={s.hintStar}>✦</Text>
+            <Text style={s.hintText}>{hint}</Text>
           </View>
-
-          {rewardsLoading ? (
-            <Loader />
-          ) : rewards.length === 0 ? (
-            <Text style={s.empty}>No rewards found.</Text>
-          ) : (
-            <View style={s.grid}>
-              {rewards.map((reward) => (
-                <MilestoneCell
-                  key={reward.id}
-                  reward={reward}
-                  isNew={reward.id === newest?.id}
-                  width={cellWidth}
-                />
-              ))}
-            </View>
-          )}
         </View>
+
+        {/* badge grid */}
+        {rewardsLoading ? (
+          <Loader />
+        ) : rewards.length === 0 ? (
+          <Text style={s.empty}>No rewards found.</Text>
+        ) : (
+          <View style={s.grid}>
+            {rewards.map((reward) => (
+              <BadgeCell
+                key={reward.id}
+                reward={reward}
+                isNew={reward.id === newest?.id}
+                width={cellWidth}
+                onPress={() => handleBadgePress(reward)}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       {activeUnlock && (
@@ -328,146 +275,141 @@ export function RewardsScreen() {
 const s = StyleSheet.create({
   wrapper: { flex: 1 },
   scroll: {
-    paddingHorizontal: 20,
-    paddingTop: 6,
-    paddingBottom: 90,
-    gap: 18,
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 100,
   },
 
-  title: { fontSize: 26, fontFamily: "Nunito_900Black", color: dq.white },
-  subtitle: { fontSize: 13, fontFamily: "Nunito_600SemiBold", color: dq.muted },
-
-  // ring card
-  ringCard: {
+  // tier header
+  tierHeader: {
+    alignItems: "center",
+  },
+  tierMedal: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowOpacity: 0.5,
+    shadowRadius: 40,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
+  },
+  tierMedalIcon: {
+    fontSize: 38,
+    lineHeight: 46,
+  },
+  tierTitle: {
+    fontSize: 22,
+    fontFamily: "Nunito_900Black",
+    color: dq.text,
+    marginTop: 14,
+  },
+  tierSub: {
+    fontSize: 13.5,
+    fontFamily: "Nunito_700Bold",
+    color: dq.muted,
+    marginTop: 3,
+  },
+  hintChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 20,
+    gap: 8,
+    backgroundColor: dq.goldTint,
+    borderWidth: 1,
+    borderColor: dq.goldBorder,
+    borderRadius: 14,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    marginTop: 12,
+  },
+  hintStar: { fontSize: 14, color: dq.gold },
+  hintText: { fontSize: 12.5, fontFamily: "Nunito_800ExtraBold", color: dq.gold },
+
+  // badge grid
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 14,
+    marginTop: 26,
+  },
+  cell: {
+    alignItems: "center",
+    gap: 8,
     backgroundColor: dq.card,
     borderWidth: 1,
     borderColor: dq.cardBorder,
     borderRadius: 18,
-    padding: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
   },
-  ringWrap: { width: 92, height: 92 },
-  ringCenter: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ringCount: { fontSize: 24, fontFamily: "Nunito_900Black", color: dq.white, lineHeight: 24 },
-  ringOf: { fontSize: 11, fontFamily: "Nunito_700Bold", color: dq.muted, marginTop: 1 },
-  ringInfo: { flex: 1, gap: 8 },
-  ringInfoTitle: { fontSize: 18, fontFamily: "Nunito_900Black", color: dq.white },
-  tierPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    gap: 5,
-    backgroundColor: dq.gold12,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 99,
-  },
-  tierText: { fontSize: 11, fontFamily: "Nunito_800ExtraBold", color: dq.gold },
-  ringHint: { fontSize: 12, fontFamily: "Nunito_600SemiBold", color: dq.muted },
-
-  // celebration banner
-  celebration: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    borderRadius: 18,
-    padding: 16,
-    backgroundColor: "rgba(255,219,60,0.09)",
-    borderWidth: 1,
-    borderColor: dq.gold25,
-  },
-  celebrationIcon: {
-    borderWidth: 2,
-    borderColor: dq.gold55,
-  },
-  celebrationTopRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  celebrationEyebrow: { fontSize: 14, fontFamily: "Nunito_900Black", color: dq.gold },
-  celebrationTitle: { fontSize: 13, fontFamily: "Nunito_700Bold", color: dq.text },
-  celebrationHint: { fontSize: 12, fontFamily: "Nunito_600SemiBold", color: "#8DA5A3" },
-
-  // milestones
-  milestonesHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  milestonesTitle: { fontSize: 17, fontFamily: "Nunito_800ExtraBold", color: dq.white },
-  milestonesCount: { fontSize: 13, fontFamily: "Nunito_700Bold", color: dq.muted },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    rowGap: 20,
-    columnGap: 8,
-  },
-  cell: { alignItems: "center", gap: 9 },
-  badgeUnlocked: {
-    borderWidth: 2,
-    borderColor: dq.gold55,
-    shadowColor: dq.gold,
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  badgeLocked: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+  cellLocked: {
     backgroundColor: dq.lockFill,
-    borderWidth: 1,
     borderColor: dq.lockBorder,
+  },
+  newTag: {
+    position: "absolute",
+    top: -7,
+    right: 10,
+    backgroundColor: "#F27FB2",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    zIndex: 1,
+  },
+  newTagText: {
+    fontSize: 9,
+    fontFamily: "Nunito_900Black",
+    color: "#3A1024",
+    letterSpacing: 0.7,
+  },
+  medal: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
   },
-  lockSub: {
-    position: "absolute",
-    bottom: -2,
-    right: -2,
-    width: 21,
-    height: 21,
-    borderRadius: 11,
-    backgroundColor: dq.lockBadge,
+  medalGlow: {
+    shadowColor: dq.gold,
+    shadowOpacity: 0.3,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 8,
+  },
+  medalLocked: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: dq.card,
     borderWidth: 2,
-    borderColor: dq.screen,
+    borderStyle: "dashed",
+    borderColor: "#2C464C",
     alignItems: "center",
     justifyContent: "center",
   },
-  newBadge: {
-    position: "absolute",
-    top: -4,
-    right: -6,
-    backgroundColor: dq.gold,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 99,
-    borderWidth: 2,
-    borderColor: dq.screen,
-  },
-  newBadgeText: { fontSize: 8, fontFamily: "Nunito_900Black", color: "#3A2A08", letterSpacing: 0.3 },
   cellTitle: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontFamily: "Nunito_800ExtraBold",
     color: dq.text,
     textAlign: "center",
     lineHeight: 14,
   },
-  unlockedLabel: { fontSize: 9, fontFamily: "Nunito_800ExtraBold", color: dq.green, letterSpacing: 0.4 },
-  cellProgress: { alignItems: "center", gap: 4 },
+  unlockedLabel: {
+    fontSize: 9,
+    fontFamily: "Nunito_800ExtraBold",
+    color: dq.gold,
+    letterSpacing: 1,
+  },
   cellTrack: {
-    width: 56,
-    height: 5,
-    borderRadius: 99,
-    backgroundColor: dq.trackWhite07,
+    alignSelf: "stretch",
+    height: 6,
+    borderRadius: 4,
+    backgroundColor: dq.screen,
     overflow: "hidden",
   },
-  cellFill: { height: "100%", backgroundColor: dq.green },
-  cellProgressText: { fontSize: 9, fontFamily: "Nunito_700Bold", color: dq.faint },
+  cellFill: { height: "100%", backgroundColor: dq.gold, borderRadius: 4 },
+  cellProgressText: { fontSize: 9.5, fontFamily: "Nunito_700Bold", color: dq.faint },
 
-  empty: { fontSize: 14, color: dq.muted, textAlign: "center", paddingTop: 12 },
+  empty: { fontSize: 14, color: dq.muted, textAlign: "center", paddingTop: 24 },
 });
