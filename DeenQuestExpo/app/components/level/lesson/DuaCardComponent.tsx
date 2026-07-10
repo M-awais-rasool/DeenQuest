@@ -104,7 +104,7 @@ const s = StyleSheet.create({
     fontSize: 13,
     color: theme.colors.secondary,
     textAlign: "center",
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
 
   continueBtn: {
@@ -125,7 +125,7 @@ const s = StyleSheet.create({
   },
   continueBtnText: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

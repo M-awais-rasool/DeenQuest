@@ -40,7 +40,7 @@ const PALETTE: Record<
   primary: {
     bg: theme.colors.primary,
     fg: theme.colors.onPrimary,
-    edge: theme.colors.primaryContainer,
+    edge: theme.colors.shadowGreen,
   },
   secondary: {
     bg: theme.colors.surfaceHigh,
@@ -95,7 +95,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
       onPress={onPress}
       disabled={disabled || loading}
       edgeColor={palette.edge}
-      radius={theme.borderRadius.sm}
+      radius={18}
       haptic={variant === "primary" || variant === "gold" ? "medium" : "light"}
       style={style}
       faceStyle={[
@@ -130,7 +130,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
 
 const styles = StyleSheet.create({
   face: {
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   text: {
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     textTransform: "uppercase",
     letterSpacing: 1,
   },

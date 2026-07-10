@@ -33,7 +33,7 @@ const s = StyleSheet.create({
   quoteOpen: {
     fontSize: 48,
     color: theme.colors.primary,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     lineHeight: 48,
     marginBottom: -8,
   },
@@ -47,7 +47,7 @@ const s = StyleSheet.create({
   quoteClose: {
     fontSize: 48,
     color: theme.colors.primary,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     lineHeight: 48,
     marginTop: -4,
     alignSelf: "flex-end",
@@ -56,7 +56,7 @@ const s = StyleSheet.create({
     fontSize: 13,
     color: theme.colors.textMuted,
     marginTop: 12,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
   continueBtn: {
     flexDirection: "row",
@@ -72,7 +72,7 @@ const s = StyleSheet.create({
   },
   continueBtnText: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

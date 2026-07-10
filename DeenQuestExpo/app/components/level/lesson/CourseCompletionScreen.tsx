@@ -400,7 +400,7 @@ export default function CourseCompletionScreen({
         ]}
       >
         <TactilePressable
-          edgeColor="#2E7D32"
+          edgeColor="#1B9484"
           faceUnderlayColor={dq.green}
           depth={4}
           radius={16}
@@ -463,9 +463,9 @@ const styles = StyleSheet.create({
 
   // headline
   headline: { alignItems: "center" },
-  eyebrow: { fontSize: 12, fontWeight: "900", letterSpacing: 2.16, color: dq.gold },
-  title: { fontSize: 30, fontWeight: "900", color: dq.white, marginTop: 8 },
-  subtitle: { fontSize: 14, fontWeight: "600", color: "#a7b0a6", marginTop: 8 },
+  eyebrow: { fontSize: 12, fontFamily: "Nunito_900Black", letterSpacing: 2.16, color: dq.gold },
+  title: { fontSize: 30, fontFamily: "Nunito_900Black", color: dq.white, marginTop: 8 },
+  subtitle: { fontSize: 14, fontFamily: "Nunito_600SemiBold", color: "#a7b0a6", marginTop: 8 },
 
   // stat tiles
   statsRow: { flexDirection: "row", gap: 10, width: "100%", marginTop: 26 },
@@ -480,12 +480,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  statValue: { fontSize: 20, lineHeight: 20, fontWeight: "900", color: dq.white },
-  statLabel: { fontSize: 11, fontWeight: "600", color: dq.muted },
+  statValue: { fontSize: 20, lineHeight: 20, fontFamily: "Nunito_900Black", color: dq.white },
+  statLabel: { fontSize: 11, fontFamily: "Nunito_600SemiBold", color: dq.muted },
 
   // new rewards
   rewardsBlock: { width: "100%", marginTop: 24, gap: 14 },
-  rewardsHeading: { fontSize: 13, fontWeight: "800", letterSpacing: 0.5, color: dq.muted },
+  rewardsHeading: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", letterSpacing: 0.5, color: dq.muted },
   rewardsRow: { flexDirection: "row", gap: 14, justifyContent: "center" },
   rewardCard: {
     flex: 1,
@@ -511,13 +511,13 @@ const styles = StyleSheet.create({
   },
   rewardTitle: {
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: dq.text,
     textAlign: "center",
     lineHeight: 13,
   },
   rarityPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99 },
-  rarityText: { fontSize: 9, fontWeight: "800", letterSpacing: 0.5 },
+  rarityText: { fontSize: 9, fontFamily: "Nunito_800ExtraBold", letterSpacing: 0.5 },
 
   // continue
   footer: { paddingHorizontal: 24, paddingTop: 18 },
@@ -534,6 +534,6 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 8 },
   },
-  continueText: { fontSize: 15, fontWeight: "900", letterSpacing: 0.6, color: dq.onGreen },
-  risingXp: { position: "absolute", fontSize: 13, fontWeight: "900", zIndex: 1 },
+  continueText: { fontSize: 15, fontFamily: "Nunito_900Black", letterSpacing: 0.6, color: dq.onGreen },
+  risingXp: { position: "absolute", fontSize: 13, fontFamily: "Nunito_900Black", zIndex: 1 },
 });

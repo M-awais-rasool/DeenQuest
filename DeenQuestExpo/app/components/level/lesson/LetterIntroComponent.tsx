@@ -114,14 +114,14 @@ const s = StyleSheet.create({
   arabicLetter: {
     fontSize: 72,
     color: theme.colors.primary,
-    fontWeight: "300",
+    fontFamily: "Nunito_400Regular",
     marginBottom: 12,
     writingDirection: "rtl",
   },
   letterName: {
     fontSize: 20,
     color: theme.colors.text,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
   },
   transliteration: {
     fontSize: 14,
@@ -149,7 +149,7 @@ const s = StyleSheet.create({
   },
   hintLabel: {
     fontSize: 10,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     color: theme.colors.primary,
     letterSpacing: 1,
     marginBottom: 4,
@@ -173,7 +173,7 @@ const s = StyleSheet.create({
   },
   continueBtnText: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

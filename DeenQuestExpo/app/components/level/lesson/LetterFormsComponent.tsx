@@ -63,7 +63,7 @@ const s = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
   formsGrid: {
     flexDirection: "row",
@@ -83,7 +83,7 @@ const s = StyleSheet.create({
   formLabel: {
     fontSize: 11,
     color: theme.colors.textMuted,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 8,
@@ -107,7 +107,7 @@ const s = StyleSheet.create({
   },
   continueBtnText: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

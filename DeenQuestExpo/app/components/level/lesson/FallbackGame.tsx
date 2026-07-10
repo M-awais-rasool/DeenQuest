@@ -49,7 +49,7 @@ const s = StyleSheet.create({
   fallbackType: {
     fontSize: 12,
     color: theme.colors.secondary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 1,
     marginBottom: 8,
   },
@@ -70,7 +70,7 @@ const s = StyleSheet.create({
   },
   nextBtnText: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

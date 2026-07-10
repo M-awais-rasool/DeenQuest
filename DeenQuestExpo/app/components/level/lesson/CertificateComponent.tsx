@@ -65,7 +65,7 @@ const s = StyleSheet.create({
   title: {
     fontSize: 24,
     color: theme.colors.secondary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     textAlign: "center",
   },
   divider: {
@@ -91,13 +91,13 @@ const s = StyleSheet.create({
   nextLabel: {
     fontSize: 10,
     color: theme.colors.textMuted,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 1,
   },
   nextPhase: {
     fontSize: 14,
     color: theme.colors.primary,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     marginTop: 4,
   },
   continueBtnWrap: {
@@ -114,7 +114,7 @@ const s = StyleSheet.create({
   },
   continueBtnText: {
     color: theme.colors.onSecondary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

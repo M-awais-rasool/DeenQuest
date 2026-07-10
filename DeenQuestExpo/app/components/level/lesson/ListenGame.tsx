@@ -156,7 +156,7 @@ export function ListenGame({
 const s = StyleSheet.create({
   counter: {
     fontSize: 12,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: theme.colors.textMuted,
     letterSpacing: 1,
     marginBottom: 8,
@@ -181,7 +181,7 @@ const s = StyleSheet.create({
   speakerLabel: {
     fontSize: 13,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
   options: { gap: 10 },
 });

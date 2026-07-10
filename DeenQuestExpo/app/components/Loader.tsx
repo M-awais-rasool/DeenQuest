@@ -125,7 +125,7 @@ const s = StyleSheet.create({
   },
   label: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     color: theme.colors.textMuted,
     letterSpacing: 2.0,
     textTransform: "uppercase",

@@ -184,7 +184,7 @@ const s = StyleSheet.create({
   instruction: {
     fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     marginBottom: 16,
   },
   sentenceBox: {
@@ -234,7 +234,7 @@ const s = StyleSheet.create({
   bankEmpty: {
     color: theme.colors.textMuted,
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     textAlign: "center",
     width: "100%",
     paddingVertical: 10,

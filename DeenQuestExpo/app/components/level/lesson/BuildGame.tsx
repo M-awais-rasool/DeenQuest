@@ -170,7 +170,7 @@ const s = StyleSheet.create({
   instruction: {
     fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     marginBottom: 16,
   },
   goalCard: {
@@ -185,7 +185,7 @@ const s = StyleSheet.create({
   },
   goalLabel: {
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     letterSpacing: 1.5,
     color: theme.colors.primary,
     marginBottom: 6,
@@ -199,7 +199,7 @@ const s = StyleSheet.create({
   goalMeaning: {
     fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     marginTop: 6,
     textAlign: "center",
   },
@@ -243,7 +243,7 @@ const s = StyleSheet.create({
     fontSize: 15,
     color: theme.colors.primary,
     textAlign: "center",
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     lineHeight: 22,
   },
 });

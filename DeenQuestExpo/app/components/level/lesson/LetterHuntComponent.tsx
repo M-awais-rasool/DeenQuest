@@ -109,7 +109,7 @@ const s = StyleSheet.create({
   instruction: {
     fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     marginBottom: 14,
   },
   targetRow: {
@@ -141,7 +141,7 @@ const s = StyleSheet.create({
   progressText: {
     color: theme.colors.text,
     fontSize: 14,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
   },
   grid: {
     flexDirection: "row",
