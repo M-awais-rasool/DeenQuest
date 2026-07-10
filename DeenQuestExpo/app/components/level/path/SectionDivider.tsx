@@ -49,7 +49,7 @@ const s = StyleSheet.create({
   },
   text: {
     fontSize: 11,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 1.5,
   },
 });

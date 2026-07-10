@@ -249,7 +249,7 @@ const s = StyleSheet.create({
     top: 34,
     color: theme.colors.white,
     fontSize: 22,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
   },
   headerText: {
     flex: 1,
@@ -257,7 +257,7 @@ const s = StyleSheet.create({
   title: {
     color: theme.colors.text,
     fontSize: 26,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 0.2,
   },
   subtitle: {
@@ -283,7 +283,7 @@ const s = StyleSheet.create({
   dayLabel: {
     color: theme.colors.textMuted,
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
   },
   dayLabelToday: {
     color: theme.colors.secondary,

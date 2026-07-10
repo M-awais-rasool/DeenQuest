@@ -46,7 +46,7 @@ const s = StyleSheet.create({
   text: {
     color: theme.colors.secondary,
     fontSize: 13,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
   },
 });
 

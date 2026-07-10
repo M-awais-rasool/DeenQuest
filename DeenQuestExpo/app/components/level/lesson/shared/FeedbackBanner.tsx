@@ -99,21 +99,31 @@ export function FeedbackBanner({
       ]}
     >
       <View style={s.bannerHeader}>
-        {isCorrect ? (
-          <CheckCircle2 size={22} color={theme.colors.primary} />
-        ) : (
-          <XCircle size={22} color={theme.colors.error} />
-        )}
-        <Text
+        <View
           style={[
-            s.bannerTitle,
-            { color: isCorrect ? theme.colors.primary : theme.colors.error },
+            s.bannerIcon,
+            { backgroundColor: isCorrect ? "#2CC9B5" : "#F0838C" },
           ]}
         >
-          {isCorrect ? "Correct!" : "Not quite"}
-        </Text>
+          {isCorrect ? (
+            <CheckCircle2 size={22} color="#06302B" />
+          ) : (
+            <XCircle size={22} color="#3A1024" />
+          )}
+        </View>
+        <View style={s.bannerHeaderText}>
+          <Text
+            style={[s.bannerTitle, { color: isCorrect ? "#5EE0CE" : "#F8A9CC" }]}
+          >
+            {isCorrect ? "Correct! MashaAllah" : "Not quite"}
+          </Text>
+          <Text
+            style={[s.bannerMsg, { color: isCorrect ? "#8FBFB4" : "#D99AAB" }]}
+          >
+            {isCorrect ? correctText : wrongText}
+          </Text>
+        </View>
       </View>
-      <Text style={s.bannerMsg}>{isCorrect ? correctText : wrongText}</Text>
       <ContinueButton
         label={continueLabel}
         variant={isCorrect ? "success" : "error"}
@@ -132,17 +142,17 @@ const BUTTON_PALETTE: Record<
   primary: {
     bg: theme.colors.primary,
     fg: theme.colors.onPrimary,
-    border: theme.colors.primaryContainer,
+    border: theme.colors.shadowGreen,
   },
   success: {
     bg: theme.colors.primary,
     fg: theme.colors.onPrimary,
-    border: theme.colors.primaryContainer,
+    border: theme.colors.shadowGreen,
   },
   error: {
-    bg: theme.colors.errorAccent,
-    fg: theme.colors.white,
-    border: theme.colors.errorStrong,
+    bg: "#F0838C",
+    fg: "#3A1024",
+    border: "#C05A66",
   },
   neutral: {
     bg: theme.colors.surfaceHigh,
@@ -161,40 +171,51 @@ const s = StyleSheet.create({
     gap: 6,
   },
   btnText: {
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },
   banner: {
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 22,
+    padding: 18,
     marginTop: 18,
-    borderWidth: 1.5,
+    borderTopWidth: 2,
+    borderWidth: 1,
   },
   bannerCorrect: {
-    backgroundColor: theme.colors.primary10,
-    borderColor: theme.colors.primary30,
+    backgroundColor: "#123B34",
+    borderColor: "#2CC9B5",
   },
   bannerWrong: {
-    backgroundColor: theme.colors.errorSoft10,
-    borderColor: theme.colors.error,
+    backgroundColor: "#3A1E24",
+    borderColor: "#F0838C",
   },
   bannerHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 6,
+    gap: 12,
+    marginBottom: 14,
+  },
+  bannerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bannerHeaderText: {
+    flex: 1,
   },
   bannerTitle: {
-    fontSize: 17,
-    fontWeight: "900",
+    fontSize: 18,
+    fontFamily: "Nunito_900Black",
     letterSpacing: 0.3,
   },
   bannerMsg: {
-    fontSize: 14,
-    color: theme.colors.text,
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: 13,
+    fontFamily: "Nunito_600SemiBold",
+    lineHeight: 19,
+    marginTop: 2,
   },
   bannerBtn: {
     marginTop: 2,

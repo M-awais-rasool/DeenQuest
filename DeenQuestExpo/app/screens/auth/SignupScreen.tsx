@@ -12,10 +12,11 @@ import { AnimatedPressable } from "../../components/ui";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   AlertCircle,
+  Check,
   CheckCircle2,
+  ChevronLeft,
   Lock,
   Mail,
-  Sparkles,
   UserPlus,
 } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
@@ -174,9 +175,6 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 
   return (
     <ScreenWrapper innerStyle={{ flex: 1 }}>
-      <View style={styles.backgroundOrbTop} />
-      <View style={styles.backgroundOrbBottom} />
-
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
@@ -191,15 +189,23 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
           }
           keyboardShouldPersistTaps="handled"
         >
+          {navigation.canGoBack() && (
+            <AnimatedPressable
+              style={styles.backBtn}
+              onPress={() => navigation.goBack()}
+            >
+              <ChevronLeft
+                size={18}
+                color={theme.colors.text}
+                strokeWidth={2.5}
+              />
+            </AnimatedPressable>
+          )}
+
           <View style={styles.heroRow}>
-            <View style={styles.heroBadge}>
-              <Sparkles size={14} color={theme.colors.onSecondary} />
-              <Text style={styles.heroBadgeText}>New Journey</Text>
-            </View>
-            <Text style={styles.title}>Create your DeenQuest account</Text>
+            <Text style={styles.title}>Create your account</Text>
             <Text style={styles.subtitle}>
-              Build daily consistency with guided milestones, reflections, and
-              rewards.
+              Free forever. Your journey starts today.
             </Text>
           </View>
 
@@ -377,11 +383,11 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 const ChecklistItem = ({ ok, text }: { ok: boolean; text: string }) => {
   return (
     <View style={styles.checklistRow}>
-      <CheckCircle2
-        size={14}
-        color={ok ? theme.colors.primary : theme.colors.outline}
-        style={styles.checklistIcon}
-      />
+      <View
+        style={[styles.checklistDot, ok ? styles.checklistDotOk : styles.checklistDotPending]}
+      >
+        {ok && <Check size={11} color={theme.colors.primary} strokeWidth={3.5} />}
+      </View>
       <Text style={[styles.checklistText, ok && styles.checklistTextActive]}>
         {text}
       </Text>
@@ -395,75 +401,38 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl + theme.spacing.xl,
+    paddingHorizontal: 26,
+    paddingTop: 14,
+    paddingBottom: theme.spacing.xxl,
   },
-  backgroundOrbTop: {
-    position: "absolute",
-    top: -80,
-    right: -40,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: theme.colors.primary14,
-  },
-  backgroundOrbBottom: {
-    position: "absolute",
-    bottom: -45,
-    left: -80,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: theme.colors.secondary11,
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroRow: {
-    marginBottom: theme.spacing.lg,
-    gap: 10,
-    marginLeft: 5,
-    marginTop: Platform.OS === "ios" ? -10 : -20,
-  },
-  heroBadge: {
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
+    marginTop: 26,
+    marginBottom: 26,
     gap: 6,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.secondary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  heroBadgeText: {
-    color: theme.colors.onSecondary,
-    fontWeight: "900",
-    fontSize: 11,
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
-    lineHeight: 36,
+    lineHeight: 38,
     color: theme.colors.text,
-    fontWeight: "900",
-    letterSpacing: 0.2,
+    fontFamily: "Nunito_900Black",
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 22,
+    fontFamily: "Nunito_600SemiBold",
     color: theme.colors.textMuted,
-    maxWidth: 340,
   },
-  formCard: {
-    backgroundColor: theme.colors.surface82,
-    borderColor: theme.colors.primary20,
-    borderWidth: 1,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 6,
-  },
+  formCard: {},
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -485,63 +454,74 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontWeight: "900",
+    fontFamily: "Nunito_800ExtraBold",
     color: theme.colors.textMuted,
-    marginBottom: 8,
-    letterSpacing: 0.4,
+    marginBottom: 7,
+    marginLeft: 4,
+    letterSpacing: 1,
     textTransform: "uppercase",
   },
   inputWrapper: {
     position: "relative",
   },
   input: {
-    backgroundColor: theme.colors.surfaceLow,
-    borderBottomWidth: 3,
-    borderWidth: 1,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
     borderColor: theme.colors.outline,
     color: theme.colors.text,
-    padding: 16,
-    paddingRight: 44,
-    borderTopLeftRadius: theme.borderRadius.sm,
-    borderTopRightRadius: theme.borderRadius.sm,
-    fontSize: 16,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
+    paddingRight: 48,
+    borderRadius: 16,
+    fontSize: 15,
+    fontFamily: "Nunito_700Bold",
   },
   inputError: {
-    borderColor: theme.colors.errorStrong,
-    borderBottomColor: theme.colors.errorStrong,
+    borderColor: theme.colors.error,
   },
   inputIcon: {
     position: "absolute",
-    right: 14,
-    top: 16,
+    right: 16,
+    top: 17,
   },
   errorText: {
-    color: theme.colors.errorBright,
-    fontSize: 12,
-    marginTop: 6,
+    color: theme.colors.error,
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
+    marginTop: 8,
+    marginLeft: 4,
   },
   checklistBox: {
-    gap: 8,
+    gap: 6,
     marginBottom: theme.spacing.md,
-    padding: 12,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.surface80,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
+    marginLeft: 4,
   },
   checklistRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 8,
   },
-  checklistIcon: {
-    marginRight: 8,
+  checklistDot: {
+    width: 17,
+    height: 17,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checklistDotOk: {
+    backgroundColor: theme.colors.primaryContainer,
+  },
+  checklistDotPending: {
+    borderWidth: 2,
+    borderColor: "#2C464C",
   },
   checklistText: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
+    color: "#5F7E7C",
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
   },
   checklistTextActive: {
-    color: theme.colors.text,
+    color: theme.colors.textMuted,
   },
   termsRow: {
     flexDirection: "row",
@@ -581,6 +561,6 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: theme.colors.primary,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
 });

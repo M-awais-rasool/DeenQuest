@@ -45,7 +45,7 @@ const s = StyleSheet.create({
   },
   text: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     textTransform: "uppercase",
     letterSpacing: 1,

@@ -29,6 +29,10 @@ const CURATED_META: Partial<Record<CourseType, SectionMeta[]>> = {
       title: "Learn to Pray",
       subtitle: "Wudu, the postures & what to recite in salah",
     },
+    {
+      title: "Review & Beyond",
+      subtitle: "Grand revision & the duas of your day",
+    },
   ],
 };
 

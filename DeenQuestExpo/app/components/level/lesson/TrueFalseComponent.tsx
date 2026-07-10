@@ -200,14 +200,14 @@ const s = StyleSheet.create({
   },
   counter: {
     fontSize: 12,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: theme.colors.textMuted,
     letterSpacing: 1,
   },
   question: {
     fontSize: 18,
     color: theme.colors.text,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     marginBottom: 18,
     lineHeight: 26,
   },
@@ -253,7 +253,7 @@ const s = StyleSheet.create({
   },
   answerLabel: {
     fontSize: 16,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 1,
   },
 });

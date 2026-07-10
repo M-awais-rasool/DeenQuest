@@ -178,7 +178,7 @@ const s = StyleSheet.create({
   },
   topBarTitle: {
     color: theme.colors.secondary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 13,
     letterSpacing: 1.5,
   },
@@ -200,7 +200,7 @@ const s = StyleSheet.create({
   gameTitle: {
     fontSize: 18,
     color: theme.colors.text,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     marginBottom: 20,
     lineHeight: 26,
   },

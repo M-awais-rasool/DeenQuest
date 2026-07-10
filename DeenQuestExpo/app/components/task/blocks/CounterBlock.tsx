@@ -32,86 +32,76 @@ export const CounterBlock = ({
 
   return (
     <View style={s.wrapper}>
-      <Text style={s.phrase}>{phrase}</Text>
-      <Text style={[s.count, reached && s.countDone]}>
-        {count} / {target}
-      </Text>
-      <View style={s.track}>
-        <View
-          style={[
-            s.bar,
-            { width: `${Math.min((count / target) * 100, 100)}%` as any },
-            reached && s.barDone,
-          ]}
-        />
-      </View>
       <TactilePressable
-        edgeColor={theme.colors.primaryContainer}
-        depth={5}
-        radius={60}
-        haptic="light"
+        edgeColor="#0E2C29"
+        depth={8}
+        radius={79}
+        haptic="none"
         dimWhenDisabled={false}
         style={s.tapBtnWrap}
-        faceStyle={[s.tapBtn, (reached || isDisabled) && s.tapBtnDone]}
+        faceStyle={[s.circle, reached && s.circleDone]}
         onPress={handleTap}
         disabled={isDisabled || reached}
       >
-        <Text style={[s.tapText, (reached || isDisabled) && s.tapTextDone]}>
-          {reached || completed ? "✓" : "Tap"}
+        <Text style={s.count}>{count}</Text>
+        <Text style={[s.ofText, reached && s.ofTextDone]}>
+          {reached ? "complete" : `of ${target}`}
         </Text>
       </TactilePressable>
+      <Text style={s.phrase}>{phrase}</Text>
+      <Text style={s.helper}>TAP ANYWHERE ON THE CIRCLE TO COUNT</Text>
     </View>
   );
 };
 
 const s = StyleSheet.create({
-  wrapper: { marginBottom: 8 },
-  phrase: {
-    fontSize: 24,
-    fontWeight: "900",
-    color: theme.colors.text,
-    textAlign: "center",
-    marginBottom: 16,
+  wrapper: {
+    marginBottom: 8,
+    alignItems: "center",
+    paddingTop: 18,
   },
-  count: {
-    fontSize: 48,
-    fontWeight: "900",
-    color: theme.colors.primary,
-    textAlign: "center",
-  },
-  countDone: { color: theme.colors.secondary },
-  track: {
-    height: 8,
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 4,
-    marginVertical: 16,
-    overflow: "hidden",
-  },
-  bar: {
-    height: "100%" as any,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 4,
-  },
-  barDone: { backgroundColor: theme.colors.secondary },
   tapBtnWrap: {
     alignSelf: "center",
-    marginBottom: 8,
   },
-  tapBtn: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: theme.colors.primary15,
-    borderWidth: 3,
+  circle: {
+    width: 158,
+    height: 158,
+    borderRadius: 79,
+    backgroundColor: theme.colors.primaryContainer,
+    borderWidth: 5,
     borderColor: theme.colors.primary,
     justifyContent: "center",
     alignItems: "center",
+    gap: 2,
   },
-  tapBtnDone: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-    opacity: 0.6,
+  circleDone: {
+    borderColor: theme.colors.secondary,
+    backgroundColor: "#3A2F16",
   },
-  tapText: { color: theme.colors.primary, fontSize: 20, fontWeight: "900" },
-  tapTextDone: { color: theme.colors.onPrimary, fontSize: 28 },
+  count: {
+    fontSize: 46,
+    lineHeight: 50,
+    fontFamily: "Nunito_900Black",
+    color: theme.colors.text,
+  },
+  ofText: {
+    fontSize: 12,
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#5EE0CE",
+  },
+  ofTextDone: { color: theme.colors.secondary },
+  phrase: {
+    fontSize: 17,
+    fontFamily: "Nunito_800ExtraBold",
+    color: theme.colors.text,
+    textAlign: "center",
+    marginTop: 14,
+  },
+  helper: {
+    fontSize: 12,
+    fontFamily: "Nunito_700Bold",
+    color: "#5F7E7C",
+    letterSpacing: 0.7,
+    marginTop: 4,
+  },
 });

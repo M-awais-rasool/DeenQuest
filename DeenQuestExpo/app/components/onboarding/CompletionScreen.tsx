@@ -88,9 +88,8 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary30,
   },
   title: {
-    fontFamily: FONTS.headline,
     fontSize: 28,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.text,
     textAlign: "center",
     marginBottom: 10,
@@ -119,9 +118,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.outline,
   },
   tagText: {
-    fontFamily: FONTS.body,
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     color: COLORS.primary,
   },
   ctaRim: {
@@ -145,9 +143,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   ctaText: {
-    fontFamily: FONTS.headline,
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.onPrimary,
     textTransform: "uppercase",
     letterSpacing: 0.5,

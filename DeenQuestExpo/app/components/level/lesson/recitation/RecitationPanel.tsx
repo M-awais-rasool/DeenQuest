@@ -434,11 +434,11 @@ const s = StyleSheet.create({
   coachLabel: {
     color: theme.colors.secondary,
     fontSize: 11,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 1,
     marginBottom: 6,
   },
-  coachTip: { color: theme.colors.text, fontSize: 14, fontWeight: "700", lineHeight: 20 },
+  coachTip: { color: theme.colors.text, fontSize: 14, fontFamily: "Nunito_700Bold", lineHeight: 20 },
   coachChips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
   coachChip: {
     backgroundColor: theme.colors.surface,
@@ -471,7 +471,7 @@ const s = StyleSheet.create({
     flex: 1,
     color: theme.colors.text,
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
   },
   requiredBadge: {
     borderRadius: 6,
@@ -480,7 +480,7 @@ const s = StyleSheet.create({
   },
   requiredText: {
     fontSize: 10,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -524,7 +524,7 @@ const s = StyleSheet.create({
   controlLabel: {
     color: theme.colors.textMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     textAlign: "center",
   },
 
@@ -554,7 +554,7 @@ const s = StyleSheet.create({
   recordLabel: {
     color: theme.colors.textMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     marginTop: 8,
   },
 
@@ -578,14 +578,14 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignSelf: "flex-start",
   },
-  scoreNum: { fontSize: 24, fontWeight: "900" },
-  scorePct: { fontSize: 13, fontWeight: "700", marginTop: 6 },
+  scoreNum: { fontSize: 24, fontFamily: "Nunito_900Black" },
+  scorePct: { fontSize: 13, fontFamily: "Nunito_700Bold", marginTop: 6 },
   scoreMeta: { flex: 1, gap: 8 },
   xpEarnedRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   xpEarnedText: {
     color: theme.colors.secondary,
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
 
   messageBox: {
@@ -599,7 +599,7 @@ const s = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     lineHeight: 20,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
 
   legendRow: {
@@ -613,7 +613,7 @@ const s = StyleSheet.create({
   legendText: {
     color: theme.colors.textMuted,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
 
   wordGrid: {
@@ -638,7 +638,7 @@ const s = StyleSheet.create({
   extraLabel: {
     color: theme.colors.textMuted,
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     textAlign: "center",
@@ -649,7 +649,7 @@ const s = StyleSheet.create({
     borderRadius: 9,
     borderWidth: 1,
   },
-  wordChipText: { fontSize: 17, fontWeight: "700", lineHeight: 26 },
+  wordChipText: { fontSize: 17, fontFamily: "Nunito_700Bold", lineHeight: 26 },
 
   transcriptBox: {
     backgroundColor: theme.colors.surfaceHigh,
@@ -660,7 +660,7 @@ const s = StyleSheet.create({
   transcriptLabel: {
     color: theme.colors.textMuted,
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -682,5 +682,5 @@ const s = StyleSheet.create({
     borderColor: theme.colors.outline,
     backgroundColor: theme.colors.surfaceHigh,
   },
-  retryBtnText: { color: theme.colors.text, fontSize: 14, fontWeight: "700" },
+  retryBtnText: { color: theme.colors.text, fontSize: 14, fontFamily: "Nunito_700Bold" },
 });

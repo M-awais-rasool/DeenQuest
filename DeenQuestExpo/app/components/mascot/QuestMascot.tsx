@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Star, Sparkles } from "lucide-react-native";
 import { theme } from "../../theme/themes";
 
-const BODY_GRADIENT = ["#B5EFAC", "#88D982", "#56A452"] as const;
+const BODY_GRADIENT = ["#9FEEE2", "#2CC9B5", "#1B9484"] as const;
 const ARM_COLOR = "#67BA62";
 const FOOT_COLOR = "#4E8B4B";
 const FACE_DARK = "#21351F";

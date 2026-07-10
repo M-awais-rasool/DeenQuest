@@ -10,10 +10,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Star } from "lucide-react-native";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
-import { SocialAuthButton, AnimatedPressable } from "../../components/ui";
+import { SocialAuthButton, TactilePressable } from "../../components/ui";
+import { TactileButton } from "../../components/TactileButton";
 import { theme } from "../../theme/themes";
 import MascotHero from "../../components/mascot/MascotHero";
 
@@ -54,17 +54,25 @@ const FadeSlide = memo(function FadeSlide({
   );
 });
 
+/** Ornamental gold divider: — ✦ — */
+function OrnamentRow() {
+  return (
+    <View style={s.ornamentRow}>
+      <View style={s.ornamentLine} />
+      <Text style={s.ornamentStar}>✦</Text>
+      <View style={s.ornamentLine} />
+    </View>
+  );
+}
+
 export function WelcomeScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
-  // Scale the mascot with the viewport. The hero stage renders ~1.78x this
-  // size (halo + orbit rings + accents), so we keep it conservative to leave
-  // breathing room on the sides and clamp it for tablets / small phones.
   const mascotSize = Math.min(
-    220,
-    Math.max(150, Math.min(width * 0.5, height * 0.26)),
+    170,
+    Math.max(120, Math.min(width * 0.38, height * 0.2)),
   );
 
   const handleGoogle = useCallback(() => {
@@ -76,7 +84,11 @@ export function WelcomeScreen() {
     // TODO: wire Sign in with Apple (expo-apple-authentication).
   }, []);
 
-  const handleEmail = useCallback(
+  const handleSignup = useCallback(
+    () => navigation.navigate("Signup"),
+    [navigation],
+  );
+  const handleLogin = useCallback(
     () => navigation.navigate("Login"),
     [navigation],
   );
@@ -84,27 +96,26 @@ export function WelcomeScreen() {
   return (
     <ScreenWrapper innerStyle={s.flex}>
       <View style={s.flex}>
-        {/* Brand */}
-        <FadeSlide delay={60} style={s.brandRow}>
-          <Star
-            size={20}
-            color={theme.colors.secondary}
-            fill={theme.colors.secondary}
-          />
-          <Text style={s.brand}>DeenQuest</Text>
-        </FadeSlide>
-
-        {/* Hero */}
+        {/* Hero + brand */}
         <View style={s.hero}>
           <MascotHero size={mascotSize} />
-        </View>
+          <FadeSlide delay={60} style={s.brandBlock}>
+            <Text style={s.brand}>
+              Deen
+              <Text style={s.brandAccent}>Quest</Text>
+            </Text>
+            <Text style={s.tagline}>LEARN · PLAY · GROW</Text>
+          </FadeSlide>
 
-        <FadeSlide delay={260} style={s.heroText}>
-          <Text style={s.greeting}>As-salamu alaykum! 👋</Text>
-          <Text style={s.tagline}>
-            Learn to read the Quran the fun way —{"\n"}a few minutes a day.
-          </Text>
-        </FadeSlide>
+          <FadeSlide delay={260} style={s.basmalahBlock}>
+            <OrnamentRow />
+            <Text style={s.basmalah}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
+            <Text style={s.basmalahTr}>
+              In the name of Allah, the Most Gracious, the Most Merciful
+            </Text>
+            <OrnamentRow />
+          </FadeSlide>
+        </View>
 
         {/* Auth actions */}
         <FadeSlide
@@ -114,24 +125,36 @@ export function WelcomeScreen() {
             { paddingBottom: Math.max(insets.bottom, 16) + 8 },
           ]}
         >
-          <SocialAuthButton provider="google" onPress={handleGoogle} />
-          <View style={s.buttonGap} />
-          <SocialAuthButton provider="apple" onPress={handleApple} />
+          <TactileButton
+            title="Get Started"
+            onPress={handleSignup}
+            size="lg"
+          />
+          <TactilePressable
+            onPress={handleLogin}
+            edgeColor={theme.colors.shadowSurface}
+            radius={18}
+            haptic="light"
+            style={s.loginBtnWrap}
+            faceStyle={s.loginBtn}
+          >
+            <Text style={s.loginText}>I ALREADY HAVE AN ACCOUNT</Text>
+          </TactilePressable>
 
           <View style={s.dividerRow}>
             <View style={s.divider} />
-            <Text style={s.dividerText}>OR</Text>
+            <Text style={s.dividerText}>or continue with</Text>
             <View style={s.divider} />
           </View>
 
-          <AnimatedPressable onPress={handleEmail} style={s.emailBtn}>
-            <Text style={s.emailText}>Continue with Email</Text>
-          </AnimatedPressable>
-
-          <Text style={s.legal}>
-            By continuing you agree to our Terms of Service{"\n"}and Privacy
-            Policy.
-          </Text>
+          <View style={s.socialRow}>
+            <View style={s.socialItem}>
+              <SocialAuthButton provider="google" onPress={handleGoogle} />
+            </View>
+            <View style={s.socialItem}>
+              <SocialAuthButton provider="apple" onPress={handleApple} />
+            </View>
+          </View>
         </FadeSlide>
       </View>
     </ScreenWrapper>
@@ -142,58 +165,92 @@ const s = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  glow: {
-    position: "absolute",
-    alignSelf: "center",
-    backgroundColor: theme.colors.primary08,
-  },
-  brandRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  brand: {
-    color: theme.colors.text,
-    fontSize: 22,
-    fontWeight: "900",
-    letterSpacing: 0.6,
-  },
   hero: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 50,
+    paddingHorizontal: 30,
   },
-  heroText: {
+  brandBlock: {
     alignItems: "center",
-    marginTop: 26,
-    marginBottom: 30,
+    marginTop: 22,
   },
-  greeting: {
+  brand: {
     color: theme.colors.text,
-    fontSize: 26,
-    fontWeight: "900",
-    letterSpacing: 0.3,
+    fontSize: 33,
+    fontFamily: "Nunito_900Black",
+    letterSpacing: -0.3,
+  },
+  brandAccent: {
+    color: theme.colors.secondary,
   },
   tagline: {
     color: theme.colors.textMuted,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 12,
+    fontFamily: "Nunito_800ExtraBold",
+    letterSpacing: 3.2,
+    marginTop: 7,
+  },
+  basmalahBlock: {
+    alignItems: "center",
+    gap: 16,
+    marginTop: 38,
+  },
+  ornamentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  ornamentLine: {
+    width: 44,
+    height: 1.5,
+    backgroundColor: theme.colors.goldDark,
+    opacity: 0.7,
+  },
+  ornamentStar: {
+    color: theme.colors.secondary,
+    fontSize: 14,
+  },
+  basmalah: {
+    fontFamily: "Amiri_400Regular",
+    fontSize: 30,
+    lineHeight: 54,
+    color: theme.colors.yellowSoft,
     textAlign: "center",
-    marginTop: 10,
+    writingDirection: "rtl",
+  },
+  basmalahTr: {
+    color: "#5F7E7C",
+    fontSize: 12.5,
+    fontFamily: "Nunito_600SemiBold",
+    textAlign: "center",
+    maxWidth: 270,
   },
   actions: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
+    gap: 12,
   },
-  buttonGap: {
-    height: 12,
+  loginBtnWrap: {},
+  loginBtn: {
+    borderWidth: 2,
+    borderColor: theme.colors.outline,
+    borderRadius: 18,
+    paddingVertical: 15,
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+  },
+  loginText: {
+    color: theme.colors.textMuted,
+    fontSize: 15,
+    fontFamily: "Nunito_900Black",
+    letterSpacing: 0.6,
   },
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    marginVertical: 16,
+    marginTop: 8,
+    marginBottom: 2,
   },
   divider: {
     flex: 1,
@@ -201,28 +258,16 @@ const s = StyleSheet.create({
     backgroundColor: theme.colors.outline,
   },
   dividerText: {
-    color: theme.colors.textMuted,
+    color: "#5F7E7C",
     fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1.2,
+    fontFamily: "Nunito_700Bold",
   },
-  emailBtn: {
-    alignSelf: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+  socialRow: {
+    flexDirection: "row",
+    gap: 12,
   },
-  emailText: {
-    color: theme.colors.primary,
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  legal: {
-    color: theme.colors.textMuted,
-    fontSize: 11,
-    lineHeight: 16,
-    textAlign: "center",
-    marginTop: 14,
-    opacity: 0.7,
+  socialItem: {
+    flex: 1,
   },
 });
 

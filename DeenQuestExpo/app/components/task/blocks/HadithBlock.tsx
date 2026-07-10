@@ -26,7 +26,7 @@ const s = StyleSheet.create({
   },
   quote: {
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     color: theme.colors.text,
     fontStyle: "italic",
     lineHeight: 28,
@@ -35,6 +35,6 @@ const s = StyleSheet.create({
   ref: {
     fontSize: 13,
     color: theme.colors.textMuted,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
 });

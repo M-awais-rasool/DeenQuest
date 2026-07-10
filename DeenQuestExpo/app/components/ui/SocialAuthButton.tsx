@@ -11,21 +11,22 @@ const PALETTE: Record<
   { bg: string; fg: string; edge: string; border?: string }
 > = {
   google: {
-    bg: "#FFFFFF",
-    fg: "#1F1F1F",
-    edge: "#C2C2C2",
+    bg: theme.colors.surface,
+    fg: theme.colors.text,
+    edge: theme.colors.shadowSurface,
+    border: theme.colors.outline,
   },
   apple: {
-    bg: "#0B0B0B",
-    fg: "#FFFFFF",
-    edge: "#2E2E2E",
-    border: "rgba(255,255,255,0.22)",
+    bg: theme.colors.surface,
+    fg: theme.colors.text,
+    edge: theme.colors.shadowSurface,
+    border: theme.colors.outline,
   },
 };
 
 const LABEL: Record<SocialProvider, string> = {
-  google: "Continue with Google",
-  apple: "Continue with Apple",
+  google: "Google",
+  apple: "Apple",
 };
 
 export function SocialAuthButton({
@@ -94,7 +95,7 @@ const s = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     letterSpacing: 0.2,
   },
 });

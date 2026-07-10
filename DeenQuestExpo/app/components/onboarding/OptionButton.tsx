@@ -225,14 +225,13 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
-    fontFamily: FONTS.body,
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     color: COLORS.textMuted,
     lineHeight: 20,
   },
   labelSelected: {
     color: COLORS.text,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
 });

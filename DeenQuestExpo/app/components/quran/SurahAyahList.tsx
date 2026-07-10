@@ -77,7 +77,9 @@ export const SurahAyahList = memo(
 
           {showBasmalah ? (
             <View style={s.bismillahContainer}>
+              <View style={s.bismillahLine} />
               <Text style={[s.bismillahText, fontStyle]}>{BASMALAH}</Text>
+              <View style={s.bismillahLine} />
             </View>
           ) : null}
         </View>
@@ -149,28 +151,35 @@ const s = StyleSheet.create({
   },
   surahNameEnglish: {
     fontSize: 20,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     color: theme.colors.white,
     letterSpacing: 0.3,
   },
   surahMeta: {
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     color: theme.colors.textMuted,
     marginTop: 6,
     letterSpacing: 0.5,
   },
   bismillahContainer: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
     paddingVertical: 22,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline10,
+    paddingHorizontal: 6,
+  },
+  bismillahLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.outline,
   },
   bismillahText: {
-    fontSize: 32,
-    lineHeight: 60,
+    fontSize: 26,
+    lineHeight: 52,
     writingDirection: "rtl",
     textAlign: "center",
-    color: theme.colors.text,
+    color: theme.colors.secondary,
   },
 });

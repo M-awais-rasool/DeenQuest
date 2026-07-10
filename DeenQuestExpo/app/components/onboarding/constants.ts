@@ -19,8 +19,8 @@ export const COLORS = {
 } as const;
 
 export const FONTS = {
-  headline: "Lexend",
-  body: "Plus Jakarta Sans",
+  headline: "Nunito_800ExtraBold",
+  body: "Nunito_600SemiBold",
 } as const;
 
 /** The exact Duolingo-style spring easing */

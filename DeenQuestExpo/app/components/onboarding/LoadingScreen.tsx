@@ -105,9 +105,8 @@ const styles = StyleSheet.create({
     height: 48,
   },
   title: {
-    fontFamily: FONTS.headline,
     fontSize: 20,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.text,
     marginBottom: 32,
   },
@@ -129,15 +128,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   stepText: {
-    fontFamily: FONTS.body,
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     color: COLORS.textMuted,
     flex: 1,
   },
   stepTextDone: {
     color: COLORS.primary,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
   quoteBox: {
     position: "absolute",

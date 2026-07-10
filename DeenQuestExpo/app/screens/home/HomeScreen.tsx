@@ -36,6 +36,18 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   reflection: Feather,
 };
 
+// Per-category icon tile tint + icon colour, straight from the B1 mock.
+const CATEGORY_TINTS: Record<string, { bg: string; fg: string }> = {
+  salah: { bg: "#123B34", fg: "#2CC9B5" },
+  quran: { bg: "#16303E", fg: "#6EC1E8" },
+  dhikr: { bg: "#3A2F16", fg: "#EFB65A" },
+  learning: { bg: "#2A2440", fg: "#A78BFA" },
+  character: { bg: "#3A2030", fg: "#F27FB2" },
+  social: { bg: "#123B34", fg: "#2CC9B5" },
+  reflection: { bg: "#16303E", fg: "#6EC1E8" },
+};
+const DEFAULT_TINT = { bg: "#123B34", fg: "#2CC9B5" };
+
 const XP_PER_LEVEL = 500;
 
 // Day letters indexed by Date.getDay() (Sun..Sat). weekly_completions is
@@ -99,26 +111,29 @@ export const HomeScreen = () => {
             <Text style={styles.salaam}>Assalamu alaikum</Text>
             <Text style={styles.name}>{displayName}</Text>
           </View>
-          <View style={styles.avatarRing}>
-            <LinearGradient
-              colors={[dq.green, dq.greenDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.avatar}
-            >
-              <Text style={styles.avatarText}>{initial}</Text>
-            </LinearGradient>
-          </View>
+          <LinearGradient
+            colors={[dq.green, dq.gold]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.avatar}
+          >
+            <Text style={styles.avatarText}>{initial}</Text>
+          </LinearGradient>
         </View>
 
         {/* ── Streak hero ── */}
-        <View style={styles.heroCard}>
+        <LinearGradient
+          colors={["#26301C", "#16272B"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.55, y: 1 }}
+          style={styles.heroCard}
+        >
           <View style={styles.heroTopRow}>
             <View style={styles.heroStreak}>
-              <Flame size={30} color={dq.gold} />
+              <Flame size={40} color={dq.gold} fill={dq.gold} />
               <View>
                 <Text style={styles.heroStreakNum}>{currentStreak}</Text>
-                <Text style={styles.heroStreakLabel}>day streak</Text>
+                <Text style={styles.heroStreakLabel}>DAY STREAK</Text>
               </View>
             </View>
             <View style={styles.bestPill}>
@@ -151,7 +166,7 @@ export const HomeScreen = () => {
                     ]}
                   >
                     {done ? (
-                      <Check size={15} color={dq.onGreenAlt} />
+                      <Check size={15} color={dq.green} strokeWidth={3} />
                     ) : isToday ? (
                       <Flame size={14} color={dq.gold} />
                     ) : null}
@@ -162,10 +177,11 @@ export const HomeScreen = () => {
           </View>
 
           {/* xp */}
-          <View style={{ gap: 9 }}>
+          <View style={styles.xpBlock}>
             <View style={styles.xpRow}>
               <Text style={styles.levelText}>
-                Level {level} · {rankWord(profile?.title)}
+                Level {level} ·{" "}
+                <Text style={styles.rankText}>{rankWord(profile?.title)}</Text>
               </Text>
               <Text style={styles.xpText}>
                 {xpInLevel} / {XP_PER_LEVEL} XP
@@ -173,14 +189,14 @@ export const HomeScreen = () => {
             </View>
             <View style={styles.xpTrack}>
               <LinearGradient
-                colors={[dq.greenDark, dq.green]}
+                colors={[dq.green, dq.greenBright]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={[styles.xpFill, { width: `${xpPct}%` }]}
               />
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
 
         {/* ── Daily Missions ── */}
@@ -211,8 +227,20 @@ export const HomeScreen = () => {
                       pressed && { opacity: 0.6 },
                     ]}
                   >
-                    <View style={styles.missionIcon}>
-                      <Icon size={18} color={dq.green} />
+                    <View
+                      style={[
+                        styles.missionIcon,
+                        {
+                          backgroundColor: (
+                            CATEGORY_TINTS[task.category] ?? DEFAULT_TINT
+                          ).bg,
+                        },
+                      ]}
+                    >
+                      <Icon
+                        size={18}
+                        color={(CATEGORY_TINTS[task.category] ?? DEFAULT_TINT).fg}
+                      />
                     </View>
                     <View style={styles.missionBody}>
                       <Text style={styles.missionTitle} numberOfLines={1}>
@@ -224,7 +252,7 @@ export const HomeScreen = () => {
                     </View>
                     {task.completed ? (
                       <View style={styles.missionCheck}>
-                        <Check size={15} color={dq.onGreenAlt} />
+                        <Check size={15} color={dq.onGreen} strokeWidth={3.5} />
                       </View>
                     ) : (
                       <View style={styles.missionXpPill}>
@@ -259,32 +287,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  salaam: { fontSize: 13, fontWeight: "700", color: dq.muted },
-  name: { fontSize: 22, fontWeight: "900", color: dq.white },
-  avatarRing: {
+  salaam: { fontSize: 14, fontFamily: "Nunito_700Bold", color: dq.muted },
+  name: { fontSize: 24, fontFamily: "Nunito_900Black", color: dq.text },
+  avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: dq.gold55,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { fontSize: 18, fontWeight: "900", color: dq.onGreen },
+  avatarText: { fontSize: 19, fontFamily: "Nunito_900Black", color: dq.onGreen },
 
   // Hero card
   heroCard: {
-    backgroundColor: dq.card,
     borderWidth: 1,
-    borderColor: dq.cardBorder,
-    borderRadius: 18,
-    padding: 20,
+    borderColor: "#3E4A2C",
+    borderRadius: 22,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 18,
     gap: 18,
   },
   heroTopRow: {
@@ -292,56 +313,68 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  heroStreak: { flexDirection: "row", alignItems: "center", gap: 12 },
-  heroStreakNum: { fontSize: 28, fontWeight: "900", color: dq.white, lineHeight: 28 },
-  heroStreakLabel: { fontSize: 12, fontWeight: "700", color: dq.muted, marginTop: 2 },
+  heroStreak: { flexDirection: "row", alignItems: "center", gap: 14 },
+  heroStreakNum: { fontSize: 34, fontFamily: "Nunito_900Black", color: dq.text, lineHeight: 36 },
+  heroStreakLabel: {
+    fontSize: 12,
+    fontFamily: "Nunito_800ExtraBold",
+    color: dq.gold,
+    letterSpacing: 1.2,
+  },
   bestPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: dq.gold12,
-    paddingHorizontal: 11,
+    gap: 6,
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.goldBorder,
+    paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 99,
+    borderRadius: 14,
   },
-  bestText: { fontSize: 12, fontWeight: "800", color: dq.gold },
+  bestText: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", color: dq.muted },
 
   weekRow: { flexDirection: "row", justifyContent: "space-between" },
-  dayCol: { alignItems: "center", gap: 7 },
-  dayLetter: { fontSize: 11, fontWeight: "800", color: dq.faint },
+  dayCol: { alignItems: "center", gap: 6 },
+  dayLetter: { fontSize: 11, fontFamily: "Nunito_800ExtraBold", color: dq.faint },
   dayDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
   },
-  dayDotDone: { backgroundColor: dq.green },
+  dayDotDone: { backgroundColor: dq.greenTint },
   dayDotToday: {
-    backgroundColor: dq.gold12,
     borderWidth: 2,
     borderColor: dq.gold,
   },
   dayDotEmpty: {
-    backgroundColor: dq.lockFill,
-    borderWidth: 1,
-    borderColor: dq.lockBorder,
+    borderWidth: 2,
+    borderColor: "#2C464C",
   },
 
+  xpBlock: {
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: dq.cardBorder,
+    paddingTop: 14,
+  },
   xpRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  levelText: { fontSize: 13, fontWeight: "800", color: dq.text },
-  xpText: { fontSize: 12, fontWeight: "700", color: dq.muted },
+  levelText: { fontSize: 13, fontFamily: "Nunito_900Black", color: dq.text },
+  rankText: { color: dq.green },
+  xpText: { fontSize: 12, fontFamily: "Nunito_800ExtraBold", color: dq.muted },
   xpTrack: {
-    height: 10,
-    borderRadius: 99,
-    backgroundColor: dq.trackWhite06,
+    height: 12,
+    borderRadius: 7,
+    backgroundColor: dq.screen,
     overflow: "hidden",
   },
-  xpFill: { height: "100%", borderRadius: 99 },
+  xpFill: { height: "100%", borderRadius: 7 },
 
   // Missions
   sectionHeader: {
@@ -350,26 +383,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  sectionTitle: { fontSize: 17, fontWeight: "800", color: dq.white },
+  sectionTitle: { fontSize: 18, fontFamily: "Nunito_900Black", color: dq.text },
   missionCountPill: {
-    backgroundColor: dq.trackGreenTint,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 99,
+    backgroundColor: dq.greenTint,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
-  missionCountText: { fontSize: 13, fontWeight: "800", color: dq.green },
+  missionCountText: { fontSize: 12, fontFamily: "Nunito_900Black", color: dq.green },
   missionCard: {
     backgroundColor: dq.card,
     borderWidth: 1,
     borderColor: dq.cardBorder,
-    borderRadius: 18,
+    borderRadius: 22,
     paddingHorizontal: 16,
+    overflow: "hidden",
   },
   missionRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 13,
+    gap: 13,
+    paddingVertical: 14,
   },
   missionRowBorder: {
     borderBottomWidth: 1,
@@ -378,14 +412,13 @@ const styles = StyleSheet.create({
   missionIcon: {
     width: 38,
     height: 38,
-    borderRadius: 11,
-    backgroundColor: dq.trackGreenTint,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   missionBody: { flex: 1, gap: 1 },
-  missionTitle: { fontSize: 14, fontWeight: "700", color: dq.text },
-  missionSub: { fontSize: 12, fontWeight: "600", color: dq.muted },
+  missionTitle: { fontSize: 14.5, fontFamily: "Nunito_800ExtraBold", color: dq.text },
+  missionSub: { fontSize: 12, fontFamily: "Nunito_600SemiBold", color: dq.faint },
   missionCheck: {
     width: 26,
     height: 26,
@@ -395,10 +428,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   missionXpPill: {
-    backgroundColor: dq.gold12,
+    backgroundColor: dq.goldTint,
     paddingHorizontal: 11,
     paddingVertical: 6,
-    borderRadius: 99,
+    borderRadius: 12,
   },
-  missionXpText: { fontSize: 12, fontWeight: "800", color: dq.gold },
+  missionXpText: { fontSize: 12, fontFamily: "Nunito_900Black", color: dq.gold },
 });

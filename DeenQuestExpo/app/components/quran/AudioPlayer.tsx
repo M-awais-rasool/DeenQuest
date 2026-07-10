@@ -216,7 +216,7 @@ export const AudioPlayer = ({
         <View style={s.controls}>
           {isPreparing ? (
             <View style={s.playBtn}>
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color="#0E2A3A" size="small" />
             </View>
           ) : (
             <>
@@ -232,9 +232,9 @@ export const AudioPlayer = ({
                 <SkipBack size={18} color={theme.colors.text} fill={theme.colors.text} />
               </AnimatedPressable>
               <TactilePressable
-                edgeColor={theme.colors.primaryContainer}
+                edgeColor="#3E8AB3"
                 depth={3}
-                radius={22}
+                radius={23}
                 haptic="light"
                 dimWhenDisabled={false}
                 faceStyle={[s.playBtn, !canPlay && s.playBtnDisabled]}
@@ -242,9 +242,9 @@ export const AudioPlayer = ({
                 disabled={!canPlay || isBusy || isTransitioning}
               >
                 {isPlaying ? (
-                  <Pause size={20} color="#fff" fill="#fff" />
+                  <Pause size={20} color="#0E2A3A" fill="#0E2A3A" />
                 ) : (
-                  <Play size={20} color="#fff" fill="#fff" />
+                  <Play size={20} color="#0E2A3A" fill="#0E2A3A" />
                 )}
               </TactilePressable>
               <AnimatedPressable
@@ -269,23 +269,31 @@ export const AudioPlayer = ({
 
 const s = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.surface,
-    paddingBottom: 24,
+    marginHorizontal: 14,
+    marginBottom: 14,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#24505F",
+    backgroundColor: "rgba(16,29,32,0.97)",
+    paddingBottom: 14,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.5,
+    shadowRadius: 34,
     elevation: 16,
   },
   progressTrack: {
-    height: 3,
-    backgroundColor: theme.colors.outline10,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: theme.colors.background,
     overflow: "hidden",
+    marginHorizontal: 18,
+    marginTop: 12,
   },
   progressFill: {
     height: "100%",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 2,
+    backgroundColor: "#6EC1E8",
+    borderRadius: 4,
   },
   content: {
     flexDirection: "row",
@@ -305,20 +313,20 @@ const s = StyleSheet.create({
   },
   surahName: {
     color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 12.5,
+    fontFamily: "Nunito_800ExtraBold",
     letterSpacing: 0.2,
   },
   reciterName: {
-    color: theme.colors.textMuted,
-    fontSize: 11,
-    fontWeight: "500",
+    color: "#5F7E7C",
+    fontSize: 11.5,
+    fontFamily: "Nunito_700Bold",
     marginTop: 1,
   },
   timeText: {
     color: theme.colors.textMuted,
     fontSize: 10,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     fontVariant: ["tabular-nums"],
   },
   controls: {
@@ -328,17 +336,12 @@ const s = StyleSheet.create({
     gap: 8,
   },
   playBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.primary,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#6EC1E8",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
   },
   playBtnDisabled: {
     opacity: 0.5,
@@ -360,7 +363,7 @@ const s = StyleSheet.create({
     color: theme.colors.error,
     marginTop: 6,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     textAlign: "center",
     paddingHorizontal: 16,
   },

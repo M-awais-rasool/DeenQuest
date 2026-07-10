@@ -66,11 +66,10 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   text: {
-    fontFamily: FONTS.body,
     fontSize: 15,
     lineHeight: 22,
     color: COLORS.text,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
   // ─── Left-pointing tail ───
   tailLeft: {

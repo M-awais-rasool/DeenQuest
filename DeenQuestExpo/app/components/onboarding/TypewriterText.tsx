@@ -101,15 +101,14 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   base: {
-    fontFamily: FONTS.body,
     fontSize: 15,
     lineHeight: 22,
     color: COLORS.text,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
   cursor: {
     color: COLORS.primary,
-    fontWeight: "400",
+    fontFamily: "Nunito_400Regular",
     marginLeft: 1,
   },
 });

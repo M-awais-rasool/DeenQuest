@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BookOpen, Lock, CircleCheckBig } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
+import { hexToRgba } from "../map/constants";
 import type { PathSection } from "./types";
 
 interface SectionHeaderProps {
@@ -50,16 +51,18 @@ export const SectionHeader = memo(function SectionHeader({
   return (
     <View style={s.wrap}>
       <LinearGradient
-        colors={[colors.base, colors.dark]}
+        colors={[colors.deep, theme.colors.surfaceLow]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={s.bar}
+        style={[s.bar, { borderColor: hexToRgba(colors.base, 0.4) }]}
       >
         <View style={s.textBlock}>
           <View style={s.labelRow}>
-            <Text style={s.label}>SECTION {number}</Text>
+            <Text style={[s.label, { color: colors.accent }]}>
+              SECTION {number}
+            </Text>
             <View style={s.labelDot} />
-            <Text style={s.label}>
+            <Text style={[s.label, { color: colors.accent }]}>
               {isComplete ? "COMPLETE" : `${completed} / ${total}`}
             </Text>
           </View>
@@ -106,21 +109,24 @@ export const SectionHeader = memo(function SectionHeader({
 const s = StyleSheet.create({
   wrap: {
     backgroundColor: theme.colors.background,
-    paddingTop: 10,
+    paddingTop: 8,
     paddingBottom: 6,
+    paddingHorizontal: 16,
   },
   bar: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
-    height: 96,
+    paddingVertical: 14,
+    minHeight: 84,
     gap: 14,
+    borderRadius: 18,
+    borderWidth: 1,
   },
   lockedBar: {
     backgroundColor: theme.colors.surface,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: theme.colors.outline + "40",
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
   },
   textBlock: {
     flex: 1,
@@ -134,7 +140,7 @@ const s = StyleSheet.create({
   label: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 10,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 1.5,
   },
   labelDot: {
@@ -146,7 +152,7 @@ const s = StyleSheet.create({
   title: {
     color: theme.colors.white,
     fontSize: 19,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 0.2,
   },
   sub: {
@@ -179,7 +185,7 @@ const s = StyleSheet.create({
   lockedLabel: {
     color: theme.colors.textMuted,
     fontSize: 10,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 1.5,
     marginBottom: 3,
     opacity: 0.7,
@@ -187,7 +193,7 @@ const s = StyleSheet.create({
   lockedTitle: {
     color: theme.colors.textMuted,
     fontSize: 18,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
   },
   lockedSub: {
     color: theme.colors.textMuted,

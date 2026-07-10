@@ -12,11 +12,11 @@ export function getNodeOffset(index: number): number {
   return Math.sin((index * Math.PI) / 3) * amplitude;
 }
 
-export const LEVEL_GREEN = "#43A047"; // Main popup bg, node border
-export const LEVEL_GREEN_LIGHT = "#66BB6A"; // 3D node top
-export const LEVEL_GREEN_DARK = "#2E7D32"; // 3D node bottom shadow
-export const LEVEL_GREEN_DEEP = "#1B5E20"; // Button text on white
-export const LEVEL_GREEN_GLOW = "rgba(67, 160, 71, 0.15)"; // Subtle node glow
+export const LEVEL_GREEN = "#2CC9B5"; // Main popup bg, node border
+export const LEVEL_GREEN_LIGHT = "#2CC9B5"; // 3D node top
+export const LEVEL_GREEN_DARK = "#1B9484"; // 3D node bottom shadow
+export const LEVEL_GREEN_DEEP = "#06302B"; // Button text on white
+export const LEVEL_GREEN_GLOW = "rgba(44, 201, 181, 0.15)"; // Subtle node glow
 
 /**
  * A full shade set that gives one section its own color identity. Every
@@ -78,11 +78,23 @@ export function nodeVisual(
   colors: SectionColors = DEFAULT_SECTION_COLORS,
 ): NodeVisual {
   if (status === "locked") return LOCKED_VISUAL;
+  // The active node is always gold with a pulsing glow (mockup C1), no matter
+  // which section hue surrounds it — it's the "you are here" marker.
+  if (status === "in_progress") {
+    return {
+      topBg: "#EFB65A",
+      bottomBg: "#C98F35",
+      borderColor: "#EFB65A",
+      iconColor: "#3A2A08",
+      baseColor: "rgba(239, 182, 90, 0.2)",
+      progressColor: theme.colors.secondary,
+    };
+  }
   return {
     topBg: colors.light,
     bottomBg: colors.dark,
     borderColor: colors.base,
-    iconColor: theme.colors.white,
+    iconColor: colors.deep,
     baseColor: colors.glow,
     progressColor: theme.colors.secondary,
   };

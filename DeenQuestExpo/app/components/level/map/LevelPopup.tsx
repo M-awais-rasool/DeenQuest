@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   title: {
     color: theme.colors.white,
     fontSize: 18,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     textAlign: "center",
     marginBottom: 14,
   },
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   buttonText: {
     // color is set inline from the section color
     fontSize: 15,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 1,
     textTransform: "uppercase",
   },

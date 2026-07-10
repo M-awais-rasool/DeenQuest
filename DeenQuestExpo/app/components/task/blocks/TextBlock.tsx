@@ -56,13 +56,13 @@ const s = StyleSheet.create({
   },
   bulletText: {
     color: theme.colors.primary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 14,
   },
   itemText: {
     color: theme.colors.text,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     flex: 1,
   },
 });

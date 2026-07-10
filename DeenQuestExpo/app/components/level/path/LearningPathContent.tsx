@@ -237,7 +237,7 @@ const s = StyleSheet.create({
   footerText: {
     color: theme.colors.textMuted,
     fontSize: 12.5,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
   empty: {
     paddingTop: 80,

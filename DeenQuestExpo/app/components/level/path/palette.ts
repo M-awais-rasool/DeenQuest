@@ -10,59 +10,59 @@ import type { SectionColors } from "../map/constants";
  * users already know.
  */
 export const SECTION_PALETTE: SectionColors[] = [
-  // Green
+  // Teal — the new-brand primary; the first section keeps the brand look.
   {
-    accent: "#43A047",
-    light: "#66BB6A",
-    base: "#43A047",
-    dark: "#2E7D32",
-    deep: "#1B5E20",
-    glow: "rgba(67, 160, 71, 0.15)",
+    accent: "#2CC9B5",
+    light: "#2CC9B5",
+    base: "#2CC9B5",
+    dark: "#1B9484",
+    deep: "#06302B",
+    glow: "rgba(44, 201, 181, 0.15)",
   },
   // Violet
   {
-    accent: "#7E57C2",
-    light: "#9575CD",
-    base: "#7E57C2",
-    dark: "#5E35B1",
-    deep: "#4527A0",
-    glow: "rgba(126, 87, 194, 0.15)",
+    accent: "#A78BFA",
+    light: "#A78BFA",
+    base: "#A78BFA",
+    dark: "#7B5BD6",
+    deep: "#241A45",
+    glow: "rgba(167, 139, 250, 0.15)",
   },
   // Sky
   {
-    accent: "#29B6F6",
-    light: "#4FC3F7",
-    base: "#29B6F6",
-    dark: "#0288D1",
-    deep: "#01579B",
-    glow: "rgba(41, 182, 246, 0.15)",
+    accent: "#6EC1E8",
+    light: "#6EC1E8",
+    base: "#6EC1E8",
+    dark: "#3E8AB3",
+    deep: "#0E2A3A",
+    glow: "rgba(110, 193, 232, 0.15)",
   },
-  // Amber
+  // Gold
   {
-    accent: "#FB8C00",
-    light: "#FFA726",
-    base: "#FB8C00",
-    dark: "#EF6C00",
-    deep: "#E65100",
-    glow: "rgba(251, 140, 0, 0.15)",
+    accent: "#EFB65A",
+    light: "#EFB65A",
+    base: "#EFB65A",
+    dark: "#C98F35",
+    deep: "#3A2A08",
+    glow: "rgba(239, 182, 90, 0.15)",
   },
   // Rose
   {
-    accent: "#EC407A",
-    light: "#F06292",
-    base: "#EC407A",
-    dark: "#D81B60",
-    deep: "#AD1457",
-    glow: "rgba(236, 64, 122, 0.15)",
+    accent: "#F27FB2",
+    light: "#F27FB2",
+    base: "#F27FB2",
+    dark: "#C25E8E",
+    deep: "#3A1024",
+    glow: "rgba(242, 127, 178, 0.15)",
   },
-  // Teal
+  // Deep teal
   {
-    accent: "#26A69A",
-    light: "#4DB6AC",
-    base: "#26A69A",
-    dark: "#00897B",
-    deep: "#00695C",
-    glow: "rgba(38, 166, 154, 0.15)",
+    accent: "#5EE0CE",
+    light: "#5EE0CE",
+    base: "#5EE0CE",
+    dark: "#2CC9B5",
+    deep: "#06302B",
+    glow: "rgba(94, 224, 206, 0.15)",
   },
 ];
 

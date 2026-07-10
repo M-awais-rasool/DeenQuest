@@ -86,7 +86,7 @@ const s = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderColor: theme.colors.primary,
   },
-  check: { color: theme.colors.onPrimary, fontWeight: "900", fontSize: 14 },
-  label: { color: theme.colors.text, fontSize: 16, fontWeight: "600" },
+  check: { color: theme.colors.onPrimary, fontFamily: "Nunito_900Black", fontSize: 14 },
+  label: { color: theme.colors.text, fontSize: 16, fontFamily: "Nunito_600SemiBold" },
   labelDone: { textDecorationLine: "line-through", opacity: 0.7 },
 });

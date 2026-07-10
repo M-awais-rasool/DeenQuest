@@ -45,7 +45,7 @@ export function OptionRow({
     <Animated.View style={animStyle}>
       <TactilePressable
         edgeColor={edgeColor}
-        radius={14}
+        radius={18}
         haptic="none"
         disabled={disabled}
         dimWhenDisabled={false}
@@ -86,9 +86,9 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: theme.colors.surface,
-    borderRadius: 14,
+    borderRadius: 18,
     padding: 16,
-    borderWidth: 2,
+    borderWidth: 2.5,
     borderColor: theme.colors.outline,
   },
   optionCorrect: {
@@ -106,7 +106,7 @@ const s = StyleSheet.create({
   optionText: {
     fontSize: 16,
     color: theme.colors.text,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
     flex: 1,
   },
 });

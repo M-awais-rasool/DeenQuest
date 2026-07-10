@@ -91,22 +91,22 @@ const STATE_PALETTE: Record<
   { bg: string; fg: string; border: string }
 > = {
   idle: {
-    bg: theme.colors.surfaceHigh,
+    bg: theme.colors.surface,
     fg: theme.colors.text,
     border: theme.colors.outline,
   },
   selected: {
-    bg: theme.colors.primary12,
-    fg: theme.colors.primary,
+    bg: theme.colors.primaryContainer,
+    fg: "#5EE0CE",
     border: theme.colors.primary,
   },
   correct: {
-    bg: theme.colors.primary12,
-    fg: theme.colors.primary,
+    bg: theme.colors.primaryContainer,
+    fg: "#5EE0CE",
     border: theme.colors.primary,
   },
   wrong: {
-    bg: theme.colors.errorSoft10,
+    bg: "#3A1E24",
     fg: theme.colors.error,
     border: theme.colors.error,
   },
@@ -119,8 +119,8 @@ const STATE_PALETTE: Record<
 
 const s = StyleSheet.create({
   chip: {
-    borderRadius: 14,
-    borderWidth: 2,
+    borderRadius: 20,
+    borderWidth: 2.5,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -132,7 +132,7 @@ const s = StyleSheet.create({
   },
   text: {
     writingDirection: "rtl",
-    fontWeight: "400",
+    fontFamily: "Nunito_400Regular",
     lineHeight: undefined,
   },
 });

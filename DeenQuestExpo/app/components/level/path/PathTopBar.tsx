@@ -41,15 +41,15 @@ export const PathTopBar = memo(function PathTopBar({
           <Pressable
             ref={streakRef}
             onPress={handleStreakPress}
-            style={({ pressed }) => [s.stat, pressed && s.statPressed]}
+            style={({ pressed }) => [s.stat, s.streakChip, pressed && s.statPressed]}
             hitSlop={6}
           >
             <Flame
               size={15}
-              color={theme.colors.warning}
-              fill={theme.colors.warning}
+              color={theme.colors.secondary}
+              fill={theme.colors.secondary}
             />
-            <Text style={s.statValue}>{streak}</Text>
+            <Text style={[s.statValue, s.streakValue]}>{streak}</Text>
           </Pressable>
           <Stat
             icon={
@@ -97,13 +97,13 @@ const s = StyleSheet.create({
   label: {
     color: theme.colors.primary,
     fontSize: 10,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 2,
   },
   title: {
     color: theme.colors.text,
     fontSize: 22,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 0.2,
     marginTop: 2,
   },
@@ -114,20 +114,28 @@ const s = StyleSheet.create({
   stat: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
     backgroundColor: theme.colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: theme.colors.outline + "40",
+    borderColor: theme.colors.outline,
+  },
+  streakChip: {
+    backgroundColor: "#3A2F16",
+    borderWidth: 1.5,
+    borderColor: theme.colors.secondary,
   },
   statPressed: {
     opacity: 0.6,
   },
   statValue: {
     color: theme.colors.text,
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: 14,
+    fontFamily: "Nunito_900Black",
+  },
+  streakValue: {
+    color: theme.colors.secondary,
   },
 });

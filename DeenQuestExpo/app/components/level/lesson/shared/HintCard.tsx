@@ -53,7 +53,7 @@ const s = StyleSheet.create({
     fontSize: 13.5,
     lineHeight: 19,
     color: theme.colors.text,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
   arabic: {
     fontSize: 20,

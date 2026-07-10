@@ -132,7 +132,7 @@ export function ProfileScreen({ navigation }: Props) {
             haptic="light"
             onPress={() => navigation.navigate("Settings")}
           >
-            <Settings size={17} color="#9aa39a" />
+            <Settings size={17} color="#8DA5A3" />
           </TactilePressable>
         </View>
 
@@ -177,7 +177,7 @@ export function ProfileScreen({ navigation }: Props) {
             <TactilePressable
               style={styles.btnFlex}
               faceStyle={styles.shareBtn}
-              edgeColor="#2E7D32"
+              edgeColor="#1B9484"
               faceUnderlayColor={dq.green}
               radius={13}
               depth={3}
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  screenTitle: { fontSize: 26, fontWeight: "900", color: dq.white },
+  screenTitle: { fontSize: 26, fontFamily: "Nunito_900Black", color: dq.white },
   gear: {
     width: 34,
     height: 34,
@@ -332,8 +332,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { fontSize: 26, fontWeight: "900", color: dq.onGreen },
-  name: { fontSize: 20, fontWeight: "900", color: dq.white },
+  avatarText: { fontSize: 26, fontFamily: "Nunito_900Black", color: dq.onGreen },
+  name: { fontSize: 20, fontFamily: "Nunito_900Black", color: dq.white },
   levelPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 99,
   },
-  levelPillText: { fontSize: 11, fontWeight: "800", color: dq.gold },
+  levelPillText: { fontSize: 11, fontFamily: "Nunito_800ExtraBold", color: dq.gold },
 
   btnRow: { flexDirection: "row", gap: 10 },
   btnFlex: { flex: 1 },
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
   },
-  editText: { fontSize: 13, fontWeight: "800", color: dq.text },
+  editText: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", color: dq.text },
   shareBtn: {
     height: 42,
     borderRadius: 13,
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
   },
-  shareText: { fontSize: 13, fontWeight: "800", color: dq.onGreen },
+  shareText: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", color: dq.onGreen },
 
   // stats
   statsGrid: { flexDirection: "row", gap: 10 },
@@ -383,8 +383,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 9,
   },
-  statValue: { fontSize: 20, fontWeight: "900", color: dq.white, lineHeight: 20 },
-  statLabel: { fontSize: 11, fontWeight: "600", color: dq.muted },
+  statValue: { fontSize: 20, fontFamily: "Nunito_900Black", color: dq.white, lineHeight: 20 },
+  statLabel: { fontSize: 11, fontFamily: "Nunito_600SemiBold", color: dq.muted },
 
   // streak history
   streakCard: {
@@ -400,8 +400,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  streakTitle: { fontSize: 14, fontWeight: "800", color: dq.text },
-  streakMeta: { fontSize: 12, fontWeight: "700", color: dq.muted },
+  streakTitle: { fontSize: 14, fontFamily: "Nunito_800ExtraBold", color: dq.text },
+  streakMeta: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.muted },
   squareRow: { flexDirection: "row", gap: 4 },
   square: { flex: 1, aspectRatio: 1, borderRadius: 6 },
   squareActive: { backgroundColor: dq.green },
@@ -426,9 +426,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  vaultTitle: { fontSize: 14, fontWeight: "800", color: dq.text },
+  vaultTitle: { fontSize: 14, fontFamily: "Nunito_800ExtraBold", color: dq.text },
   vaultView: { flexDirection: "row", alignItems: "center", gap: 3 },
-  vaultViewText: { fontSize: 12, fontWeight: "700", color: dq.green },
+  vaultViewText: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.green },
   vaultRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -447,6 +447,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  vaultExtraText: { fontSize: 11, fontWeight: "800", color: dq.muted },
-  vaultCount: { fontSize: 12, fontWeight: "700", color: dq.muted },
+  vaultExtraText: { fontSize: 11, fontFamily: "Nunito_800ExtraBold", color: dq.muted },
+  vaultCount: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.muted },
 });

@@ -17,7 +17,7 @@ export const s = StyleSheet.create({
   backBtnText: {
     color: theme.colors.primary,
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
   },
   phaseHeader: {
     paddingHorizontal: 20,
@@ -32,7 +32,7 @@ export const s = StyleSheet.create({
   phaseTitle: {
     color: theme.colors.text,
     fontSize: 20,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     letterSpacing: 0.3,
   },
   phaseSubtitle: {
@@ -58,7 +58,7 @@ export const s = StyleSheet.create({
   summaryValue: {
     color: theme.colors.text,
     fontSize: 18,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
   },
   summaryLabel: {
     color: theme.colors.textMuted,
@@ -146,7 +146,7 @@ export const s = StyleSheet.create({
   nodeLabel: {
     color: theme.colors.text,
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     marginTop: 8,
     textAlign: "center",
     maxWidth: NODE_SIZE + 60,
@@ -165,7 +165,7 @@ export const s = StyleSheet.create({
   progressText: {
     color: theme.colors.primary,
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
   },
   treasureBadge: {
     position: "absolute",

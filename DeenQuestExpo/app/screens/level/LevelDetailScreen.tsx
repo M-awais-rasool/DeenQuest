@@ -46,13 +46,13 @@ type Route = RouteProp<AppStackParamList, "LevelDetail">;
 type TypeMeta = { label: string; color: string; tint: string; onColor: string; Icon: LucideIcon };
 
 const LESSON_TYPE_META: Record<LessonType, TypeMeta> = {
-  qaida: { label: "LETTERS", color: "#88D982", tint: "rgba(136,217,130,0.14)", onColor: "#13351a", Icon: BookOpen },
-  pronunciation: { label: "PRONUNCIATION", color: "#E5A77A", tint: "rgba(229,167,122,0.14)", onColor: "#3a1f0c", Icon: AudioLines },
-  hadith: { label: "HADITH", color: "#FFDB3C", tint: "rgba(255,219,60,0.16)", onColor: "#3a2f06", Icon: ScrollText },
-  dua: { label: "DUA", color: "#7FC8C0", tint: "rgba(127,200,192,0.14)", onColor: "#0e2b28", Icon: MoonStar },
-  quiz: { label: "QUIZ", color: "#B59CE0", tint: "rgba(181,156,224,0.16)", onColor: "#241640", Icon: ListChecks },
-  manners: { label: "MANNERS", color: "#E58FA8", tint: "rgba(229,143,168,0.16)", onColor: "#3a1622", Icon: Heart },
-  revision: { label: "REVISION", color: "#8FB3E0", tint: "rgba(143,179,224,0.16)", onColor: "#16263a", Icon: RotateCw },
+  qaida: { label: "LETTERS", color: "#5EE0CE", tint: "#123B34", onColor: "#06302B", Icon: BookOpen },
+  pronunciation: { label: "PRONUNCIATION", color: "#F79A59", tint: "#3D2A14", onColor: "#3A2A08", Icon: AudioLines },
+  hadith: { label: "HADITH", color: "#EFB65A", tint: "#3A2F16", onColor: "#3A2A08", Icon: ScrollText },
+  dua: { label: "DUA", color: "#2CC9B5", tint: "#123B34", onColor: "#06302B", Icon: MoonStar },
+  quiz: { label: "QUIZ", color: "#C4B2FF", tint: "#2A2440", onColor: "#241A45", Icon: ListChecks },
+  manners: { label: "MANNERS", color: "#F27FB2", tint: "#3A2030", onColor: "#3A1024", Icon: Heart },
+  revision: { label: "REVISION", color: "#6EC1E8", tint: "#16303E", onColor: "#0E2A3A", Icon: RotateCw },
 };
 
 const DEFAULT_META: TypeMeta = {
@@ -154,36 +154,39 @@ export function LevelDetailScreen() {
           contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* ── Header row ──────────────────────────────────────── */}
+          <View style={s.headerRow}>
+            <AnimatedPressable
+              onPress={() => navigation.goBack()}
+              style={s.backBtn}
+              haptic="light"
+            >
+              <ArrowLeft size={18} color={dq.text} strokeWidth={2.5} />
+            </AnimatedPressable>
+          </View>
+
           {/* ── Hero ─────────────────────────────────────────────── */}
           <LinearGradient
-            colors={["#9be08f", "#4f9e54"]}
-            start={{ x: 0.1, y: 0 }}
-            end={{ x: 0.9, y: 1 }}
+            colors={["#123B34", "#16272B"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
             style={s.hero}
           >
-            <View style={s.heroTopRow}>
-              <AnimatedPressable
-                onPress={() => navigation.goBack()}
-                style={s.backBtn}
-                haptic="light"
-              >
-                <ArrowLeft size={19} color="#0e2a12" />
-              </AnimatedPressable>
-              <View style={s.diffPill}>
-                <DiffIcon size={13} color="#0e2a12" />
-                <Text style={s.diffText}>{diff.label}</Text>
-              </View>
-            </View>
-
             <FadeInView delay={60}>
-              <Text style={s.levelBadge}>LEVEL {courseLevel}</Text>
-              <Text style={s.levelTitle}>{level.title}</Text>
-              <Text style={s.levelTheme}>{level.theme}</Text>
-
-              <View style={s.goalPill}>
-                <Star size={14} color="#0e2a12" fill="#0e2a12" />
-                <Text style={s.goalText}>Earn {level.xp_reward} XP to complete</Text>
+              <View style={s.heroPills}>
+                <View style={s.diffPill}>
+                  <DiffIcon size={13} color="#5EE0CE" />
+                  <Text style={s.diffText}>{diff.label}</Text>
+                </View>
+                <View style={s.goalPill}>
+                  <Star size={13} color={dq.gold} fill={dq.gold} />
+                  <Text style={s.goalText}>+{level.xp_reward} XP</Text>
+                </View>
               </View>
+              <Text style={s.levelTitle}>
+                Level {courseLevel} · {level.title}
+              </Text>
+              <Text style={s.levelTheme}>{level.theme}</Text>
             </FadeInView>
           </LinearGradient>
 
@@ -232,20 +235,17 @@ export function LevelDetailScreen() {
                         <View
                           style={[
                             s.node,
-                            status === "done" && { backgroundColor: meta.color },
-                            status === "current" && {
-                              backgroundColor: meta.tint,
-                              borderColor: meta.color,
-                              shadowColor: meta.color,
-                            },
-                            status === "current" && s.nodeGlow,
-                            locked && { backgroundColor: meta.tint },
+                            status === "done" && s.nodeDone,
+                            status === "current" && s.nodeCurrent,
+                            locked && s.nodeLocked,
                           ]}
                         >
                           {status === "done" ? (
-                            <Check size={19} color={meta.onColor} strokeWidth={3} />
+                            <Check size={19} color={dq.onGreen} strokeWidth={3.5} />
+                          ) : status === "current" ? (
+                            <Play size={17} color="#3A2A08" fill="#3A2A08" />
                           ) : (
-                            <TypeIcon size={19} color={meta.color} />
+                            <Lock size={17} color={dq.faint} />
                           )}
                         </View>
 
@@ -253,19 +253,18 @@ export function LevelDetailScreen() {
                         <View
                           style={[
                             s.card,
-                            status === "current" && {
-                              borderColor: hexToRgba(meta.color, 0.3),
-                              shadowColor: meta.color,
-                              shadowOpacity: 0.12,
-                              shadowRadius: 14,
-                              shadowOffset: { width: 0, height: 0 },
-                            },
+                            status === "current" && s.cardCurrent,
+                            locked && s.cardLocked,
                           ]}
                         >
                           <View style={s.cardBody}>
-                            <Text style={[s.typeLabel, { color: meta.color }]}>
-                              {meta.label}
-                            </Text>
+                            <View
+                              style={[s.typeChip, { backgroundColor: meta.tint }]}
+                            >
+                              <Text style={[s.typeLabel, { color: meta.color }]}>
+                                {meta.label}
+                              </Text>
+                            </View>
                             <Text
                               style={[s.lessonTitle, status === "current" && s.lessonTitleActive]}
                               numberOfLines={1}
@@ -287,11 +286,14 @@ export function LevelDetailScreen() {
                             </Text>
                           </View>
 
-                          {status === "current" ? (
-                            <Play size={18} color={meta.color} fill={meta.color} />
-                          ) : status === "locked" ? (
-                            <Lock size={16} color={dq.chevron} />
-                          ) : null}
+                          <Text
+                            style={[
+                              s.xpTag,
+                              status === "current" && { color: dq.gold },
+                            ]}
+                          >
+                            +{lessonXp}
+                          </Text>
                         </View>
                       </AnimatedPressable>
                     </FadeInView>
@@ -301,35 +303,39 @@ export function LevelDetailScreen() {
                 {/* mini-game */}
                 <FadeInView delay={total * 55} style={s.row}>
                   <AnimatedPressable
-                    style={s.rowPress}
+                    style={[s.rowPress, !allLessonsDone && { opacity: 0.6 }]}
                     haptic="light"
                     onPress={startMiniGame}
                     disabled={!allLessonsDone}
                   >
                     <LinearGradient
-                      colors={[dq.badgeGoldFrom, dq.badgeGoldTo]}
-                      start={{ x: 0.32, y: 0.28 }}
-                      end={{ x: 1, y: 1 }}
-                      style={[s.node, s.nodeGame, !allLessonsDone && { opacity: 0.5 }]}
+                      colors={["#2A2440", "#1C1636"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 0.8, y: 1 }}
+                      style={[s.node, s.nodeGame]}
                     >
-                      <Gamepad2 size={20} color={dq.onBadgeGold} />
+                      <Gamepad2 size={20} color="#A78BFA" />
                     </LinearGradient>
 
                     <LinearGradient
-                      colors={["rgba(255,219,60,0.12)", "rgba(255,219,60,0.03)"]}
+                      colors={["#1C1636", "#16272B"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      style={[s.card, s.cardGame, !allLessonsDone && { opacity: 0.6 }]}
+                      style={[s.card, s.cardGame]}
                     >
                       <View style={s.cardBody}>
-                        <Text style={s.gameLabel}>MINI-GAME</Text>
+                        <Text style={s.gameLabel}>MINI-GAME FINALE</Text>
                         <Text style={s.lessonTitleActive} numberOfLines={1}>
                           {miniGameTitle}
                         </Text>
-                        <Text style={s.gameSub}>Bonus reward</Text>
+                        <Text style={s.gameSub}>
+                          {allLessonsDone
+                            ? "Bonus reward"
+                            : "Unlocks when all lessons are done"}
+                        </Text>
                       </View>
                       {allLessonsDone ? (
-                        <ChevronRight size={18} color={dq.gold} />
+                        <ChevronRight size={18} color="#A78BFA" />
                       ) : (
                         <Lock size={16} color={dq.chevron} />
                       )}
@@ -343,16 +349,16 @@ export function LevelDetailScreen() {
 
         {/* ── Sticky CTA ─────────────────────────────────────────── */}
         <LinearGradient
-          colors={["rgba(22,22,22,0)", dq.screen]}
+          colors={["rgba(11,21,23,0)", dq.screen]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 0.4 }}
           style={[s.footer, { paddingBottom: Math.max(insets.bottom, 10) + 8 }]}
         >
           <TactilePressable
-            edgeColor="#2E7D32"
+            edgeColor={dq.greenDark}
             faceUnderlayColor={dq.green}
-            depth={4}
-            radius={16}
+            depth={5}
+            radius={18}
             haptic="medium"
             faceStyle={s.cta}
             onPress={ctaAction}
@@ -380,71 +386,78 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: dq.screen },
   scrollContent: { paddingBottom: 120 },
 
-  // Hero
-  hero: {
-    paddingTop: 8,
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-  },
-  heroTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 18,
+  // Header
+  headerRow: {
+    paddingHorizontal: 22,
+    paddingTop: 14,
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(14,42,18,0.16)",
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: dq.card,
+    borderWidth: 1,
+    borderColor: dq.cardBorder,
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  // Hero
+  hero: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    padding: 22,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#1F5148",
+  },
+  heroPills: {
+    flexDirection: "row",
+    gap: 8,
   },
   diffPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    backgroundColor: "rgba(255,255,255,0.3)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 99,
+    gap: 5,
+    backgroundColor: "#123B34",
+    borderWidth: 1,
+    borderColor: "#2CC9B5",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   diffText: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-    color: "#0e2a12",
-  },
-  levelBadge: {
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 1.9,
-    color: "rgba(14,42,18,0.7)",
-  },
-  levelTitle: {
-    fontSize: 27,
-    fontWeight: "900",
-    color: "#0e2a12",
-    marginTop: 5,
-  },
-  levelTheme: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "rgba(14,42,18,0.82)",
-    marginTop: 4,
+    fontSize: 10.5,
+    fontFamily: "Nunito_900Black",
+    letterSpacing: 0.8,
+    color: "#5EE0CE",
   },
   goalPill: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
-    gap: 7,
-    marginTop: 16,
-    backgroundColor: "rgba(14,42,18,0.14)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 99,
+    gap: 5,
+    backgroundColor: "#3A2F16",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
-  goalText: { fontSize: 12, fontWeight: "800", color: "#0e2a12" },
+  goalText: {
+    fontSize: 10.5,
+    fontFamily: "Nunito_900Black",
+    color: dq.gold,
+  },
+  levelTitle: {
+    fontSize: 24,
+    fontFamily: "Nunito_900Black",
+    color: dq.text,
+    marginTop: 12,
+  },
+  levelTheme: {
+    fontSize: 13.5,
+    fontFamily: "Nunito_600SemiBold",
+    color: dq.muted,
+    marginTop: 4,
+  },
 
   // Body
   body: { paddingHorizontal: 20, paddingTop: 18, gap: 20 },
@@ -456,18 +469,18 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  progressLabel: { fontSize: 13, fontWeight: "800", color: dq.text },
-  progressCount: { fontSize: 12, fontWeight: "700", color: dq.muted },
+  progressLabel: { fontSize: 13, fontFamily: "Nunito_800ExtraBold", color: dq.text },
+  progressCount: { fontSize: 12, fontFamily: "Nunito_700Bold", color: dq.muted },
   progressTrack: {
     height: 10,
-    borderRadius: 99,
-    backgroundColor: dq.trackWhite06,
+    borderRadius: 6,
+    backgroundColor: dq.screen,
     overflow: "hidden",
   },
-  progressFill: { height: "100%", borderRadius: 99 },
+  progressFill: { height: "100%", borderRadius: 6 },
 
   // Path
-  pathHeading: { fontSize: 17, fontWeight: "800", color: dq.white, marginBottom: 14 },
+  pathHeading: { fontSize: 17, fontFamily: "Nunito_800ExtraBold", color: dq.white, marginBottom: 14 },
   path: { position: "relative", gap: 12 },
   pathLine: {
     position: "absolute",
@@ -489,21 +502,30 @@ const s = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 3,
-    borderColor: dq.screen,
     zIndex: 1,
   },
-  nodeGlow: {
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
+  nodeDone: {
+    backgroundColor: dq.green,
+  },
+  nodeCurrent: {
+    backgroundColor: dq.gold,
+    shadowColor: dq.goldDark,
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  nodeLocked: {
+    backgroundColor: dq.lockFill,
+    borderWidth: 2.5,
+    borderColor: dq.lockBorder,
   },
   nodeGame: {
-    borderColor: dq.screen,
-    shadowColor: dq.gold,
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: "#3B2F6B",
   },
   card: {
     flex: 1,
@@ -511,23 +533,43 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     backgroundColor: dq.card,
-    borderRadius: 18,
+    borderRadius: 16,
     paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingHorizontal: 15,
     borderWidth: 1,
     borderColor: dq.cardBorder,
   },
-  cardGame: {
-    borderColor: dq.gold25,
+  cardCurrent: {
+    borderWidth: 1.5,
+    borderColor: dq.gold,
   },
-  cardBody: { flex: 1, gap: 2 },
-  typeLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 0.45 },
-  lessonTitle: { fontSize: 14, fontWeight: "800", color: dq.text },
-  lessonTitleActive: { fontSize: 14, fontWeight: "800", color: dq.white },
-  lessonSub: { fontSize: 11, fontWeight: "700" },
-  lessonSubMuted: { fontSize: 11, fontWeight: "600", color: dq.muted },
-  gameLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 0.45, color: dq.gold },
-  gameSub: { fontSize: 11, fontWeight: "700", color: "#a99a6a" },
+  cardLocked: {
+    backgroundColor: dq.lockFill,
+    borderColor: dq.lockBorder,
+    opacity: 0.75,
+  },
+  cardGame: {
+    borderColor: "#3B2F6B",
+  },
+  cardBody: { flex: 1, gap: 5, alignItems: "flex-start" },
+  typeChip: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  typeLabel: { fontSize: 10, fontFamily: "Nunito_900Black", letterSpacing: 0.8 },
+  lessonTitle: { fontSize: 14.5, fontFamily: "Nunito_800ExtraBold", color: dq.text },
+  lessonTitleActive: { fontSize: 14.5, fontFamily: "Nunito_800ExtraBold", color: dq.text },
+  lessonSub: { fontSize: 11, fontFamily: "Nunito_700Bold" },
+  lessonSubMuted: { fontSize: 11, fontFamily: "Nunito_600SemiBold", color: dq.muted },
+  xpTag: { fontSize: 11, fontFamily: "Nunito_800ExtraBold", color: dq.faint },
+  gameLabel: {
+    fontSize: 10,
+    fontFamily: "Nunito_900Black",
+    letterSpacing: 1,
+    color: "#A78BFA",
+  },
+  gameSub: { fontSize: 11.5, fontFamily: "Nunito_600SemiBold", color: dq.faint },
 
   // Sticky CTA
   footer: {
@@ -539,17 +581,13 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
   },
   cta: {
-    height: 54,
-    borderRadius: 16,
+    height: 56,
+    borderRadius: 18,
     backgroundColor: dq.green,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    shadowColor: dq.green,
-    shadowOpacity: 0.22,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 8 },
   },
-  ctaText: { fontSize: 15, fontWeight: "900", letterSpacing: 0.6, color: dq.onGreen },
+  ctaText: { fontSize: 16, fontFamily: "Nunito_900Black", letterSpacing: 1.2, color: dq.onGreen },
 });

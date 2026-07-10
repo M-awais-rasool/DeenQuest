@@ -64,13 +64,13 @@ const s = StyleSheet.create({
   },
   surah: {
     fontSize: 22,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     color: theme.colors.text,
   },
   duration: {
     fontSize: 14,
     color: theme.colors.textMuted,
-    fontWeight: "600",
+    fontFamily: "Nunito_600SemiBold",
   },
   openButtonWrap: {
     marginTop: 16,
@@ -88,7 +88,7 @@ const s = StyleSheet.create({
   openButtonText: {
     color: theme.colors.onPrimary,
     fontSize: 12,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },

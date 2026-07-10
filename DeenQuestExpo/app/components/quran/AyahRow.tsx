@@ -68,7 +68,7 @@ export const AyahRow = memo(
 const s = StyleSheet.create({
   container: {
     marginBottom: 4,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: "transparent",
     backgroundColor: "transparent",
@@ -76,8 +76,8 @@ const s = StyleSheet.create({
     paddingVertical: 4,
   },
   containerHighlighted: {
-    borderColor: theme.colors.primary30,
-    backgroundColor: theme.colors.primary08,
+    borderColor: "#24505F",
+    backgroundColor: "rgba(18, 48, 58, 0.4)",
   },
   ayahBlock: {
     marginBottom: 4,
@@ -90,7 +90,7 @@ const s = StyleSheet.create({
     color: theme.colors.text,
   },
   ayahTextHighlighted: {
-    color: theme.colors.white,
+    color: "#D9F0FC",
   },
   ayahTextContent: {
     fontSize: 38,
@@ -102,7 +102,7 @@ const s = StyleSheet.create({
     color: theme.colors.textMuted,
   },
   ayahMarkerHighlighted: {
-    color: theme.colors.secondary,
+    color: "#6EC1E8",
   },
   translationBlock: {
     marginBottom: 18,
@@ -113,13 +113,12 @@ const s = StyleSheet.create({
   },
   translationText: {
     color: theme.colors.textMuted,
-    fontSize: 14,
-    lineHeight: 24,
-    fontWeight: "500",
-    fontStyle: "italic",
+    fontSize: 13.5,
+    lineHeight: 22,
+    fontFamily: "Nunito_600SemiBold",
     textAlign: "center",
   },
   translationTextHighlighted: {
-    color: theme.colors.text,
+    color: "#9AD5F2",
   },
 });

@@ -379,16 +379,14 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logo: {
-    fontFamily: FONTS.headline,
     fontSize: 20,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.primary,
     letterSpacing: -1,
   },
   skipText: {
-    fontFamily: FONTS.headline,
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     color: COLORS.onSurface,
   },
   // Clipping container for all slides
@@ -443,9 +441,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   badgeText: {
-    fontFamily: FONTS.headline,
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.onSecondaryFixed,
   },
   contentContainer: {
@@ -455,9 +452,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontFamily: FONTS.headline,
     fontSize: 34,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.onSurface,
     textAlign: "center",
     lineHeight: 40,
@@ -468,9 +464,8 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   description: {
-    fontFamily: FONTS.body,
     fontSize: 16,
-    fontWeight: "500",
+    fontFamily: "Nunito_500Medium",
     color: COLORS.onSurfaceVariant,
     textAlign: "center",
     lineHeight: 24,
@@ -487,9 +482,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryButtonText: {
-    fontFamily: FONTS.headline,
     fontSize: 18,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.onPrimary,
   },
   // Dots — fixed below the slides
@@ -536,9 +530,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.secondaryContainer + "33",
   },
   streakBadgeText: {
-    fontFamily: FONTS.headline,
     fontSize: 20,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.secondaryContainer,
   },
   levelBadge: {
@@ -560,9 +553,8 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   levelBadgeLabel: {
-    fontFamily: FONTS.headline,
     fontSize: 10,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
     color: COLORS.onSurfaceVariant,
     letterSpacing: 2,
     marginTop: 4,
@@ -610,9 +602,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   goalText: {
-    fontFamily: FONTS.headline,
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: "Nunito_700Bold",
     color: COLORS.onSurface,
     paddingRight: 4,
   },

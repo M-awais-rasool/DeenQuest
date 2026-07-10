@@ -19,30 +19,26 @@ import { LESSON_COMPONENT_MAP } from "../../components/level/lesson";
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "LessonPlayer">;
 
+/** Segmented lesson progress (mock C3): one pill per lesson, filled up to the
+ * current one, with a "5/7" counter on the right. */
 function ProgressBar({ current, total }: { current: number; total: number }) {
-  const progress = total > 0 ? (current + 1) / total : 0;
-  const widthAnim = useRef(new Animated.Value(progress)).current;
-
-  useEffect(() => {
-    Animated.timing(widthAnim, {
-      toValue: progress,
-      duration: 350,
-      useNativeDriver: false,
-    }).start();
-  }, [progress, widthAnim]);
-
-  const animatedWidth = widthAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0%", "100%"],
-  });
-
   return (
     <View style={s.progressBarContainer}>
-      <View style={s.progressBarBg}>
-        <Animated.View style={[s.progressBarFill, { width: animatedWidth }]} />
+      <View style={s.progressSegments}>
+        {Array.from({ length: total }, (_, i) => (
+          <View
+            key={i}
+            style={[
+              s.progressSegment,
+              i <= current
+                ? s.progressSegmentDone
+                : s.progressSegmentPending,
+            ]}
+          />
+        ))}
       </View>
       <Text style={s.progressBarText}>
-        {current + 1} / {total}
+        {current + 1}/{total}
       </Text>
     </View>
   );
@@ -240,25 +236,29 @@ const s = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
-  progressBarBg: {
+  progressSegments: {
     flex: 1,
-    height: 10,
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 5,
-    overflow: "hidden",
+    flexDirection: "row",
+    gap: 5,
   },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: theme.colors.primary,
+  progressSegment: {
+    flex: 1,
+    height: 9,
     borderRadius: 5,
+  },
+  progressSegmentDone: {
+    backgroundColor: theme.colors.primary,
+  },
+  progressSegmentPending: {
+    backgroundColor: theme.colors.surfaceHigh,
   },
   progressBarText: {
     color: theme.colors.textMuted,
     fontSize: 12,
-    fontWeight: "800",
-    minWidth: 36,
+    fontFamily: "Nunito_800ExtraBold",
+    minWidth: 32,
     textAlign: "right",
   },
 
@@ -275,15 +275,16 @@ const s = StyleSheet.create({
   lessonContent: { flex: 1 },
   lessonTitle: {
     color: theme.colors.text,
-    fontSize: 24,
-    fontWeight: "900",
+    fontSize: 22,
+    fontFamily: "Nunito_900Black",
     marginBottom: 6,
   },
   lessonDescription: {
     color: theme.colors.textMuted,
     fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 20,
+    fontFamily: "Nunito_600SemiBold",
+    lineHeight: 21,
+    marginBottom: 22,
   },
 
   // Generic fallback
@@ -317,7 +318,7 @@ const s = StyleSheet.create({
   },
   continueBtnText: {
     color: theme.colors.onPrimary,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
     fontSize: 16,
     letterSpacing: 1,
   },

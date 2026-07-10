@@ -1,11 +1,11 @@
 import {
   View,
   StyleSheet,
-  Text,
   Animated,
 } from "react-native";
 import { AnimatedPressable } from "../components/ui";
 import { useRef, useEffect } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   createBottomTabNavigator,
   BottomTabBarProps,
@@ -29,30 +29,69 @@ import { QuranHomeScreen } from "../screens/quran/QuranHomeScreen";
 
 const Tab = createBottomTabNavigator<DemoTabParamList>();
 
+/** Per-tab active pill colours, straight from the mockups. */
 const TAB_CONFIG: {
   name: keyof DemoTabParamList;
   label: string;
   icon: LucideIcon;
+  activeBg: string;
+  activeBorder: string;
+  activeFg: string;
 }[] = [
-  { name: "HomeScreen", label: "Home", icon: Home },
-  { name: "PathScreen", label: "Learn", icon: BookOpen },
-  { name: "QuranScreen", label: "Quran", icon: Book },
-  { name: "RewardsScreen", label: "Rewards", icon: Trophy },
-  { name: "ProfileScreen", label: "Profile", icon: User },
+  {
+    name: "HomeScreen",
+    label: "Home",
+    icon: Home,
+    activeBg: "#123B34",
+    activeBorder: "#2CC9B5",
+    activeFg: "#5EE0CE",
+  },
+  {
+    name: "PathScreen",
+    label: "Learn",
+    icon: BookOpen,
+    activeBg: "#2A2440",
+    activeBorder: "#A78BFA",
+    activeFg: "#C4B2FF",
+  },
+  {
+    name: "QuranScreen",
+    label: "Quran",
+    icon: Book,
+    activeBg: "#12303A",
+    activeBorder: "#6EC1E8",
+    activeFg: "#9AD5F2",
+  },
+  {
+    name: "RewardsScreen",
+    label: "Rewards",
+    icon: Trophy,
+    activeBg: "#3A2F16",
+    activeBorder: "#EFB65A",
+    activeFg: "#F5CE8A",
+  },
+  {
+    name: "ProfileScreen",
+    label: "Profile",
+    icon: User,
+    activeBg: "#3A2030",
+    activeBorder: "#F27FB2",
+    activeFg: "#F8A9CC",
+  },
 ];
+
+const INACTIVE_FG = "#5F7E7C";
 
 const SPRING = { friction: 8, tension: 120, useNativeDriver: true };
 
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
   const tabCount = state.routes.length;
 
   const iconScales = useRef(
     Array.from({ length: tabCount }, () => new Animated.Value(1))
   ).current;
   const labelOpacities = useRef(
-    Array.from({ length: tabCount }, () => new Animated.Value(0.5))
-  ).current;
-  const indicatorScales = useRef(
     Array.from({ length: tabCount }, () => new Animated.Value(0))
   ).current;
 
@@ -61,83 +100,80 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       const isFocused = state.index === i;
       Animated.parallel([
         Animated.spring(iconScales[i], {
-          toValue: isFocused ? 1.1 : 1,
+          toValue: isFocused ? 1.08 : 1,
           ...SPRING,
         }),
         Animated.timing(labelOpacities[i], {
-          toValue: isFocused ? 1 : 0.5,
+          toValue: isFocused ? 1 : 0,
           duration: 180,
           useNativeDriver: true,
-        }),
-        Animated.spring(indicatorScales[i], {
-          toValue: isFocused ? 1 : 0,
-          ...SPRING,
         }),
       ]).start();
     }
   }, [state.index, tabCount]);
 
   return (
-    <View style={styles.container}>
-      {state.routes.map((route, index) => {
-        const isFocused = state.index === index;
-        const tabConf = TAB_CONFIG.find((t) => t.name === route.name);
-        const TabIcon = tabConf?.icon ?? Home;
+    <View
+      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 14) }]}
+    >
+      <View style={styles.bar}>
+        {state.routes.map((route, index) => {
+          const isFocused = state.index === index;
+          const tabConf =
+            TAB_CONFIG.find((t) => t.name === route.name) ?? TAB_CONFIG[0];
+          const TabIcon = tabConf.icon;
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: "tabPress",
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
 
-        return (
-          <AnimatedPressable
-            key={route.key}
-            style={styles.tab}
-            onPress={onPress}
-            activeOpacity={0.7}
-          >
-            <Animated.View
-              style={{
-                transform: [{ scale: iconScales[index] }],
-              }}
-            >
-              <TabIcon
-                size={24}
-                color={
-                  isFocused ? theme.colors.primary : theme.colors.textMuted
-                }
-                strokeWidth={isFocused ? 2.5 : 2}
-              />
-            </Animated.View>
-
-            <Animated.Text
+          return (
+            <AnimatedPressable
+              key={route.key}
               style={[
-                styles.label,
-                isFocused && styles.activeLabel,
-                { opacity: labelOpacities[index] },
-              ]}
-            >
-              {tabConf?.label}
-            </Animated.Text>
-
-            {/* Active indicator line */}
-            <Animated.View
-              style={[
-                styles.indicator,
-                {
-                  transform: [{ scaleX: indicatorScales[index] }],
+                styles.tab,
+                isFocused && {
+                  backgroundColor: tabConf.activeBg,
+                  borderColor: tabConf.activeBorder,
                 },
               ]}
-            />
-          </AnimatedPressable>
-        );
-      })}
+              onPress={onPress}
+              activeOpacity={0.7}
+            >
+              <Animated.View
+                style={{ transform: [{ scale: iconScales[index] }] }}
+              >
+                <TabIcon
+                  size={19}
+                  color={isFocused ? tabConf.activeFg : INACTIVE_FG}
+                  strokeWidth={isFocused ? 2.3 : 2.1}
+                />
+              </Animated.View>
+
+              {isFocused && (
+                <Animated.Text
+                  style={[
+                    styles.label,
+                    {
+                      color: tabConf.activeFg,
+                      opacity: labelOpacities[index],
+                    },
+                  ]}
+                >
+                  {tabConf.label}
+                </Animated.Text>
+              )}
+            </AnimatedPressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -159,38 +195,39 @@ export function DemoNavigator() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
+  wrapper: {
     backgroundColor: theme.colors.background,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.surface,
-    paddingBottom: 24,
-    paddingTop: 10,
-    justifyContent: "space-around",
+    paddingHorizontal: 14,
+    paddingTop: 6,
+  },
+  bar: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(16,29,32,0.96)",
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    borderRadius: 26,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.5,
+    shadowRadius: 34,
+    elevation: 12,
   },
   tab: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 4,
-    minWidth: 56,
-    gap: 4,
+    gap: 7,
+    paddingVertical: 9,
+    paddingHorizontal: 15,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "transparent",
   },
   label: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: theme.colors.textMuted,
-    marginTop: 2,
-  },
-  activeLabel: {
-    color: theme.colors.primary,
-    fontWeight: "700",
-  },
-  indicator: {
-    width: 20,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: theme.colors.primary,
-    marginTop: 2,
+    fontSize: 12,
+    fontFamily: "Nunito_900Black",
   },
 });

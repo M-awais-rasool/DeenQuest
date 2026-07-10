@@ -6,17 +6,35 @@ import {
   Text,
   View,
 } from "react-native";
-import { Crown, Star, Zap } from "lucide-react-native";
-import { Header } from "../../components/Header";
+import { LinearGradient } from "expo-linear-gradient";
+import { ChevronLeft, Crown } from "lucide-react-native";
+import { useNavigation } from "@react-navigation/native";
+import { AnimatedPressable } from "../../components/ui";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { useAppSelector } from "../../store/hooks";
-import { useGetLeaderboardQuery, useGetProgressQuery } from "../../store/services/api";
+import { useGetLeaderboardQuery } from "../../store/services/api";
+import type { LeaderboardUser } from "../../store/services/api";
 import type { RootState } from "../../store/store";
 import type { MainState } from "../../store/slices/mainSlice";
 import { theme } from "../../theme/themes";
 
-const TOP_COLORS = [theme.colors.secondary, theme.colors.silver, theme.colors.bronze];
+/** Avatar gradient pairs cycled per rank (from the F3 mock). */
+const AVATAR_GRADIENTS: [string, string][] = [
+  ["#EFB65A", "#F27FB2"],
+  ["#6EC1E8", "#2CC9B5"],
+  ["#A78BFA", "#F27FB2"],
+  ["#2CC9B5", "#6EC1E8"],
+  ["#F79A59", "#F27FB2"],
+  ["#2CC9B5", "#EFB65A"],
+];
+
+/** Podium plinth look for ranks 1..3. */
+const PODIUM = [
+  { height: 100, colors: ["#3A2F16", "#16272B"] as [string, string], border: "#4A3E28", rankColor: "#EFB65A" },
+  { height: 74, colors: ["#1E3238", "#16272B"] as [string, string], border: "#24393E", rankColor: "#C9D4D9" },
+  { height: 56, colors: ["#2E2318", "#16272B"] as [string, string], border: "#3D2A14", rankColor: "#D9A06B" },
+];
 
 function formatXP(xp: number): string {
   return `${xp.toLocaleString()} XP`;
@@ -46,8 +64,86 @@ function buildDisplayName({
   return buildMockName(rank);
 }
 
+function Avatar({
+  name,
+  rank,
+  size,
+}: {
+  name: string;
+  rank: number;
+  size: number;
+}) {
+  const gradient = AVATAR_GRADIENTS[(rank - 1) % AVATAR_GRADIENTS.length];
+  return (
+    <LinearGradient
+      colors={gradient}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text
+        style={{
+          fontSize: size * 0.38,
+          fontFamily: "Nunito_900Black",
+          color: "#06302B",
+        }}
+      >
+        {name.charAt(0).toUpperCase()}
+      </Text>
+    </LinearGradient>
+  );
+}
+
+function PodiumColumn({
+  entry,
+  name,
+  place,
+}: {
+  entry: LeaderboardUser;
+  name: string;
+  place: 1 | 2 | 3;
+}) {
+  const meta = PODIUM[place - 1];
+  return (
+    <View style={styles.podiumCol}>
+      {place === 1 && (
+        <Crown
+          size={20}
+          color={theme.colors.secondary}
+          fill={theme.colors.secondary}
+          style={styles.crown}
+        />
+      )}
+      <Avatar name={name} rank={entry.rank} size={place === 1 ? 66 : 56} />
+      <Text style={styles.podiumName} numberOfLines={1}>
+        {name}
+      </Text>
+      <LinearGradient
+        colors={meta.colors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[
+          styles.plinth,
+          { height: meta.height, borderColor: meta.border },
+        ]}
+      >
+        <Text style={[styles.plinthRank, { color: meta.rankColor }]}>
+          {place}
+        </Text>
+        <Text style={styles.plinthXp}>{formatXP(entry.xp)}</Text>
+      </LinearGradient>
+    </View>
+  );
+}
+
 export function LeaderboardScreen() {
-  const { data: progressData } = useGetProgressQuery();
+  const navigation = useNavigation();
   const {
     data: leaderboardData,
     isLoading,
@@ -61,30 +157,38 @@ export function LeaderboardScreen() {
   const currentUserName =
     currentUser?.display_name?.trim() || currentUser?.email?.split("@")[0] || undefined;
 
-  const totalXP = progressData?.data?.xp ?? 0;
   const rows = useMemo(() => leaderboardData?.data ?? [], [leaderboardData]);
+  const podium = rows.slice(0, 3);
+  const rest = rows.length > 3 ? rows.slice(3) : [];
+
+  const nameFor = (item: LeaderboardUser) =>
+    buildDisplayName({
+      rank: item.rank,
+      backendName: item.display_name,
+      isCurrentUser: currentUser?.id === item.user_id,
+      currentUserName,
+    });
 
   return (
     <ScreenWrapper>
-      <Header title="Leaderboard" xp={totalXP} />
-
-      <View style={styles.headerCard}>
-        <View style={styles.headerTopRow}>
-          <View style={styles.pill}>
-            <Crown size={14} color={theme.colors.secondary} />
-            <Text style={styles.pillText}>Global Ranking</Text>
-          </View>
-          <Text style={styles.countText}>{rows.length} Players</Text>
+      <View style={styles.headerRow}>
+        <AnimatedPressable
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <ChevronLeft size={18} color={theme.colors.text} strokeWidth={2.5} />
+        </AnimatedPressable>
+        <Text style={styles.headerTitle}>Leaderboard</Text>
+        <View style={styles.scopePill}>
+          <Text style={styles.scopePillText}>GLOBAL · XP</Text>
         </View>
-        <Text style={styles.headerTitle}>Top learners by Level and XP</Text>
-        <Text style={styles.headerSub}>Sorted by level first, then XP points.</Text>
       </View>
 
       {isLoading ? (
         <Loader />
       ) : (
         <FlatList
-          data={rows}
+          data={rest.length > 0 ? rest : rows}
           keyExtractor={(item) => `${item.user_id}-${item.rank}`}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -95,53 +199,45 @@ export function LeaderboardScreen() {
               tintColor={theme.colors.primary}
             />
           }
+          ListHeaderComponent={
+            podium.length === 3 && rest.length > 0 ? (
+              <View style={styles.podiumRow}>
+                <PodiumColumn entry={podium[1]} name={nameFor(podium[1])} place={2} />
+                <PodiumColumn entry={podium[0]} name={nameFor(podium[0])} place={1} />
+                <PodiumColumn entry={podium[2]} name={nameFor(podium[2])} place={3} />
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyTitle}>No users yet</Text>
-              <Text style={styles.emptySub}>Leaderboard will appear when users gain XP.</Text>
+              <Text style={styles.emptySub}>
+                Leaderboard will appear when users gain XP.
+              </Text>
             </View>
           }
-          renderItem={({ item, index }) => {
+          renderItem={({ item }) => {
             const isCurrentUser = currentUser?.id === item.user_id;
-            const isTopThree = index < 3;
+            const name = isCurrentUser ? "You" : nameFor(item);
             return (
-              <View
-                style={[
-                  styles.row,
-                  isCurrentUser && styles.rowCurrentUser,
-                  isTopThree && { borderColor: `${TOP_COLORS[index]}55` },
-                ]}
-              >
-                <View style={styles.rankWrap}>
-                  <Text style={[styles.rankText, isTopThree && { color: TOP_COLORS[index] }]}>
-                    #{item.rank}
-                  </Text>
-                </View>
-
-                <View style={styles.userBlock}>
-                  <Text style={styles.userName}>
-                    {buildDisplayName({
-                      rank: item.rank,
-                      backendName: item.display_name,
-                      isCurrentUser,
-                      currentUserName,
-                    })}
-                  </Text>
-                  <Text style={styles.userSubtext}>
-                    {isCurrentUser ? "Your Position" : "Community Member"}
-                  </Text>
-                </View>
-
-                <View style={styles.statsBlock}>
-                  <View style={styles.statRow}>
-                    <Star size={12} color={theme.colors.secondary} />
-                    <Text style={styles.statText}>Lv {item.level}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Zap size={12} color={theme.colors.primary} />
-                    <Text style={styles.statText}>{formatXP(item.xp)}</Text>
-                  </View>
-                </View>
+              <View style={[styles.row, isCurrentUser && styles.rowCurrentUser]}>
+                <Text
+                  style={[styles.rankText, isCurrentUser && styles.rankTextYou]}
+                >
+                  {item.rank}
+                </Text>
+                <Avatar name={nameFor(item)} rank={item.rank} size={38} />
+                <Text
+                  style={[styles.userName, isCurrentUser && styles.userNameYou]}
+                  numberOfLines={1}
+                >
+                  {name}
+                </Text>
+                <Text
+                  style={[styles.xpText, isCurrentUser && styles.xpTextYou]}
+                >
+                  {formatXP(item.xp)}
+                </Text>
               </View>
             );
           }}
@@ -152,75 +248,91 @@ export function LeaderboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerCard: {
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 22,
+    paddingTop: 14,
+  },
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     backgroundColor: theme.colors.surface,
-    borderRadius: 16,
     borderWidth: 1,
     borderColor: theme.colors.outline,
-    marginHorizontal: 16,
-    marginTop: 12,
-    padding: 16,
-  },
-  headerTopRow: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  pill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: theme.colors.secondary12,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: theme.colors.secondary28,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  pillText: {
-    color: theme.colors.secondary,
-    fontSize: 10,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  countText: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: "700",
+    justifyContent: "center",
   },
   headerTitle: {
     color: theme.colors.text,
     fontSize: 20,
-    fontWeight: "900",
+    fontFamily: "Nunito_900Black",
   },
-  headerSub: {
-    color: theme.colors.textMuted,
-    fontSize: 13,
-    marginTop: 4,
+  scopePill: {
+    marginLeft: "auto",
+    backgroundColor: "#3A2F16",
+    borderRadius: 11,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
   },
-  loadingContainer: {
-    flex: 1,
+  scopePillText: {
+    color: theme.colors.secondary,
+    fontSize: 11,
+    fontFamily: "Nunito_900Black",
+    letterSpacing: 0.7,
+  },
+  podiumRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
     justifyContent: "center",
-    alignItems: "center",
-    gap: 10,
+    gap: 14,
+    paddingTop: 22,
+    paddingBottom: 14,
   },
-  loadingText: {
-    color: theme.colors.textMuted,
-    fontSize: 14,
-    fontWeight: "600",
+  podiumCol: {
+    alignItems: "center",
+    gap: 8,
+  },
+  crown: {
+    marginBottom: -2,
+  },
+  podiumName: {
+    color: theme.colors.text,
+    fontSize: 12,
+    fontFamily: "Nunito_800ExtraBold",
+    maxWidth: 86,
+  },
+  plinth: {
+    width: 82,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  plinthRank: {
+    fontSize: 22,
+    fontFamily: "Nunito_900Black",
+  },
+  plinthXp: {
+    color: "#5F7E7C",
+    fontSize: 10.5,
+    fontFamily: "Nunito_800ExtraBold",
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 110,
-    gap: 10,
+    gap: 9,
   },
   emptyContainer: {
     alignItems: "center",
     backgroundColor: theme.colors.surface,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: theme.colors.outline,
     padding: 20,
@@ -228,63 +340,55 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: theme.colors.text,
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: "Nunito_800ExtraBold",
   },
   emptySub: {
     color: theme.colors.textMuted,
     fontSize: 13,
+    fontFamily: "Nunito_600SemiBold",
     marginTop: 4,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.surfaceLow,
-    borderRadius: 14,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: theme.colors.outline,
-    paddingHorizontal: 12,
+    paddingHorizontal: 15,
     paddingVertical: 12,
-    gap: 12,
+    gap: 13,
   },
   rowCurrentUser: {
+    backgroundColor: theme.colors.primaryContainer,
+    borderWidth: 2,
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary08,
-  },
-  rankWrap: {
-    width: 46,
-    alignItems: "center",
-    justifyContent: "center",
   },
   rankText: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: "900",
+    width: 24,
+    color: "#5F7E7C",
+    fontSize: 13,
+    fontFamily: "Nunito_900Black",
   },
-  userBlock: {
-    flex: 1,
+  rankTextYou: {
+    color: "#5EE0CE",
   },
   userName: {
+    flex: 1,
     color: theme.colors.text,
-    fontSize: 15,
-    fontWeight: "800",
+    fontSize: 14,
+    fontFamily: "Nunito_800ExtraBold",
   },
-  userSubtext: {
+  userNameYou: {
+    fontFamily: "Nunito_900Black",
+  },
+  xpText: {
     color: theme.colors.textMuted,
-    fontSize: 11,
-    marginTop: 2,
+    fontSize: 12.5,
+    fontFamily: "Nunito_800ExtraBold",
   },
-  statsBlock: {
-    alignItems: "flex-end",
-    gap: 4,
-  },
-  statRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  statText: {
-    color: theme.colors.text,
-    fontSize: 12,
-    fontWeight: "800",
+  xpTextYou: {
+    color: "#5EE0CE",
+    fontFamily: "Nunito_900Black",
   },
 });

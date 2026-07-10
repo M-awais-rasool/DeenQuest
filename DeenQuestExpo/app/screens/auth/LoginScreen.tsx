@@ -5,16 +5,12 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  Image,
   ScrollView,
   Platform,
 } from "react-native";
-import {
-  AnimatedPressable,
-  TactilePressable,
-} from "../../components/ui";
+import { AnimatedPressable } from "../../components/ui";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Mail, Eye, EyeOff, AlertCircle, Sparkles } from "lucide-react-native";
+import { Eye, EyeOff, ChevronLeft } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { TactileButton } from "../../components/TactileButton";
 import { LoginRequest, useLoginMutation } from "../../store/services/api";
@@ -130,9 +126,6 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
 
   return (
     <ScreenWrapper innerStyle={{ flex: 1 }}>
-      <View style={styles.backgroundOrbTop} />
-      <View style={styles.backgroundOrbBottom} />
-
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
@@ -147,63 +140,59 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
           }
           keyboardShouldPersistTaps="handled"
         >
+          {navigation.canGoBack() && (
+            <AnimatedPressable
+              style={styles.backBtn}
+              onPress={() => navigation.goBack()}
+            >
+              <ChevronLeft
+                size={18}
+                color={theme.colors.text}
+                strokeWidth={2.5}
+              />
+            </AnimatedPressable>
+          )}
+
           <View style={styles.heroRow}>
-            <View style={styles.heroBadge}>
-              <Sparkles size={14} color={theme.colors.onSecondary} />
-              <Text style={styles.heroBadgeText}>Welcome Back</Text>
-            </View>
-            <Text style={styles.title}>Continue your DeenQuest</Text>
+            <Text style={styles.title}>Welcome back</Text>
             <Text style={styles.subtitle}>
-              Pick up your progress, unlock your next milestone, and stay
-              consistent today.
+              Your streak missed you. Log in to continue.
             </Text>
           </View>
 
           <View
-            style={styles.formCard}
+            style={styles.form}
             onLayout={(event) => {
               formOffset.current = event.nativeEvent.layout.y;
             }}
           >
-            {displayError && (
-              <View style={styles.errorContainer}>
-                <AlertCircle size={16} color={theme.colors.errorStrong} />
-                <Text style={styles.errorMessage}>{displayError}</Text>
-              </View>
-            )}
-
             <View
               style={styles.inputGroup}
               onLayout={(event) => {
                 inputOffsets.current.email = event.nativeEvent.layout.y;
               }}
             >
-              <Text style={[styles.label, { marginBottom: 8 }]}>
-                Email Address
-              </Text>
-
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={[styles.input, errors.email && styles.inputError]}
-                  placeholder="name@example.com"
-                  placeholderTextColor={theme.colors.textMuted}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  selectionColor={theme.colors.primary}
-                  value={form.email}
-                  onChangeText={(text) => handleChange("email", text)}
-                  onFocus={() => handleInputFocus("email")}
-                  editable={!isLoading}
-                />
-                <Mail
-                  size={20}
-                  color={theme.colors.textMuted}
-                  style={styles.inputIcon}
-                />
-              </View>
-              {errors.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
+              <Text style={styles.label}>EMAIL</Text>
+              <TextInput
+                style={[styles.input, !!errors.email && styles.inputError]}
+                placeholder="name@example.com"
+                placeholderTextColor={theme.colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                selectionColor={theme.colors.primary}
+                value={form.email}
+                onChangeText={(text) => handleChange("email", text)}
+                onFocus={() => handleInputFocus("email")}
+                editable={!isLoading}
+              />
+              {!!errors.email && (
+                <View style={styles.errorRow}>
+                  <View style={styles.errorDot}>
+                    <Text style={styles.errorDotText}>!</Text>
+                  </View>
+                  <Text style={styles.errorText}>{errors.email}</Text>
+                </View>
               )}
             </View>
 
@@ -213,13 +202,13 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
                 inputOffsets.current.password = event.nativeEvent.layout.y;
               }}
             >
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>Password</Text>
-              </View>
-
+              <Text style={styles.label}>PASSWORD</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[styles.input, errors.password && styles.inputError]}
+                  style={[
+                    styles.input,
+                    (!!errors.password || !!displayError) && styles.inputError,
+                  ]}
                   placeholder="••••••••"
                   placeholderTextColor={theme.colors.textMuted}
                   secureTextEntry={!showPassword}
@@ -237,44 +226,32 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
                   disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff size={20} color={theme.colors.textMuted} />
+                    <EyeOff size={19} color="#5F7E7C" />
                   ) : (
-                    <Eye size={20} color={theme.colors.textMuted} />
+                    <Eye size={19} color="#5F7E7C" />
                   )}
                 </AnimatedPressable>
               </View>
-              {errors.password && (
-                <Text style={styles.errorText}>{errors.password}</Text>
+              {(!!errors.password || !!displayError) && (
+                <View style={styles.errorRow}>
+                  <View style={styles.errorDot}>
+                    <Text style={styles.errorDotText}>!</Text>
+                  </View>
+                  <Text style={styles.errorText}>
+                    {errors.password || displayError}
+                  </Text>
+                </View>
               )}
             </View>
+
+            <Text style={styles.forgotPassword}>Forgot password?</Text>
 
             <TactileButton
               title={isLoading ? "Logging in..." : "Log In"}
               onPress={handleLogin}
+              size="lg"
               style={styles.loginButton}
             />
-
-            <View style={styles.dividerRow}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
-              <View style={styles.divider} />
-            </View>
-
-            <TactilePressable
-              edgeColor={theme.colors.outline}
-              radius={theme.borderRadius.full}
-              haptic="medium"
-              style={styles.socialButtonWrap}
-              faceStyle={styles.socialButton}
-              disabled={isLoading}
-            >
-              <Image
-                source={require("../../../assets/icons/google.png")}
-                style={styles.socialIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.socialText}>Continue with Google</Text>
-            </TactilePressable>
           </View>
 
           <AnimatedPressable
@@ -282,7 +259,8 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
             onPress={() => navigation.navigate("Signup")}
           >
             <Text style={styles.footerText}>
-              New to DeenQuest? <Text style={styles.signUpText}>Sign Up</Text>
+              New to DeenQuest?{" "}
+              <Text style={styles.signUpText}>Create account</Text>
             </Text>
           </AnimatedPressable>
         </ScrollView>
@@ -297,133 +275,66 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl + theme.spacing.xl,
+    paddingHorizontal: 26,
+    paddingTop: 14,
+    paddingBottom: theme.spacing.xxl,
   },
-  backgroundOrbTop: {
-    position: "absolute",
-    top: -90,
-    right: -50,
-    width: 230,
-    height: 230,
-    borderRadius: 115,
-    backgroundColor: theme.colors.primary13,
-  },
-  backgroundOrbBottom: {
-    position: "absolute",
-    bottom: -45,
-    left: -90,
-    width: 230,
-    height: 230,
-    borderRadius: 115,
-    backgroundColor: theme.colors.secondary10,
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroRow: {
-    marginBottom: theme.spacing.lg,
-    gap: 10,
-    marginLeft: 5,
-    marginTop: Platform.OS === "ios" ? -10 : -20,
-  },
-  heroBadge: {
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
+    marginTop: 26,
+    marginBottom: 26,
     gap: 6,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.secondary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  heroBadgeText: {
-    color: theme.colors.onSecondary,
-    fontWeight: "900",
-    fontSize: 11,
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
-    lineHeight: 36,
-    fontWeight: "900",
+    lineHeight: 38,
+    fontFamily: "Nunito_900Black",
     color: theme.colors.text,
-    letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 22,
+    fontFamily: "Nunito_600SemiBold",
     color: theme.colors.textMuted,
-    maxWidth: 340,
   },
-  formCard: {
-    backgroundColor: theme.colors.surface82,
-    borderColor: theme.colors.primary20,
-    borderWidth: 1,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 6,
+  form: {
+    gap: 16,
   },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.error10,
-    borderColor: theme.colors.errorStrong,
-    borderWidth: 1,
-    borderRadius: theme.borderRadius.sm,
-    padding: 12,
-    marginBottom: theme.spacing.md,
-    gap: 8,
-  },
-  errorMessage: {
-    color: theme.colors.errorBright,
-    fontSize: 13,
-    flex: 1,
-  },
-  inputGroup: {
-    marginBottom: theme.spacing.md,
-  },
-  labelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
+  inputGroup: {},
   label: {
     fontSize: 12,
-    fontWeight: "900",
+    fontFamily: "Nunito_800ExtraBold",
     color: theme.colors.textMuted,
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-  },
-  forgotPassword: {
-    fontSize: 12,
-    color: theme.colors.secondary,
+    letterSpacing: 1,
+    marginBottom: 7,
+    marginLeft: 4,
   },
   inputWrapper: {
     position: "relative",
   },
   input: {
-    backgroundColor: theme.colors.surfaceLow,
-    borderBottomWidth: 3,
-    borderWidth: 1,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
     borderColor: theme.colors.outline,
     color: theme.colors.text,
-    padding: 16,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
     paddingRight: 48,
-    borderTopLeftRadius: theme.borderRadius.sm,
-    borderTopRightRadius: theme.borderRadius.sm,
-    fontSize: 16,
+    borderRadius: 16,
+    fontSize: 15,
+    fontFamily: "Nunito_700Bold",
   },
   inputError: {
-    borderColor: theme.colors.errorStrong,
-    borderBottomColor: theme.colors.errorStrong,
-  },
-  inputIcon: {
-    position: "absolute",
-    right: 16,
-    top: 16,
+    borderColor: theme.colors.error,
   },
   inputIconButton: {
     position: "absolute",
@@ -431,68 +342,53 @@ const styles = StyleSheet.create({
     top: 16,
     padding: 2,
   },
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    marginTop: 9,
+    marginLeft: 4,
+  },
+  errorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#3A1E24",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorDotText: {
+    color: theme.colors.error,
+    fontSize: 10,
+    fontFamily: "Nunito_900Black",
+  },
   errorText: {
-    color: theme.colors.errorBright,
-    fontSize: 12,
-    marginTop: 6,
+    color: theme.colors.error,
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
+    flex: 1,
+  },
+  forgotPassword: {
+    fontSize: 13,
+    fontFamily: "Nunito_800ExtraBold",
+    color: theme.colors.primary,
+    textAlign: "right",
   },
   loginButton: {
     marginTop: 2,
   },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: theme.spacing.lg,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.colors.neutralMid,
-  },
-  dividerText: {
-    fontSize: 10,
-    marginHorizontal: 12,
-    color: theme.colors.outline,
-  },
-  socialRow: {
-    flexDirection: "row",
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  socialButtonWrap: {
-    alignSelf: "center",
-  },
-  socialButton: {
-    flexDirection: "row",
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: theme.borderRadius.full,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    minWidth: 230,
-  },
-  socialIcon: {
-    width: 24,
-    height: 24,
-  },
-  socialText: {
-    color: theme.colors.text,
-    fontWeight: "700",
-    marginLeft: 10,
-  },
   footer: {
     alignItems: "center",
-    marginTop: theme.spacing.xl,
+    marginTop: "auto",
+    paddingTop: theme.spacing.xl,
   },
   footerText: {
     color: theme.colors.textMuted,
+    fontSize: 14,
+    fontFamily: "Nunito_700Bold",
   },
   signUpText: {
     color: theme.colors.primary,
-    fontWeight: "700",
+    fontFamily: "Nunito_900Black",
   },
 });
