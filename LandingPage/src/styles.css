@@ -11,6 +11,8 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
+
+  /* shadcn base tokens (kept for bundled ui components) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -30,135 +32,265 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-emerald: var(--emerald);
-  --color-emerald-glow: var(--emerald-glow);
-  --color-emerald-deep: var(--emerald-deep);
-  --color-gold: var(--gold);
-  --color-gold-soft: var(--gold-soft);
-  --font-display: var(--font-display);
 
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-float-slow: float 9s ease-in-out infinite;
-  --animate-glow-pulse: glow-pulse 3s ease-in-out infinite;
-  --animate-shimmer: shimmer 8s linear infinite;
-  --animate-fade-up: fade-up 0.7s ease-out both;
-  --animate-spin-slow: spin 24s linear infinite;
-  --animate-rise: rise 18s linear infinite;
+  /* ── DeenQuest design tokens ───────────────────────────── */
+  --color-ink: #060d0f;
+  --color-ink2: #081214;
+  --color-panel: #0b1517;
+  --color-panel2: #16272b;
+  --color-panel3: #101d20;
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-18px); }
-  }
-  @keyframes glow-pulse {
-    0%, 100% { opacity: 0.55; }
-    50% { opacity: 0.95; }
-  }
-  @keyframes shimmer {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes rise {
-    0% { transform: translateY(20vh) translateX(0); opacity: 0; }
-    10% { opacity: 1; }
-    100% { transform: translateY(-110vh) translateX(40px); opacity: 0; }
-  }
+  --color-teal: #2cc9b5;
+  --color-teal-light: #5ee0ce;
+  --color-teal-deep: #06302b;
+  --color-teal-shadow: #1b9484;
+  --color-teal-tint: #123b34;
+
+  --color-gold: #efb65a;
+  --color-gold-soft: #f5ce8a;
+  --color-gold-shadow: #c98f35;
+  --color-gold-ink: #3a2a08;
+  --color-gold-tint: #3a2f16;
+
+  --color-purple: #a78bfa;
+  --color-purple-light: #c4b2ff;
+  --color-purple-deep: #241a45;
+  --color-purple-tint: #2a2440;
+  --color-purple-shadow: #6d4fd1;
+
+  --color-blue: #6ec1e8;
+  --color-blue-light: #9ad5f2;
+  --color-blue-deep: #0e2a3a;
+  --color-blue-tint: #12303a;
+
+  --color-pink: #f27fb2;
+  --color-pink-light: #f8a9cc;
+  --color-pink-tint: #3a2030;
+  --color-coral: #f0838c;
+  --color-orange: #f79a59;
+
+  --color-heading: #edf5f4;
+  --color-body: #8da5a3;
+  --color-body2: #b7c8c6;
+  --color-faint: #5f7e7c;
+  --color-line: #14262a;
+  --color-line2: #24393e;
+
+  --font-sans: "Nunito", system-ui, sans-serif;
+  --font-arabic: "Amiri", serif;
+
+  --animate-dq-float: dqFloat 6s ease-in-out infinite;
+  --animate-dq-float2: dqFloat2 4.5s ease-in-out infinite;
+  --animate-dq-float3: dqFloat3 5s ease-in-out infinite;
+  --animate-dq-pulse: dqPulse 2s infinite;
+}
+
+/* Global keyframes (available to arbitrary animate-[…] utilities) */
+@keyframes dqFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes dqFloat2 {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-14px) rotate(-6deg); }
+}
+@keyframes dqFloat3 {
+  0%, 100% { transform: translateY(0) rotate(5deg); }
+  50% { transform: translateY(-8px) rotate(5deg); }
+}
+@keyframes dqPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(44, 201, 181, 0.45); }
+  70% { box-shadow: 0 0 0 22px rgba(44, 201, 181, 0); }
 }
 
 :root {
   --radius: 1rem;
-  --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  /* Deep spiritual dark base */
-  --background: oklch(0.18 0.04 165);
-  --foreground: oklch(0.97 0.01 130);
-
-  --card: oklch(0.22 0.05 165 / 60%);
-  --card-foreground: oklch(0.97 0.01 130);
-  --popover: oklch(0.18 0.04 165);
-  --popover-foreground: oklch(0.97 0.01 130);
-
-  --primary: oklch(0.65 0.18 155);
-  --primary-foreground: oklch(0.15 0.04 165);
-  --secondary: oklch(0.28 0.06 165);
-  --secondary-foreground: oklch(0.97 0.01 130);
-  --muted: oklch(0.25 0.04 165);
-  --muted-foreground: oklch(0.72 0.03 150);
-  --accent: oklch(0.82 0.15 85);
-  --accent-foreground: oklch(0.18 0.04 165);
-  --destructive: oklch(0.6 0.22 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.65 0.18 155);
-
-  --emerald: oklch(0.62 0.17 158);
-  --emerald-glow: oklch(0.78 0.2 150);
-  --emerald-deep: oklch(0.32 0.09 162);
-  --gold: oklch(0.82 0.15 85);
-  --gold-soft: oklch(0.9 0.1 92);
-
-  --gradient-hero: radial-gradient(ellipse at top, oklch(0.32 0.12 158 / 0.55), transparent 60%),
-                   radial-gradient(ellipse at bottom right, oklch(0.55 0.15 95 / 0.18), transparent 55%),
-                   linear-gradient(180deg, oklch(0.15 0.04 165), oklch(0.12 0.03 165));
-  --gradient-emerald: linear-gradient(135deg, var(--emerald-glow), var(--emerald));
-  --gradient-gold: linear-gradient(135deg, var(--gold-soft), var(--gold));
-  --gradient-card: linear-gradient(160deg, oklch(1 0 0 / 0.06), oklch(1 0 0 / 0.02));
-
-  --shadow-glow: 0 0 60px -10px var(--emerald-glow);
-  --shadow-gold: 0 0 40px -10px var(--gold);
-  --shadow-elevated: 0 25px 60px -20px oklch(0 0 0 / 0.6);
+  /* shadcn base palette (unused by landing, kept for ui components) */
+  --background: #060d0f;
+  --foreground: #edf5f4;
+  --card: #0b1517;
+  --card-foreground: #edf5f4;
+  --popover: #0b1517;
+  --popover-foreground: #edf5f4;
+  --primary: #2cc9b5;
+  --primary-foreground: #06302b;
+  --secondary: #16272b;
+  --secondary-foreground: #edf5f4;
+  --muted: #101d20;
+  --muted-foreground: #8da5a3;
+  --accent: #efb65a;
+  --accent-foreground: #3a2a08;
+  --destructive: #f0838c;
+  --destructive-foreground: #ffffff;
+  --border: #14262a;
+  --input: #24393e;
+  --ring: #2cc9b5;
 }
 
 .dark { color-scheme: dark; }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    /* keep anchored sections clear of the sticky navbar */
+    scroll-padding-top: 84px;
+    /* clip stray horizontal overflow at the root (doesn't affect the
+       sticky navbar, which sticks to the viewport, or vertical scroll) */
+    overflow-x: hidden;
+  }
   body {
-    background: var(--gradient-hero);
-    background-attachment: fixed;
-    color: var(--color-foreground);
-    font-family: var(--font-display);
+    margin: 0;
+    background: #060d0f;
+    color: var(--color-heading);
+    font-family: "Nunito", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  ::selection { background: var(--emerald-glow); color: var(--emerald-deep); }
+  a { color: #2cc9b5; text-decoration: none; }
+  a:hover { color: #5ee0ce; }
+  ::selection { background: #2cc9b5; color: #06302b; }
 }
 
-@utility glass {
-  background: var(--gradient-card);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid oklch(1 0 0 / 0.08);
+@utility font-arabic {
+  font-family: "Amiri", serif;
 }
 
-@utility glass-solid {
-  background: linear-gradient(160deg, oklch(0.24 0.05 165 / 0.85), oklch(0.2 0.04 165 / 0.7));
-  border: 1px solid oklch(1 0 0 / 0.08);
+/* ── Interactive buttons ───────────────────────────────────
+   btn3d: the chunky "pushable" buttons (lift on hover, press down
+   onto their drop-shadow on click). btn-soft: outline / ghost pills. */
+.btn3d {
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.btn3d:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+.btn3d:active {
+  transform: translateY(4px);
+  filter: brightness(0.98);
+}
+.btn-soft {
+  transition: transform 0.12s ease, background-color 0.12s ease,
+    border-color 0.12s ease, color 0.12s ease;
+}
+.btn-soft:hover {
+  transform: translateY(-1px);
+  border-color: #2cc9b5;
+  color: #edf5f4;
+}
+.btn-soft:active {
+  transform: translateY(1px);
 }
 
-@utility text-gradient-emerald {
-  background: linear-gradient(135deg, oklch(0.92 0.12 145), oklch(0.78 0.2 150));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* ── Scroll reveal (modern) ────────────────────────────────
+   The Reveal component toggles `.is-visible` when a section enters view.
+   Sections can enter from any direction / scale / blur, and containers
+   marked `.stagger` or `.stagger-sides` cascade their children in. */
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-back: cubic-bezier(0.34, 1.45, 0.64, 1);
 }
 
-@utility text-gradient-gold {
-  background: linear-gradient(135deg, var(--gold-soft), var(--gold));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.reveal {
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 0.9s var(--ease-out-expo),
+    filter 0.9s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
 }
 
-@utility shimmer-text {
-  background: linear-gradient(90deg, oklch(0.97 0.01 130) 0%, var(--gold-soft) 25%, oklch(0.97 0.01 130) 50%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shimmer 6s linear infinite;
+/* section entrance variants (initial, pre-reveal state) */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(56px);
+}
+.reveal-down {
+  opacity: 0;
+  transform: translateY(-56px);
+}
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-70px);
+}
+.reveal-right {
+  opacity: 0;
+  transform: translateX(70px);
+}
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.86);
+}
+.reveal-blur {
+  opacity: 0;
+  transform: translateY(44px) scale(0.97);
+  filter: blur(18px);
+}
+.reveal-fade {
+  opacity: 0;
+}
+
+/* Staggered children — mark the grid/row container. Direct children cascade
+   in once the ancestor `.reveal` becomes visible. `.stagger` pops them up
+   with a slight overshoot; `.stagger-sides` alternates left/right slides. */
+.stagger > *,
+.stagger-sides > * {
+  opacity: 0;
+  transition:
+    opacity 0.7s var(--ease-out-expo),
+    transform 0.7s var(--ease-back);
+}
+.stagger > * {
+  transform: translateY(46px) scale(0.95);
+}
+.stagger-sides > *:nth-child(odd) {
+  transform: translateX(-60px);
+}
+.stagger-sides > *:nth-child(even) {
+  transform: translateX(60px);
+}
+.reveal.is-visible .stagger > *,
+.reveal.is-visible .stagger-sides > * {
+  opacity: 1;
+  transform: none;
+}
+.reveal.is-visible .stagger > *:nth-child(1),
+.reveal.is-visible .stagger-sides > *:nth-child(1) { transition-delay: 0.05s; }
+.reveal.is-visible .stagger > *:nth-child(2),
+.reveal.is-visible .stagger-sides > *:nth-child(2) { transition-delay: 0.13s; }
+.reveal.is-visible .stagger > *:nth-child(3) { transition-delay: 0.21s; }
+.reveal.is-visible .stagger > *:nth-child(4) { transition-delay: 0.29s; }
+.reveal.is-visible .stagger > *:nth-child(5) { transition-delay: 0.37s; }
+.reveal.is-visible .stagger > *:nth-child(6) { transition-delay: 0.45s; }
+.reveal.is-visible .stagger > *:nth-child(7) { transition-delay: 0.53s; }
+.reveal.is-visible .stagger > *:nth-child(8) { transition-delay: 0.61s; }
+.reveal.is-visible .stagger > *:nth-child(9) { transition-delay: 0.69s; }
+
+/* Respect users who prefer reduced motion: no float, no reveal shift. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal,
+  .reveal-up,
+  .reveal-down,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale,
+  .reveal-blur,
+  .reveal-fade,
+  .stagger > *,
+  .stagger-sides > * {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
 }
