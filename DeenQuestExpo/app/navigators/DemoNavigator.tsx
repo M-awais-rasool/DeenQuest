@@ -2,9 +2,10 @@ import {
   View,
   StyleSheet,
   Animated,
+  Easing,
+  Pressable,
 } from "react-native";
-import { AnimatedPressable } from "../components/ui";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, memo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   createBottomTabNavigator,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react-native";
 import type { DemoTabParamList } from "./navigationTypes";
 import { theme } from "../theme/themes";
+import { haptics } from "../utils/haptics";
 import { HomeScreen } from "../screens/home/HomeScreen";
 import { RewardsScreen } from "../screens/reward/RewardsScreen";
 
@@ -81,36 +83,172 @@ const TAB_CONFIG: {
 ];
 
 const INACTIVE_FG = "#5F7E7C";
+const TRANSPARENT = "rgba(0,0,0,0)";
 
-const SPRING = { friction: 8, tension: 120, useNativeDriver: true };
+/** Room the label needs when the pill is expanded ("Rewards" is widest). */
+const LABEL_MAX_WIDTH = 64;
+
+/**
+ * One animated tab. Two animation channels that never share a node:
+ *  - `focus`   (JS driver)     → pill colours, label reveal (width/opacity/x)
+ *  - `bounce*` (native driver) → icon scale-pop + little hop on activation
+ */
+const TabItem = memo(function TabItem({
+  conf,
+  isFocused,
+  onPress,
+}: {
+  conf: (typeof TAB_CONFIG)[number];
+  isFocused: boolean;
+  onPress: () => void;
+}) {
+  const TabIcon = conf.icon;
+
+  const focus = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
+  const bounceScale = useRef(new Animated.Value(1)).current;
+  const bounceY = useRef(new Animated.Value(0)).current;
+  const pressScale = useRef(new Animated.Value(1)).current;
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    // Pill expand/collapse + colour fade (layout props → JS driver).
+    Animated.timing(focus, {
+      toValue: isFocused ? 1 : 0,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+
+    // Icon celebration on activation only (skip the initial mount so the
+    // restored tab doesn't pop on app start).
+    if (isFocused && mounted.current) {
+      bounceScale.setValue(1);
+      bounceY.setValue(0);
+      Animated.parallel([
+        Animated.sequence([
+          Animated.spring(bounceScale, {
+            toValue: 1.28,
+            friction: 5,
+            tension: 300,
+            useNativeDriver: true,
+          }),
+          Animated.spring(bounceScale, {
+            toValue: 1,
+            friction: 5,
+            tension: 160,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(bounceY, {
+            toValue: -5,
+            duration: 130,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.spring(bounceY, {
+            toValue: 0,
+            friction: 4,
+            tension: 220,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    }
+    mounted.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocused]);
+
+  const backgroundColor = focus.interpolate({
+    inputRange: [0, 1],
+    outputRange: [TRANSPARENT, conf.activeBg],
+  });
+  const borderColor = focus.interpolate({
+    inputRange: [0, 1],
+    outputRange: [TRANSPARENT, conf.activeBorder],
+  });
+  const labelMaxWidth = focus.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, LABEL_MAX_WIDTH],
+  });
+  const labelMargin = focus.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 7],
+  });
+  const labelOpacity = focus.interpolate({
+    inputRange: [0, 0.4, 1],
+    outputRange: [0, 0, 1],
+  });
+  const labelShift = focus.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-8, 0],
+  });
+
+  const handlePressIn = () => {
+    Animated.spring(pressScale, {
+      toValue: 0.92,
+      friction: 6,
+      tension: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(pressScale, {
+      toValue: 1,
+      friction: 5,
+      tension: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      hitSlop={6}
+    >
+      <Animated.View
+        style={[styles.tab, { backgroundColor, borderColor }]}
+      >
+        <Animated.View
+          style={{
+            transform: [
+              { scale: Animated.multiply(bounceScale, pressScale) },
+              { translateY: bounceY },
+            ],
+          }}
+        >
+          <TabIcon
+            size={19}
+            color={isFocused ? conf.activeFg : INACTIVE_FG}
+            strokeWidth={isFocused ? 2.3 : 2.1}
+          />
+        </Animated.View>
+
+        <Animated.Text
+          numberOfLines={1}
+          ellipsizeMode="clip"
+          style={[
+            styles.label,
+            {
+              color: conf.activeFg,
+              maxWidth: labelMaxWidth,
+              marginLeft: labelMargin,
+              opacity: labelOpacity,
+              transform: [{ translateX: labelShift }],
+            },
+          ]}
+        >
+          {conf.label}
+        </Animated.Text>
+      </Animated.View>
+    </Pressable>
+  );
+});
 
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const tabCount = state.routes.length;
-
-  const iconScales = useRef(
-    Array.from({ length: tabCount }, () => new Animated.Value(1))
-  ).current;
-  const labelOpacities = useRef(
-    Array.from({ length: tabCount }, () => new Animated.Value(0))
-  ).current;
-
-  useEffect(() => {
-    for (let i = 0; i < tabCount; i++) {
-      const isFocused = state.index === i;
-      Animated.parallel([
-        Animated.spring(iconScales[i], {
-          toValue: isFocused ? 1.08 : 1,
-          ...SPRING,
-        }),
-        Animated.timing(labelOpacities[i], {
-          toValue: isFocused ? 1 : 0,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [state.index, tabCount]);
 
   return (
     <View
@@ -119,9 +257,8 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       <View style={styles.bar}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
-          const tabConf =
+          const conf =
             TAB_CONFIG.find((t) => t.name === route.name) ?? TAB_CONFIG[0];
-          const TabIcon = tabConf.icon;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -130,47 +267,18 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               canPreventDefault: true,
             });
             if (!isFocused && !event.defaultPrevented) {
+              haptics.light();
               navigation.navigate(route.name);
             }
           };
 
           return (
-            <AnimatedPressable
+            <TabItem
               key={route.key}
-              style={[
-                styles.tab,
-                isFocused && {
-                  backgroundColor: tabConf.activeBg,
-                  borderColor: tabConf.activeBorder,
-                },
-              ]}
+              conf={conf}
+              isFocused={isFocused}
               onPress={onPress}
-              activeOpacity={0.7}
-            >
-              <Animated.View
-                style={{ transform: [{ scale: iconScales[index] }] }}
-              >
-                <TabIcon
-                  size={19}
-                  color={isFocused ? tabConf.activeFg : INACTIVE_FG}
-                  strokeWidth={isFocused ? 2.3 : 2.1}
-                />
-              </Animated.View>
-
-              {isFocused && (
-                <Animated.Text
-                  style={[
-                    styles.label,
-                    {
-                      color: tabConf.activeFg,
-                      opacity: labelOpacities[index],
-                    },
-                  ]}
-                >
-                  {tabConf.label}
-                </Animated.Text>
-              )}
-            </AnimatedPressable>
+            />
           );
         })}
       </View>
@@ -219,12 +327,12 @@ const styles = StyleSheet.create({
   tab: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
     paddingVertical: 9,
     paddingHorizontal: 15,
     borderRadius: 18,
     borderWidth: 1.5,
     borderColor: "transparent",
+    overflow: "hidden",
   },
   label: {
     fontSize: 12,

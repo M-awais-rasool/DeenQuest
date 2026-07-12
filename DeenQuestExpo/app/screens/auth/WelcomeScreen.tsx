@@ -5,17 +5,94 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Svg, {
+  Circle,
+  Defs,
+  G,
+  LinearGradient as SvgLinearGradient,
+  Path,
+  RadialGradient,
+  Rect,
+  Stop,
+} from "react-native-svg";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { SocialAuthButton, TactilePressable } from "../../components/ui";
 import { TactileButton } from "../../components/TactileButton";
 import { theme } from "../../theme/themes";
-import MascotHero from "../../components/mascot/MascotHero";
+
+/** Gold rounded-square app icon with the mosque mark (A2 mock). */
+function BrandLogo({ size = 110 }: { size?: number }) {
+  return (
+    <View style={s.logoShadow}>
+      <Svg width={size} height={size} viewBox="0 0 80 80">
+        <Defs>
+          <SvgLinearGradient
+            id="lqg"
+            gradientUnits="userSpaceOnUse"
+            x1="12"
+            y1="0"
+            x2="62"
+            y2="80"
+          >
+            <Stop offset="0" stopColor="#F9D98C" />
+            <Stop offset="1" stopColor="#D08A22" />
+          </SvgLinearGradient>
+        </Defs>
+        <Rect x="1" y="1" width="78" height="78" rx="21" fill="url(#lqg)" />
+        <Rect
+          x="2.2"
+          y="2.2"
+          width="75.6"
+          height="75.6"
+          rx="20"
+          stroke="rgba(255,255,255,0.4)"
+          strokeWidth="1.5"
+        />
+        <G fill="#0B3B33">
+          <Path d="M40 16 C55 25 61 38 61 64 H19 C19 38 25 25 40 16 Z" />
+          <Rect x="38.7" y="9" width="2.6" height="8" rx="1.3" />
+          <Path
+            d="M40 1.5 A4.5 4.5 0 1 0 40 10.5 A6 6 0 0 1 40 1.5 Z"
+            transform="rotate(-20 40 6)"
+          />
+        </G>
+        <Path d="M33 64 v-12 a7 7 0 0 1 14 0 v12 z" fill="url(#lqg)" />
+        <Path
+          d="M60 17 l1.8 3.9 3.9 1.8-3.9 1.8-1.8 3.9-1.8-3.9-3.9-1.8 3.9-1.8z"
+          fill="#FDF6E3"
+        />
+        <Circle cx="20" cy="24" r="1.6" fill="#FDF6E3" opacity="0.85" />
+      </Svg>
+    </View>
+  );
+}
+
+/** Ambient radial glows behind the hero (teal top, gold bottom). */
+function AmbientGlows() {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Svg width="100%" height="100%">
+        <Defs>
+          <RadialGradient id="wg1" cx="0.5" cy="0.5" r="0.5">
+            <Stop offset="0" stopColor="#2CC9B5" stopOpacity="0.14" />
+            <Stop offset="1" stopColor="#2CC9B5" stopOpacity="0" />
+          </RadialGradient>
+          <RadialGradient id="wg2" cx="0.5" cy="0.5" r="0.5">
+            <Stop offset="0" stopColor="#EFB65A" stopOpacity="0.08" />
+            <Stop offset="1" stopColor="#EFB65A" stopOpacity="0" />
+          </RadialGradient>
+        </Defs>
+        <Circle cx="50%" cy="8%" r="280" fill="url(#wg1)" />
+        <Circle cx="50%" cy="96%" r="240" fill="url(#wg2)" />
+      </Svg>
+    </View>
+  );
+}
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -68,12 +145,6 @@ function OrnamentRow() {
 export function WelcomeScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
-
-  const mascotSize = Math.min(
-    170,
-    Math.max(120, Math.min(width * 0.38, height * 0.2)),
-  );
 
   const handleGoogle = useCallback(() => {
     // TODO: wire native Google OAuth (expo-auth-session) once the backend
@@ -96,9 +167,10 @@ export function WelcomeScreen() {
   return (
     <ScreenWrapper innerStyle={s.flex}>
       <View style={s.flex}>
+        <AmbientGlows />
         {/* Hero + brand */}
         <View style={s.hero}>
-          <MascotHero size={mascotSize} />
+          <BrandLogo />
           <FadeSlide delay={60} style={s.brandBlock}>
             <Text style={s.brand}>
               Deen
@@ -126,7 +198,7 @@ export function WelcomeScreen() {
           ]}
         >
           <TactileButton
-            title="Get Started"
+            title="GET STARTED"
             onPress={handleSignup}
             size="lg"
           />
@@ -164,6 +236,14 @@ export function WelcomeScreen() {
 const s = StyleSheet.create({
   flex: {
     flex: 1,
+  },
+  logoShadow: {
+    borderRadius: 30,
+    shadowColor: "#EFB65A",
+    shadowOpacity: 0.2,
+    shadowRadius: 30,
+    shadowOffset: { width: 0, height: 18 },
+    elevation: 16,
   },
   hero: {
     flex: 1,

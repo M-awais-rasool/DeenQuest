@@ -34,6 +34,11 @@ import OnboardingScreen from "../screens/auth/OnboardingScreen";
 import { SignupScreen } from "../screens/auth/SignupScreen";
 import { WelcomeScreen } from "../screens/auth/WelcomeScreen";
 import { SurahDetailScreen } from "../screens/quran/SurahDetailScreen";
+import { CoachInsightsScreen } from "../screens/coach/CoachInsightsScreen";
+import { PrayerTimesScreen } from "../screens/extras/PrayerTimesScreen";
+import { HifzTrackerScreen } from "../screens/extras/HifzTrackerScreen";
+import { ChallengesScreen } from "../screens/extras/ChallengesScreen";
+import { ParentDashboardScreen } from "../screens/extras/ParentDashboardScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -149,7 +154,14 @@ const AppStack = () => {
           />
           <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
           <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
-
+          <Stack.Screen name="CoachInsights" component={CoachInsightsScreen} />
+          <Stack.Screen name="PrayerTimes" component={PrayerTimesScreen} />
+          <Stack.Screen name="HifzTracker" component={HifzTrackerScreen} />
+          <Stack.Screen name="Challenges" component={ChallengesScreen} />
+          <Stack.Screen
+            name="ParentDashboard"
+            component={ParentDashboardScreen}
+          />
         </>
       ) : (
         <>

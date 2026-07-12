@@ -37,6 +37,11 @@ export type AppStackParamList = {
   ChangePassword: undefined;
   PublicProfile: { userId: string };
   Leaderboard: undefined;
+  CoachInsights: undefined;
+  PrayerTimes: undefined;
+  HifzTracker: undefined;
+  Challenges: undefined;
+  ParentDashboard: undefined;
 };
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =

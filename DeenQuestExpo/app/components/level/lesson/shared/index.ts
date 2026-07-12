@@ -7,6 +7,8 @@ export {
 } from "./FeedbackBanner";
 export { ArabicChip, type ChipState, type ChipSize } from "./ArabicChip";
 export { OptionRow, type OptionState } from "./OptionRow";
+export { OptionGrid, useGridLayout } from "./OptionGrid";
+export { CoachCorrectionSheet } from "./CoachCorrectionSheet";
 export { HintCard } from "./HintCard";
 export { CelebrationOverlay } from "./CelebrationOverlay";
 export { StreakBadge } from "./StreakBadge";

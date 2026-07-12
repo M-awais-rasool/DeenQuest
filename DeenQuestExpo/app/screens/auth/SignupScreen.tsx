@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   View,
@@ -10,87 +10,67 @@ import {
 } from "react-native";
 import { AnimatedPressable } from "../../components/ui";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import {
-  AlertCircle,
-  Check,
-  CheckCircle2,
-  ChevronLeft,
-  Lock,
-  Mail,
-  UserPlus,
-} from "lucide-react-native";
+import { Eye, EyeOff, ChevronLeft } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { TactileButton } from "../../components/TactileButton";
-import { AppStackParamList } from "../../navigators/navigationTypes";
-import { useAppDispatch } from "../../store/hooks";
 import { SignupRequest, useSignupMutation } from "../../store/services/api";
-import { theme } from "../../theme/themes";
+import { useAppDispatch } from "../../store/hooks";
+import { AppStackParamList } from "../../navigators/navigationTypes";
 import { setError } from "../../store/slices/mainSlice";
+import { theme } from "../../theme/themes";
 
 type SignupScreenProps = NativeStackScreenProps<AppStackParamList, "Signup">;
+type SignupField = "name" | "email" | "password";
 
-type FormErrors = {
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
-type SignupField = keyof FormErrors;
+function getErrorMessage(err: any): string {
+  const validationErrors = err?.data?.errors as string[] | undefined;
+  return (
+    err?.data?.error ||
+    validationErrors?.[0] ||
+    "Signup failed. Please try again."
+  );
+}
 
-const getErrorMessage = (rawError: any): string => {
-  const data = rawError?.data;
-  if (!data) return "Could not create account. Please try again.";
-
-  if (typeof data.error === "string" && data.error.trim()) return data.error;
-
-  if (Array.isArray(data.errors) && data.errors.length > 0) {
-    return String(data.errors[0]);
-  }
-
-  if (data.errors && typeof data.errors === "object") {
-    const first = Object.values(data.errors)[0];
-    if (Array.isArray(first) && first.length > 0) return String(first[0]);
-    if (typeof first === "string" && first.trim()) return first;
-  }
-
-  return "Could not create account. Please try again.";
-};
+/** ✓ / ○ requirement row under the password field (A4 mock). */
+function Requirement({ met, label }: { met: boolean; label: string }) {
+  return (
+    <View style={styles.reqRow}>
+      <View style={[styles.reqDot, met ? styles.reqDotMet : styles.reqDotIdle]}>
+        {met && <Text style={styles.reqDotText}>✓</Text>}
+      </View>
+      <Text style={[styles.reqLabel, met && styles.reqLabelMet]}>{label}</Text>
+    </View>
+  );
+}
 
 export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   const dispatch = useAppDispatch();
-  const [signup, { isLoading, error }] = useSignupMutation();
+  const [signup, { isLoading }] = useSignupMutation();
   const scrollRef = useRef<ScrollView>(null);
   const formOffset = useRef(0);
   const inputOffsets = useRef<Record<SignupField, number>>({
+    name: 0,
     email: 0,
     password: 0,
-    confirmPassword: 0,
   });
 
   const [form, setForm] = useState({
-    email: "awais@gmail.com",
-    password: "Helo@1234",
-    confirmPassword: "Helo@1234",
-  });
-
-  const [errors, setErrors] = useState<FormErrors>({
+    name: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
-
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const passwordChecklist = useMemo(
-    () => ({
-      length: form.password.length >= 8,
-      upper: /[A-Z]/.test(form.password),
-      number: /\d/.test(form.password),
-    }),
-    [form.password],
-  );
+  const hasMinLength = form.password.length >= 8;
+  const hasNumber = /\d/.test(form.password);
 
-  const handleChange = (field: keyof typeof form, value: string) => {
+  const handleChange = (field: SignupField, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
     setFormError(null);
@@ -101,7 +81,9 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
     setTimeout(() => {
       scrollRef.current?.scrollTo({
         y: Math.max(
-          formOffset.current + inputOffsets.current[field] - theme.spacing.lg,
+          formOffset.current +
+            inputOffsets.current[field] -
+            (Platform.OS === "android" ? 190 : theme.spacing.lg),
           0,
         ),
         animated: true,
@@ -111,42 +93,28 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
 
   const validate = () => {
     let valid = true;
-    const nextErrors: FormErrors = {
-      email: "",
-      password: "",
-      confirmPassword: "",
-    };
+    const next = { name: "", email: "", password: "" };
 
+    if (!form.name.trim()) {
+      next.name = "Name is required";
+      valid = false;
+    }
     if (!form.email.trim()) {
-      nextErrors.email = "Email is required";
+      next.email = "Email is required";
       valid = false;
     } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-      nextErrors.email = "Use a valid email address";
+      next.email = "Invalid email format";
       valid = false;
     }
-
     if (!form.password) {
-      nextErrors.password = "Password is required";
+      next.password = "Password is required";
       valid = false;
-    } else if (form.password.length < 8) {
-      nextErrors.password = "Password must be at least 8 characters";
-      valid = false;
-    }
-
-    if (!form.confirmPassword) {
-      nextErrors.confirmPassword = "Please confirm your password";
-      valid = false;
-    } else if (form.confirmPassword !== form.password) {
-      nextErrors.confirmPassword = "Passwords do not match";
+    } else if (!hasMinLength || !hasNumber) {
+      next.password = "Password doesn't meet the requirements below";
       valid = false;
     }
 
-    if (!acceptedTerms) {
-      setFormError("Please accept the terms to continue.");
-      valid = false;
-    }
-
-    setErrors(nextErrors);
+    setErrors(next);
     return valid;
   };
 
@@ -158,6 +126,7 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         role: "USER",
+        display_name: form.name.trim(),
       };
 
       await signup(payload).unwrap();
@@ -169,9 +138,6 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
       dispatch(setError(message));
     }
   };
-
-  const requestError = error ? getErrorMessage(error) : null;
-  const displayError = formError || requestError;
 
   return (
     <ScreenWrapper innerStyle={{ flex: 1 }}>
@@ -210,188 +176,138 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
           </View>
 
           <View
-            style={styles.formCard}
+            style={styles.form}
             onLayout={(event) => {
               formOffset.current = event.nativeEvent.layout.y;
             }}
           >
-            {displayError && (
-              <View style={styles.errorContainer}>
-                <AlertCircle size={16} color={theme.colors.errorStrong} />
-                <Text style={styles.errorMessage}>{displayError}</Text>
-              </View>
-            )}
-
             <View
-              style={styles.inputGroup}
               onLayout={(event) => {
-                inputOffsets.current.email = event.nativeEvent.layout.y;
+                inputOffsets.current.name = event.nativeEvent.layout.y;
               }}
             >
-              <Text style={styles.label}>Email Address</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={[styles.input, errors.email && styles.inputError]}
-                  placeholder="name@example.com"
-                  placeholderTextColor={theme.colors.textMuted}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  selectionColor={theme.colors.primary}
-                  value={form.email}
-                  onChangeText={(text) => handleChange("email", text)}
-                  onFocus={() => handleInputFocus("email")}
-                  editable={!isLoading}
-                />
-                <Mail
-                  size={18}
-                  color={theme.colors.textMuted}
-                  style={styles.inputIcon}
-                />
-              </View>
-              {!!errors.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
+              <Text style={styles.label}>NAME</Text>
+              <TextInput
+                style={[styles.input, !!errors.name && styles.inputError]}
+                placeholder="Your name"
+                placeholderTextColor={theme.colors.textMuted}
+                autoCapitalize="words"
+                autoCorrect={false}
+                selectionColor={theme.colors.primary}
+                value={form.name}
+                onChangeText={(text) => handleChange("name", text)}
+                onFocus={() => handleInputFocus("name")}
+                editable={!isLoading}
+              />
+              {!!errors.name && (
+                <View style={styles.errorRow}>
+                  <View style={styles.errorDot}>
+                    <Text style={styles.errorDotText}>!</Text>
+                  </View>
+                  <Text style={styles.errorText}>{errors.name}</Text>
+                </View>
               )}
             </View>
 
             <View
-              style={styles.inputGroup}
+              onLayout={(event) => {
+                inputOffsets.current.email = event.nativeEvent.layout.y;
+              }}
+            >
+              <Text style={styles.label}>EMAIL</Text>
+              <TextInput
+                style={[styles.input, !!errors.email && styles.inputError]}
+                placeholder="name@example.com"
+                placeholderTextColor={theme.colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                selectionColor={theme.colors.primary}
+                value={form.email}
+                onChangeText={(text) => handleChange("email", text)}
+                onFocus={() => handleInputFocus("email")}
+                editable={!isLoading}
+              />
+              {!!(errors.email || formError) && (
+                <View style={styles.errorRow}>
+                  <View style={styles.errorDot}>
+                    <Text style={styles.errorDotText}>!</Text>
+                  </View>
+                  <Text style={styles.errorText}>
+                    {errors.email || formError}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <View
               onLayout={(event) => {
                 inputOffsets.current.password = event.nativeEvent.layout.y;
               }}
             >
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>PASSWORD</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[styles.input, errors.password && styles.inputError]}
-                  placeholder="Create a secure password"
+                  style={[
+                    styles.input,
+                    form.password.length > 0 && styles.inputActive,
+                    !!errors.password && styles.inputError,
+                  ]}
+                  placeholder="Create a password"
                   placeholderTextColor={theme.colors.textMuted}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   selectionColor={theme.colors.primary}
                   value={form.password}
                   onChangeText={(text) => handleChange("password", text)}
                   onFocus={() => handleInputFocus("password")}
                   editable={!isLoading}
                 />
-                <Lock
-                  size={18}
-                  color={theme.colors.textMuted}
-                  style={styles.inputIcon}
-                />
+                <AnimatedPressable
+                  style={styles.inputIconButton}
+                  onPress={() => setShowPassword((prev) => !prev)}
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff size={19} color="#5F7E7C" />
+                  ) : (
+                    <Eye size={19} color="#5F7E7C" />
+                  )}
+                </AnimatedPressable>
+              </View>
+              <View style={styles.reqList}>
+                <Requirement met={hasMinLength} label="At least 8 characters" />
+                <Requirement met={hasNumber} label="Contains a number" />
               </View>
               {!!errors.password && (
-                <Text style={styles.errorText}>{errors.password}</Text>
+                <View style={styles.errorRow}>
+                  <View style={styles.errorDot}>
+                    <Text style={styles.errorDotText}>!</Text>
+                  </View>
+                  <Text style={styles.errorText}>{errors.password}</Text>
+                </View>
               )}
             </View>
-
-            <View
-              style={styles.inputGroup}
-              onLayout={(event) => {
-                inputOffsets.current.confirmPassword =
-                  event.nativeEvent.layout.y;
-              }}
-            >
-              <Text style={styles.label}>Confirm Password</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={[
-                    styles.input,
-                    errors.confirmPassword && styles.inputError,
-                  ]}
-                  placeholder="Re-enter your password"
-                  placeholderTextColor={theme.colors.textMuted}
-                  secureTextEntry
-                  selectionColor={theme.colors.primary}
-                  value={form.confirmPassword}
-                  onChangeText={(text) => handleChange("confirmPassword", text)}
-                  onFocus={() => handleInputFocus("confirmPassword")}
-                  editable={!isLoading}
-                />
-                <UserPlus
-                  size={18}
-                  color={theme.colors.textMuted}
-                  style={styles.inputIcon}
-                />
-              </View>
-              {!!errors.confirmPassword && (
-                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-              )}
-            </View>
-
-            <View style={styles.checklistBox}>
-              <ChecklistItem
-                ok={passwordChecklist.length}
-                text="At least 8 characters"
-              />
-              <ChecklistItem
-                ok={passwordChecklist.upper}
-                text="Contains one uppercase letter"
-              />
-              <ChecklistItem
-                ok={passwordChecklist.number}
-                text="Contains one number"
-              />
-            </View>
-
-            <AnimatedPressable
-              style={styles.termsRow}
-              onPress={() => {
-                setAcceptedTerms((prev) => !prev);
-              }}
-              disabled={isLoading}
-              activeOpacity={0.8}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  acceptedTerms && styles.checkboxChecked,
-                ]}
-              >
-                {acceptedTerms && (
-                  <CheckCircle2 size={14} color={theme.colors.onPrimary} />
-                )}
-              </View>
-              <Text style={styles.termsText}>
-                I agree to the community guidelines and privacy policy.
-              </Text>
-            </AnimatedPressable>
 
             <TactileButton
-              title={isLoading ? "Creating account..." : "Create Account"}
+              title={isLoading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
               onPress={handleSignup}
-              style={styles.signupButton}
+              size="lg"
+              style={styles.submitButton}
             />
           </View>
 
           <AnimatedPressable
             style={styles.footer}
-            onPress={() => {
-              navigation.goBack();
-            }}
+            onPress={() => navigation.navigate("Login")}
           >
             <Text style={styles.footerText}>
               Already have an account?{" "}
-              <Text style={styles.loginText}>Log In</Text>
+              <Text style={styles.loginText}>Log in</Text>
             </Text>
           </AnimatedPressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenWrapper>
-  );
-};
-
-const ChecklistItem = ({ ok, text }: { ok: boolean; text: string }) => {
-  return (
-    <View style={styles.checklistRow}>
-      <View
-        style={[styles.checklistDot, ok ? styles.checklistDotOk : styles.checklistDotPending]}
-      >
-        {ok && <Check size={11} color={theme.colors.primary} strokeWidth={3.5} />}
-      </View>
-      <Text style={[styles.checklistText, ok && styles.checklistTextActive]}>
-        {text}
-      </Text>
-    </View>
   );
 };
 
@@ -423,8 +339,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     lineHeight: 38,
-    color: theme.colors.text,
     fontFamily: "Nunito_900Black",
+    color: theme.colors.text,
   },
   subtitle: {
     fontSize: 15,
@@ -432,34 +348,16 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_600SemiBold",
     color: theme.colors.textMuted,
   },
-  formCard: {},
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.error10,
-    borderColor: theme.colors.errorStrong,
-    borderWidth: 1,
-    borderRadius: theme.borderRadius.sm,
-    padding: 12,
-    marginBottom: theme.spacing.md,
-    gap: 8,
-  },
-  errorMessage: {
-    color: theme.colors.errorBright,
-    fontSize: 13,
-    flex: 1,
-  },
-  inputGroup: {
-    marginBottom: theme.spacing.md,
+  form: {
+    gap: 16,
   },
   label: {
     fontSize: 12,
     fontFamily: "Nunito_800ExtraBold",
     color: theme.colors.textMuted,
+    letterSpacing: 1,
     marginBottom: 7,
     marginLeft: 4,
-    letterSpacing: 1,
-    textTransform: "uppercase",
   },
   inputWrapper: {
     position: "relative",
@@ -471,96 +369,102 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     paddingVertical: 15,
     paddingHorizontal: 18,
-    paddingRight: 48,
     borderRadius: 16,
     fontSize: 15,
     fontFamily: "Nunito_700Bold",
   },
+  inputActive: {
+    borderColor: theme.colors.primary,
+  },
   inputError: {
     borderColor: theme.colors.error,
   },
-  inputIcon: {
+  inputIconButton: {
     position: "absolute",
     right: 16,
-    top: 17,
+    top: 16,
+    padding: 2,
   },
-  errorText: {
-    color: theme.colors.error,
-    fontSize: 13,
-    fontFamily: "Nunito_700Bold",
-    marginTop: 8,
-    marginLeft: 4,
-  },
-  checklistBox: {
+  reqList: {
     gap: 6,
-    marginBottom: theme.spacing.md,
+    marginTop: 10,
     marginLeft: 4,
   },
-  checklistRow: {
+  reqRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  checklistDot: {
+  reqDot: {
     width: 17,
     height: 17,
     borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
   },
-  checklistDotOk: {
+  reqDotMet: {
     backgroundColor: theme.colors.primaryContainer,
   },
-  checklistDotPending: {
+  reqDotIdle: {
     borderWidth: 2,
     borderColor: "#2C464C",
   },
-  checklistText: {
-    color: "#5F7E7C",
+  reqDotText: {
+    color: theme.colors.primary,
+    fontSize: 10,
+    fontFamily: "Nunito_900Black",
+  },
+  reqLabel: {
     fontSize: 13,
     fontFamily: "Nunito_700Bold",
+    color: "#5F7E7C",
   },
-  checklistTextActive: {
+  reqLabelMet: {
     color: theme.colors.textMuted,
   },
-  termsRow: {
+  errorRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.lg,
+    gap: 7,
+    marginTop: 9,
+    marginLeft: 4,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    justifyContent: "center",
+  errorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#3A1E24",
     alignItems: "center",
-    marginRight: 10,
-    backgroundColor: theme.colors.surfaceLow,
+    justifyContent: "center",
   },
-  checkboxChecked: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
+  errorDotText: {
+    color: theme.colors.error,
+    fontSize: 10,
+    fontFamily: "Nunito_900Black",
   },
-  termsText: {
-    color: theme.colors.textMuted,
-    fontSize: 12,
+  errorText: {
+    color: theme.colors.error,
+    fontSize: 13,
+    fontFamily: "Nunito_700Bold",
     flex: 1,
-    lineHeight: 18,
   },
-  signupButton: {
+  submitButton: {
     marginTop: 2,
   },
   footer: {
     alignItems: "center",
-    marginTop: theme.spacing.xl,
+    marginTop: "auto",
+    paddingTop: theme.spacing.xl,
   },
   footerText: {
     color: theme.colors.textMuted,
+    fontSize: 14,
+    fontFamily: "Nunito_700Bold",
   },
   loginText: {
     color: theme.colors.primary,
-    fontFamily: "Nunito_700Bold",
+    fontFamily: "Nunito_900Black",
   },
 });
+
+export default SignupScreen;

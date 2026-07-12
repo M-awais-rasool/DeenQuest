@@ -247,7 +247,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
             <Text style={styles.forgotPassword}>Forgot password?</Text>
 
             <TactileButton
-              title={isLoading ? "Logging in..." : "Log In"}
+              title={isLoading ? "LOGGING IN..." : "LOG IN"}
               onPress={handleLogin}
               size="lg"
               style={styles.loginButton}

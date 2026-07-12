@@ -5,12 +5,16 @@ import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import {
+  CoachCorrectionSheet,
   FeedbackBanner,
   type FeedbackStatus,
   HintCard,
+  OptionGrid,
   OptionRow,
   type OptionState,
+  useGridLayout,
 } from "./shared";
+import { containsArabic } from "./shared";
 
 type Question = {
   question: string;
@@ -49,11 +53,22 @@ export function MCQComponent({ lesson, onComplete }: LessonComponentProps) {
 
   const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
+  const [wrongAttempts, setWrongAttempts] = useState(0);
 
   const q = questions[qIndex];
   const answered = selected !== null;
   const isCorrect = answered && selected === q.correct;
   const isLast = qIndex >= questions.length - 1;
+  const gridLayout = useGridLayout(q.options);
+
+  // G3: the coach steps in (instead of the plain "wrong" banner) when an
+  // Arabic answer was confused with another Arabic answer.
+  const coachEligible =
+    answered &&
+    !isCorrect &&
+    selected !== null &&
+    containsArabic(q.options[selected] ?? "") &&
+    containsArabic(q.options[q.correct] ?? "");
 
   const handleSelect = (idx: number) => {
     if (answered) return;
@@ -64,7 +79,12 @@ export function MCQComponent({ lesson, onComplete }: LessonComponentProps) {
     } else {
       haptics.error();
       sfx.wrong();
+      setWrongAttempts((n) => n + 1);
     }
+  };
+
+  const handleTryAgain = () => {
+    setSelected(null);
   };
 
   const handleContinue = () => {
@@ -74,6 +94,7 @@ export function MCQComponent({ lesson, onComplete }: LessonComponentProps) {
     }
     setQIndex((i) => i + 1);
     setSelected(null);
+    setWrongAttempts(0);
   };
 
   const optState = (idx: number): OptionState => {
@@ -96,22 +117,41 @@ export function MCQComponent({ lesson, onComplete }: LessonComponentProps) {
 
       {!answered && <HintCard text={q.hint} arabic={q.hintArabic} />}
 
-      {q.options.map((opt, idx) => (
-        <OptionRow
-          key={`${qIndex}-${idx}`}
-          text={opt}
-          state={optState(idx)}
+      {gridLayout ? (
+        <OptionGrid
+          key={qIndex}
+          options={q.options}
+          state={optState}
           disabled={answered}
-          onPress={() => handleSelect(idx)}
+          onSelect={handleSelect}
         />
-      ))}
+      ) : (
+        q.options.map((opt, idx) => (
+          <OptionRow
+            key={`${qIndex}-${idx}`}
+            text={opt}
+            state={optState(idx)}
+            disabled={answered}
+            onPress={() => handleSelect(idx)}
+          />
+        ))
+      )}
 
-      <FeedbackBanner
-        status={status}
-        wrongText={`The correct answer is highlighted above.`}
-        continueLabel={isLast ? "CONTINUE" : "NEXT"}
-        onContinue={handleContinue}
-      />
+      {coachEligible ? (
+        <CoachCorrectionSheet
+          picked={q.options[selected!]}
+          correct={q.options[q.correct]}
+          attempt={wrongAttempts}
+          onTryAgain={handleTryAgain}
+        />
+      ) : (
+        <FeedbackBanner
+          status={status}
+          wrongText={`The correct answer is highlighted above.`}
+          continueLabel={isLast ? "CONTINUE" : "NEXT"}
+          onContinue={handleContinue}
+        />
+      )}
     </View>
   );
 }
