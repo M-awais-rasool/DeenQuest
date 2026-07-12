@@ -26,6 +26,7 @@ export interface SignupRequest {
   email: string;
   password: string;
   role?: string;
+  display_name?: string;
 }
 
 export interface LoginRequest {

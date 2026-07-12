@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
-import { Zap } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
@@ -8,9 +8,11 @@ import type { LessonComponentProps } from "./types";
 import {
   FeedbackBanner,
   type FeedbackStatus,
+  OptionGrid,
   OptionRow,
   type OptionState,
   StreakBadge,
+  useGridLayout,
 } from "./shared";
 
 type Question = { question: string; options: string[]; correct: number };
@@ -41,6 +43,9 @@ export function LightningRoundComponent({ lesson, onComplete }: LessonComponentP
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [barWidth, setBarWidth] = useState(0);
+  const [secondsLeft, setSecondsLeft] = useState(seconds);
+  // Per-question outcome for the result dots row (C16 mock).
+  const [results, setResults] = useState<boolean[]>([]);
 
   const timer = useRef(new Animated.Value(1)).current;
   const answeredRef = useRef(false);
@@ -49,10 +54,16 @@ export function LightningRoundComponent({ lesson, onComplete }: LessonComponentP
   const answered = selected !== null;
   const isCorrect = answered && selected === q?.correct;
   const isLast = qIndex >= questions.length - 1;
+  const gridLayout = useGridLayout(q?.options ?? []);
 
   useEffect(() => {
     answeredRef.current = false;
     timer.setValue(1);
+    setSecondsLeft(seconds);
+    const countdown = setInterval(
+      () => setSecondsLeft((v) => Math.max(0, v - 1)),
+      1000,
+    );
     const anim = Animated.timing(timer, {
       toValue: 0,
       duration: seconds * 1000,
@@ -64,11 +75,15 @@ export function LightningRoundComponent({ lesson, onComplete }: LessonComponentP
         answeredRef.current = true;
         setSelected(-1);
         setStreak(0);
+        setResults((r) => [...r, false]);
         haptics.error();
         sfx.wrong();
       }
     });
-    return () => anim.stop();
+    return () => {
+      clearInterval(countdown);
+      anim.stop();
+    };
   }, [qIndex, seconds, timer]);
 
   const handleSelect = (idx: number) => {
@@ -76,7 +91,9 @@ export function LightningRoundComponent({ lesson, onComplete }: LessonComponentP
     answeredRef.current = true;
     timer.stopAnimation();
     setSelected(idx);
-    if (idx === q.correct) {
+    const right = idx === q.correct;
+    setResults((r) => [...r, right]);
+    if (right) {
       haptics.success();
       sfx.correct();
       setScore((n) => n + 1);
@@ -121,46 +138,88 @@ export function LightningRoundComponent({ lesson, onComplete }: LessonComponentP
 
   return (
     <View>
-      <View style={s.headerRow}>
-        <View style={s.scorePill}>
-          <Zap
-            size={14}
-            color={theme.colors.secondary}
-            fill={theme.colors.secondary}
-          />
-          <Text style={s.scoreText}>
-            {score} / {questions.length}
-          </Text>
+      {/* timer bar + countdown (C16 mock) */}
+      <View style={s.timerRow}>
+        <View
+          style={s.timerTrack}
+          onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+        >
+          <Animated.View
+            style={[
+              s.timerFill,
+              { transform: [{ translateX }, { scaleX: timer }] },
+            ]}
+          >
+            <LinearGradient
+              colors={["#F0838C", "#F79A59"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
         </View>
-        <StreakBadge streak={streak} />
-        <Text style={s.counter}>
-          {qIndex + 1} of {questions.length}
+        <Text style={s.timerText}>
+          0:{String(secondsLeft).padStart(2, "0")}
         </Text>
       </View>
 
-      <View
-        style={s.timerTrack}
-        onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
-      >
-        <Animated.View
-          style={[
-            s.timerFill,
-            { transform: [{ translateX }, { scaleX: timer }] },
-          ]}
-        />
+      {/* Q / CORRECT stats */}
+      <View style={s.statsRow}>
+        <View>
+          <Text style={s.statValue}>Q{qIndex + 1}</Text>
+          <Text style={s.statLabel}>QUESTION</Text>
+        </View>
+        <View style={s.streakSlot}>
+          <StreakBadge streak={streak} />
+        </View>
+        <View style={s.statRight}>
+          <Text style={[s.statValue, { color: "#5EE0CE" }]}>{score}</Text>
+          <Text style={s.statLabel}>CORRECT</Text>
+        </View>
       </View>
 
       <Text style={s.question}>{q.question}</Text>
 
-      {q.options.map((opt, idx) => (
-        <OptionRow
-          key={`${qIndex}-${idx}`}
-          text={opt}
-          state={optState(idx)}
+      {gridLayout ? (
+        <OptionGrid
+          key={qIndex}
+          options={q.options}
+          state={optState}
           disabled={answered}
-          onPress={() => handleSelect(idx)}
+          onSelect={handleSelect}
         />
-      ))}
+      ) : (
+        q.options.map((opt, idx) => (
+          <OptionRow
+            key={`${qIndex}-${idx}`}
+            text={opt}
+            state={optState(idx)}
+            disabled={answered}
+            onPress={() => handleSelect(idx)}
+          />
+        ))
+      )}
+
+      {/* per-question result dots */}
+      <View style={s.dotsRow}>
+        {questions.map((_, idx) => {
+          const result = results[idx];
+          const answeredDot = idx < results.length;
+          return (
+            <View
+              key={idx}
+              style={[
+                s.dot,
+                answeredDot
+                  ? result
+                    ? s.dotRight
+                    : s.dotWrong
+                  : s.dotPending,
+              ]}
+            />
+          );
+        })}
+      </View>
 
       <FeedbackBanner
         status={status}
@@ -184,51 +243,82 @@ export function LightningRoundComponent({ lesson, onComplete }: LessonComponentP
 }
 
 const s = StyleSheet.create({
-  headerRow: {
+  timerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 12,
-  },
-  scorePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: theme.colors.secondary12,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  scoreText: {
-    color: theme.colors.secondary,
-    fontSize: 13,
-    fontFamily: "Nunito_900Black",
-  },
-  counter: {
-    marginLeft: "auto",
-    fontSize: 12,
-    fontFamily: "Nunito_800ExtraBold",
-    color: theme.colors.textMuted,
-    letterSpacing: 1,
+    gap: 12,
+    marginBottom: 6,
   },
   timerTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.surfaceHigh,
+    flex: 1,
+    height: 12,
+    borderRadius: 7,
+    backgroundColor: theme.colors.surface,
     overflow: "hidden",
-    marginBottom: 18,
   },
   timerFill: {
     flex: 1,
-    borderRadius: 4,
-    backgroundColor: theme.colors.secondary,
+    borderRadius: 7,
+    overflow: "hidden",
+  },
+  timerText: {
+    fontSize: 18,
+    fontFamily: "Nunito_900Black",
+    color: "#F79A59",
+  },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 14,
+    marginBottom: 16,
+  },
+  streakSlot: {
+    alignItems: "center",
+  },
+  statRight: {
+    alignItems: "flex-end",
+  },
+  statValue: {
+    fontSize: 22,
+    fontFamily: "Nunito_900Black",
+    color: theme.colors.text,
+  },
+  statLabel: {
+    fontSize: 10.5,
+    fontFamily: "Nunito_800ExtraBold",
+    color: "#5F7E7C",
+    letterSpacing: 0.8,
+    marginTop: 2,
   },
   question: {
-    fontSize: 18,
+    fontSize: 21,
     color: theme.colors.text,
-    fontFamily: "Nunito_800ExtraBold",
+    fontFamily: "Nunito_900Black",
     marginBottom: 20,
-    lineHeight: 26,
+    lineHeight: 28,
+    textAlign: "center",
+  },
+  dotsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 7,
+    marginTop: 22,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  dotRight: {
+    backgroundColor: theme.colors.primary,
+  },
+  dotWrong: {
+    backgroundColor: theme.colors.error,
+  },
+  dotPending: {
+    borderWidth: 2,
+    borderColor: "#2C464C",
   },
 });
 

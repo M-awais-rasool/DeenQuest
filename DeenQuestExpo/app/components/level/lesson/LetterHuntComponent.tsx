@@ -67,11 +67,6 @@ export function LetterHuntComponent({ lesson, onComplete }: LessonComponentProps
         <View style={s.targetCard}>
           <Text style={[s.targetText, { fontFamily }]}>{target}</Text>
         </View>
-        <View style={s.progressPill}>
-          <Text style={s.progressText}>
-            {found.size} / {total}
-          </Text>
-        </View>
       </View>
 
       <View style={s.grid}>
@@ -94,6 +89,24 @@ export function LetterHuntComponent({ lesson, onComplete }: LessonComponentProps
             />
           </View>
         ))}
+      </View>
+
+      {/* PROGRESS strip (C9 mock) */}
+      <View style={s.progressCard}>
+        <Text style={s.progressLabel}>PROGRESS</Text>
+        <View style={s.progressTrack}>
+          <View
+            style={[
+              s.progressFill,
+              {
+                width: `${total > 0 ? Math.round((found.size / total) * 100) : 0}%`,
+              },
+            ]}
+          />
+        </View>
+        <Text style={s.progressPct}>
+          {total > 0 ? Math.round((found.size / total) * 100) : 0}%
+        </Text>
       </View>
 
       <FeedbackBanner
@@ -132,25 +145,49 @@ const s = StyleSheet.create({
     color: theme.colors.primary,
     writingDirection: "rtl",
   },
-  progressPill: {
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  progressText: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontFamily: "Nunito_900Black",
-  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    gap: 12,
     justifyContent: "center",
   },
   cell: {
     width: "22%",
+  },
+  progressCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 22,
+  },
+  progressLabel: {
+    fontSize: 11,
+    fontFamily: "Nunito_800ExtraBold",
+    color: theme.colors.textMuted,
+    letterSpacing: 0.9,
+  },
+  progressTrack: {
+    flex: 1,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: theme.colors.background,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 5,
+    backgroundColor: theme.colors.primary,
+  },
+  progressPct: {
+    fontSize: 13,
+    fontFamily: "Nunito_900Black",
+    color: "#5EE0CE",
   },
 });
 
