@@ -7,6 +7,8 @@ func CourseTypeFromString(raw string) (CourseType, bool) {
 	switch CourseType(strings.ToLower(strings.TrimSpace(raw))) {
 	case CourseQaida:
 		return CourseQaida, true
+	case CoursePractice:
+		return CoursePractice, true
 	default:
 		return "", false
 	}

@@ -3,6 +3,7 @@ package progress
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -23,6 +24,7 @@ type MongoCoreRepository struct {
 	rewards            *mongo.Collection
 	userRewards        *mongo.Collection
 	recitationAttempts *mongo.Collection
+	meta               *mongo.Collection
 	staticMu           sync.RWMutex
 	cachedLevels       []Level
 	cachedTasks        []DailyTask
@@ -43,6 +45,7 @@ func NewMongoCoreRepository(db *mongo.Database) (*MongoCoreRepository, error) {
 		rewards:            db.Collection("rewards"),
 		userRewards:        db.Collection("user_rewards"),
 		recitationAttempts: db.Collection("recitation_attempts"),
+		meta:               db.Collection("meta"),
 	}
 	if err := r.ensureIndexes(); err != nil {
 		return nil, err
@@ -563,6 +566,70 @@ func (r *MongoCoreRepository) SeedLevels(ctx context.Context, levels []Level) er
 	if _, err := r.levels.BulkWrite(timeoutCtx, models, options.BulkWrite().SetOrdered(false)); err != nil {
 		return err
 	}
+	r.invalidateLevels()
+	return nil
+}
+
+// levelSeedMetaID is the meta-collection document that records which
+// curriculum version the levels collection holds.
+const levelSeedMetaID = "level_seed"
+
+func (r *MongoCoreRepository) LevelSeedVersion(ctx context.Context) (int, error) {
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	var doc struct {
+		Version int `bson:"version"`
+	}
+	err := r.meta.FindOne(timeoutCtx, bson.M{"_id": levelSeedMetaID}).Decode(&doc)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	return doc.Version, nil
+}
+
+// ReplaceLevels swaps the entire level catalog for a new curriculum version.
+// The version marker is written last, so a crash mid-migration simply reruns
+// the migration on the next boot (every step is idempotent).
+func (r *MongoCoreRepository) ReplaceLevels(ctx context.Context, levels []Level, version int) error {
+	if len(levels) == 0 {
+		return errors.New("refusing to replace levels with an empty catalog")
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	// 1. Out with the old catalog…
+	if _, err := r.levels.DeleteMany(timeoutCtx, bson.M{}); err != nil {
+		return fmt.Errorf("clear levels: %w", err)
+	}
+	// 2. …and the per-user progress that pointed at it (level IDs changed
+	// meaning; XP, streaks and rewards are untouched).
+	if _, err := r.userLevels.DeleteMany(timeoutCtx, bson.M{}); err != nil {
+		return fmt.Errorf("clear user levels: %w", err)
+	}
+
+	// 3. In with the new catalog.
+	docs := make([]any, 0, len(levels))
+	for _, l := range levels {
+		docs = append(docs, l)
+	}
+	if _, err := r.levels.InsertMany(timeoutCtx, docs); err != nil {
+		return fmt.Errorf("insert levels: %w", err)
+	}
+
+	// 4. Record the version — the commit point of the migration.
+	_, err := r.meta.UpdateOne(timeoutCtx,
+		bson.M{"_id": levelSeedMetaID},
+		bson.M{"$set": bson.M{"version": version, "updated_at": time.Now().UTC()}},
+		options.Update().SetUpsert(true))
+	if err != nil {
+		return fmt.Errorf("record seed version: %w", err)
+	}
+
 	r.invalidateLevels()
 	return nil
 }

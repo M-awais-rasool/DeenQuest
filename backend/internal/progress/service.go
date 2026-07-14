@@ -360,8 +360,24 @@ func (s *CoreService) bumpStreak(ctx context.Context, userID string) (*Streak, e
 
 // ─── Level Journey Methods ───
 
-// SeedLevels inserts/updates the master level templates for every course.
+// SeedLevels installs the embedded curriculum. Two paths:
+//
+//   - version bump (stored < SeedDataVersion): the catalog is replaced
+//     wholesale and per-user level progress resets — XP, streaks and
+//     rewards are kept. This is how "remove the old levels, ship the new
+//     50" reaches existing databases automatically.
+//   - same version: insert-if-absent, so CMS edits survive restarts.
 func (s *CoreService) SeedLevels(ctx context.Context) error {
+	stored, err := s.repo.LevelSeedVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("read level seed version: %w", err)
+	}
+	if stored < SeedDataVersion {
+		if err := s.repo.ReplaceLevels(ctx, SeedLevels(), SeedDataVersion); err != nil {
+			return fmt.Errorf("migrate curriculum v%d→v%d: %w", stored, SeedDataVersion, err)
+		}
+		return nil
+	}
 	return s.repo.SeedLevels(ctx, SeedLevels())
 }
 

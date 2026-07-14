@@ -33,6 +33,13 @@ type CoreRepository interface {
 
 	// Levels
 	SeedLevels(ctx context.Context, levels []Level) error
+	// LevelSeedVersion returns the curriculum version stored in the meta
+	// collection (0 when the database predates versioned seeds).
+	LevelSeedVersion(ctx context.Context) (int, error)
+	// ReplaceLevels swaps the whole level catalog for a new curriculum
+	// version: wipes levels + per-user level progress, inserts the new
+	// levels, and records the version. Used when SeedDataVersion is bumped.
+	ReplaceLevels(ctx context.Context, levels []Level, version int) error
 	ListLevelsByCourse(ctx context.Context, courseType CourseType) ([]Level, error)
 	ListAllLevels(ctx context.Context) ([]Level, error)
 	GetLevelByID(ctx context.Context, levelID int) (*Level, error)

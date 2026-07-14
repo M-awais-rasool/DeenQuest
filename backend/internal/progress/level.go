@@ -7,6 +7,9 @@ type CourseType string
 
 const (
 	CourseQaida CourseType = "qaida"
+	// CoursePractice holds AI-Coach remedial drills (IDs ≥ 900). They are
+	// opened directly from coach surfaces and never appear on the learn path.
+	CoursePractice CourseType = "practice"
 )
 
 // ScreenType is used by the Lesson system to identify its screen layout.
