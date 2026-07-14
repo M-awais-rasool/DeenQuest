@@ -1,4 +1,6 @@
-export const COACH_PRACTICE_LEVEL_ID = 33;
+export const COACH_PRACTICE_LEVEL_ID = 901; // lookalikes.json — ت vs ث
+export const COACH_MADD_LEVEL_ID = 902; // madd.json — long vowels
+export const COACH_PRACTICE_COURSE = "practice" as const;
 
 export type CoachSeverity = "high" | "med" | "low";
 
@@ -95,7 +97,7 @@ const MOCK_STATE: CoachState = {
       detail: "Pace score drops on آ words",
       severity: "med",
       practiceMinutes: 3,
-      practiceLevelId: COACH_PRACTICE_LEVEL_ID,
+      practiceLevelId: COACH_MADD_LEVEL_ID,
       why: "A madd letter stretches the sound to two counts. Your recordings average 0.8 counts on آ — try holding it twice as long.",
     },
     {

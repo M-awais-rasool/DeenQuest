@@ -5,7 +5,7 @@ import type { AyahTimingInput } from "../../types/quranSync";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.18.11:8080",
+  baseUrl: "http://192.168.18.6:8080",
   prepareHeaders: async (headers, { getState }) => {
     try {
       const stateToken = (getState() as any)?.main?.accessToken;
@@ -203,7 +203,7 @@ export type LessonType =
 export type LevelDifficulty = "easy" | "medium" | "hard";
 
 export type LevelStatus = "locked" | "available" | "in_progress" | "completed";
-export type CourseType = "qaida";
+export type CourseType = "qaida" | "practice";
 
 // ScreenType is used by the Level/Lesson system (not by daily tasks).
 export type ScreenType =

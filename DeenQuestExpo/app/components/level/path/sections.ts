@@ -18,20 +18,24 @@ interface SectionMeta {
 const CURATED_META: Partial<Record<CourseType, SectionMeta[]>> = {
   qaida: [
     {
-      title: "Arabic Foundations",
-      subtitle: "Letters, harakat & your first words",
+      title: "Meet the Letters I",
+      subtitle: "Your first thirteen letters, by shape and sound",
     },
     {
-      title: "Reading the Qur'an",
-      subtitle: "From joining letters to fluent recitation",
+      title: "Meet the Letters II",
+      subtitle: "The rest of the alphabet — all 28 letters",
     },
     {
-      title: "Learn to Pray",
-      subtitle: "Wudu, the postures & what to recite in salah",
+      title: "Harakat — Letters Speak",
+      subtitle: "Fatha, kasra, damma & your first words",
     },
     {
-      title: "Review & Beyond",
-      subtitle: "Grand revision & the duas of your day",
+      title: "Reading Words",
+      subtitle: "Joining letters, long vowels & the Basmalah",
+    },
+    {
+      title: "First Recitations",
+      subtitle: "Al-Fatiha, short surahs & the duas of your day",
     },
   ],
 };

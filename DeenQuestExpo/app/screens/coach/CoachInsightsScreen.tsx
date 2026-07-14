@@ -13,6 +13,7 @@ import { AnimatedPressable, TactilePressable } from "../../components/ui";
 import { theme } from "../../theme/themes";
 import { dq } from "../../theme/designTokens";
 import {
+  COACH_PRACTICE_COURSE,
   getMockCoachState,
   type CoachInsight,
   type CoachSeverity,
@@ -118,6 +119,7 @@ export function CoachInsightsScreen({ navigation }: Props) {
     navigation.navigate("LessonPlayer", {
       levelId,
       startLessonIndex: 0,
+      courseType: COACH_PRACTICE_COURSE,
     });
   };
 

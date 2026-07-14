@@ -31,7 +31,11 @@ import {
 } from "../../store/services/api";
 import type { DailyTask } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
-import { getMockCoachState, type CoachState } from "../../services/coach";
+import {
+  COACH_PRACTICE_COURSE,
+  getMockCoachState,
+  type CoachState,
+} from "../../services/coach";
 
 // Icon shown on each mission row, keyed by the task's category.
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -239,6 +243,7 @@ export const HomeScreen = () => {
     navigation.navigate("LessonPlayer", {
       levelId: coach.practiceLevelId,
       startLessonIndex: 0,
+      courseType: COACH_PRACTICE_COURSE,
     });
   };
 
