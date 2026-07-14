@@ -7,7 +7,7 @@ COMPOSE ?= docker compose
 WHISPER_DIR := whisper-service
 WHISPER_VENV := $(WHISPER_DIR)/.venv
 
-.PHONY: help tidy fmt vet test lint build run \
+.PHONY: help tidy fmt vet test lint content-lint build run \
         whisper-setup whisper-run whisper-dev \
         compose-up compose-down compose-build compose-logs compose-ps compose-restart clean
 
@@ -18,6 +18,7 @@ help:
 	@echo "  make vet               - Run go vet"
 	@echo "  make test              - Run go test ./..."
 	@echo "  make lint              - Run fmt + vet + test"
+	@echo "  make content-lint      - Validate curriculum content chunks"
 	@echo "  make build             - Build the Go binary"
 	@echo "  make run               - Run the server (go run)"
 	@echo ""
@@ -49,7 +50,10 @@ vet:
 test:
 	$(GO) test ./...
 
-lint: fmt vet test
+lint: fmt vet test content-lint
+
+content-lint:
+	$(GO) run ./cmd/contentlint
 
 build:
 	@mkdir -p build

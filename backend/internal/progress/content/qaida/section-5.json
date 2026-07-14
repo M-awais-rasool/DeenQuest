@@ -1,0 +1,168 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "qaida",
+  "section": 5,
+  "section_title": "First Recitations",
+  "levels": [
+    {
+      "id": 41,
+      "title": "Al-Fatiha: The Opening",
+      "theme": "First Recitations",
+      "goal": "Read the first three ayahs of Al-Fatiha",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Read Ayah One", "description": "The Basmalah opens the Book", "screen_type": "QURAN_READER", "component": "QuranReaderComponent", "skill_tags": ["الفَاتِحَة"], "data": { "text": "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ", "meaning": "In the name of Allah, the Most Gracious, the Most Merciful", "surah": "Al-Fatiha · 1" } },
+        { "type": "pronunciation", "title": "Recite Ayah Two", "description": "Word by word, out loud", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["الفَاتِحَة"], "data": { "items": [ { "arabic": "الْحَمْدُ" }, { "arabic": "لِلّٰهِ" }, { "arabic": "رَبِّ" }, { "arabic": "الْعَالَمِينَ" } ] } },
+        { "type": "qaida", "title": "Build Ayah Two", "description": "Arrange the words in order", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["الفَاتِحَة"], "data": { "instruction": "Build the ayah in order", "parts": ["الْحَمْدُ", "لِلّٰهِ", "رَبِّ", "الْعَالَمِينَ"], "distractors": [], "meaning": "All praise is for Allah, Lord of the worlds" } },
+        { "type": "quiz", "title": "Complete the Ayah", "description": "Fill in the missing word", "screen_type": "QUIZ", "component": "FillBlankComponent", "skill_tags": ["الفَاتِحَة"], "data": { "instruction": "Complete ayah three", "sentence": [ { "text": "الرَّحْمٰنِ" }, { "blank": true, "answer": "الرَّحِيمِ" } ], "bank": ["الرَّحِيمِ", "الْعَالَمِينَ", "الدِّينِ"], "meaning": "The Most Gracious, the Most Merciful" } }
+      ],
+      "mini_game": { "type": "drag_drop", "description": "Build the opening ayahs", "skill_tags": ["الفَاتِحَة"], "data": { "rounds": [ { "parts": ["الْحَمْدُ", "لِلّٰهِ", "رَبِّ", "الْعَالَمِينَ"], "word": "الْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِينَ", "meaning": "All praise is for Allah, Lord of the worlds" } ] } }
+    },
+    {
+      "id": 42,
+      "title": "Al-Fatiha: The Path",
+      "theme": "First Recitations",
+      "goal": "Read ayahs four to seven of Al-Fatiha",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Read Ayahs 4–5", "description": "The heart of the surah", "screen_type": "QURAN_READER", "component": "QuranReaderComponent", "skill_tags": ["الفَاتِحَة"], "data": { "text": "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ", "meaning": "You alone we worship, and You alone we ask for help", "surah": "Al-Fatiha · 5" } },
+        { "type": "pronunciation", "title": "Recite the Dua Ayah", "description": "The greatest request", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["الفَاتِحَة"], "data": { "items": [ { "arabic": "اهْدِنَا" }, { "arabic": "الصِّرَاطَ" }, { "arabic": "الْمُسْتَقِيمَ" } ] } },
+        { "type": "qaida", "title": "Build the Ayah", "description": "Arrange the words in order", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["الفَاتِحَة"], "data": { "instruction": "Build 'Guide us to the straight path'", "parts": ["اهْدِنَا", "الصِّرَاطَ", "الْمُسْتَقِيمَ"], "distractors": ["الرَّحِيمِ"], "meaning": "Guide us to the straight path" } },
+        { "type": "quiz", "title": "Order Check", "description": "Which ayah comes first?", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["الفَاتِحَة"], "data": { "questions": [ { "question": "Which words open ayah five?", "options": ["إِيَّاكَ نَعْبُدُ", "اهْدِنَا", "الْحَمْدُ لِلّٰهِ"], "correct": 0 }, { "question": "Which word means 'guide us'?", "options": ["نَعْبُدُ", "اهْدِنَا", "نَسْتَعِينُ"], "correct": 1 } ] } }
+      ],
+      "mini_game": { "type": "listen_choose", "description": "Hear the words of Al-Fatiha", "skill_tags": ["الفَاتِحَة"], "data": { "questions": [ { "audio": "نَعْبُدُ", "options": ["نَعْبُدُ", "نَسْتَعِينُ", "اهْدِنَا"], "correct": 0 }, { "audio": "الصِّرَاطَ", "options": ["الْمُسْتَقِيمَ", "الصِّرَاطَ", "الْعَالَمِينَ"], "correct": 1 } ] } }
+    },
+    {
+      "id": 43,
+      "title": "Surah Al-Ikhlas",
+      "theme": "First Recitations",
+      "goal": "Recite the surah of pure tawheed",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Read Al-Ikhlas", "description": "Four short ayahs, one great truth", "screen_type": "QURAN_READER", "component": "QuranReaderComponent", "skill_tags": ["الإِخْلَاص"], "data": { "text": "قُلْ هُوَ اللّٰهُ أَحَدٌ", "meaning": "Say: He is Allah, the One", "surah": "Al-Ikhlas · 1" } },
+        { "type": "pronunciation", "title": "Recite It", "description": "Ayah by ayah, out loud", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["الإِخْلَاص"], "data": { "items": [ { "arabic": "قُلْ هُوَ اللّٰهُ أَحَدٌ" }, { "arabic": "اللّٰهُ الصَّمَدُ" } ] } },
+        { "type": "qaida", "title": "Build Ayah One", "description": "Arrange the words in order", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["الإِخْلَاص"], "data": { "instruction": "Build the first ayah of Al-Ikhlas", "parts": ["قُلْ", "هُوَ", "اللّٰهُ", "أَحَدٌ"], "distractors": [], "meaning": "Say: He is Allah, the One" } },
+        { "type": "quiz", "title": "Complete the Ayah", "description": "Fill in the missing word", "screen_type": "QUIZ", "component": "FillBlankComponent", "skill_tags": ["الإِخْلَاص"], "data": { "instruction": "Complete ayah two", "sentence": [ { "text": "اللّٰهُ" }, { "blank": true, "answer": "الصَّمَدُ" } ], "bank": ["الصَّمَدُ", "أَحَدٌ", "الرَّحِيمُ"], "meaning": "Allah, the Eternal Refuge" } }
+      ],
+      "mini_game": { "type": "drag_drop", "description": "Build the ayahs of Al-Ikhlas", "skill_tags": ["الإِخْلَاص"], "data": { "rounds": [ { "parts": ["قُلْ", "هُوَ", "اللّٰهُ", "أَحَدٌ"], "word": "قُلْ هُوَ اللّٰهُ أَحَدٌ", "meaning": "Say: He is Allah, the One" } ] } }
+    },
+    {
+      "id": 44,
+      "title": "Surah An-Nas",
+      "theme": "First Recitations",
+      "goal": "Recite the surah of seeking refuge",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Read An-Nas", "description": "The surah of protection", "screen_type": "QURAN_READER", "component": "QuranReaderComponent", "skill_tags": ["النَّاس"], "data": { "text": "قُلْ أَعُوذُ بِرَبِّ النَّاسِ", "meaning": "Say: I seek refuge in the Lord of mankind", "surah": "An-Nas · 1" } },
+        { "type": "pronunciation", "title": "Recite It", "description": "Word by word, out loud", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["النَّاس"], "data": { "items": [ { "arabic": "قُلْ" }, { "arabic": "أَعُوذُ" }, { "arabic": "بِرَبِّ" }, { "arabic": "النَّاسِ" } ] } },
+        { "type": "qaida", "title": "Build the Ayah", "description": "Arrange the words in order", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["النَّاس"], "data": { "instruction": "Build the first ayah of An-Nas", "parts": ["قُلْ", "أَعُوذُ", "بِرَبِّ", "النَّاسِ"], "distractors": ["الْفَلَقِ"], "meaning": "Say: I seek refuge in the Lord of mankind" } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the word you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["النَّاس"], "data": { "audio": "أَعُوذُ", "options": ["أَعُوذُ", "بِرَبِّ", "النَّاسِ"], "correct": 0 } }
+      ],
+      "mini_game": { "type": "listen_choose", "description": "Hear the words of An-Nas", "skill_tags": ["النَّاس"], "data": { "questions": [ { "audio": "النَّاسِ", "options": ["النَّاسِ", "الْفَلَقِ", "الْعَالَمِينَ"], "correct": 0 }, { "audio": "بِرَبِّ", "options": ["قُلْ", "بِرَبِّ", "أَعُوذُ"], "correct": 1 } ] } }
+    },
+    {
+      "id": 45,
+      "title": "Review: Recitation Garden",
+      "theme": "Review & Treasure",
+      "goal": "Revisit your surahs — treasure awaits",
+      "xp_reward": 80,
+      "unlock_reward": "treasure:recitations",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "revision", "title": "Whose Ayah?", "description": "Match each ayah to its surah", "screen_type": "ACTION", "component": "MatchPairsComponent", "skill_tags": ["الفَاتِحَة", "الإِخْلَاص", "النَّاس"], "data": { "instruction": "Match each opening to its surah", "pairs": [ { "left": "الْحَمْدُ لِلّٰهِ", "right": "الفَاتِحَة" }, { "left": "قُلْ هُوَ اللّٰهُ", "right": "الإِخْلَاص" }, { "left": "قُلْ أَعُوذُ بِرَبِّ النَّاسِ", "right": "النَّاس" } ] } },
+        { "type": "revision", "title": "Grand Recitation", "description": "Read your favourite ayahs aloud", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["الفَاتِحَة", "الإِخْلَاص"], "data": { "items": [ { "arabic": "إِيَّاكَ نَعْبُدُ" }, { "arabic": "اللّٰهُ الصَّمَدُ" }, { "arabic": "بِرَبِّ النَّاسِ" } ] } },
+        { "type": "revision", "title": "Lightning Surahs", "description": "Fast rounds across your surahs", "screen_type": "QUIZ", "component": "LightningRoundComponent", "skill_tags": ["الفَاتِحَة", "الإِخْلَاص", "النَّاس"], "data": { "seconds": 8, "questions": [ { "question": "Tap the word 'ahad' — the One", "options": ["أَحَدٌ", "الصَّمَدُ", "النَّاسِ"], "correct": 0 }, { "question": "Tap 'we worship'", "options": ["نَسْتَعِينُ", "نَعْبُدُ", "اهْدِنَا"], "correct": 1 }, { "question": "Tap 'I seek refuge'", "options": ["قُلْ", "بِرَبِّ", "أَعُوذُ"], "correct": 2 } ] } },
+        { "type": "revision", "title": "Build From Memory", "description": "One ayah, no hints", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["الإِخْلَاص"], "data": { "instruction": "Build ayah two of Al-Ikhlas", "parts": ["اللّٰهُ", "الصَّمَدُ"], "distractors": ["أَحَدٌ"], "meaning": "Allah, the Eternal Refuge" } }
+      ],
+      "mini_game": { "type": "mcq", "description": "Which surah is it from?", "skill_tags": ["الفَاتِحَة", "الإِخْلَاص", "النَّاس"], "data": { "questions": [ { "question": "'اهْدِنَا الصِّرَاطَ' is from which surah?", "options": ["الفَاتِحَة", "الإِخْلَاص", "النَّاس"], "correct": 0 }, { "question": "'اللّٰهُ الصَّمَدُ' is from which surah?", "options": ["النَّاس", "الإِخْلَاص", "الفَاتِحَة"], "correct": 1 } ] } }
+    },
+    {
+      "id": 46,
+      "title": "Duas of Your Day",
+      "theme": "Daily Deen",
+      "goal": "Read the duas that carry you through the day",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "dua", "title": "Waking Up", "description": "The first words of your morning", "screen_type": "HADITH_CARD", "component": "DuaCardComponent", "skill_tags": ["دُعَاء"], "data": { "arabic": "الْحَمْدُ لِلّٰهِ الَّذِي أَحْيَانَا", "meaning": "All praise is for Allah who gave us life", "context": "Say it as soon as you wake up" } },
+        { "type": "dua", "title": "Before Sleeping", "description": "End your day with His name", "screen_type": "HADITH_CARD", "component": "DuaCardComponent", "skill_tags": ["دُعَاء"], "data": { "arabic": "بِاسْمِكَ اللّٰهُمَّ أَمُوتُ وَأَحْيَا", "meaning": "In Your name, O Allah, I die and I live", "context": "Sunnah: recite this while lying on your right side" } },
+        { "type": "qaida", "title": "Your Daily Adhkar", "description": "Tick off each dua of the day", "screen_type": "CHECKLIST", "component": "PrayerChecklistComponent", "skill_tags": ["دُعَاء"], "data": { "steps": ["Waking up — الْحَمْدُ لِلّٰهِ الَّذِي أَحْيَانَا", "Before eating — بِسْمِ اللّٰهِ", "Leaving home — بِسْمِ اللّٰهِ تَوَكَّلْتُ عَلَى اللّٰهِ", "Before sleep — بِاسْمِكَ اللّٰهُمَّ أَمُوتُ وَأَحْيَا"] } },
+        { "type": "quiz", "title": "Which Dua?", "description": "Match the moment to its dua", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["دُعَاء"], "data": { "questions": [ { "question": "Which dua do you say before eating?", "options": ["بِسْمِ اللّٰهِ", "الْحَمْدُ لِلّٰهِ الَّذِي أَحْيَانَا", "بِاسْمِكَ اللّٰهُمَّ"], "correct": 0 }, { "question": "Which dua ends your day?", "options": ["بِسْمِ اللّٰهِ", "بِاسْمِكَ اللّٰهُمَّ أَمُوتُ وَأَحْيَا", "رَبِّ زِدْنِي عِلْمًا"], "correct": 1 } ] } }
+      ],
+      "mini_game": { "type": "tap_match", "description": "Match each moment to its dua", "skill_tags": ["دُعَاء"], "data": { "pairs": [ { "left": "بِسْمِ اللّٰهِ", "right": "کھانے سے پہلے" }, { "left": "الْحَمْدُ لِلّٰهِ الَّذِي أَحْيَانَا", "right": "جاگنے پر" }, { "left": "بِاسْمِكَ اللّٰهُمَّ", "right": "سونے سے پہلے" } ] } }
+    },
+    {
+      "id": 47,
+      "title": "Words of Salah",
+      "theme": "Daily Deen",
+      "goal": "Read the phrases you say in every prayer",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "The Takbir & Tasbih", "description": "The words that fill your salah", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["صَلَاة"], "data": { "items": [ { "arabic": "اللّٰهُ أَكْبَر" }, { "arabic": "سُبْحَانَ رَبِّيَ الْعَظِيمِ" }, { "arabic": "سَمِعَ اللّٰهُ لِمَنْ حَمِدَهُ" } ] } },
+        { "type": "quiz", "title": "When Do You Say It?", "description": "Match the phrase to its moment", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["صَلَاة"], "data": { "questions": [ { "question": "What do you say when salah begins?", "options": ["اللّٰهُ أَكْبَر", "السَّلَامُ عَلَيْكُم", "سُبْحَانَ رَبِّي"], "correct": 0 }, { "question": "What do you say in ruku'?", "options": ["اللّٰهُ أَكْبَر", "سُبْحَانَ رَبِّيَ الْعَظِيمِ", "آمِين"], "correct": 1 } ] } },
+        { "type": "qaida", "title": "Steps of Salah", "description": "Tick each phrase in order", "screen_type": "CHECKLIST", "component": "PrayerChecklistComponent", "skill_tags": ["صَلَاة"], "data": { "steps": ["Takbir — اللّٰهُ أَكْبَر", "Ruku' — سُبْحَانَ رَبِّيَ الْعَظِيمِ", "Rising — سَمِعَ اللّٰهُ لِمَنْ حَمِدَهُ", "Sujood — سُبْحَانَ رَبِّيَ الْأَعْلَى", "Ending — السَّلَامُ عَلَيْكُم"] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the phrase you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["صَلَاة"], "data": { "audio": "اللّٰهُ أَكْبَر", "options": ["اللّٰهُ أَكْبَر", "سُبْحَانَ رَبِّي", "السَّلَامُ عَلَيْكُم"], "correct": 0 } }
+      ],
+      "mini_game": { "type": "tap_match", "description": "Match each phrase to its place in salah", "skill_tags": ["صَلَاة"], "data": { "pairs": [ { "left": "اللّٰهُ أَكْبَر", "right": "تَكْبِير" }, { "left": "سُبْحَانَ رَبِّيَ الْعَظِيمِ", "right": "رُكُوع" }, { "left": "سُبْحَانَ رَبِّيَ الْأَعْلَى", "right": "سُجُود" } ] } }
+    },
+    {
+      "id": 48,
+      "title": "Surah Al-Falaq",
+      "theme": "First Recitations",
+      "goal": "Recite the surah of the daybreak",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Read Al-Falaq", "description": "Refuge in the Lord of daybreak", "screen_type": "QURAN_READER", "component": "QuranReaderComponent", "skill_tags": ["الفَلَق"], "data": { "text": "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ", "meaning": "Say: I seek refuge in the Lord of daybreak", "surah": "Al-Falaq · 1" } },
+        { "type": "pronunciation", "title": "Recite It", "description": "Word by word, out loud", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["الفَلَق"], "data": { "items": [ { "arabic": "قُلْ" }, { "arabic": "أَعُوذُ" }, { "arabic": "بِرَبِّ" }, { "arabic": "الْفَلَقِ" } ] } },
+        { "type": "quiz", "title": "Nas or Falaq?", "description": "Two refuge surahs — tell them apart", "screen_type": "QUIZ", "component": "TrueFalseComponent", "skill_tags": ["الفَلَق", "النَّاس"], "data": { "rounds": [ { "prompt": "This word belongs to Al-Falaq", "arabic": "الْفَلَقِ", "answer": true }, { "prompt": "This word belongs to Al-Falaq", "arabic": "النَّاسِ", "answer": false }, { "prompt": "Both surahs begin with قُلْ أَعُوذُ", "arabic": "قُلْ أَعُوذُ", "answer": true } ] } },
+        { "type": "qaida", "title": "Build the Ayah", "description": "Arrange the words in order", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["الفَلَق"], "data": { "instruction": "Build the first ayah of Al-Falaq", "parts": ["قُلْ", "أَعُوذُ", "بِرَبِّ", "الْفَلَقِ"], "distractors": ["النَّاسِ"], "meaning": "Say: I seek refuge in the Lord of daybreak" } }
+      ],
+      "mini_game": { "type": "listen_choose", "description": "Hear the words of Al-Falaq", "skill_tags": ["الفَلَق"], "data": { "questions": [ { "audio": "الْفَلَقِ", "options": ["الْفَلَقِ", "النَّاسِ", "الصَّمَدُ"], "correct": 0 }, { "audio": "أَعُوذُ", "options": ["قُلْ", "أَعُوذُ", "بِرَبِّ"], "correct": 1 } ] } }
+    },
+    {
+      "id": 49,
+      "title": "The Grand Revision",
+      "theme": "Grand Revision",
+      "goal": "Everything from Alif to Al-Falaq — one last sweep",
+      "xp_reward": 80,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "revision", "title": "Alphabet Flashback", "description": "The letters where it all began", "screen_type": "QUIZ", "component": "LightningRoundComponent", "skill_tags": ["حُرُوف"], "data": { "seconds": 7, "questions": [ { "question": "Tap ثَاء", "options": ["ت", "ث", "ب"], "correct": 1 }, { "question": "Tap ضَاد", "options": ["ض", "ص", "ط"], "correct": 0 }, { "question": "Tap غَيْن", "options": ["ع", "خ", "غ"], "correct": 2 }, { "question": "Tap the sound 'bu'", "options": ["بُ", "بَ", "بِ"], "correct": 0 } ] } },
+        { "type": "revision", "title": "Word Flashback", "description": "Build the words you conquered", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["كَلِمَة"], "data": { "instruction": "Build the word 'khalaqa' — He created", "parts": ["خَ", "لَ", "قَ"], "distractors": ["حَ"], "meaning": "khalaqa — He created" } },
+        { "type": "revision", "title": "Surah Flashback", "description": "Read your surahs one more time", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["الفَاتِحَة", "الإِخْلَاص", "الفَلَق"], "data": { "items": [ { "arabic": "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ" }, { "arabic": "قُلْ هُوَ اللّٰهُ أَحَدٌ" }, { "arabic": "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ" } ] } },
+        { "type": "revision", "title": "The Final Sort", "description": "Surah or dua?", "screen_type": "ACTION", "component": "SortBucketsComponent", "skill_tags": ["سُورَة", "دُعَاء"], "data": { "instruction": "Sort each line: surah or dua?", "buckets": ["سُورَة", "دُعَاء"], "items": [ { "text": "قُلْ هُوَ اللّٰهُ أَحَدٌ", "bucket": 0 }, { "text": "اللّٰهُ الصَّمَدُ", "bucket": 0 }, { "text": "رَبِّ زِدْنِي عِلْمًا", "bucket": 1 }, { "text": "بِسْمِ اللّٰهِ تَوَكَّلْتُ عَلَى اللّٰهِ", "bucket": 1 } ] } }
+      ],
+      "mini_game": { "type": "mcq", "description": "The grand quiz — a bit of everything", "skill_tags": ["حُرُوف", "كَلِمَة", "سُورَة"], "data": { "questions": [ { "question": "Which letter has three dots above?", "options": ["ث", "ت", "ن"], "correct": 0 }, { "question": "Which word means 'he heard'?", "options": ["جَلَسَ", "سَمِعَ", "كَتَبَ"], "correct": 1 }, { "question": "'الْفَلَقِ' means…", "options": ["mankind", "the One", "the daybreak"], "correct": 2 } ] } }
+    },
+    {
+      "id": 50,
+      "title": "Qaida Graduate",
+      "theme": "Grand Ceremony",
+      "goal": "Receive your Qaida Graduate certificate",
+      "xp_reward": 100,
+      "unlock_reward": "title:qaida_graduate",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "revision", "title": "The Graduate's Recitation", "description": "One last beautiful reading", "screen_type": "QURAN_READER", "component": "QuranReaderComponent", "skill_tags": ["الفَاتِحَة"], "data": { "text": "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ ۝ الْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِينَ", "meaning": "In the name of Allah, the Most Gracious, the Most Merciful. All praise is for Allah, Lord of the worlds.", "surah": "Al-Fatiha · 1–2" } },
+        { "type": "revision", "title": "The Graduate's Challenge", "description": "Five final lightning questions", "screen_type": "QUIZ", "component": "LightningRoundComponent", "skill_tags": ["حُرُوف", "كَلِمَة", "سُورَة"], "data": { "seconds": 7, "questions": [ { "question": "Tap عَيْن", "options": ["ع", "غ", "ح"], "correct": 0 }, { "question": "Tap the sound 'mi'", "options": ["مَ", "مِ", "مُ"], "correct": 1 }, { "question": "Tap the doubled letter", "options": ["نَ", "نْ", "نَّ"], "correct": 2 }, { "question": "Tap the long-vowel word", "options": ["نُور", "نَر", "نُر"], "correct": 0 }, { "question": "Tap 'the Eternal Refuge'", "options": ["أَحَدٌ", "الصَّمَدُ", "الْفَلَقِ"], "correct": 1 } ] } },
+        { "type": "dua", "title": "A Graduate's Dua", "description": "Carry this with you always", "screen_type": "HADITH_CARD", "component": "DuaCardComponent", "skill_tags": ["دُعَاء"], "data": { "arabic": "رَبِّ زِدْنِي عِلْمًا", "meaning": "My Lord, increase me in knowledge", "context": "The journey of knowledge never ends — keep asking for more" } },
+        { "type": "revision", "title": "Certificate Ceremony", "description": "You did it — Qaida Graduate!", "screen_type": "ACTION", "component": "CertificateComponent", "data": { "title": "Qaida Graduate", "message": "MashaAllah! From your first Alif to reciting whole surahs — you completed the entire Qaida journey. You can read the Book of Allah. May every letter be light for you!", "next_phase": "Keep your streak alive with Daily Missions" } }
+      ],
+      "mini_game": { "type": "mcq", "description": "The graduate's final quiz", "skill_tags": ["الفَاتِحَة", "الإِخْلَاص"], "data": { "questions": [ { "question": "Which surah is 'the Opening'?", "options": ["الفَاتِحَة", "الإِخْلَاص", "النَّاس"], "correct": 0 }, { "question": "How many Arabic letters do you know?", "options": ["18", "28", "38"], "correct": 1 }, { "question": "Which word completes: رَبِّ زِدْنِي …", "options": ["نُورًا", "عِلْمًا", "كَثِيرًا"], "correct": 1 } ] } }
+    }
+  ]
+}

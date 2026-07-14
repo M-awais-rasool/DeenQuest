@@ -1,0 +1,168 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "qaida",
+  "section": 1,
+  "section_title": "Meet the Letters I",
+  "levels": [
+    {
+      "id": 1,
+      "title": "Alif & Ba",
+      "theme": "Meet the Letters",
+      "goal": "Meet your very first letters: ا and ب",
+      "xp_reward": 40,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "qaida", "title": "Meet Alif & Ba", "description": "Tap each letter to hear it", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["ا", "ب"], "data": { "letters": [ { "letter": "ا", "name": "أَلِف" }, { "letter": "ب", "name": "بَاء" } ] } },
+        { "type": "quiz", "title": "Spot Alif", "description": "Tap the tall standing letter", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["ا"], "data": { "question": "Tap Alif — the tall standing letter", "hint": "Alif stands straight like a pillar", "options": ["ب", "ا"], "correct": 1 } },
+        { "type": "qaida", "title": "Match the Names", "description": "Match each letter with its name", "screen_type": "ACTION", "component": "MatchPairsComponent", "skill_tags": ["ا", "ب"], "data": { "instruction": "Match each letter to its Arabic name", "pairs": [ { "left": "ا", "right": "أَلِف" }, { "left": "ب", "right": "بَاء" } ] } },
+        { "type": "qaida", "title": "Letter Hunt", "description": "Find every بَاء in the grid", "screen_type": "ACTION", "component": "LetterHuntComponent", "skill_tags": ["ب"], "data": { "instruction": "Tap every ب — its single dot sits below", "target": "ب", "grid": ["ا", "ب", "ا", "ب", "ا", "ب", "ا", "ب"] } }
+      ],
+      "mini_game": { "type": "tap_match", "description": "Match each letter to its name", "skill_tags": ["ا", "ب"], "data": { "pairs": [ { "left": "ا", "right": "أَلِف" }, { "left": "ب", "right": "بَاء" } ] } }
+    },
+    {
+      "id": 2,
+      "title": "Ta & Tha",
+      "theme": "Meet the Letters",
+      "goal": "Learn ت and ث — count the dots on top",
+      "xp_reward": 40,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "qaida", "title": "Meet Ta & Tha", "description": "Two dots, three dots — hear them both", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["ت", "ث"], "data": { "letters": [ { "letter": "ت", "name": "تَاء" }, { "letter": "ث", "name": "ثَاء" } ] } },
+        { "type": "quiz", "title": "Count the Dots", "description": "True or false — look closely", "screen_type": "QUIZ", "component": "TrueFalseComponent", "skill_tags": ["ت", "ث"], "data": { "rounds": [ { "prompt": "This letter has two dots above it", "arabic": "ت", "answer": true }, { "prompt": "This letter has three dots above it", "arabic": "ث", "answer": true }, { "prompt": "This letter has three dots above it", "arabic": "ت", "answer": false } ] } },
+        { "type": "quiz", "title": "Pick the Letter", "description": "Choose the right letter", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["ت", "ث"], "data": { "questions": [ { "question": "Tap Ta — two dots on top", "options": ["ث", "ت", "ب"], "correct": 1 }, { "question": "Tap Tha — three dots on top", "options": ["ت", "ب", "ث"], "correct": 2 } ] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the letter you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["ت"], "data": { "audio": "ت", "options": ["ت", "ث", "ب"], "correct": 0 } }
+      ],
+      "mini_game": { "type": "memory_cards", "description": "Flip the cards to match letters with their names", "skill_tags": ["ت", "ث"], "data": { "pairs": [ { "left": "ت", "right": "تَاء" }, { "left": "ث", "right": "ثَاء" }, { "left": "ب", "right": "بَاء" } ] } }
+    },
+    {
+      "id": 3,
+      "title": "Nun & Ya",
+      "theme": "The Dots Family",
+      "goal": "Learn ن and ي — and sort the whole dots family",
+      "xp_reward": 45,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "qaida", "title": "Meet Nun & Ya", "description": "One dot above, two dots below", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["ن", "ي"], "data": { "letters": [ { "letter": "ن", "name": "نُون" }, { "letter": "ي", "name": "يَاء" } ] } },
+        { "type": "qaida", "title": "Sort the Dots", "description": "Dots above or dots below?", "screen_type": "ACTION", "component": "SortBucketsComponent", "skill_tags": ["ن", "ي", "ب", "ت"], "data": { "instruction": "Sort each letter: dots above or dots below?", "buckets": ["نُقَط فَوْق", "نُقَط تَحْت"], "items": [ { "text": "ت", "bucket": 0 }, { "text": "ن", "bucket": 0 }, { "text": "ب", "bucket": 1 }, { "text": "ي", "bucket": 1 } ] } },
+        { "type": "qaida", "title": "Letter Hunt", "description": "Find every نُون in the grid", "screen_type": "ACTION", "component": "LetterHuntComponent", "skill_tags": ["ن"], "data": { "instruction": "Tap every ن — one dot above the bowl", "target": "ن", "grid": ["ب", "ن", "ت", "ن", "ي", "ن", "ب", "ن", "ت"] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the letter you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["ي"], "data": { "audio": "ي", "options": ["ي", "ن", "ت"], "correct": 0 } }
+      ],
+      "mini_game": { "type": "tap_match", "description": "Match each letter to its name", "skill_tags": ["ن", "ي", "ب", "ت"], "data": { "pairs": [ { "left": "ن", "right": "نُون" }, { "left": "ي", "right": "يَاء" }, { "left": "ب", "right": "بَاء" }, { "left": "ت", "right": "تَاء" } ] } }
+    },
+    {
+      "id": 4,
+      "title": "Jeem, Ha & Kha",
+      "theme": "The Smile Family",
+      "goal": "Three letters that share one smiling shape",
+      "xp_reward": 45,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "qaida", "title": "Meet the Smile Family", "description": "Same shape — the dot makes the difference", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["ج", "ح", "خ"], "data": { "letters": [ { "letter": "ج", "name": "جِيم" }, { "letter": "ح", "name": "حَاء" }, { "letter": "خ", "name": "خَاء" } ] } },
+        { "type": "quiz", "title": "Where Is the Dot?", "description": "True or false — check the dot", "screen_type": "QUIZ", "component": "TrueFalseComponent", "skill_tags": ["ج", "ح", "خ"], "data": { "rounds": [ { "prompt": "This letter has a dot inside", "arabic": "ج", "answer": true }, { "prompt": "This letter has no dots", "arabic": "ح", "answer": true }, { "prompt": "This letter has a dot above it", "arabic": "خ", "answer": true }, { "prompt": "This letter has a dot inside", "arabic": "ح", "answer": false } ] } },
+        { "type": "qaida", "title": "Match the Names", "description": "Match each letter with its name", "screen_type": "ACTION", "component": "MatchPairsComponent", "skill_tags": ["ج", "ح", "خ"], "data": { "instruction": "Match each letter to its Arabic name", "pairs": [ { "left": "ج", "right": "جِيم" }, { "left": "ح", "right": "حَاء" }, { "left": "خ", "right": "خَاء" } ] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the letter you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["خ"], "data": { "audio": "خ", "options": ["ح", "خ", "ج"], "correct": 1 } }
+      ],
+      "mini_game": { "type": "memory_cards", "description": "Flip the cards to match letters with their names", "skill_tags": ["ج", "ح", "خ"], "data": { "pairs": [ { "left": "ج", "right": "جِيم" }, { "left": "ح", "right": "حَاء" }, { "left": "خ", "right": "خَاء" } ] } }
+    },
+    {
+      "id": 5,
+      "title": "Review: Your First Nine",
+      "theme": "Review & Treasure",
+      "goal": "Show off everything from ا to خ — treasure awaits",
+      "xp_reward": 50,
+      "unlock_reward": "treasure:letters_one",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "revision", "title": "Warm-Up Match", "description": "Match all the letters you know", "screen_type": "ACTION", "component": "MatchPairsComponent", "skill_tags": ["ا", "ب", "ت", "ث"], "data": { "instruction": "Match each letter to its Arabic name", "pairs": [ { "left": "ا", "right": "أَلِف" }, { "left": "ب", "right": "بَاء" }, { "left": "ت", "right": "تَاء" }, { "left": "ث", "right": "ثَاء" } ] } },
+        { "type": "revision", "title": "Sort the Family", "description": "Dots or no dots?", "screen_type": "ACTION", "component": "SortBucketsComponent", "skill_tags": ["ح", "ا", "خ", "ن"], "data": { "instruction": "Sort each letter: does it have dots?", "buckets": ["بِنُقَط", "بِدُون نُقَط"], "items": [ { "text": "خ", "bucket": 0 }, { "text": "ن", "bucket": 0 }, { "text": "ا", "bucket": 1 }, { "text": "ح", "bucket": 1 } ] } },
+        { "type": "revision", "title": "Letter Hunt", "description": "Find every تَاء in the grid", "screen_type": "ACTION", "component": "LetterHuntComponent", "skill_tags": ["ت"], "data": { "instruction": "Tap every ت — watch out for lookalikes!", "target": "ت", "grid": ["ب", "ت", "ث", "ت", "ن", "ب", "ت", "ي", "ث", "ت", "ب", "ن"] } },
+        { "type": "revision", "title": "Lightning Review", "description": "Quick rounds — you know these!", "screen_type": "QUIZ", "component": "LightningRoundComponent", "skill_tags": ["ا", "ب", "ج", "ح"], "data": { "seconds": 8, "questions": [ { "question": "Tap أَلِف", "options": ["ا", "ب", "ن"], "correct": 0 }, { "question": "Tap بَاء", "options": ["ت", "ب", "ث"], "correct": 1 }, { "question": "Tap جِيم", "options": ["ح", "خ", "ج"], "correct": 2 }, { "question": "Tap نُون", "options": ["ن", "ي", "ت"], "correct": 0 } ] } }
+      ],
+      "mini_game": { "type": "tap_match", "description": "Match every letter to its name", "skill_tags": ["ج", "ح", "خ", "ن", "ي"], "data": { "pairs": [ { "left": "ج", "right": "جِيم" }, { "left": "ح", "right": "حَاء" }, { "left": "خ", "right": "خَاء" }, { "left": "ن", "right": "نُون" }, { "left": "ي", "right": "يَاء" } ] } }
+    },
+    {
+      "id": 6,
+      "title": "Dal & Dhal",
+      "theme": "Meet the Letters",
+      "goal": "Learn د and ذ — the little sitting letters",
+      "xp_reward": 45,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "qaida", "title": "Meet Dal & Dhal", "description": "Small, proud and sitting up", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["د", "ذ"], "data": { "letters": [ { "letter": "د", "name": "دَال" }, { "letter": "ذ", "name": "ذَال" } ] } },
+        { "type": "quiz", "title": "Dot or No Dot?", "description": "True or false — check above", "screen_type": "QUIZ", "component": "TrueFalseComponent", "skill_tags": ["د", "ذ"], "data": { "rounds": [ { "prompt": "This letter has one dot above it", "arabic": "ذ", "answer": true }, { "prompt": "This letter has no dots", "arabic": "د", "answer": true }, { "prompt": "This letter has one dot above it", "arabic": "د", "answer": false } ] } },
+        { "type": "quiz", "title": "Pick the Letter", "description": "Choose the right letter", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["د", "ذ"], "data": { "questions": [ { "question": "Tap Dal — no dots", "options": ["ذ", "د", "ر"], "correct": 1 }, { "question": "Tap Dhal — one dot above", "options": ["د", "ذ", "ب"], "correct": 1 } ] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the letter you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["ذ"], "data": { "audio": "ذ", "options": ["د", "ذ", "ت"], "correct": 1 } }
+      ],
+      "mini_game": { "type": "tap_match", "description": "Match each letter to its name", "skill_tags": ["د", "ذ"], "data": { "pairs": [ { "left": "د", "right": "دَال" }, { "left": "ذ", "right": "ذَال" }, { "left": "ا", "right": "أَلِف" } ] } }
+    },
+    {
+      "id": 7,
+      "title": "Ra & Zay",
+      "theme": "Meet the Letters",
+      "goal": "Learn ر and ز — the little divers",
+      "xp_reward": 45,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "qaida", "title": "Meet Ra & Zay", "description": "They dive below the line", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["ر", "ز"], "data": { "letters": [ { "letter": "ر", "name": "رَاء" }, { "letter": "ز", "name": "زَاي" } ] } },
+        { "type": "qaida", "title": "Sort the Twins", "description": "Which twin is which?", "screen_type": "ACTION", "component": "SortBucketsComponent", "skill_tags": ["ر", "ز", "د", "ذ"], "data": { "instruction": "Sort each letter: does it have a dot?", "buckets": ["بِنُقْطَة", "بِدُون نُقْطَة"], "items": [ { "text": "ز", "bucket": 0 }, { "text": "ذ", "bucket": 0 }, { "text": "ر", "bucket": 1 }, { "text": "د", "bucket": 1 } ] } },
+        { "type": "qaida", "title": "Letter Hunt", "description": "Find every رَاء in the grid", "screen_type": "ACTION", "component": "LetterHuntComponent", "skill_tags": ["ر"], "data": { "instruction": "Tap every ر — no dot on the diver", "target": "ر", "grid": ["ز", "ر", "د", "ر", "ذ", "ر", "ز", "د", "ر"] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the letter you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["ر"], "data": { "audio": "ر", "options": ["ر", "ز", "د"], "correct": 0 } }
+      ],
+      "mini_game": { "type": "memory_cards", "description": "Flip the cards to match letters with their names", "skill_tags": ["ر", "ز", "د", "ذ"], "data": { "pairs": [ { "left": "ر", "right": "رَاء" }, { "left": "ز", "right": "زَاي" }, { "left": "د", "right": "دَال" }, { "left": "ذ", "right": "ذَال" } ] } }
+    },
+    {
+      "id": 8,
+      "title": "Meem & Waw",
+      "theme": "Meet the Letters",
+      "goal": "Learn م and و — the round friends",
+      "xp_reward": 45,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "qaida", "title": "Meet Meem & Waw", "description": "Round heads, long tails", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["م", "و"], "data": { "letters": [ { "letter": "م", "name": "مِيم" }, { "letter": "و", "name": "وَاو" } ] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the letter you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["م"], "data": { "audio": "م", "options": ["م", "و", "ن"], "correct": 0 } },
+        { "type": "qaida", "title": "Match the Names", "description": "Match each letter with its name", "screen_type": "ACTION", "component": "MatchPairsComponent", "skill_tags": ["م", "و"], "data": { "instruction": "Match each letter to its Arabic name", "pairs": [ { "left": "م", "right": "مِيم" }, { "left": "و", "right": "وَاو" }, { "left": "ر", "right": "رَاء" } ] } },
+        { "type": "quiz", "title": "Round or Tall?", "description": "True or false — look at the shape", "screen_type": "QUIZ", "component": "TrueFalseComponent", "skill_tags": ["م", "و", "ا"], "data": { "rounds": [ { "prompt": "This letter has a round head", "arabic": "م", "answer": true }, { "prompt": "This letter stands tall like a pillar", "arabic": "و", "answer": false }, { "prompt": "This letter has a round head and a tail", "arabic": "و", "answer": true } ] } }
+      ],
+      "mini_game": { "type": "tap_match", "description": "Match each letter to its name", "skill_tags": ["م", "و"], "data": { "pairs": [ { "left": "م", "right": "مِيم" }, { "left": "و", "right": "وَاو" }, { "left": "ز", "right": "زَاي" } ] } }
+    },
+    {
+      "id": 9,
+      "title": "Kaf & Lam",
+      "theme": "Meet the Letters",
+      "goal": "Learn ك and ل — the tall guardians",
+      "xp_reward": 45,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "qaida", "title": "Meet Kaf & Lam", "description": "Two tall letters with open arms", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["ك", "ل"], "data": { "letters": [ { "letter": "ك", "name": "كَاف" }, { "letter": "ل", "name": "لَام" } ] } },
+        { "type": "quiz", "title": "Pick the Letter", "description": "Choose the right letter", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["ك", "ل"], "data": { "questions": [ { "question": "Tap Lam — the tall hook", "options": ["ك", "ل", "ا"], "correct": 1 }, { "question": "Tap Kaf — it carries a little mark inside", "options": ["ل", "ا", "ك"], "correct": 2 } ] } },
+        { "type": "qaida", "title": "Letter Hunt", "description": "Find every لَام in the grid", "screen_type": "ACTION", "component": "LetterHuntComponent", "skill_tags": ["ل"], "data": { "instruction": "Tap every ل — don't grab Alif by mistake!", "target": "ل", "grid": ["ا", "ل", "ك", "ل", "ا", "ل", "ك", "ا", "ل"] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the letter you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["ك"], "data": { "audio": "ك", "options": ["ق", "ك", "ل"], "correct": 1 } }
+      ],
+      "mini_game": { "type": "memory_cards", "description": "Flip the cards to match letters with their names", "skill_tags": ["ك", "ل", "م", "و"], "data": { "pairs": [ { "left": "ك", "right": "كَاف" }, { "left": "ل", "right": "لَام" }, { "left": "م", "right": "مِيم" }, { "left": "و", "right": "وَاو" } ] } }
+    },
+    {
+      "id": 10,
+      "title": "Checkpoint: Letter Friend",
+      "theme": "Checkpoint & Certificate",
+      "goal": "Prove your first thirteen letters and earn your first certificate",
+      "xp_reward": 60,
+      "unlock_reward": "title:letter_friend",
+      "difficulty": "easy",
+      "lessons": [
+        { "type": "revision", "title": "Big Letter Match", "description": "Match everything you've learned", "screen_type": "ACTION", "component": "MatchPairsComponent", "skill_tags": ["د", "ر", "م", "ك"], "data": { "instruction": "Match each letter to its Arabic name", "pairs": [ { "left": "د", "right": "دَال" }, { "left": "ر", "right": "رَاء" }, { "left": "م", "right": "مِيم" }, { "left": "ك", "right": "كَاف" } ] } },
+        { "type": "revision", "title": "Sound Check", "description": "Listen, then tap the letter you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["ل"], "data": { "audio": "ل", "options": ["ل", "ن", "ك"], "correct": 0 } },
+        { "type": "revision", "title": "Lightning Checkpoint", "description": "Fast rounds across all 13 letters", "screen_type": "QUIZ", "component": "LightningRoundComponent", "skill_tags": ["ب", "ج", "ذ", "و", "ل"], "data": { "seconds": 7, "questions": [ { "question": "Tap بَاء", "options": ["ب", "ت", "ث"], "correct": 0 }, { "question": "Tap جِيم", "options": ["ح", "ج", "خ"], "correct": 1 }, { "question": "Tap ذَال", "options": ["د", "ر", "ذ"], "correct": 2 }, { "question": "Tap وَاو", "options": ["و", "م", "ر"], "correct": 0 }, { "question": "Tap لَام", "options": ["ا", "ل", "ك"], "correct": 1 } ] } },
+        { "type": "revision", "title": "Certificate Ceremony", "description": "Your first milestone!", "screen_type": "ACTION", "component": "CertificateComponent", "data": { "title": "Letter Friend", "message": "MashaAllah! You can now recognise thirteen Arabic letters by shape, name and sound. The alphabet is opening its doors to you!", "next_phase": "Next: the rest of the alphabet" } }
+      ],
+      "mini_game": { "type": "mcq", "description": "Checkpoint quiz — five quick questions", "skill_tags": ["ا", "ت", "ح", "ز", "م"], "data": { "questions": [ { "question": "Which letter is تَاء?", "options": ["ث", "ت", "ب"], "correct": 1 }, { "question": "Which letter is حَاء?", "options": ["ح", "ج", "خ"], "correct": 0 }, { "question": "Which letter is زَاي?", "options": ["ر", "ز", "ذ"], "correct": 1 }, { "question": "Which letter is مِيم?", "options": ["و", "ن", "م"], "correct": 2 }, { "question": "Which letter is أَلِف?", "options": ["ا", "ل", "ك"], "correct": 0 } ] } }
+    }
+  ]
+}
