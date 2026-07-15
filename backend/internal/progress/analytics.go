@@ -2,20 +2,17 @@ package progress
 
 import "context"
 
-// AnalyticsTimePoint is one day in the activity time series.
 type AnalyticsTimePoint struct {
 	Date             string `json:"date"` // YYYY-MM-DD
 	LevelCompletions int    `json:"level_completions"`
 	TaskCompletions  int    `json:"task_completions"`
 }
 
-// AnalyticsLabelCount is a labelled bucket for bar/doughnut charts.
 type AnalyticsLabelCount struct {
 	Label string `json:"label"`
 	Count int    `json:"count"`
 }
 
-// AdminAnalytics is the real, aggregated dashboard payload.
 type AdminAnalytics struct {
 	TotalUsers         int64                 `json:"total_users"`
 	ActiveToday        int64                 `json:"active_today"`
@@ -33,7 +30,6 @@ type AdminAnalytics struct {
 	TopLevels          []AnalyticsLabelCount `json:"top_levels"`
 }
 
-// AnalyticsRepository aggregates real data across collections for the dashboard.
 type AnalyticsRepository interface {
 	GetAdminAnalytics(ctx context.Context) (*AdminAnalytics, error)
 }

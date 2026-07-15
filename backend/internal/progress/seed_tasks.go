@@ -1,9 +1,5 @@
 package progress
 
-// SeedTasks returns the master task templates.
-// Each task is composed of an ordered []Block; adding a new task type in the future
-// only requires configuring blocks — no new frontend component is needed.
-// Task ID "1" (Pray Fajr) is marked IsFixed and always included in a user's daily set.
 func SeedTasks() []DailyTask {
 	return []DailyTask{
 		{

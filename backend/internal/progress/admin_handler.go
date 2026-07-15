@@ -9,8 +9,6 @@ import (
 	"github.com/chawais/deenquest/backend/internal/platform/response"
 )
 
-// AdminHandler exposes the CMS endpoints used by the admin panel: the content
-// registry plus CRUD for the real Level and DailyTask models.
 type AdminHandler struct {
 	service   *CoreService
 	analytics AnalyticsRepository
@@ -34,8 +32,6 @@ func (h *AdminHandler) GetAnalytics(c *gin.Context) {
 	}
 	response.OK(c, "analytics fetched", data)
 }
-
-// ─── Levels ────────────────────────────────────────────────────────────────
 
 // GET /admin/levels
 func (h *AdminHandler) ListLevels(c *gin.Context) {
@@ -115,8 +111,6 @@ func (h *AdminHandler) DeleteLevel(c *gin.Context) {
 	response.OK(c, "level deleted", gin.H{"id": id})
 }
 
-// ─── Daily tasks ─────────────────────────────────────────────────────────────
-
 // GET /admin/tasks
 func (h *AdminHandler) ListTasks(c *gin.Context) {
 	tasks, err := h.service.AdminListTasks(c.Request.Context())
@@ -179,8 +173,6 @@ func (h *AdminHandler) DeleteTask(c *gin.Context) {
 	}
 	response.OK(c, "task deleted", gin.H{"id": c.Param("id")})
 }
-
-// ─── Rewards ─────────────────────────────────────────────────────────────────
 
 // GET /admin/rewards
 func (h *AdminHandler) ListRewards(c *gin.Context) {

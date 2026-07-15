@@ -2,7 +2,6 @@ package progress
 
 import "time"
 
-// RewardTrigger defines the condition that unlocks a reward.
 type RewardTrigger string
 
 const (

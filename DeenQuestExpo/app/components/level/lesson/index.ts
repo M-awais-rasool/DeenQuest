@@ -4,7 +4,6 @@ import { LetterIntroComponent } from "./LetterIntroComponent";
 import { PronunciationComponent } from "./PronunciationComponent";
 import { DuaCardComponent } from "./DuaCardComponent";
 import { HadithComponent } from "./HadithComponent";
-import { QuizComponent } from "./QuizComponent";
 import { TipsComponent } from "./TipsComponent";
 import { LetterFormsComponent } from "./LetterFormsComponent";
 import { QuranReaderComponent } from "./QuranReaderComponent";
@@ -20,6 +19,7 @@ import { TrueFalseComponent } from "./TrueFalseComponent";
 import { LetterHuntComponent } from "./LetterHuntComponent";
 import { SortBucketsComponent } from "./SortBucketsComponent";
 import { LightningRoundComponent } from "./LightningRoundComponent";
+import { LessonEngine, setEngineTargets } from "./engine";
 
 export type LessonComponent = React.FC<LessonComponentProps>;
 
@@ -28,7 +28,7 @@ export const LESSON_COMPONENT_MAP: Record<string, LessonComponent> = {
   PronunciationComponent,
   DuaCardComponent,
   HadithComponent,
-  QuizComponent,
+  QuizComponent: MCQComponent,
   TipsComponent,
   LetterFormsComponent,
   QuranReaderComponent,
@@ -45,6 +45,9 @@ export const LESSON_COMPONENT_MAP: Record<string, LessonComponent> = {
   LetterHuntComponent,
   SortBucketsComponent,
   LightningRoundComponent,
+  engine: LessonEngine,
 };
+
+setEngineTargets(LESSON_COMPONENT_MAP);
 
 export type { LessonComponentProps } from "./types";

@@ -1,7 +1,5 @@
 package progress
 
-// SeedRewards returns the master reward definitions that are upserted on every
-// service startup. To add or change a reward, edit this list and redeploy.
 func SeedRewards() []Reward {
 	return []Reward{
 		{

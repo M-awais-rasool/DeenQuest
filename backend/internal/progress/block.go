@@ -1,8 +1,5 @@
 package progress
 
-// BlockType identifies what a block renders on the client.
-// Naming matches the admin panel's BlockBuilder so new block types
-// added in the admin panel automatically work end-to-end.
 type BlockType string
 
 const (

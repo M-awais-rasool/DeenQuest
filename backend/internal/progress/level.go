@@ -2,18 +2,13 @@ package progress
 
 import "time"
 
-// CourseType identifies which learning track a level belongs to.
 type CourseType string
 
 const (
 	CourseQaida CourseType = "qaida"
-	// CoursePractice holds AI-Coach remedial drills (IDs ≥ 900). They are
-	// opened directly from coach surfaces and never appear on the learn path.
 	CoursePractice CourseType = "practice"
 )
 
-// ScreenType is used by the Lesson system to identify its screen layout.
-// Daily tasks no longer use ScreenType — they use []Block instead.
 type ScreenType string
 
 const (
@@ -28,7 +23,6 @@ const (
 	ScreenAction      ScreenType = "ACTION"
 )
 
-// MiniGameType defines the kind of interactive game in a level.
 type MiniGameType string
 
 const (

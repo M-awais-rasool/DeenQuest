@@ -48,7 +48,6 @@ func (s *CoreService) AdminCreateLevel(ctx context.Context, in *Level) (*Level, 
 	if err != nil {
 		return nil, err
 	}
-	// Auto-assign IDs so the admin never has to pick them manually.
 	if in.ID == 0 {
 		in.ID = maxLevelID(existing) + 1
 	}

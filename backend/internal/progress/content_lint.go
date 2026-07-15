@@ -44,7 +44,6 @@ var knownComponents = map[string]bool{
 	"PronunciationComponent":   true,
 	"DuaCardComponent":         true,
 	"HadithComponent":          true,
-	"QuizComponent":            true,
 	"TipsComponent":            true,
 	"LetterFormsComponent":     true,
 	"QuranReaderComponent":     true,
@@ -135,12 +134,18 @@ func LintLevels(levels []Level) []LintIssue {
 		// ── lesson guards ──
 		for li, lesson := range level.Lessons {
 			where := fmt.Sprintf("lesson %d (%s)", li+1, lesson.Component)
+			if strings.TrimSpace(lesson.Title) == "" {
+				add(id, where, "title is empty")
+			}
+			// Engine lessons carry a Lesson DSL — validate that instead of
+			// component-specific data shapes.
+			if lesson.Component == EngineComponent {
+				issues = append(issues, ValidateLessonDSL(id, where, lesson.Data)...)
+				continue
+			}
 			if !knownComponents[lesson.Component] {
 				add(id, where, "unknown component")
 				continue
-			}
-			if strings.TrimSpace(lesson.Title) == "" {
-				add(id, where, "title is empty")
 			}
 			issues = append(issues, lintLessonData(id, where, lesson)...)
 		}
@@ -189,7 +194,7 @@ func lintLessonData(id int, where string, lesson Lesson) []LintIssue {
 	data := lesson.Data
 
 	switch lesson.Component {
-	case "MCQComponent", "QuizComponent":
+	case "MCQComponent":
 		for _, q := range questionList(data) {
 			issues = append(issues, lintChoice(id, where, q, true)...)
 		}

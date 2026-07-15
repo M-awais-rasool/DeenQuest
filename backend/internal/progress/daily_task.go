@@ -29,9 +29,6 @@ const (
 	CategoryReflection TaskCategory = "reflection"
 )
 
-// DailyTask is the master template for a task. These are seeded and never user-specific.
-// A task is composed of an ordered list of Blocks; the frontend renders each block in
-// sequence without needing a dedicated component per task type.
 type DailyTask struct {
 	ID             string         `bson:"_id" json:"id"`
 	Title          string         `bson:"title" json:"title"`

@@ -5,8 +5,6 @@ import (
 	"errors"
 )
 
-// ErrAlreadyCompleted is returned when a task has already been completed for the day.
-// Callers should treat this as a no-op rather than a failure.
 var ErrAlreadyCompleted = errors.New("task already completed")
 
 type CoreRepository interface {

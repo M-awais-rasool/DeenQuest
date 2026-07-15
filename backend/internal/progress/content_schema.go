@@ -1,16 +1,5 @@
 package progress
 
-// content_schema.go is the single source of truth describing every renderable
-// piece of content the mobile app can show: lesson components, mini-games, and
-// daily-task blocks. Each entry carries a human label, the data fields it
-// accepts, and a ready-to-use example payload.
-//
-// The admin panel fetches this (GET /admin/registry) to render config forms and
-// "insert example" buttons, so an admin always knows what a component is and
-// what data it needs. Adding a new frontend component = add one entry here
-// (and register it in the app's LESSON_COMPONENT_MAP / mini-game router).
-
-// SchemaFieldType is the editor hint the admin panel uses to render a field.
 type SchemaFieldType string
 
 const (

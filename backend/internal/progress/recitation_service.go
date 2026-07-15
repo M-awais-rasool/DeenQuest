@@ -24,8 +24,6 @@ type whisperResponse struct {
 
 const defaultLessonXP = 25
 
-// RecitationCoach generates a short, simple pronunciation tip. The Gemini client
-// satisfies it. Optional — when nil, coaching is deterministic only.
 type RecitationCoach interface {
 	Generate(ctx context.Context, system, userPrompt string) (string, error)
 }
@@ -45,7 +43,6 @@ func NewRecitationService(repo CoreRepository, whisperURL string) *RecitationSer
 	}
 }
 
-// SetCoach wires the optional AI pronunciation coach (Gemini).
 func (s *RecitationService) SetCoach(c RecitationCoach) { s.coach = c }
 
 const recitationPassScore = 60
@@ -55,8 +52,6 @@ const recitationCoachPrompt = "You are a gentle Quran recitation (tajweed) coach
 	"mention the articulation point (makhraj) simply. Keep Arabic words in Arabic script. " +
 	"Do NOT give religious rulings. Plain text only."
 
-// buildCoaching derives deterministic coaching from the per-word results, then
-// optionally adds an AI explanation for the focus words.
 func (s *RecitationService) buildCoaching(ctx context.Context, score int, words []WordResult) *RecitationCoaching {
 	var focus []string
 	seen := make(map[string]struct{})

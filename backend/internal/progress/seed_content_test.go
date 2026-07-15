@@ -2,8 +2,6 @@ package progress
 
 import "testing"
 
-// TestSeedContentLoads guards the embed + parse path: a malformed chunk file
-// must fail the build's test stage, never a production boot.
 func TestSeedContentLoads(t *testing.T) {
 	levels := SeedLevels()
 	if len(levels) == 0 {
@@ -23,8 +21,6 @@ func TestSeedContentLoads(t *testing.T) {
 	}
 }
 
-// TestContentLintClean is the same gate as `make content-lint`, wired into
-// `go test` so content regressions cannot merge.
 func TestContentLintClean(t *testing.T) {
 	issues := LintLevels(SeedLevels())
 	for _, issue := range issues {
@@ -32,9 +28,6 @@ func TestContentLintClean(t *testing.T) {
 	}
 }
 
-// TestCurriculumShape pins the Part-1 curriculum contract: 50 qaida levels,
-// a certificate every 10th level, review+treasure every 5th, and the two
-// coach-practice drills.
 func TestCurriculumShape(t *testing.T) {
 	levels := SeedLevels()
 
@@ -63,7 +56,6 @@ func TestCurriculumShape(t *testing.T) {
 		}
 	}
 
-	// Review levels (every 5th, except checkpoints) carry a treasure reward.
 	for id := 5; id <= 45; id += 10 {
 		level, ok := byID[id]
 		if !ok {
@@ -74,7 +66,6 @@ func TestCurriculumShape(t *testing.T) {
 		}
 	}
 
-	// Checkpoints (every 10th) end in a certificate and award a title.
 	for id := 10; id <= 50; id += 10 {
 		level, ok := byID[id]
 		if !ok {
@@ -94,10 +85,17 @@ func TestCurriculumShape(t *testing.T) {
 		}
 	}
 
-	// Difficulty never exceeds "medium" and eases in: section 1 is all easy.
 	for _, l := range levels {
 		if l.CourseType == CourseQaida && l.ID <= 10 && l.Difficulty != LevelEasy {
 			t.Errorf("level %d: section 1 must be easy, got %s", l.ID, l.Difficulty)
+		}
+	}
+
+	if demo, ok := byID[902]; ok {
+		for i, lesson := range demo.Lessons {
+			if lesson.Component != EngineComponent {
+				t.Errorf("level 902 lesson %d: component %q, want %q (DSL-authored)", i+1, lesson.Component, EngineComponent)
+			}
 		}
 	}
 }

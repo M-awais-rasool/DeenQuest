@@ -191,6 +191,12 @@ export type MiniGameType =
   | "mcq"
   | "memory_cards";
 
+/**
+ * Pedagogical category of a lesson. The named values get curated chip
+ * colors in the UI; content may introduce NEW categories at any time
+ * (they are data, not code — unknown ones fall back to a default chip),
+ * hence the open string union.
+ */
 export type LessonType =
   | "qaida"
   | "hadith"
@@ -198,7 +204,8 @@ export type LessonType =
   | "quiz"
   | "pronunciation"
   | "manners"
-  | "revision";
+  | "revision"
+  | (string & {});
 
 export type LevelDifficulty = "easy" | "medium" | "hard";
 
