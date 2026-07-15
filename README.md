@@ -25,13 +25,15 @@
 ## App Screenshots
 
 <p align="center">
-  <img src="DeenQuestExpo/assets/IMG.PNG" alt="Home — Daily Missions & Streak" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG.PNG" alt="Home — Daily Missions & Streak" width="18%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-5.PNG" alt="Learning Path — Choose a Course" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG-1.PNG" alt="Learning Path — Choose a Course" width="18%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-4.PNG" alt="Level Map — Course Progression" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG-8.PNG" alt="Level Map — Course Progression" width="18%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-8.PNG" alt="Settings — App Preferences" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG-2.PNG" alt="Settings — App Preferences" width="18%" />
+    &nbsp;&nbsp;
+  <img src="DeenQuestExpo/assets/IMG-9.PNG" alt="Settings — App Preferences" width="18%" />
 </p>
 
 <p align="center">
@@ -45,13 +47,15 @@
 </p>
 
 <p align="center">
-  <img src="DeenQuestExpo/assets/IMG-6.PNG" alt="Lesson — Arabic Letter Audio" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG-3.PNG" alt="Lesson — Arabic Letter Audio" width="18%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-7.PNG" alt="Lesson — Dua with Recitation" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG-4.PNG" alt="Lesson — Dua with Recitation" width="18%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-3.PNG" alt="Rewards — Reward Vault & Milestones" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG-5.PNG" alt="Rewards — Reward Vault & Milestones" width="18%" />
   &nbsp;&nbsp;
-  <img src="DeenQuestExpo/assets/IMG-2.PNG" alt="Profile — Stats & Streak History" width="22%" />
+  <img src="DeenQuestExpo/assets/IMG-6.PNG" alt="Profile — Stats & Streak History" width="18%" />
+  &nbsp;&nbsp;
+  <img src="DeenQuestExpo/assets/IMG-7.PNG" alt="Profile — Stats & Streak History" width="18%" />
 </p>
 
 <p align="center">
