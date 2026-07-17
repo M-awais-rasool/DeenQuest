@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/chawais/deenquest/backend/internal/platform/cache"
@@ -22,15 +23,24 @@ type Provider interface {
 	GetSurahAudio(ctx context.Context, id int) (*SurahAudio, error)
 }
 
+type memEntry struct {
+	value     []byte
+	expiresAt time.Time
+}
+
 type Service struct {
 	provider Provider
 	redis    *cache.RedisClient
+
+	mu  sync.RWMutex
+	mem map[string]memEntry
 }
 
 func NewService(provider Provider, redisClient *cache.RedisClient) *Service {
 	return &Service{
 		provider: provider,
 		redis:    redisClient,
+		mem:      make(map[string]memEntry),
 	}
 }
 
@@ -91,10 +101,16 @@ func (s *Service) GetSurahAudio(ctx context.Context, id int) (*SurahAudio, error
 }
 
 func (s *Service) getCached(ctx context.Context, key string, dest any) bool {
+	s.mu.RLock()
+	entry, ok := s.mem[key]
+	s.mu.RUnlock()
+	if ok && time.Now().Before(entry.expiresAt) {
+		return json.Unmarshal(entry.value, dest) == nil
+	}
+
 	if s.redis == nil {
 		return false
 	}
-
 	raw, err := s.redis.Client.Get(ctx, key).Bytes()
 	if err != nil {
 		return false
@@ -103,12 +119,16 @@ func (s *Service) getCached(ctx context.Context, key string, dest any) bool {
 }
 
 func (s *Service) setCached(ctx context.Context, key string, value any, ttl time.Duration) {
-	if s.redis == nil {
+	raw, err := json.Marshal(value)
+	if err != nil {
 		return
 	}
 
-	raw, err := json.Marshal(value)
-	if err != nil {
+	s.mu.Lock()
+	s.mem[key] = memEntry{value: raw, expiresAt: time.Now().Add(ttl)}
+	s.mu.Unlock()
+
+	if s.redis == nil {
 		return
 	}
 	_ = s.redis.Client.Set(ctx, key, raw, ttl).Err()

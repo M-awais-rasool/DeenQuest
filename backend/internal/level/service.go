@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/chawais/deenquest/backend/internal/progress"
 	"github.com/chawais/deenquest/backend/internal/reward"
@@ -249,20 +250,24 @@ func (s *Service) CompleteLevel(ctx context.Context, userID string, levelID int,
 		return nil, err
 	}
 
-	// Award XP (fixed amount per level) and bump the streak.
 	xp := lvl.XPReward
-	updatedProg, err := s.progress.Award(ctx, userID, xp, 5)
-	if err != nil {
-		return nil, err
-	}
-	updatedStreak, err := s.progress.BumpStreak(ctx, userID)
-	if err != nil {
+	var (
+		updatedProg   *progress.Progress
+		updatedStreak *progress.Streak
+		completed     int
+		completedErr  error
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() (err error) { updatedProg, err = s.progress.Award(gctx, userID, xp, 5); return })
+	g.Go(func() (err error) { updatedStreak, err = s.progress.BumpStreak(gctx, userID); return })
+	g.Go(func() error { completed, completedErr = s.CompletedLevelCount(gctx, userID); return nil })
+	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 
 	// Grant any rewards newly unlocked by this completion (non-fatal).
 	var newRewards []reward.Reward
-	if completed, cerr := s.CompletedLevelCount(ctx, userID); cerr == nil {
+	if completedErr == nil {
 		if granted, gerr := s.reward.Grant(ctx, userID, reward.Metrics{
 			CompletedLevels: completed,
 			XP:              updatedProg.TotalXP,

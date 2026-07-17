@@ -129,14 +129,10 @@ func (s *Service) CompleteDailyTask(ctx context.Context, userID, taskID string) 
 		return errors.New("task template not found")
 	}
 
-	if _, err := s.progress.Award(ctx, userID, task.RewardXP, 0); err != nil {
-		return err
-	}
-	if _, err := s.progress.BumpStreak(ctx, userID); err != nil {
-		return err
-	}
-
-	return nil
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() error { _, err := s.progress.Award(gctx, userID, task.RewardXP, 0); return err })
+	g.Go(func() error { _, err := s.progress.BumpStreak(gctx, userID); return err })
+	return g.Wait()
 }
 
 // hashString produces a simple hash for seeding the random shuffle.
