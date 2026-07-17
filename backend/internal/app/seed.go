@@ -24,18 +24,18 @@ func seedStartupData(cfg *config.Config, m *Modules) error {
 			zap.String("status", status))
 	}
 
-	if err := m.CoreService.SeedDailyTasks(ctx); err != nil {
+	if err := m.TaskService.Seed(ctx); err != nil {
 		return fmt.Errorf("seed daily tasks: %w", err)
 	}
 	logger.Info("Daily tasks seeded successfully")
 
-	if err := m.CoreService.SeedLevels(ctx); err != nil {
+	if err := m.LevelService.Seed(ctx); err != nil {
 		logger.Warn("failed to seed levels (will retry on next startup)", zap.Error(err))
 	} else {
 		logger.Info("Levels seeded successfully")
 	}
 
-	if err := m.CoreService.SeedRewards(ctx); err != nil {
+	if err := m.RewardService.Seed(ctx); err != nil {
 		logger.Warn("failed to seed rewards (will retry on next startup)", zap.Error(err))
 	} else {
 		logger.Info("Rewards seeded successfully")

@@ -1,5 +1,5 @@
 // Command contentlint validates the embedded curriculum chunks
-// (internal/progress/content/**). It is the CI gate for content changes:
+// (internal/level/curriculum/**). It is the CI gate for content changes:
 //
 //	make content-lint
 //
@@ -10,14 +10,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/chawais/deenquest/backend/internal/progress"
+	"github.com/chawais/deenquest/backend/internal/content"
+	"github.com/chawais/deenquest/backend/internal/level"
 )
 
 func main() {
-	levels := progress.SeedLevels()
-	chunks := progress.SeedContentChunks()
+	levels := level.SeedLevels()
+	chunks := level.SeedContentChunks()
 
-	issues := progress.LintLevels(levels)
+	issues := content.LintLevels(levels)
 	if len(issues) > 0 {
 		fmt.Fprintf(os.Stderr, "content lint: %d issue(s)\n", len(issues))
 		for _, issue := range issues {
@@ -29,12 +30,12 @@ func main() {
 	qaida, practice := 0, 0
 	for _, l := range levels {
 		switch l.CourseType {
-		case progress.CourseQaida:
+		case level.CourseQaida:
 			qaida++
-		case progress.CoursePractice:
+		case level.CoursePractice:
 			practice++
 		}
 	}
 	fmt.Printf("content lint: clean ✓ (%d chunks · %d qaida levels · %d practice drills · seed v%d)\n",
-		len(chunks), qaida, practice, progress.SeedDataVersion)
+		len(chunks), qaida, practice, level.SeedDataVersion)
 }

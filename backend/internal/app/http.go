@@ -5,12 +5,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/chawais/deenquest/backend/internal/analytics"
 	"github.com/chawais/deenquest/backend/internal/auth"
+	"github.com/chawais/deenquest/backend/internal/content"
+	"github.com/chawais/deenquest/backend/internal/dailytask"
+	"github.com/chawais/deenquest/backend/internal/level"
 	"github.com/chawais/deenquest/backend/internal/notification"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 	"github.com/chawais/deenquest/backend/internal/platform/middleware"
 	"github.com/chawais/deenquest/backend/internal/progress"
 	"github.com/chawais/deenquest/backend/internal/quran"
+	"github.com/chawais/deenquest/backend/internal/recitation"
+	"github.com/chawais/deenquest/backend/internal/reward"
 	"github.com/chawais/deenquest/backend/internal/user"
 )
 
@@ -46,8 +52,18 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	auth.RegisterRoutes(v1, m.AuthHandler)
 	user.RegisterRoutes(v1, authed, m.UserHandler)
 
-	progress.RegisterRoutes(v1, authed, m.CoreHandler, m.RecitationHandler)
-	progress.RegisterAdminRoutes(admin, m.AdminHandler)
+	// learning features (formerly the single "progress" module)
+	progress.RegisterRoutes(v1, authed, m.ProgressHandler)
+	level.RegisterRoutes(authed, m.LevelHandler)
+	dailytask.RegisterRoutes(authed, m.TaskHandler)
+	reward.RegisterRoutes(authed, m.RewardHandler)
+	recitation.RegisterRoutes(authed, m.RecitationHandler)
+
+	level.RegisterAdminRoutes(admin, m.LevelAdminHandler)
+	dailytask.RegisterAdminRoutes(admin, m.TaskAdminHandler)
+	reward.RegisterAdminRoutes(admin, m.RewardAdminHandler)
+	content.RegisterAdminRoutes(admin, m.ContentHandler)
+	analytics.RegisterAdminRoutes(admin, m.AnalyticsHandler)
 
 	quran.RegisterRoutes(v1.Group("/quran"), m.QuranHandler)
 	quran.RegisterRoutes(r.Group("/api/quran"), m.QuranHandler) // legacy path used by older clients
