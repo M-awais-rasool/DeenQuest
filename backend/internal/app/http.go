@@ -7,6 +7,7 @@ import (
 
 	"github.com/chawais/deenquest/backend/internal/analytics"
 	"github.com/chawais/deenquest/backend/internal/auth"
+	"github.com/chawais/deenquest/backend/internal/coach"
 	"github.com/chawais/deenquest/backend/internal/content"
 	"github.com/chawais/deenquest/backend/internal/dailytask"
 	"github.com/chawais/deenquest/backend/internal/level"
@@ -58,6 +59,9 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	dailytask.RegisterRoutes(authed, m.TaskHandler)
 	reward.RegisterRoutes(authed, m.RewardHandler)
 	recitation.RegisterRoutes(authed, m.RecitationHandler)
+	if m.CoachHandler != nil {
+		coach.RegisterRoutes(authed, m.CoachHandler)
+	}
 
 	level.RegisterAdminRoutes(admin, m.LevelAdminHandler)
 	dailytask.RegisterAdminRoutes(admin, m.TaskAdminHandler)

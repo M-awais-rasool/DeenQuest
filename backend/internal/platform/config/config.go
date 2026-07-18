@@ -48,6 +48,9 @@ type Config struct {
 	GeminiAPIKey string
 	GeminiModel  string
 
+	CoachEnabled    bool
+	CoachLLMEnabled bool
+
 	CORSAllowedOrigins string
 
 	// AdminEmails is a comma-separated allowlist of user emails permitted to
@@ -90,6 +93,8 @@ func Load() (*Config, error) {
 		OllamaURL:           getEnv("OLLAMA_URL", "http://127.0.0.1:11434"),
 		GeminiAPIKey:        getEnv("GEMINI_API_KEY", ""),
 		GeminiModel:         getEnv("GEMINI_MODEL", ""),
+		CoachEnabled:        getBool("COACH_ENABLED", true),
+		CoachLLMEnabled:     getBool("COACH_LLM_ENABLED", false),
 		CORSAllowedOrigins:  getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
 		AdminEmails:         getEnv("ADMIN_EMAILS", ""),
 		AdminSeedEmail:      getEnv("ADMIN_SEED_EMAIL", "admin@deenquest.app"),
@@ -167,6 +172,18 @@ func getEnv(key, fallback string) string {
 		return fallback
 	}
 	return v
+}
+
+func getBool(key string, fallback bool) bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv(key)))
+	switch v {
+	case "":
+		return fallback
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }
 
 func getInt(key string, fallback int) int {

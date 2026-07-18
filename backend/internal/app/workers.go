@@ -6,6 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/chawais/deenquest/backend/internal/coach"
 	"github.com/chawais/deenquest/backend/internal/notification"
 	"github.com/chawais/deenquest/backend/internal/notification/smart"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
@@ -13,10 +14,6 @@ import (
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
 )
 
-// startWorkers launches every background piece of the monolith: Kafka
-// consumers and cron-style schedulers. Each worker is listed here, in one
-// place, so a reader can see the whole background surface at a glance.
-// Workers stop when ctx is cancelled; the returned func closes the consumers.
 func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modules) func() {
 	brokers := cfg.GetKafkaBrokerList()
 	var closers []io.Closer
@@ -40,6 +37,15 @@ func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modu
 			logger.Error("smart notification scheduler error", zap.Error(err))
 		}
 	}()
+
+	if m.CoachService != nil {
+		coachSweeper := coach.NewSweeper(m.CoachService)
+		go func() {
+			if err := coachSweeper.Start(ctx); err != nil {
+				logger.Error("coach sweeper error", zap.Error(err))
+			}
+		}()
+	}
 
 	return func() {
 		for _, c := range closers {

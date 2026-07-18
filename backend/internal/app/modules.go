@@ -7,6 +7,7 @@ import (
 
 	"github.com/chawais/deenquest/backend/internal/analytics"
 	"github.com/chawais/deenquest/backend/internal/auth"
+	"github.com/chawais/deenquest/backend/internal/coach"
 	"github.com/chawais/deenquest/backend/internal/content"
 	"github.com/chawais/deenquest/backend/internal/dailytask"
 	"github.com/chawais/deenquest/backend/internal/level"
@@ -21,10 +22,6 @@ import (
 	"github.com/chawais/deenquest/backend/internal/user"
 )
 
-// Modules collects every feature module's services and HTTP handlers, grouped
-// by module. buildModules is the single place where modules are constructed
-// and wired to each other — if you want to know "who talks to whom", read it
-// top to bottom.
 type Modules struct {
 	// auth & user — accounts, login, profiles.
 	AuthService *auth.Service
@@ -47,6 +44,9 @@ type Modules struct {
 	ContentHandler     *content.Handler    // authoring registry (/admin/registry)
 	AnalyticsHandler   *analytics.Handler  // admin dashboards (/admin/analytics)
 
+	CoachService *coach.Service
+	CoachHandler *coach.Handler
+
 	// quran — surah reading and audio (external AlQuran API + Redis cache).
 	QuranHandler *quran.Handler
 
@@ -57,9 +57,6 @@ type Modules struct {
 	SmartNotifications  *smart.Service
 }
 
-// buildModules constructs all feature modules on top of the shared
-// infrastructure. Order: repositories → services (dependency order) →
-// optional AI wiring → handlers.
 func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	db := infra.DB
 
@@ -116,6 +113,24 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	quranClient := quran.NewClient(cfg.AlQuranBaseURL, cfg.QuranAudioCDNURL, cfg.QuranAudioEdition, cfg.QuranAudioBitrate)
 	quranService := quran.NewService(quranClient, infra.Redis)
 
+	var coachService *coach.Service
+	var coachHandler *coach.Handler
+	if cfg.CoachEnabled {
+		coachRepo, err := coach.NewMongoRepository(db)
+		if err != nil {
+			return nil, fmt.Errorf("init coach repository: %w", err)
+		}
+		var coachLLM coach.Generator
+		if infra.Gemini != nil {
+			coachLLM = infra.Gemini
+		}
+		phraser := coach.NewPhraser(coachLLM, infra.Redis, cfg.CoachLLMEnabled)
+		coachService = coach.NewService(coachRepo, progressService, phraser)
+		coachHandler = coach.NewHandler(coachService)
+		logger.Info("Coach module initialized",
+			zap.Bool("llm_enabled", cfg.CoachLLMEnabled && infra.Gemini != nil))
+	}
+
 	// --- optional Gemini wiring (features also work without it) ---
 	if infra.Gemini != nil {
 		recitationService.SetCoach(infra.Gemini) // pronunciation/tajweed coach
@@ -140,6 +155,9 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		RecitationHandler:  recitation.NewHandler(recitationService),
 		ContentHandler:     content.NewHandler(),
 		AnalyticsHandler:   analytics.NewHandler(analyticsRepo),
+
+		CoachService: coachService,
+		CoachHandler: coachHandler,
 
 		QuranHandler: quran.NewHandler(quranService),
 
