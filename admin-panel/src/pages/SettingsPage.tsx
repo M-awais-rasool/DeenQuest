@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useRegistry } from "../lib/useRegistry";
+import PageHeader from "../components/PageHeader";
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -74,26 +75,31 @@ export default function SettingsPage() {
     {
       label: "Lesson components",
       value: registry.lesson_components.length,
+      color: "#2CC9B5",
     },
-    { label: "Mini-games", value: registry.mini_games.length },
-    { label: "Block types", value: registry.blocks.length },
+    { label: "Mini-games", value: registry.mini_games.length, color: "#EFB65A" },
+    { label: "Block types", value: registry.blocks.length, color: "#A78BFA" },
   ];
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="mt-1 text-sm text-white/40">
-          Manage your account and review system info
-        </p>
-      </div>
+    <div className="max-w-3xl">
+      <PageHeader
+        title="Settings"
+        subtitle="Your account and the content system"
+      />
 
       {/* Profile */}
-      <Section icon={<UserCircleIcon className="h-5 w-5" />} title="Profile">
+      <Section
+        icon={<UserCircleIcon className="h-[18px] w-[18px]" strokeWidth={2.2} />}
+        tint="#123B34"
+        color="#5EE0CE"
+        title="Profile"
+        className="mt-5"
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Display name">
             <input
-              className="input-field"
+              className="dq-input"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your name"
@@ -101,24 +107,27 @@ export default function SettingsPage() {
           </Field>
           <Field label="Email">
             <div className="relative">
-              <EnvelopeIcon className="input-icon" />
+              <EnvelopeIcon
+                className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-fg-dimmer"
+                strokeWidth={2.2}
+              />
               <input
-                className="input-field pl-11 opacity-70"
+                className="dq-input pl-11"
                 value={user?.email ?? ""}
                 readOnly
               />
             </div>
           </Field>
         </div>
-        <div className="flex items-center justify-between pt-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">
-            <ShieldCheckIcon className="h-3.5 w-3.5" />
+        <div className="mt-4 flex items-center justify-between">
+          <span className="inline-flex items-center gap-[7px] rounded-[20px] border border-teal-edge bg-teal-tint px-3.5 py-1.5 text-[11px] font-extrabold text-teal-light">
+            <ShieldCheckIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
             {user?.role ?? "ADMIN"}
           </span>
           <button
             onClick={saveProfile}
             disabled={savingProfile}
-            className="btn-primary disabled:opacity-50"
+            className="dq-btn-ghost"
           >
             {savingProfile ? "Saving…" : "Save profile"}
           </button>
@@ -126,12 +135,18 @@ export default function SettingsPage() {
       </Section>
 
       {/* Security */}
-      <Section icon={<LockClosedIcon className="h-5 w-5" />} title="Security">
+      <Section
+        icon={<LockClosedIcon className="h-[18px] w-[18px]" strokeWidth={2.2} />}
+        tint="#2A2212"
+        color="#EFB65A"
+        title="Security"
+        className="mt-4"
+      >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Current password">
             <input
               type="password"
-              className="input-field"
+              className="dq-input"
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               placeholder="••••••••"
@@ -140,7 +155,7 @@ export default function SettingsPage() {
           <Field label="New password">
             <input
               type="password"
-              className="input-field"
+              className="dq-input"
               value={next}
               onChange={(e) => setNext(e.target.value)}
               placeholder="8+ characters"
@@ -149,61 +164,75 @@ export default function SettingsPage() {
           <Field label="Confirm new password">
             <input
               type="password"
-              className="input-field"
+              className="dq-input"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="••••••••"
             />
           </Field>
         </div>
-        <div className="flex justify-end pt-2">
+        <div className="mt-4 flex justify-end">
           <button
             onClick={changePassword}
             disabled={savingPw || !current || !next}
-            className="btn-primary disabled:opacity-50"
+            className="dq-btn-ghost"
           >
             {savingPw ? "Updating…" : "Change password"}
           </button>
         </div>
       </Section>
 
-      {/* System info */}
-      <Section icon={<CubeIcon className="h-5 w-5" />} title="Content system">
-        <div className="grid grid-cols-3 gap-4">
+      {/* Content system */}
+      <Section
+        icon={<CubeIcon className="h-[18px] w-[18px]" strokeWidth={2.2} />}
+        tint="#2A2212"
+        color="#EFB65A"
+        title="Content system"
+        className="mt-4"
+      >
+        <div className="grid grid-cols-3 gap-3.5">
           {stats.map((s) => (
             <div
               key={s.label}
-              className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center"
+              className="rounded-[13px] border border-ink-500 bg-ink-700 p-5 text-center"
             >
-              <p className="text-2xl font-bold text-white/90">{s.value}</p>
-              <p className="mt-1 text-[11px] text-white/40">{s.label}</p>
+              <div
+                className="text-[30px] font-black leading-none"
+                style={{ color: s.color }}
+              >
+                {s.value}
+              </div>
+              <div className="mt-1.5 text-xs font-bold text-fg-dim">
+                {s.label}
+              </div>
             </div>
           ))}
         </div>
-        <p className="text-xs leading-relaxed text-white/35">
-          Components are defined in the backend registry (the single source of
-          truth). To add a new one, register it in the app and add an entry to{" "}
-          <code className="rounded bg-white/10 px-1 py-0.5 text-white/60">
-            content_schema.go
-          </code>
-          .
+        <p className="mt-3.5 text-xs font-semibold leading-relaxed text-fg-dimmer">
+          Components are defined in the backend registry (
+          <code className="font-mono text-fg-dim">content_schema.go</code>) — the
+          single source of truth.
         </p>
       </Section>
 
-      {/* Danger / session */}
+      {/* Session */}
       <Section
-        icon={<ArrowRightStartOnRectangleIcon className="h-5 w-5" />}
+        icon={
+          <ArrowRightStartOnRectangleIcon
+            className="h-[18px] w-[18px]"
+            strokeWidth={2.2}
+          />
+        }
+        tint="#2A1218"
+        color="#F0838C"
         title="Session"
+        className="mt-4"
       >
         <div className="flex items-center justify-between">
-          <p className="text-sm text-white/50">
+          <p className="text-[13px] font-semibold text-fg-dim">
             Sign out of the admin panel on this device.
           </p>
-          <button
-            onClick={handleLogout}
-            className="btn-secondary text-red-300 hover:bg-red-500/10"
-          >
-            <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
+          <button onClick={handleLogout} className="dq-btn-danger">
             Logout
           </button>
         </div>
@@ -214,18 +243,29 @@ export default function SettingsPage() {
 
 function Section({
   icon,
+  tint,
+  color,
   title,
   children,
+  className = "",
 }: {
   icon: React.ReactNode;
+  tint: string;
+  color: string;
   title: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="glass-card space-y-4 p-6">
-      <div className="flex items-center gap-2.5">
-        <span className="icon-tile h-9 w-9">{icon}</span>
-        <h2 className="text-base font-semibold text-white/90">{title}</h2>
+    <section className={`dq-card p-[22px] ${className}`}>
+      <div className="mb-[18px] flex items-center gap-[11px]">
+        <span
+          className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-[10px]"
+          style={{ background: tint, color }}
+        >
+          {icon}
+        </span>
+        <h2 className="dq-h2">{title}</h2>
       </div>
       {children}
     </section>
@@ -241,9 +281,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-white/50">
-        {label}
-      </label>
+      <label className="dq-label">{label}</label>
       {children}
     </div>
   );

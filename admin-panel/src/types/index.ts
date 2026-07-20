@@ -76,6 +76,8 @@ export interface Theme {
   name: string;
   slug: string;
   description: string;
+  /** Emoji shown beside the theme (sent when creating one). */
+  icon?: string;
   style: Style;
   is_default: boolean;
   created_by: string;
