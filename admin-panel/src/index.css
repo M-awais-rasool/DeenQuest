@@ -2,126 +2,344 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ──────────────────────────────────────────────────────────────
+   DeenQuest Admin — design system
+   Values mirror the approved design mock (Nunito, teal/gold on
+   near-black, chunky pressable buttons, 16px cards).
+   ────────────────────────────────────────────────────────────── */
+
 @layer base {
   html,
   body {
-    @apply text-white antialiased;
+    @apply antialiased;
   }
 
-  /* Ambient mesh background — gives the dark UI depth without imagery. */
   body {
-    background-color: #070912;
-    background-image:
-      radial-gradient(60rem 60rem at 12% -8%, rgba(16, 185, 129, 0.12), transparent 60%),
-      radial-gradient(50rem 50rem at 105% 0%, rgba(245, 158, 11, 0.1), transparent 55%),
-      radial-gradient(70rem 70rem at 50% 120%, rgba(76, 110, 245, 0.12), transparent 60%);
-    background-attachment: fixed;
+    margin: 0;
+    background: #060d0f;
+    color: #edf5f4;
+    font-family: Nunito, system-ui, sans-serif;
+  }
+
+  a {
+    color: #2cc9b5;
+    text-decoration: none;
+  }
+  a:hover {
+    color: #5ee0ce;
   }
 
   ::selection {
-    background: rgba(16, 185, 129, 0.3);
+    background: rgba(44, 201, 181, 0.3);
   }
 }
 
 @layer components {
-  .glass-card {
-    @apply rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl;
-    box-shadow:
-      0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
-      0 20px 40px -24px rgba(0, 0, 0, 0.6);
+  /* ── Surfaces ───────────────────────────────────────────── */
+
+  /* The standard panel: every card, table shell and section box. */
+  .dq-card {
+    @apply rounded-card border border-white/[0.08] bg-white/[0.035];
   }
 
-  /* Interactive card (gallery items, list rows…) */
-  .card-interactive {
-    @apply rounded-2xl border border-white/10 bg-white/[0.03] transition-all duration-200;
-  }
-  .card-interactive:hover {
-    @apply border-white/20 bg-white/[0.06] -translate-y-0.5;
+  /* A recessed inner panel (step cards, stat tiles, picker items). */
+  .dq-inset {
+    @apply rounded-step border border-ink-500 bg-ink-700;
   }
 
-  /* A small rounded tile that holds an icon. */
-  .icon-tile {
-    @apply flex items-center justify-center rounded-xl text-emerald-300;
-    background: linear-gradient(
-      135deg,
-      rgba(16, 185, 129, 0.18),
-      rgba(16, 185, 129, 0.04)
-    );
-    border: 1px solid rgba(16, 185, 129, 0.22);
+  /* Small tinted square that holds an icon or emoji. */
+  .dq-tile {
+    @apply grid place-items-center rounded-[10px] bg-teal-tint text-teal-light;
   }
 
-  .gradient-emerald {
-    @apply bg-gradient-to-br from-emerald-400 to-emerald-600;
+  /* ── Typography ─────────────────────────────────────────── */
+
+  .dq-h1 {
+    @apply text-2xl font-black text-fg;
   }
-  .gradient-gold {
-    @apply bg-gradient-to-br from-gold-400 to-gold-600;
+  .dq-h2 {
+    @apply text-[15px] font-black text-fg;
   }
-  .gradient-navy {
-    @apply bg-gradient-to-br from-navy-600 to-navy-900;
+  .dq-sub {
+    @apply mt-1 text-sm font-semibold text-fg-dimmer;
+  }
+  /* Uppercase eyebrow above a card section. */
+  .dq-eyebrow {
+    @apply text-[11px] font-black uppercase tracking-[0.14em] text-fg/40;
+  }
+  /* Field label. */
+  .dq-label {
+    @apply mb-[7px] block text-xs font-extrabold text-fg-dim;
   }
 
-  .section-title {
-    @apply text-[11px] font-bold uppercase tracking-[0.14em] text-white/40;
+  /* ── Form controls ──────────────────────────────────────── */
+
+  .dq-input {
+    @apply w-full rounded-field border-[1.5px] border-ink-500 bg-ink-700
+           px-[15px] py-3 text-sm font-bold text-fg
+           placeholder-fg-faint transition-colors;
+  }
+  .dq-input:focus {
+    @apply border-teal outline-none;
+  }
+  .dq-input:read-only {
+    @apply border-ink-600 bg-ink-900 text-fg-dimmer;
   }
 
-  .sidebar-link {
-    @apply relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-white/55 transition-all duration-200;
+  /* Compact variant used inside step cards. */
+  .dq-input-sm {
+    @apply w-full rounded-[10px] border-[1.5px] border-ink-500 bg-ink-700
+           px-[13px] py-[10px] text-[13px] font-bold text-fg
+           placeholder-fg-faint transition-colors;
   }
-  .sidebar-link:hover {
-    @apply bg-white/[0.06] text-white/90;
-  }
-  .sidebar-link.active {
-    @apply bg-emerald-500/15 text-emerald-300;
-  }
-  /* Accent bar on the active nav item. */
-  .sidebar-link.active::before {
-    content: "";
-    @apply absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-emerald-400;
+  .dq-input-sm:focus {
+    @apply border-teal outline-none;
   }
 
-  .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-white transition-all duration-200 active:scale-[0.98];
-    background: linear-gradient(135deg, #10b981, #059669);
-    box-shadow: 0 10px 24px -10px rgba(16, 185, 129, 0.7);
-  }
-  .btn-primary:hover {
-    background: linear-gradient(135deg, #34d399, #10b981);
+  select.dq-input,
+  select.dq-input-sm {
+    @apply cursor-pointer appearance-none bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235F7E7C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 14px center;
   }
 
-  .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 font-semibold text-white/90 transition-all duration-200 hover:bg-white/10 active:scale-[0.98];
+  /* ── Buttons ────────────────────────────────────────────── */
+
+  /* Primary: teal gradient with a chunky pressable underside. */
+  .dq-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl
+           px-5 py-3 text-sm font-black text-teal-ink shadow-pop
+           transition-all duration-100;
+    background: linear-gradient(#2cc9b5, #1fb0a0);
+  }
+  .dq-btn:hover {
+    background: linear-gradient(#3ad9c4, #24bfae);
+  }
+  .dq-btn:active {
+    @apply translate-y-[3px] shadow-none;
+  }
+  .dq-btn:disabled {
+    @apply pointer-events-none opacity-50;
   }
 
-  .input-field {
-    @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-white placeholder-white/30 transition-all;
-    @apply focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/30;
+  /* Secondary: quiet glass pill. */
+  .dq-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-[10px]
+           border border-white/10 bg-white/[0.05] px-[18px] py-[9px]
+           text-[13px] font-extrabold text-fg transition-colors;
+  }
+  .dq-btn-ghost:hover {
+    @apply border-white/20 bg-white/10;
+  }
+  .dq-btn-ghost:disabled {
+    @apply pointer-events-none opacity-40;
   }
 
-  .badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  /* Destructive: rose-tinted outline. */
+  .dq-btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-[10px]
+           border border-rose/30 bg-rose/10 px-[18px] py-[9px]
+           text-[13px] font-extrabold text-rose transition-colors;
+  }
+  .dq-btn-danger:hover {
+    @apply bg-rose/[0.18];
   }
 
-  /* Icon sitting inside an input (use with input padding, e.g. pl-11). */
-  .input-icon {
-    @apply pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30;
+  /* Outlined teal link-button ("Insert example", "Change"). */
+  .dq-btn-outline {
+    @apply inline-flex items-center gap-1.5 rounded-[10px] border-[1.5px]
+           border-teal-edge px-[13px] py-[7px] text-xs font-extrabold
+           text-teal-light transition-colors;
+  }
+  .dq-btn-outline:hover {
+    @apply border-teal bg-teal/10;
+  }
+
+  /* Square icon buttons — 32px in tables, 28px inside step cards. */
+  .dq-icon-btn {
+    @apply grid h-8 w-8 place-items-center rounded-[9px]
+           bg-white/[0.05] text-fg-dim transition-colors;
+  }
+  .dq-icon-btn:hover {
+    @apply bg-white/10 text-fg;
+  }
+  .dq-icon-btn:disabled {
+    @apply pointer-events-none opacity-25;
+  }
+  .dq-icon-btn-sm {
+    @apply grid h-7 w-7 place-items-center rounded-lg
+           bg-white/[0.05] text-fg-dim transition-colors;
+  }
+  .dq-icon-btn-sm:hover {
+    @apply bg-white/10 text-fg;
+  }
+  .dq-icon-btn-sm:disabled {
+    @apply pointer-events-none opacity-25;
+  }
+  .dq-icon-btn-danger {
+    @apply bg-rose/[0.09] text-rose;
+  }
+  .dq-icon-btn-danger:hover {
+    @apply bg-rose/20 text-rose;
+  }
+
+  /* Dashed "add another" affordance. */
+  .dq-add {
+    @apply w-full rounded-xl border-[1.5px] border-dashed border-ink-400
+           py-[15px] text-center text-[13px] font-extrabold text-fg-dimmer
+           transition-colors;
+  }
+  .dq-add:hover {
+    @apply border-teal-edge text-teal-light;
+  }
+
+  /* ── Badges ─────────────────────────────────────────────── */
+
+  .dq-badge {
+    @apply inline-flex items-center rounded-[20px] px-3 py-[5px]
+           text-[11px] font-extrabold;
+  }
+  .dq-badge-neutral {
+    @apply bg-white/[0.06] text-fg-dim;
+  }
+  .dq-badge-easy {
+    @apply bg-leaf text-teal-light;
+  }
+  .dq-badge-medium {
+    @apply bg-gold-tint text-gold;
+  }
+  .dq-badge-hard {
+    @apply bg-rose-tile text-rose;
+  }
+  /* "NOT WIRED" flag next to a page title. */
+  .dq-flag {
+    @apply ml-3 inline-block rounded-lg border border-gold-edge bg-gold-tint
+           px-[9px] py-[3px] align-middle text-[10px] font-extrabold text-gold;
+  }
+
+  /* ── Sidebar ────────────────────────────────────────────── */
+
+  .dq-nav-group {
+    @apply px-3 pb-1.5 pt-4 text-[10px] font-extrabold uppercase
+           tracking-[0.16em] text-fg-faintest;
+  }
+  .dq-nav-link {
+    @apply relative flex items-center gap-3 rounded-field px-[14px] py-[11px]
+           text-sm font-extrabold text-fg-dim transition-colors;
+  }
+  .dq-nav-link:hover {
+    @apply bg-white/[0.04] text-fg;
+  }
+  .dq-nav-link.active {
+    @apply bg-teal/10 text-teal-light;
+  }
+  /* Accent bar sits in the nav's 12px gutter. */
+  .dq-nav-link.active::before {
+    content: '';
+    @apply absolute -left-3 bottom-[9px] top-[9px] w-1 rounded-[3px] bg-teal;
+  }
+
+  /* ── Table ──────────────────────────────────────────────── */
+
+  .dq-table {
+    @apply w-full border-collapse;
+  }
+  .dq-table thead tr {
+    @apply border-b border-white/[0.07];
+  }
+  .dq-table th {
+    @apply px-6 py-4 text-left text-[11px] font-extrabold uppercase
+           tracking-[0.06em] text-fg/50;
+  }
+  .dq-table tbody tr {
+    @apply border-b border-white/[0.04] transition-colors;
+  }
+  .dq-table tbody tr:last-child {
+    @apply border-b-0;
+  }
+  .dq-table tbody tr:hover {
+    @apply bg-white/[0.02];
+  }
+  .dq-table td {
+    @apply px-6 py-[15px] text-sm text-fg-dim;
+  }
+  /* Clickable title cell. */
+  .dq-table-link {
+    @apply text-left text-[13.5px] font-extrabold text-teal-light transition-colors;
+  }
+  .dq-table-link:hover {
+    @apply text-teal;
+  }
+
+  /* ── Misc ───────────────────────────────────────────────── */
+
+  .dq-spinner {
+    @apply rounded-full border-[3px] border-teal border-t-transparent;
+    animation: dqSpin 0.7s linear infinite;
+  }
+
+  /* Pulsing "Live" indicator dot. */
+  .dq-live-dot {
+    @apply h-2 w-2 rounded-full bg-teal;
+    animation: dqLivePulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes dqSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dqLivePulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(44, 201, 181, 0.5);
+  }
+  70% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 8px rgba(44, 201, 181, 0);
   }
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: #1b3036;
+  border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
-  background-clip: padding-box;
+  background: #24393e;
+}
+
+/* Native colour swatch inputs (Themes page). */
+input[type='color'] {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type='color']::-webkit-color-swatch {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+}
+
+/* Disclosure triangles are drawn manually in the markup. */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
 }
