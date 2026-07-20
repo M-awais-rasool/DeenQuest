@@ -185,6 +185,7 @@ func (s *Service) CoachState(ctx context.Context, userID string) (*CoachStateDTO
 	if top != nil {
 		dto.Message = HomeMessage(*top)
 		dto.FixMinutes = top.PracticeMinutes
+		dto.InsightID = top.ID
 		dto.PracticeLevelID = top.PracticeLevelID
 		if top.PracticeLevelID != 0 {
 			dto.SuggestedMission = SuggestedMission{

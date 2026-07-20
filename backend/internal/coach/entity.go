@@ -170,10 +170,11 @@ type InsightDTO struct {
 }
 
 type CoachStateDTO struct {
-	Subtitle         string           `json:"subtitle"`
-	Message          MessageParts     `json:"message"`
-	FixMinutes       int              `json:"fixMinutes"`
-	PracticeLevelID  int              `json:"practiceLevelId"`
+	Subtitle   string       `json:"subtitle"`
+	Message    MessageParts `json:"message"`
+	FixMinutes int          `json:"fixMinutes"`
+	InsightID       string `json:"insightId,omitempty"`
+	PracticeLevelID int    `json:"practiceLevelId"`
 	SuggestedMission SuggestedMission `json:"suggestedMission"`
 	WeekAccuracy     []float64        `json:"weekAccuracy"` // Mon..Sun; <0 = no data
 	WeekDeltaPct     int              `json:"weekDeltaPct"`
