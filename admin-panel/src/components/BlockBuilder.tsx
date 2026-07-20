@@ -6,23 +6,22 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
 } from "@heroicons/react/24/outline";
-import { ComponentIcon } from "../lib/componentIcons";
 
-const BLOCK_TYPES: { type: BlockType; label: string }[] = [
-  { type: "TextBlock", label: "Text" },
-  { type: "AyahBlock", label: "Ayah" },
-  { type: "HadithBlock", label: "Hadith" },
-  { type: "CounterBlock", label: "Counter" },
-  { type: "QuizBlock", label: "Quiz" },
-  { type: "AudioBlock", label: "Audio" },
-  { type: "ChecklistBlock", label: "Checklist" },
-  { type: "FlashCardBlock", label: "Flash Card" },
-  { type: "DragDropBlock", label: "Drag & Drop" },
-  { type: "MatchBlock", label: "Match" },
-  { type: "RewardBlock", label: "Reward" },
-  { type: "ImageBlock", label: "Image" },
-  { type: "VideoBlock", label: "Video" },
-  { type: "VoicePracticeBlock", label: "Voice Practice" },
+const BLOCK_TYPES: { type: BlockType; label: string; emoji: string }[] = [
+  { type: "TextBlock", label: "Text", emoji: "📝" },
+  { type: "AyahBlock", label: "Ayah", emoji: "📖" },
+  { type: "HadithBlock", label: "Hadith", emoji: "📜" },
+  { type: "CounterBlock", label: "Counter", emoji: "🔢" },
+  { type: "QuizBlock", label: "Quiz", emoji: "❓" },
+  { type: "AudioBlock", label: "Audio", emoji: "🔊" },
+  { type: "ChecklistBlock", label: "Checklist", emoji: "✅" },
+  { type: "FlashCardBlock", label: "Flash Card", emoji: "🃏" },
+  { type: "DragDropBlock", label: "Drag & Drop", emoji: "🔀" },
+  { type: "MatchBlock", label: "Match", emoji: "🔗" },
+  { type: "RewardBlock", label: "Reward", emoji: "🏆" },
+  { type: "ImageBlock", label: "Image", emoji: "🖼️" },
+  { type: "VideoBlock", label: "Video", emoji: "🎬" },
+  { type: "VoicePracticeBlock", label: "Voice Practice", emoji: "🎙️" },
 ];
 
 interface BlockBuilderProps {
@@ -72,32 +71,19 @@ export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-white/70">Content Blocks</h3>
-        <button
-          type="button"
-          onClick={() => setShowPicker(!showPicker)}
-          className="btn-primary text-xs flex items-center gap-1"
-        >
-          <PlusIcon className="w-4 h-4" /> Add Block
-        </button>
-      </div>
-
-      {/* Block Picker */}
+    <div>
+      {/* Picker */}
       {showPicker && (
-        <div className="glass-card p-4 grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-2">
+        <div className="dq-inset mb-3.5 grid grid-cols-3 gap-2.5 p-4 sm:grid-cols-5 lg:grid-cols-7">
           {BLOCK_TYPES.map((bt) => (
             <button
               key={bt.type}
               type="button"
               onClick={() => addBlock(bt.type)}
-              className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/10 transition-colors text-center"
+              className="flex flex-col items-center gap-2 rounded-xl border-[1.5px] border-ink-500 bg-ink-700 px-1 py-3 text-center transition-colors hover:border-teal-edge hover:bg-teal/[0.06]"
             >
-              <span className="icon-tile h-9 w-9">
-                <ComponentIcon name={bt.type} className="h-5 w-5" />
-              </span>
-              <span className="text-[10px] text-white/60 font-medium">
+              <span className="text-[20px] leading-none">{bt.emoji}</span>
+              <span className="text-[10.5px] font-extrabold leading-tight text-fg-dim">
                 {bt.label}
               </span>
             </button>
@@ -105,68 +91,96 @@ export default function BlockBuilder({ blocks, onChange }: BlockBuilderProps) {
         </div>
       )}
 
-      {/* Block List */}
-      <div className="space-y-3">
-        {blocks.map((block, index) => {
-          const meta = BLOCK_TYPES.find((bt) => bt.type === block.type);
-          return (
-            <div key={index} className="glass-card p-4 group">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="icon-tile h-8 w-8">
-                    <ComponentIcon name={block.type} className="h-4 w-4" />
-                  </span>
-                  <span className="text-sm font-semibold text-white/80">
-                    {meta?.label ?? block.type}
-                  </span>
-                  <span className="badge bg-white/5 text-white/30 text-[10px]">
-                    #{index + 1}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    type="button"
-                    onClick={() => moveBlock(index, -1)}
-                    className="p-1.5 rounded-lg hover:bg-white/10"
-                    disabled={index === 0}
-                  >
-                    <ArrowUpIcon className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveBlock(index, 1)}
-                    className="p-1.5 rounded-lg hover:bg-white/10"
-                    disabled={index === blocks.length - 1}
-                  >
-                    <ArrowDownIcon className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeBlock(index)}
-                    className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400"
-                  >
-                    <TrashIcon className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+      {/* Block list */}
+      {blocks.map((block, index) => {
+        const meta = BLOCK_TYPES.find((bt) => bt.type === block.type);
+        return (
+          <div key={index} className="dq-inset mb-3.5 p-4">
+            <div className="mb-3.5 flex items-center gap-2.5">
+              <span className="grid h-[34px] w-[34px] flex-shrink-0 place-items-center rounded-[10px] bg-teal-tint text-[16px] leading-none">
+                {meta?.emoji ?? "🧩"}
+              </span>
+              <span className="text-[13.5px] font-extrabold text-fg">
+                {meta?.label ?? block.type}
+              </span>
+              <span className="dq-badge dq-badge-neutral !px-2 !py-0.5 !text-[10px]">
+                #{index + 1}
+              </span>
+              <div className="ml-auto flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => moveBlock(index, -1)}
+                  className="dq-icon-btn-sm"
+                  disabled={index === 0}
+                  title="Move up"
+                >
+                  <ArrowUpIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveBlock(index, 1)}
+                  className="dq-icon-btn-sm"
+                  disabled={index === blocks.length - 1}
+                  title="Move down"
+                >
+                  <ArrowDownIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeBlock(index)}
+                  className="dq-icon-btn-sm dq-icon-btn-danger"
+                  title="Remove block"
+                >
+                  <TrashIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                </button>
               </div>
-
-              {/* Simple content editor based on block type */}
-              <BlockContentEditor
-                block={block}
-                onUpdate={(key, value) => updateBlockContent(index, key, value)}
-              />
             </div>
-          );
-        })}
-      </div>
 
-      {blocks.length === 0 && (
-        <div className="glass-card p-8 text-center">
-          <p className="text-white/30 text-sm">
-            No blocks added yet. Click "Add Block" to start building content.
-          </p>
+            <BlockContentEditor
+              block={block}
+              onUpdate={(key, value) => updateBlockContent(index, key, value)}
+            />
+          </div>
+        );
+      })}
+
+      {blocks.length === 0 && !showPicker && (
+        <div className="dq-inset p-8 text-center text-[13px] font-semibold text-fg-faint">
+          No blocks yet. Add one to start building this task.
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={() => setShowPicker(!showPicker)}
+        className="dq-add mt-3.5"
+      >
+        {showPicker ? (
+          "Close picker"
+        ) : (
+          <>
+            <PlusIcon className="mr-1 inline h-4 w-4 align-[-3px]" strokeWidth={2.6} />
+            Add a block
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
+function Labeled({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-extrabold text-fg-dim">
+        {label}
+      </label>
+      {children}
     </div>
   );
 }
@@ -181,129 +195,156 @@ function BlockContentEditor({
   switch (block.type) {
     case "TextBlock":
       return (
-        <textarea
-          className="input-field text-sm min-h-[80px]"
-          placeholder="Enter text content..."
-          value={(block.content.text as string) ?? ""}
-          onChange={(e) => onUpdate("text", e.target.value)}
-        />
+        <Labeled label="Text">
+          <textarea
+            className="dq-input-sm min-h-[80px] leading-relaxed"
+            placeholder="Enter text content…"
+            value={(block.content.text as string) ?? ""}
+            onChange={(e) => onUpdate("text", e.target.value)}
+          />
+        </Labeled>
       );
     case "AyahBlock":
       return (
         <div className="grid grid-cols-2 gap-3">
-          <input
-            className="input-field text-sm"
-            placeholder="Surah name"
-            value={(block.content.surah as string) ?? ""}
-            onChange={(e) => onUpdate("surah", e.target.value)}
-          />
-          <input
-            className="input-field text-sm"
-            placeholder="Ayah numbers (e.g., 1,2,3)"
-            value={(block.content.ayahs as string) ?? ""}
-            onChange={(e) => onUpdate("ayahs", e.target.value)}
-          />
+          <Labeled label="Surah">
+            <input
+              className="dq-input-sm"
+              placeholder="Al-Fatihah"
+              value={(block.content.surah as string) ?? ""}
+              onChange={(e) => onUpdate("surah", e.target.value)}
+            />
+          </Labeled>
+          <Labeled label="Ayah numbers">
+            <input
+              className="dq-input-sm"
+              placeholder="1,2,3"
+              value={(block.content.ayahs as string) ?? ""}
+              onChange={(e) => onUpdate("ayahs", e.target.value)}
+            />
+          </Labeled>
         </div>
       );
     case "HadithBlock":
       return (
         <div className="space-y-3">
-          <input
-            className="input-field text-sm"
-            placeholder="Hadith source (e.g., Bukhari 6018)"
-            value={(block.content.source as string) ?? ""}
-            onChange={(e) => onUpdate("source", e.target.value)}
-          />
-          <textarea
-            className="input-field text-sm min-h-[60px]"
-            placeholder="Hadith text..."
-            value={(block.content.text as string) ?? ""}
-            onChange={(e) => onUpdate("text", e.target.value)}
-          />
+          <Labeled label="Source">
+            <input
+              className="dq-input-sm"
+              placeholder="Bukhari 6018"
+              value={(block.content.source as string) ?? ""}
+              onChange={(e) => onUpdate("source", e.target.value)}
+            />
+          </Labeled>
+          <Labeled label="Hadith text">
+            <textarea
+              className="dq-input-sm min-h-[60px] leading-relaxed"
+              placeholder="Hadith text…"
+              value={(block.content.text as string) ?? ""}
+              onChange={(e) => onUpdate("text", e.target.value)}
+            />
+          </Labeled>
         </div>
       );
     case "RewardBlock":
       return (
-        <input
-          className="input-field text-sm"
-          type="number"
-          placeholder="XP reward amount"
-          value={(block.content.xp as number) ?? ""}
-          onChange={(e) => onUpdate("xp", parseInt(e.target.value) || 0)}
-        />
+        <Labeled label="XP reward">
+          <input
+            className="dq-input-sm"
+            type="number"
+            placeholder="50"
+            value={(block.content.xp as number) ?? ""}
+            onChange={(e) => onUpdate("xp", parseInt(e.target.value) || 0)}
+          />
+        </Labeled>
       );
     case "QuizBlock":
       return (
         <div className="space-y-3">
-          <input
-            className="input-field text-sm"
-            placeholder="Question"
-            value={(block.content.question as string) ?? ""}
-            onChange={(e) => onUpdate("question", e.target.value)}
-          />
-          <input
-            className="input-field text-sm"
-            placeholder="Options (comma-separated)"
-            value={(block.content.options as string) ?? ""}
-            onChange={(e) => onUpdate("options", e.target.value)}
-          />
-          <input
-            className="input-field text-sm"
-            placeholder="Correct answer"
-            value={(block.content.answer as string) ?? ""}
-            onChange={(e) => onUpdate("answer", e.target.value)}
-          />
+          <Labeled label="Question">
+            <input
+              className="dq-input-sm"
+              placeholder="Ask something…"
+              value={(block.content.question as string) ?? ""}
+              onChange={(e) => onUpdate("question", e.target.value)}
+            />
+          </Labeled>
+          <div className="grid grid-cols-2 gap-3">
+            <Labeled label="Options (comma-separated)">
+              <input
+                className="dq-input-sm"
+                placeholder="A, B, C"
+                value={(block.content.options as string) ?? ""}
+                onChange={(e) => onUpdate("options", e.target.value)}
+              />
+            </Labeled>
+            <Labeled label="Correct answer">
+              <input
+                className="dq-input-sm"
+                value={(block.content.answer as string) ?? ""}
+                onChange={(e) => onUpdate("answer", e.target.value)}
+              />
+            </Labeled>
+          </div>
         </div>
       );
     case "CounterBlock":
       return (
         <div className="grid grid-cols-2 gap-3">
-          <input
-            className="input-field text-sm"
-            placeholder="Label (e.g., SubhanAllah)"
-            value={(block.content.label as string) ?? ""}
-            onChange={(e) => onUpdate("label", e.target.value)}
-          />
-          <input
-            className="input-field text-sm"
-            type="number"
-            placeholder="Target count"
-            value={(block.content.target as number) ?? ""}
-            onChange={(e) => onUpdate("target", parseInt(e.target.value) || 0)}
-          />
+          <Labeled label="Label">
+            <input
+              className="dq-input-sm"
+              placeholder="SubhanAllah"
+              value={(block.content.label as string) ?? ""}
+              onChange={(e) => onUpdate("label", e.target.value)}
+            />
+          </Labeled>
+          <Labeled label="Target count">
+            <input
+              className="dq-input-sm"
+              type="number"
+              placeholder="33"
+              value={(block.content.target as number) ?? ""}
+              onChange={(e) => onUpdate("target", parseInt(e.target.value) || 0)}
+            />
+          </Labeled>
         </div>
       );
     case "AudioBlock":
     case "ImageBlock":
     case "VideoBlock":
       return (
-        <input
-          className="input-field text-sm"
-          placeholder="URL"
-          value={(block.content.url as string) ?? ""}
-          onChange={(e) => onUpdate("url", e.target.value)}
-        />
+        <Labeled label="URL">
+          <input
+            className="dq-input-sm"
+            placeholder="https://…"
+            value={(block.content.url as string) ?? ""}
+            onChange={(e) => onUpdate("url", e.target.value)}
+          />
+        </Labeled>
       );
     default:
       return (
-        <textarea
-          className="input-field text-sm min-h-[60px] font-mono text-xs"
-          placeholder='{"key": "value"}'
-          value={
-            typeof block.content === "object"
-              ? JSON.stringify(block.content, null, 2)
-              : ""
-          }
-          onChange={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value);
-              // Update all keys
-              Object.entries(parsed).forEach(([k, v]) => onUpdate(k, v));
-            } catch {
-              // ignore invalid JSON while typing
+        <Labeled label="Content (JSON)">
+          <textarea
+            className="dq-input-sm min-h-[70px] font-mono text-[12px] leading-relaxed"
+            placeholder='{"key": "value"}'
+            value={
+              typeof block.content === "object"
+                ? JSON.stringify(block.content, null, 2)
+                : ""
             }
-          }}
-        />
+            onChange={(e) => {
+              try {
+                const parsed = JSON.parse(e.target.value);
+                // Update all keys
+                Object.entries(parsed).forEach(([k, v]) => onUpdate(k, v));
+              } catch {
+                // ignore invalid JSON while typing
+              }
+            }}
+          />
+        </Labeled>
       );
   }
 }

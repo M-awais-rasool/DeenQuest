@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   PlusIcon,
-  PencilSquareIcon,
+  PencilIcon,
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import api from "../lib/api";
 import { useRegistry, enumLabel } from "../lib/useRegistry";
 import { RewardIcon, rarityColor } from "../lib/rewardIcons";
+import PageHeader, { PageLoader, PageMessage } from "../components/PageHeader";
 import type { EnumOption, Reward } from "../types";
 
 function blankReward(): Reward {
@@ -70,44 +71,38 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Rewards</h1>
-          <p className="mt-1 text-sm text-white/40">
-            Achievements users unlock as they progress
-          </p>
-        </div>
-        <button
-          onClick={() => setEditing(blankReward())}
-          className="btn-primary"
-        >
-          <PlusIcon className="h-5 w-5" /> New Reward
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Rewards"
+        subtitle="Badges learners unlock as they grow"
+        action={
+          <button onClick={() => setEditing(blankReward())} className="dq-btn">
+            <PlusIcon className="h-[17px] w-[17px]" strokeWidth={2.6} />
+            New Reward
+          </button>
+        }
+      />
 
-      {loading ? (
-        <div className="flex h-48 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-        </div>
-      ) : rewards.length === 0 ? (
-        <div className="glass-card p-12 text-center text-white/40">
-          No rewards yet. Create your first one.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rewards.map((r) => (
-            <RewardCard
-              key={r.id}
-              reward={r}
-              rarities={rarities}
-              triggers={triggers}
-              onEdit={() => setEditing(r)}
-              onDelete={() => remove(r)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="mt-6">
+        {loading ? (
+          <PageLoader />
+        ) : rewards.length === 0 ? (
+          <PageMessage>No rewards yet. Create your first one.</PageMessage>
+        ) : (
+          <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 xl:grid-cols-3">
+            {rewards.map((r) => (
+              <RewardCard
+                key={r.id}
+                reward={r}
+                rarities={rarities}
+                triggers={triggers}
+                onEdit={() => setEditing(r)}
+                onDelete={() => remove(r)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {editing && (
         <RewardForm
@@ -138,47 +133,51 @@ function RewardCard({
 }) {
   const color = rarityColor(reward.rarity);
   return (
-    <div className="card-interactive group relative p-5">
+    <div className="dq-card p-5 transition-colors hover:border-white/[0.14]">
       <div className="flex items-start gap-3">
         <div
-          className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl"
-          style={{ backgroundColor: `${color}22`, border: `1px solid ${color}55` }}
+          className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-[11px]"
+          style={{ backgroundColor: `${color}20`, border: `1px solid ${color}44` }}
         >
-          <RewardIcon icon={reward.icon} className="h-6 w-6" style={{ color }} />
+          <RewardIcon icon={reward.icon} className="h-5 w-5" style={{ color }} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-white/90">{reward.title}</p>
+          <p className="truncate text-sm font-extrabold text-fg">
+            {reward.title || "(untitled)"}
+          </p>
           <span
-            className="badge mt-1"
+            className="dq-badge mt-1.5 !px-2.5 !py-0.5 !text-[10px]"
             style={{ backgroundColor: `${color}1f`, color }}
           >
             {enumLabel(rarities, reward.rarity)}
           </span>
         </div>
-        <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
-          <button
-            onClick={onEdit}
-            className="rounded-lg p-1.5 text-white/50 hover:bg-white/10"
-          >
-            <PencilSquareIcon className="h-4 w-4" />
+        <div className="flex flex-shrink-0 gap-1.5">
+          <button onClick={onEdit} className="dq-icon-btn-sm" title="Edit">
+            <PencilIcon className="h-[14px] w-[14px]" strokeWidth={2.2} />
           </button>
           <button
             onClick={onDelete}
-            className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/20"
+            className="dq-icon-btn-sm dq-icon-btn-danger"
+            title="Delete"
           >
-            <TrashIcon className="h-4 w-4" />
+            <TrashIcon className="h-[14px] w-[14px]" strokeWidth={2.2} />
           </button>
         </div>
       </div>
-      <p className="mt-3 line-clamp-2 text-xs text-white/50">
+
+      <p className="mt-3.5 line-clamp-2 text-xs font-semibold leading-relaxed text-fg-dimmer">
         {reward.description}
       </p>
-      <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-xs">
-        <span className="text-white/40">
+
+      <div className="mt-3.5 flex items-center justify-between border-t border-white/[0.06] pt-3.5">
+        <span className="text-[11px] font-bold text-fg-dimmer">
           {enumLabel(triggers, reward.trigger)} ≥{" "}
-          <span className="text-white/70">{reward.required}</span>
+          <span className="text-fg-dim">{reward.required}</span>
         </span>
-        <span className="font-semibold text-gold-400">+{reward.xp_bonus} XP</span>
+        <span className="text-[11px] font-black text-gold">
+          +{reward.xp_bonus} XP
+        </span>
       </div>
     </div>
   );
@@ -202,50 +201,59 @@ function RewardForm({
   const [r, setR] = useState<Reward>(initial);
   const isNew = !initial.id;
   const set = (patch: Partial<Reward>) => setR({ ...r, ...patch });
+  const color = rarityColor(r.rarity);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="glass-card max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="dq-card max-h-[90vh] w-full max-w-lg overflow-y-auto p-[22px]"
+        style={{ background: "#0B1517" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-black text-fg">
             {isNew ? "New Reward" : "Edit Reward"}
           </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-white/50 hover:bg-white/10"
-          >
-            <XMarkIcon className="h-5 w-5" />
+          <button onClick={onClose} className="dq-icon-btn" title="Close">
+            <XMarkIcon className="h-[18px] w-[18px]" strokeWidth={2.4} />
           </button>
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+          {/* Live badge preview */}
+          <div className="dq-inset flex items-center gap-3 p-3.5">
             <div
-              className="grid h-12 w-12 place-items-center rounded-xl"
+              className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-xl"
               style={{
-                backgroundColor: `${rarityColor(r.rarity)}22`,
-                border: `1px solid ${rarityColor(r.rarity)}55`,
+                backgroundColor: `${color}20`,
+                border: `1px solid ${color}44`,
               }}
             >
-              <RewardIcon
-                icon={r.icon}
-                className="h-6 w-6"
-                style={{ color: rarityColor(r.rarity) }}
-              />
+              <RewardIcon icon={r.icon} className="h-6 w-6" style={{ color }} />
             </div>
-            <p className="text-sm text-white/50">Live preview of the badge</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-extrabold text-fg">
+                {r.title || "Untitled reward"}
+              </p>
+              <p className="text-[11px] font-semibold text-fg-dimmer">
+                Live preview of the badge
+              </p>
+            </div>
           </div>
 
           <Field label="Title">
             <input
-              className="input-field"
+              className="dq-input"
               value={r.title}
               onChange={(e) => set({ title: e.target.value })}
             />
           </Field>
           <Field label="Description">
             <textarea
-              className="input-field"
+              className="dq-input leading-relaxed"
               rows={2}
               value={r.description}
               onChange={(e) => set({ description: e.target.value })}
@@ -281,7 +289,7 @@ function RewardForm({
             <Field label="Required">
               <input
                 type="number"
-                className="input-field"
+                className="dq-input"
                 value={r.required}
                 onChange={(e) => set({ required: Number(e.target.value) })}
               />
@@ -289,7 +297,7 @@ function RewardForm({
             <Field label="XP bonus">
               <input
                 type="number"
-                className="input-field"
+                className="dq-input"
                 value={r.xp_bonus}
                 onChange={(e) => set({ xp_bonus: Number(e.target.value) })}
               />
@@ -297,7 +305,7 @@ function RewardForm({
             <Field label="Sort order">
               <input
                 type="number"
-                className="input-field"
+                className="dq-input"
                 value={r.sort_order}
                 onChange={(e) => set({ sort_order: Number(e.target.value) })}
               />
@@ -306,10 +314,10 @@ function RewardForm({
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} className="btn-secondary">
+          <button onClick={onClose} className="dq-btn-ghost">
             Cancel
           </button>
-          <button onClick={() => onSave(r, isNew)} className="btn-primary">
+          <button onClick={() => onSave(r, isNew)} className="dq-btn">
             Save
           </button>
         </div>
@@ -327,9 +335,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-white/50">
-        {label}
-      </label>
+      <label className="dq-label">{label}</label>
       {children}
     </div>
   );
@@ -346,7 +352,7 @@ function Select({
 }) {
   return (
     <select
-      className="input-field"
+      className="dq-input"
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >

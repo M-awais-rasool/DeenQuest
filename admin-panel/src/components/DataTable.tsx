@@ -1,6 +1,8 @@
 interface Column<T> {
   key: string;
   label: string;
+  /** Right-align the header + cells (used for the actions column). */
+  align?: "left" | "right";
   render?: (item: T) => React.ReactNode;
 }
 
@@ -15,26 +17,26 @@ export default function DataTable<T extends object>({
   columns,
   data,
   loading,
-  emptyMessage = "No data found",
+  emptyMessage = "Nothing here yet",
 }: DataTableProps<T>) {
   if (loading) {
     return (
-      <div className="glass-card p-12 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      <div className="dq-card flex items-center justify-center p-12">
+        <div className="dq-spinner h-8 w-8" />
       </div>
     );
   }
 
   return (
-    <div className="glass-card overflow-hidden">
+    <div className="dq-card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="dq-table">
           <thead>
-            <tr className="border-b border-white/10">
+            <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-6 py-4 text-left text-xs font-semibold text-white/50 uppercase tracking-wider"
+                  className={col.align === "right" ? "text-right" : undefined}
                 >
                   {col.label}
                 </th>
@@ -46,18 +48,18 @@ export default function DataTable<T extends object>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-6 py-12 text-center text-white/30 text-sm"
+                  className="px-6 py-14 text-center text-sm font-semibold text-fg-faint"
                 >
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
               data.map((item, idx) => (
-                <tr key={idx} className="table-row">
+                <tr key={idx}>
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className="px-6 py-4 text-sm text-white/80"
+                      className={col.align === "right" ? "text-right" : undefined}
                     >
                       {col.render
                         ? col.render(item)

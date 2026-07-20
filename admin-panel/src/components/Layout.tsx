@@ -12,7 +12,6 @@ import {
   Cog6ToothIcon,
   ChevronDoubleLeftIcon,
   MagnifyingGlassIcon,
-  SparklesIcon,
   CpuChipIcon,
 } from "@heroicons/react/24/outline";
 import { type ReactNode, useState } from "react";
@@ -41,11 +40,74 @@ const navGroups: {
     heading: "System",
     items: [
       { label: "Events", path: "/events", icon: CalendarDaysIcon },
-      { label: "Audit Logs", path: "/audit-logs", icon: ClipboardDocumentCheckIcon },
+      {
+        label: "Audit Logs",
+        path: "/audit-logs",
+        icon: ClipboardDocumentCheckIcon,
+      },
       { label: "Settings", path: "/settings", icon: Cog6ToothIcon },
     ],
   },
 ];
+
+/** The DeenQuest mark: a gold tile holding a mosque silhouette. */
+export function Logo({ size = 40 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 80 80"
+      fill="none"
+      className="flex-shrink-0 rounded-xl"
+    >
+      <defs>
+        <linearGradient id="dq-logo" gradientUnits="userSpaceOnUse" x1="12" y1="0" x2="62" y2="80">
+          <stop offset="0" stopColor="#F9D98C" />
+          <stop offset="1" stopColor="#D08A22" />
+        </linearGradient>
+      </defs>
+      <rect x="1" y="1" width="78" height="78" rx="18" fill="url(#dq-logo)" />
+      <g fill="#0B3B33">
+        <path d="M40 16 C55 25 61 38 61 64 H19 C19 38 25 25 40 16 Z" />
+        <rect x="38.7" y="9" width="2.6" height="8" rx="1.3" />
+        <path
+          d="M40 1.5 A4.5 4.5 0 1 0 40 10.5 A6 6 0 0 1 40 1.5 Z"
+          transform="rotate(-20 40 6)"
+        />
+      </g>
+      <path d="M33 64 v-12 a7 7 0 0 1 14 0 v12 z" fill="url(#dq-logo)" />
+    </svg>
+  );
+}
+
+/** Fixed ambient colour wash behind the whole app. */
+export function AmbientGlow() {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-0">
+      <div
+        className="absolute -left-24 -top-52 h-[600px] w-[600px] rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(44,201,181,.07), transparent 60%)",
+        }}
+      />
+      <div
+        className="absolute -right-32 -top-32 h-[520px] w-[520px] rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(239,182,90,.06), transparent 60%)",
+        }}
+      />
+      <div
+        className="absolute -bottom-56 left-[40%] h-[620px] w-[620px] rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(124,110,240,.05), transparent 60%)",
+        }}
+      />
+    </div>
+  );
+}
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -58,108 +120,136 @@ export default function Layout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
+    <div className="relative flex min-h-screen">
+      <AmbientGlow />
+
+      {/* ── Sidebar ── */}
       <aside
         className={`${
           collapsed ? "w-20" : "w-64"
-        } flex flex-col border-r border-white/5 bg-navy-950/40 backdrop-blur-2xl transition-all duration-300`}
+        } sticky top-0 z-10 flex h-screen flex-shrink-0 flex-col border-r border-white/[0.06] backdrop-blur-xl transition-all duration-300`}
+        style={{ background: "rgba(9,17,19,.72)" }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-6">
-          <div className="grid h-10 w-10 place-items-center rounded-xl gradient-emerald shadow-lg shadow-emerald-500/25">
-            <SparklesIcon className="h-5 w-5 text-white" />
-          </div>
+        <div
+          className={`flex items-center gap-[11px] px-5 pb-5 pt-[22px] ${
+            collapsed ? "justify-center" : ""
+          }`}
+        >
+          <Logo />
           {!collapsed && (
             <div>
-              <h1 className="bg-gradient-to-r from-emerald-300 to-gold-300 bg-clip-text text-lg font-bold text-transparent">
+              <div
+                className="text-[18px] font-black leading-tight text-transparent"
+                style={{
+                  background: "linear-gradient(90deg,#5EE0CE,#EFB65A)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                }}
+              >
                 DeenQuest
-              </h1>
-              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/35">
-                Admin Panel
-              </p>
+              </div>
+              <div className="text-[9.5px] font-extrabold tracking-[0.18em] text-fg-faint">
+                ADMIN PANEL
+              </div>
             </div>
           )}
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2">
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2">
           {navGroups.map((group) => (
-            <div key={group.heading}>
-              {!collapsed && (
-                <p className="section-title px-3.5 pb-1.5">{group.heading}</p>
-              )}
-              <div className="space-y-1">
-                {group.items.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    end={item.path === "/"}
-                    title={item.label}
-                    className={({ isActive }) =>
-                      `sidebar-link ${isActive ? "active" : ""} ${
-                        collapsed ? "justify-center" : ""
-                      }`
-                    }
-                  >
-                    <item.icon className="h-5 w-5 flex-shrink-0" />
-                    {!collapsed && <span>{item.label}</span>}
-                  </NavLink>
-                ))}
-              </div>
+            <div key={group.heading} className="contents">
+              {!collapsed && <p className="dq-nav-group">{group.heading}</p>}
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.path === "/"}
+                  title={item.label}
+                  className={({ isActive }) =>
+                    `dq-nav-link ${isActive ? "active" : ""} ${
+                      collapsed ? "justify-center" : ""
+                    }`
+                  }
+                >
+                  <item.icon className="h-[18px] w-[18px] flex-shrink-0" strokeWidth={2.1} />
+                  {!collapsed && <span>{item.label}</span>}
+                </NavLink>
+              ))}
             </div>
           ))}
         </nav>
 
         {/* Footer */}
-        <div className="space-y-1 border-t border-white/5 px-3 py-4">
+        <div className="flex flex-col gap-3.5 border-t border-white/[0.06] px-[22px] py-3.5">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`sidebar-link w-full ${collapsed ? "justify-center" : ""}`}
+            className={`flex items-center gap-2.5 text-[13px] font-extrabold text-fg-dimmer transition-colors hover:text-fg ${
+              collapsed ? "justify-center" : ""
+            }`}
           >
             <ChevronDoubleLeftIcon
-              className={`h-5 w-5 transition-transform ${collapsed ? "rotate-180" : ""}`}
+              className={`h-4 w-4 flex-shrink-0 transition-transform ${
+                collapsed ? "rotate-180" : ""
+              }`}
+              strokeWidth={2.2}
             />
             {!collapsed && <span>Collapse</span>}
           </button>
           <button
             onClick={handleLogout}
-            className={`sidebar-link w-full text-red-400 hover:bg-red-500/10 hover:text-red-300 ${
+            className={`flex items-center gap-2.5 text-[13px] font-extrabold text-rose transition-opacity hover:opacity-80 ${
               collapsed ? "justify-center" : ""
             }`}
           >
-            <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+            <ArrowRightStartOnRectangleIcon
+              className="h-4 w-4 flex-shrink-0"
+              strokeWidth={2.2}
+            />
             {!collapsed && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main */}
-      <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-white/5 bg-navy-950/60 px-8 py-4 backdrop-blur-xl">
+      {/* ── Main column ── */}
+      <div className="relative z-[1] flex min-w-0 flex-1 flex-col">
+        <header
+          className="sticky top-0 z-[9] flex items-center gap-5 border-b border-white/[0.05] px-8 py-[18px] backdrop-blur-xl"
+          style={{ background: "rgba(6,13,15,.8)" }}
+        >
           <div>
-            <h2 className="text-base font-semibold text-white/90">
-              Welcome back, {user?.email?.split("@")[0] ?? "Admin"}
-            </h2>
-            <p className="text-xs text-white/40">Manage your DeenQuest content</p>
+            <div className="text-[17px] font-black text-fg">
+              Welcome back, {user?.email?.split("@")[0] ?? "admin"}
+            </div>
+            <div className="text-[13px] font-semibold text-fg-dimmer">
+              Manage your DeenQuest content
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="relative hidden sm:block">
-              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+
+          <div className="ml-auto flex items-center gap-3.5">
+            <div className="hidden w-60 items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 sm:flex">
+              <MagnifyingGlassIcon
+                className="h-4 w-4 flex-shrink-0 text-fg-dimmer"
+                strokeWidth={2.2}
+              />
               <input
                 type="text"
                 placeholder="Search…"
-                className="input-field w-56 py-2 pl-9 text-sm"
+                className="w-full bg-transparent text-[13px] font-semibold text-fg placeholder-fg-faint focus:outline-none"
               />
             </div>
-            <div className="grid h-9 w-9 place-items-center rounded-full gradient-emerald text-sm font-bold shadow-lg shadow-emerald-500/25">
+            <div
+              className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full text-base font-black text-teal-ink"
+              style={{ background: "linear-gradient(135deg,#2CC9B5,#EFB65A)" }}
+            >
               {user?.email?.[0]?.toUpperCase() ?? "A"}
             </div>
           </div>
         </header>
 
-        <div className="p-8">{children}</div>
-      </main>
+        <main className="flex-1 p-8">{children}</main>
+      </div>
     </div>
   );
 }

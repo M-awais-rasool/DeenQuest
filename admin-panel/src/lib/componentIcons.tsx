@@ -91,3 +91,28 @@ export function ComponentIcon({
   const Icon = iconFor(name);
   return <Icon className={className} />;
 }
+
+/**
+ * Renders the registry's emoji when the backend supplies one (the design uses
+ * emoji glyphs in pickers and tiles), otherwise falls back to the line icon.
+ */
+export function ComponentGlyph({
+  name,
+  emoji,
+  size = 18,
+  className = "h-[18px] w-[18px]",
+}: {
+  name: string;
+  emoji?: string;
+  size?: number;
+  className?: string;
+}) {
+  if (emoji) {
+    return (
+      <span style={{ fontSize: size, lineHeight: 1 }} aria-hidden>
+        {emoji}
+      </span>
+    );
+  }
+  return <ComponentIcon name={name} className={className} />;
+}

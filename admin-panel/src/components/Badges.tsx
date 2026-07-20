@@ -1,33 +1,40 @@
 import type { ContentStatus } from "../types";
 
-const statusColors: Record<ContentStatus, string> = {
-  draft: "bg-yellow-500/20 text-yellow-400",
-  published: "bg-emerald-500/20 text-emerald-400",
-  archived: "bg-white/10 text-white/50",
+const statusClasses: Record<ContentStatus, string> = {
+  draft: "dq-badge-medium",
+  published: "dq-badge-easy",
+  archived: "dq-badge-neutral",
 };
 
 export function StatusBadge({ status }: { status: ContentStatus }) {
   return (
-    <span
-      className={`badge ${statusColors[status] || "bg-white/10 text-white/50"}`}
-    >
+    <span className={`dq-badge ${statusClasses[status] ?? "dq-badge-neutral"}`}>
       {status}
     </span>
   );
 }
 
-const difficultyColors: Record<string, string> = {
-  easy: "bg-emerald-500/20 text-emerald-400",
-  medium: "bg-gold-500/20 text-gold-400",
-  hard: "bg-red-500/20 text-red-400",
+const difficultyClasses: Record<string, string> = {
+  easy: "dq-badge-easy",
+  medium: "dq-badge-medium",
+  hard: "dq-badge-hard",
 };
 
 export function DifficultyBadge({ difficulty }: { difficulty: string }) {
   return (
     <span
-      className={`badge ${difficultyColors[difficulty] || "bg-white/10 text-white/50"}`}
+      className={`dq-badge capitalize ${
+        difficultyClasses[difficulty] ?? "dq-badge-neutral"
+      }`}
     >
-      {difficulty}
+      {difficulty || "—"}
     </span>
+  );
+}
+
+/** Neutral pill used for categories and other free-form tags. */
+export function TagBadge({ label }: { label: string }) {
+  return (
+    <span className="dq-badge dq-badge-neutral capitalize">{label || "—"}</span>
   );
 }

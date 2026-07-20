@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SparklesIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type { ContentSchema, SchemaField } from "../types";
-import { ComponentIcon } from "../lib/componentIcons";
+import { ComponentGlyph } from "../lib/componentIcons";
 
 interface Props {
   schema: ContentSchema;
@@ -20,67 +20,54 @@ export default function SchemaForm({ schema, value, onChange }: Props) {
   const insertExample = () => onChange(structuredClone(schema.example ?? {}));
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2.5">
-          <div className="icon-tile h-9 w-9 flex-shrink-0">
-            <ComponentIcon name={schema.name} className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-white/80">{schema.label}</p>
-            <p className="text-xs text-white/40 mt-0.5">{schema.description}</p>
-          </div>
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-[9px]">
+          <span className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-lg bg-teal-tint">
+            <ComponentGlyph name={schema.name} emoji={schema.icon} size={15} />
+          </span>
+          <span className="text-[13px] font-extrabold text-fg">
+            {schema.label} fields
+          </span>
         </div>
         <button
           type="button"
           onClick={insertExample}
-          className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 rounded-lg px-2.5 py-1.5"
+          className="dq-btn-outline flex-shrink-0"
           title="Fill all fields with a ready-made example"
         >
-          <SparklesIcon className="w-4 h-4" /> Insert example
+          <SparklesIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+          Insert example
         </button>
       </div>
 
       {schema.fields.map((field) => (
-        <FieldEditor
-          key={field.key}
-          field={field}
-          value={value[field.key]}
-          onChange={(v) => set(field.key, v)}
-        />
+        <div key={field.key} className="mt-3">
+          <label className="mb-1.5 block text-xs font-extrabold text-fg-dim">
+            {field.label}
+            {field.required && <span className="text-rose"> *</span>}
+            {field.help && (
+              <span className="ml-2 font-semibold text-fg-faint">
+                {field.help}
+              </span>
+            )}
+          </label>
+          <FieldInput
+            field={field}
+            value={value[field.key]}
+            onChange={(v) => set(field.key, v)}
+          />
+        </div>
       ))}
 
-      <details className="text-xs">
-        <summary className="cursor-pointer text-white/40 hover:text-white/60 select-none">
-          View data JSON
+      <details className="mt-3.5">
+        <summary className="cursor-pointer select-none text-xs font-extrabold text-fg-dimmer transition-colors hover:text-fg-dim">
+          ▸ View data JSON
         </summary>
-        <pre className="mt-2 p-3 rounded-lg bg-black/30 text-white/60 overflow-x-auto text-[11px] leading-relaxed">
+        <pre className="mt-2 overflow-x-auto rounded-[10px] border border-ink-500 bg-ink-900 p-3 text-[11px] leading-relaxed text-fg-dim">
           {JSON.stringify(value ?? {}, null, 2)}
         </pre>
       </details>
-    </div>
-  );
-}
-
-function FieldEditor({
-  field,
-  value,
-  onChange,
-}: {
-  field: SchemaField;
-  value: any;
-  onChange: (v: any) => void;
-}) {
-  return (
-    <div>
-      <label className="block text-xs font-medium text-white/50 mb-1">
-        {field.label}
-        {field.required && <span className="text-red-400"> *</span>}
-        {field.help && (
-          <span className="ml-2 text-white/30 font-normal">{field.help}</span>
-        )}
-      </label>
-      <FieldInput field={field} value={value} onChange={onChange} />
     </div>
   );
 }
@@ -95,6 +82,7 @@ function FieldInput({
   onChange: (v: any) => void;
 }) {
   const isArabic = field.type === "arabic" || field.type === "arabic_list";
+  const arabicClass = isArabic ? "font-arabic text-base text-teal-light" : "";
 
   switch (field.type) {
     case "text":
@@ -102,7 +90,7 @@ function FieldInput({
     case "select":
       return (
         <input
-          className="input-field text-sm"
+          className={`dq-input-sm ${arabicClass}`}
           dir={isArabic ? "rtl" : undefined}
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
@@ -112,7 +100,7 @@ function FieldInput({
     case "textarea":
       return (
         <textarea
-          className="input-field text-sm font-mono"
+          className={`dq-input-sm leading-relaxed ${arabicClass}`}
           dir={isArabic ? "rtl" : undefined}
           rows={3}
           value={value ?? ""}
@@ -124,7 +112,7 @@ function FieldInput({
       return (
         <input
           type="number"
-          className="input-field text-sm"
+          className="dq-input-sm"
           value={value ?? ""}
           onChange={(e) =>
             onChange(e.target.value === "" ? "" : Number(e.target.value))
@@ -134,10 +122,10 @@ function FieldInput({
 
     case "boolean":
       return (
-        <label className="flex items-center gap-2 text-sm text-white/70">
+        <label className="flex cursor-pointer items-center gap-2.5 text-[13px] font-bold text-fg-dim">
           <input
             type="checkbox"
-            className="w-4 h-4 accent-emerald-500"
+            className="h-4 w-4 accent-teal"
             checked={!!value}
             onChange={(e) => onChange(e.target.checked)}
           />
@@ -149,7 +137,7 @@ function FieldInput({
     case "arabic_list":
       return (
         <textarea
-          className="input-field text-sm"
+          className={`dq-input-sm leading-[1.9] ${arabicClass}`}
           dir={isArabic ? "rtl" : undefined}
           rows={Math.max(3, (Array.isArray(value) ? value.length : 0) + 1)}
           placeholder="One item per line"
@@ -193,15 +181,15 @@ function PairsEditor({
       {pairs.map((p, i) => (
         <div key={i} className="flex items-center gap-2">
           <input
-            className="input-field text-sm flex-1"
+            className="dq-input-sm flex-1 font-arabic text-base text-teal-light"
             dir="rtl"
             placeholder="Left"
             value={p.left ?? ""}
             onChange={(e) => update(i, "left", e.target.value)}
           />
-          <span className="text-white/30">→</span>
+          <span className="flex-shrink-0 font-black text-fg-faint">→</span>
           <input
-            className="input-field text-sm flex-1"
+            className="dq-input-sm flex-1"
             placeholder="Right"
             value={p.right ?? ""}
             onChange={(e) => update(i, "right", e.target.value)}
@@ -209,18 +197,18 @@ function PairsEditor({
           <button
             type="button"
             onClick={() => onChange(pairs.filter((_, idx) => idx !== i))}
-            className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400"
+            className="dq-icon-btn-sm dq-icon-btn-danger flex-shrink-0"
           >
-            <TrashIcon className="w-4 h-4" />
+            <TrashIcon className="h-[15px] w-[15px]" strokeWidth={2.2} />
           </button>
         </div>
       ))}
       <button
         type="button"
         onClick={() => onChange([...pairs, { left: "", right: "" }])}
-        className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+        className="flex items-center gap-1.5 text-xs font-extrabold text-teal-light transition-colors hover:text-teal"
       >
-        <PlusIcon className="w-4 h-4" /> Add pair
+        <PlusIcon className="h-4 w-4" strokeWidth={2.6} /> Add pair
       </button>
     </div>
   );
@@ -256,13 +244,19 @@ function JsonField({
   return (
     <div>
       <textarea
-        className={`input-field text-sm font-mono ${error ? "border-red-500/60" : ""}`}
+        className={`dq-input-sm font-mono text-[12px] leading-relaxed ${
+          error ? "!border-rose" : ""
+        }`}
         rows={Math.min(14, Math.max(4, text.split("\n").length + 1))}
         value={text}
         spellCheck={false}
         onChange={(e) => commit(e.target.value)}
       />
-      {error && <p className="text-xs text-red-400 mt-1">JSON error: {error}</p>}
+      {error && (
+        <p className="mt-1 text-[11px] font-bold text-rose">
+          JSON error: {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -19,9 +19,9 @@ const ICONS: Record<string, Icon> = {
 };
 
 const RARITY_COLOR: Record<string, string> = {
-  rare: "#60a5fa",
-  epic: "#c084fc",
-  legendary: "#fbbf24",
+  rare: "#6E96F0",
+  epic: "#A78BFA",
+  legendary: "#EFB65A",
 };
 
 export function RewardIcon({
@@ -38,5 +38,5 @@ export function RewardIcon({
 }
 
 export function rarityColor(rarity: string): string {
-  return RARITY_COLOR[rarity] ?? "#94a3b8";
+  return RARITY_COLOR[rarity] ?? "#8DA5A3";
 }

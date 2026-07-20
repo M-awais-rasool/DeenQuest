@@ -4,6 +4,7 @@ import type { Event } from "../types";
 import toast from "react-hot-toast";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import DataTable from "../components/DataTable";
+import PageHeader from "../components/PageHeader";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -57,43 +58,37 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Events</h1>
-          <p className="text-white/40 text-sm mt-1">
-            Manage seasonal and special events
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <PlusIcon className="w-5 h-5" /> New Event
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Events"
+        flag="NOT WIRED"
+        subtitle="Seasonal and special events"
+        action={
+          <button onClick={() => setShowForm(!showForm)} className="dq-btn">
+            <PlusIcon className="h-[17px] w-[17px]" strokeWidth={2.6} />
+            New Event
+          </button>
+        }
+      />
 
       {showForm && (
-        <form onSubmit={handleCreate} className="glass-card p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleCreate} className="dq-card mt-5 p-[22px]">
+          <div className="dq-eyebrow mb-4">New event</div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-white/50 mb-1.5">
-                Name
-              </label>
+              <label className="dq-label">Name</label>
               <input
-                className="input-field"
+                className="dq-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                placeholder="Ramadan 2025"
+                placeholder="Ramadan 2026"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white/50 mb-1.5">
-                Type
-              </label>
+              <label className="dq-label">Type</label>
               <select
-                className="input-field"
+                className="dq-input"
                 value={eType}
                 onChange={(e) => setEType(e.target.value)}
               >
@@ -103,123 +98,133 @@ export default function EventsPage() {
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-white/50 mb-1.5">
-                Description
-              </label>
+              <label className="dq-label">Description</label>
               <textarea
-                className="input-field min-h-[60px]"
+                className="dq-input min-h-[70px] leading-relaxed"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white/50 mb-1.5">
-                Start Date
-              </label>
+              <label className="dq-label">Start date</label>
               <input
                 type="datetime-local"
-                className="input-field"
+                className="dq-input"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white/50 mb-1.5">
-                End Date
-              </label>
+              <label className="dq-label">End date</label>
               <input
                 type="datetime-local"
-                className="input-field"
+                className="dq-input"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-white/50 mb-1.5">
-                Banner URL
-              </label>
+            <div className="md:col-span-2">
+              <label className="dq-label">Banner URL</label>
               <input
-                className="input-field"
+                className="dq-input"
                 value={banner}
                 onChange={(e) => setBanner(e.target.value)}
-                placeholder="https://..."
+                placeholder="https://…"
               />
             </div>
           </div>
-          <div className="flex justify-end gap-3">
+          <div className="mt-5 flex justify-end gap-3">
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="btn-secondary"
+              className="dq-btn-ghost"
             >
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="dq-btn">
               Create Event
             </button>
           </div>
         </form>
       )}
 
-      <DataTable
-        columns={[
-          { key: "name", label: "Name" },
-          {
-            key: "type",
-            label: "Type",
-            render: (e: Event) => (
-              <span className="badge bg-purple-500/20 text-purple-400">
-                {e.type}
-              </span>
-            ),
-          },
-          {
-            key: "is_active",
-            label: "Active",
-            render: (e: Event) => (
-              <span
-                className={`badge ${e.is_active ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/40"}`}
-              >
-                {e.is_active ? "Yes" : "No"}
-              </span>
-            ),
-          },
-          {
-            key: "start",
-            label: "Start",
-            render: (e: Event) => (
-              <span className="text-white/50 text-sm">
-                {new Date(e.start_date).toLocaleDateString()}
-              </span>
-            ),
-          },
-          {
-            key: "end",
-            label: "End",
-            render: (e: Event) => (
-              <span className="text-white/50 text-sm">
-                {new Date(e.end_date).toLocaleDateString()}
-              </span>
-            ),
-          },
-          {
-            key: "actions",
-            label: "",
-            render: (e: Event) => (
-              <button
-                onClick={() => handleDelete(e.id)}
-                className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400"
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
-            ),
-          },
-        ]}
-        data={events}
-        loading={loading}
-      />
+      <div className="mt-[18px]">
+        <DataTable
+          columns={[
+            {
+              key: "name",
+              label: "Name",
+              render: (e: Event) => (
+                <span className="text-[13.5px] font-extrabold text-fg">
+                  {e.name}
+                </span>
+              ),
+            },
+            {
+              key: "type",
+              label: "Type",
+              render: (e: Event) => (
+                <span
+                  className="dq-badge"
+                  style={{ background: "rgba(167,139,250,.14)", color: "#A78BFA" }}
+                >
+                  {e.type}
+                </span>
+              ),
+            },
+            {
+              key: "is_active",
+              label: "Active",
+              render: (e: Event) => (
+                <span
+                  className={`dq-badge ${
+                    e.is_active ? "dq-badge-easy" : "dq-badge-neutral"
+                  }`}
+                >
+                  {e.is_active ? "Yes" : "No"}
+                </span>
+              ),
+            },
+            {
+              key: "start",
+              label: "Start",
+              render: (e: Event) => (
+                <span className="text-[13px] font-bold text-fg-dim">
+                  {new Date(e.start_date).toLocaleDateString()}
+                </span>
+              ),
+            },
+            {
+              key: "end",
+              label: "End",
+              render: (e: Event) => (
+                <span className="text-[13px] font-bold text-fg-dim">
+                  {new Date(e.end_date).toLocaleDateString()}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              label: "Actions",
+              align: "right" as const,
+              render: (e: Event) => (
+                <button
+                  onClick={() => handleDelete(e.id)}
+                  className="dq-icon-btn dq-icon-btn-danger"
+                  title="Delete"
+                >
+                  <TrashIcon className="h-[15px] w-[15px]" strokeWidth={2.2} />
+                </button>
+              ),
+            },
+          ]}
+          data={events}
+          loading={loading}
+          emptyMessage="No events yet."
+        />
+      </div>
     </div>
   );
 }

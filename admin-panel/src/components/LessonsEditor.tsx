@@ -1,17 +1,15 @@
 import { useState } from "react";
 import {
-  PlusIcon,
   TrashIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   ArrowPathIcon,
-  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import type { ContentRegistry, Lesson } from "../types";
 import SchemaForm from "./SchemaForm";
 import ComponentPicker from "./ComponentPicker";
 import LessonPreview from "./LessonPreview";
-import { ComponentIcon } from "../lib/componentIcons";
+import { ComponentGlyph } from "../lib/componentIcons";
 import { findSchema } from "../lib/useRegistry";
 
 interface Props {
@@ -59,7 +57,7 @@ export default function LessonsEditor({ lessons, registry, onChange }: Props) {
   };
 
   return (
-    <div className="space-y-4">
+    <div>
       {lessons.map((lesson, i) => (
         <LessonCard
           key={i}
@@ -77,9 +75,9 @@ export default function LessonsEditor({ lessons, registry, onChange }: Props) {
       <button
         type="button"
         onClick={() => onChange([...lessons, emptyLesson()])}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-white/15 text-white/50 hover:text-white hover:border-white/30 text-sm font-semibold"
+        className="dq-add mt-3.5"
       >
-        <PlusIcon className="w-5 h-5" /> Add a step
+        + Add a step
       </button>
     </div>
   );
@@ -106,32 +104,49 @@ function LessonCard({
 }) {
   const schema = findSchema(registry.lesson_components, lesson.component);
   const [changing, setChanging] = useState(!lesson.component);
-  const [advanced, setAdvanced] = useState(false);
   const lessonTypes = registry.enums.lesson_types ?? [];
 
   return (
-    <div className="glass-card p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-white/40 uppercase tracking-wider">
-          Step {index + 1}
+    <div className="dq-inset mb-3.5 p-4">
+      {/* Card header */}
+      <div className="mb-3.5 flex items-center gap-2.5">
+        <span className="text-[10px] font-extrabold tracking-[0.12em] text-fg-faint">
+          STEP {index + 1}
         </span>
-        <div className="flex items-center gap-1">
-          <IconBtn disabled={index === 0} onClick={() => onMove(-1)}>
-            <ArrowUpIcon className="w-4 h-4" />
-          </IconBtn>
-          <IconBtn disabled={index === total - 1} onClick={() => onMove(1)}>
-            <ArrowDownIcon className="w-4 h-4" />
-          </IconBtn>
-          <IconBtn onClick={onRemove} danger>
-            <TrashIcon className="w-4 h-4" />
-          </IconBtn>
+        <div className="ml-auto flex gap-1.5">
+          <button
+            type="button"
+            className="dq-icon-btn-sm"
+            disabled={index === 0}
+            onClick={() => onMove(-1)}
+            title="Move up"
+          >
+            <ArrowUpIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </button>
+          <button
+            type="button"
+            className="dq-icon-btn-sm"
+            disabled={index === total - 1}
+            onClick={() => onMove(1)}
+            title="Move down"
+          >
+            <ArrowDownIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </button>
+          <button
+            type="button"
+            className="dq-icon-btn-sm dq-icon-btn-danger"
+            onClick={onRemove}
+            title="Remove step"
+          >
+            <TrashIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </button>
         </div>
       </div>
 
       {/* Step type: gallery when choosing, compact chip once chosen */}
       {changing || !schema ? (
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-white/50">
+        <div>
+          <p className="mb-2.5 text-xs font-extrabold text-fg-dim">
             What kind of step is this?
           </p>
           <ComponentPicker
@@ -144,50 +159,56 @@ function LessonCard({
           />
         </div>
       ) : (
-        <div className="flex items-center gap-2.5 rounded-xl bg-white/5 border border-white/10 px-3 py-2">
-          <div className="icon-tile h-9 w-9 flex-shrink-0">
-            <ComponentIcon name={lesson.component} className="h-5 w-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white/90 truncate">
+        <div className="mb-4 flex items-center gap-3 rounded-field border border-teal-edge bg-teal/[0.06] px-3.5 py-[11px]">
+          <span className="grid h-[34px] w-[34px] flex-shrink-0 place-items-center rounded-[10px] bg-teal-tint">
+            <ComponentGlyph name={lesson.component} emoji={schema.icon} size={16} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[13.5px] font-extrabold text-fg">
               {schema.label}
-            </p>
-            <p className="text-[11px] text-white/40 truncate">
+            </div>
+            <div className="truncate text-[11.5px] font-semibold text-fg-dimmer">
               {schema.description}
-            </p>
+            </div>
           </div>
           <button
             type="button"
             onClick={() => setChanging(true)}
-            className="shrink-0 flex items-center gap-1 text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/30 rounded-lg px-2 py-1"
+            className="flex flex-shrink-0 items-center gap-1 text-xs font-extrabold text-teal-light transition-colors hover:text-teal"
           >
-            <ArrowPathIcon className="w-3.5 h-3.5" /> Change
+            <ArrowPathIcon className="h-3.5 w-3.5" strokeWidth={2.4} /> Change
           </button>
         </div>
       )}
 
       {schema && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_300px]">
           {/* Left: content fields */}
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Labeled label="Title (shown to learner)">
+          <div className="min-w-0">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-extrabold text-fg-dim">
+                  Title (shown to learner)
+                </label>
                 <input
-                  className="input-field text-sm"
+                  className="dq-input-sm"
                   value={lesson.title}
                   onChange={(e) => onPatch({ title: e.target.value })}
                 />
-              </Labeled>
-              <Labeled label="Subtitle / hint">
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-extrabold text-fg-dim">
+                  Subtitle / hint
+                </label>
                 <input
-                  className="input-field text-sm"
+                  className="dq-input-sm"
                   value={lesson.description}
                   onChange={(e) => onPatch({ description: e.target.value })}
                 />
-              </Labeled>
+              </div>
             </div>
 
-            <div className="border-t border-white/10 pt-3">
+            <div className="mt-4">
               <SchemaForm
                 schema={schema}
                 value={lesson.data ?? {}}
@@ -196,46 +217,43 @@ function LessonCard({
             </div>
 
             {/* Advanced (auto-managed; rarely needed) */}
-            <div className="border-t border-white/5 pt-2">
-              <button
-                type="button"
-                onClick={() => setAdvanced((v) => !v)}
-                className="flex items-center gap-1 text-[11px] text-white/30 hover:text-white/60"
-              >
-                <ChevronDownIcon
-                  className={`w-3.5 h-3.5 transition ${advanced ? "rotate-180" : ""}`}
-                />
-                Advanced (auto-set)
-              </button>
-              {advanced && (
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                  <Labeled label="Category">
-                    <select
-                      className="input-field text-sm"
-                      value={lesson.type}
-                      onChange={(e) => onPatch({ type: e.target.value })}
-                    >
-                      {lessonTypes.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </Labeled>
-                  <Labeled label="Screen type (auto)">
-                    <input
-                      className="input-field text-sm opacity-60"
-                      value={lesson.screen_type}
-                      readOnly
-                    />
-                  </Labeled>
+            <details className="mt-2.5">
+              <summary className="cursor-pointer select-none text-xs font-extrabold text-fg-dimmer transition-colors hover:text-fg-dim">
+                ▸ Advanced (auto-set)
+              </summary>
+              <div className="mt-2.5 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1.5 block text-xs font-extrabold text-fg-dim">
+                    Category
+                  </label>
+                  <select
+                    className="dq-input-sm"
+                    value={lesson.type}
+                    onChange={(e) => onPatch({ type: e.target.value })}
+                  >
+                    {lessonTypes.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
-            </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-extrabold text-fg-dim">
+                    Screen type (auto)
+                  </label>
+                  <input
+                    className="dq-input-sm"
+                    value={lesson.screen_type}
+                    readOnly
+                  />
+                </div>
+              </div>
+            </details>
           </div>
 
           {/* Right: live preview */}
-          <div className="lg:sticky lg:top-4 self-start">
+          <div className="self-start xl:sticky xl:top-[90px]">
             <LessonPreview
               kind="lesson"
               name={lesson.component}
@@ -244,50 +262,6 @@ function LessonCard({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function IconBtn({
-  children,
-  onClick,
-  disabled,
-  danger,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`p-1.5 rounded-lg disabled:opacity-20 ${
-        danger
-          ? "hover:bg-red-500/20 text-red-400"
-          : "hover:bg-white/10 text-white/40"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Labeled({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="block text-xs font-medium text-white/50 mb-1">
-        {label}
-      </label>
-      {children}
     </div>
   );
 }

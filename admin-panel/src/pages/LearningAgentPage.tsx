@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Doughnut } from "react-chartjs-2";
 import {
   UsersIcon,
   SparklesIcon,
@@ -11,8 +9,8 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import api from "../lib/api";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
+import { PageLoader, PageMessage } from "../components/PageHeader";
+import { Donut, DonutLegend, Gauge, type DonutSlice } from "../components/Charts";
 
 type AgentStats = {
   total_learners: number;
@@ -42,14 +40,11 @@ type Curriculum = {
 };
 
 const SEGMENTS: { key: string; label: string; color: string }[] = [
-  { key: "improving", label: "Improving", color: "#34d399" },
-  { key: "active", label: "Active", color: "#10b981" },
-  { key: "weak", label: "Weak", color: "#fb7185" },
-  { key: "inactive", label: "Inactive", color: "#f59e0b" },
+  { key: "improving", label: "Improving", color: "#5EE0CE" },
+  { key: "active", label: "Active", color: "#2CC9B5" },
+  { key: "weak", label: "Weak", color: "#F0838C" },
+  { key: "inactive", label: "Inactive", color: "#EFB65A" },
 ];
-
-// Solid (no backdrop-blur) card — keeps this data-heavy page smooth to scroll.
-const CARD = "rounded-2xl border border-white/10 bg-white/[0.04]";
 
 export default function LearningAgentPage() {
   const [s, setS] = useState<AgentStats | null>(null);
@@ -82,136 +77,160 @@ export default function LearningAgentPage() {
     };
   }, []);
 
-  const segData = useMemo(
-    () => SEGMENTS.map((seg) => s?.segments?.[seg.key] ?? 0),
+  const slices: DonutSlice[] = useMemo(
+    () =>
+      SEGMENTS.map((seg) => ({
+        label: seg.label,
+        value: s?.segments?.[seg.key] ?? 0,
+        color: seg.color,
+      })),
     [s],
   );
-  const hasSegments = segData.some((n) => n > 0);
+  const hasSegments = slices.some((x) => x.value > 0);
 
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoader />;
+
   if (error || !s) {
     return (
-      <div className={`${CARD} p-12 text-center text-white/50`}>
+      <PageMessage>
         Failed to load agent stats. Is the API running and your account on the
         admin allowlist?
-      </div>
+      </PageMessage>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-xl border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
-            <CpuChipIcon className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Learning Agent</h1>
-            <p className="text-sm text-white/45">
-              Real-time view of the adaptive learning engine
-            </p>
-          </div>
+      <div className="flex items-center gap-4">
+        <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl bg-teal-tint text-teal-light">
+          <CpuChipIcon className="h-6 w-6" strokeWidth={2.1} />
+        </span>
+        <div className="flex-1">
+          <h1 className="text-[22px] font-black text-fg">Learning Agent</h1>
+          <p className="text-[13px] font-semibold text-fg-dimmer">
+            Real-time view of the adaptive learning engine
+          </p>
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-          <span className="text-xs font-semibold text-emerald-300">Live</span>
-        </div>
+        <span className="inline-flex items-center gap-2 rounded-[20px] border border-teal-edge bg-teal-tint px-3.5 py-1.5">
+          <span className="dq-live-dot" />
+          <span className="text-[11px] font-black tracking-wide text-teal-light">
+            LIVE
+          </span>
+        </span>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat icon={UsersIcon} label="Learners tracked" value={s.total_learners} accent="emerald" />
-        <Stat icon={SparklesIcon} label="Active recommendations" value={s.active_recommendations} accent="gold" />
-        <Stat icon={ArrowPathIcon} label="Revisions due now" value={s.due_revisions} accent="rose" />
-        <Stat icon={BoltIcon} label="Events processed" value={s.total_events} accent="violet" />
+      <div className="mt-6 grid grid-cols-2 gap-[18px] lg:grid-cols-4">
+        <Stat
+          icon={<UsersIcon className="h-5 w-5" strokeWidth={2.1} />}
+          label="Learners tracked"
+          value={s.total_learners}
+          tint="#123B34"
+          color="#5EE0CE"
+        />
+        <Stat
+          icon={<SparklesIcon className="h-5 w-5" strokeWidth={2.1} />}
+          label="Active recommendations"
+          value={s.active_recommendations}
+          tint="#2A2212"
+          color="#EFB65A"
+        />
+        <Stat
+          icon={<ArrowPathIcon className="h-5 w-5" strokeWidth={2.1} />}
+          label="Revisions due now"
+          value={s.due_revisions}
+          tint="#2A1218"
+          color="#F0838C"
+        />
+        <Stat
+          icon={<BoltIcon className="h-5 w-5" strokeWidth={2.1} />}
+          label="Events processed"
+          value={s.total_events}
+          tint="rgba(167,139,250,.14)"
+          color="#A78BFA"
+        />
       </div>
 
       {/* Segments + gauges */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className={`${CARD} p-5`}>
-          <p className="section-title mb-4">Learner segments</p>
+      <div className="mt-[18px] grid gap-[18px] lg:grid-cols-3">
+        <div className="dq-card p-5">
+          <p className="dq-eyebrow mb-4">Learner segments</p>
           {hasSegments ? (
             <div className="flex items-center gap-5">
-              <div className="h-32 w-32 shrink-0">
-                <Doughnut
-                  data={{
-                    labels: SEGMENTS.map((x) => x.label),
-                    datasets: [
-                      {
-                        data: segData,
-                        backgroundColor: SEGMENTS.map((x) => x.color),
-                        borderWidth: 0,
-                      },
-                    ],
-                  }}
-                  options={{
-                    cutout: "68%",
-                    animation: false,
-                    plugins: { legend: { display: false } },
-                    maintainAspectRatio: false,
-                  }}
-                />
+              <div className="flex-shrink-0">
+                <Donut slices={slices} size={128} />
               </div>
-              <div className="flex-1 space-y-2">
-                {SEGMENTS.map((seg, i) => (
-                  <div key={seg.key} className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: seg.color }} />
-                      <span className="text-white/70">{seg.label}</span>
-                    </span>
-                    <span className="font-semibold text-white">{segData[i]}</span>
-                  </div>
-                ))}
+              <div className="min-w-0 flex-1">
+                <DonutLegend slices={slices} />
               </div>
             </div>
           ) : (
-            <p className="py-12 text-center text-sm text-white/35">No learner data yet.</p>
+            <p className="py-12 text-center text-sm font-semibold text-fg-faint">
+              No learner data yet.
+            </p>
           )}
         </div>
 
-        <Gauge icon={ArrowTrendingUpIcon} label="Avg engagement" pct={Math.round((s.avg_engagement || 0) * 100)} color="#10b981" />
-        <Gauge icon={ExclamationTriangleIcon} label="Avg dropout risk" pct={Math.round((s.avg_dropout_risk || 0) * 100)} color="#f59e0b" />
+        <Gauge
+          icon={<ArrowTrendingUpIcon className="h-5 w-5" strokeWidth={2.1} />}
+          label="Avg engagement"
+          pct={Math.round((s.avg_engagement || 0) * 100)}
+          color="#2CC9B5"
+        />
+        <Gauge
+          icon={<ExclamationTriangleIcon className="h-5 w-5" strokeWidth={2.1} />}
+          label="Avg dropout risk"
+          pct={Math.round((s.avg_dropout_risk || 0) * 100)}
+          color="#EFB65A"
+        />
       </div>
 
       {/* Workflow diagram */}
-      <div className={`${CARD} p-5`}>
+      <div className="dq-card mt-[18px] p-5">
         <div className="mb-3 flex items-center justify-between">
-          <p className="section-title">How it works · event pipeline</p>
-          <span className="text-xs text-white/35">deterministic core · optional AI</span>
+          <p className="dq-eyebrow">How it works · event pipeline</p>
+          <span className="text-[11px] font-semibold text-fg-faint">
+            deterministic core · optional AI
+          </span>
         </div>
-        <WorkflowDiagram learners={s.total_learners} recs={s.active_recommendations} />
+        <WorkflowDiagram
+          learners={s.total_learners}
+          recs={s.active_recommendations}
+        />
       </div>
 
-      {/* Curriculum Agent insights */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className={`${CARD} p-5`}>
-          <p className="section-title mb-1">Hardest skills</p>
-          <p className="mb-4 text-xs text-white/35">Where learners are weakest right now</p>
+      {/* Curriculum insights */}
+      <div className="mt-[18px] grid gap-[18px] lg:grid-cols-2">
+        <div className="dq-card p-5">
+          <p className="dq-eyebrow">Hardest skills</p>
+          <p className="mb-4 mt-1 text-[11px] font-semibold text-fg-faint">
+            Where learners are weakest right now
+          </p>
           {cur?.top_weak_skills?.length ? (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {cur.top_weak_skills.map((sk) => {
                 const pct = Math.round((sk.avg_mastery || 0) * 100);
                 return (
                   <div key={sk.tag} className="flex items-center gap-3">
-                    <div className="grid h-9 min-w-9 place-items-center rounded-lg border border-white/10 bg-white/[0.04] px-2 text-base text-white">
+                    <div className="grid h-9 min-w-[36px] place-items-center rounded-[10px] border border-ink-500 bg-ink-700 px-2 text-[13px] font-extrabold text-fg">
                       {sk.tag.startsWith("level:") ? `L${sk.tag.slice(6)}` : sk.tag}
                     </div>
                     <div className="flex-1">
-                      <div className="mb-1 flex justify-between text-xs">
-                        <span className="text-white/50">{sk.weak_learners} weak / {sk.learners}</span>
-                        <span className="text-white/70">{pct}%</span>
+                      <div className="mb-1.5 flex justify-between text-[11px] font-bold">
+                        <span className="text-fg-dimmer">
+                          {sk.weak_learners} weak / {sk.learners}
+                        </span>
+                        <span className="text-fg-dim">{pct}%</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-2 overflow-hidden rounded-full bg-ink-700">
                         <div
                           className="h-full rounded-full"
-                          style={{ width: `${pct}%`, background: pct < 50 ? "#fb7185" : pct < 80 ? "#f59e0b" : "#10b981" }}
+                          style={{
+                            width: `${pct}%`,
+                            background:
+                              pct < 50 ? "#F0838C" : pct < 80 ? "#EFB65A" : "#2CC9B5",
+                          }}
                         />
                       </div>
                     </div>
@@ -220,32 +239,38 @@ export default function LearningAgentPage() {
               })}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-white/35">No skill data yet.</p>
+            <p className="py-8 text-center text-sm font-semibold text-fg-faint">
+              No skill data yet.
+            </p>
           )}
         </div>
 
-        <div className={`${CARD} p-5`}>
-          <p className="section-title mb-1">Most-missed lessons</p>
-          <p className="mb-4 text-xs text-white/35">Where learners fail the most</p>
+        <div className="dq-card p-5">
+          <p className="dq-eyebrow">Most-missed lessons</p>
+          <p className="mb-4 mt-1 text-[11px] font-semibold text-fg-faint">
+            Where learners fail the most
+          </p>
           {cur?.top_missed_lessons?.length ? (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {cur.top_missed_lessons.map((l, i) => (
                 <div
                   key={`${l.level_id}-${l.lesson_index}-${i}`}
-                  className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5"
+                  className="flex items-center justify-between rounded-[10px] border border-ink-500 bg-ink-700 px-3.5 py-2.5"
                 >
-                  <span className="text-sm text-white/80">
+                  <span className="text-[13px] font-bold text-fg">
                     Level {l.level_id} · Lesson {l.lesson_index + 1}
                   </span>
-                  <span className="flex items-center gap-3 text-xs">
-                    <span className="font-semibold text-rose-300">{l.mistakes} misses</span>
-                    <span className="text-white/40">{l.learners} learners</span>
+                  <span className="flex items-center gap-3 text-[11px] font-bold">
+                    <span className="text-rose">{l.mistakes} misses</span>
+                    <span className="text-fg-faint">{l.learners} learners</span>
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-white/35">No mistakes recorded yet.</p>
+            <p className="py-8 text-center text-sm font-semibold text-fg-faint">
+              No mistakes recorded yet.
+            </p>
           )}
         </div>
       </div>
@@ -254,66 +279,41 @@ export default function LearningAgentPage() {
 }
 
 function Stat({
-  icon: Icon,
+  icon,
   label,
   value,
-  accent,
-}: {
-  icon: typeof UsersIcon;
-  label: string;
-  value: number;
-  accent: "emerald" | "gold" | "rose" | "violet";
-}) {
-  const ring: Record<string, string> = {
-    emerald: "text-emerald-300 bg-emerald-500/10 border-emerald-500/20",
-    gold: "text-gold-300 bg-gold-500/10 border-gold-500/20",
-    rose: "text-rose-300 bg-rose-500/10 border-rose-500/20",
-    violet: "text-violet-300 bg-violet-500/10 border-violet-500/20",
-  };
-  return (
-    <div className={`${CARD} p-4`}>
-      <div className={`mb-3 grid h-9 w-9 place-items-center rounded-lg border ${ring[accent]}`}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <p className="text-2xl font-bold text-white">{value.toLocaleString()}</p>
-      <p className="mt-0.5 text-xs text-white/45">{label}</p>
-    </div>
-  );
-}
-
-function Gauge({
-  icon: Icon,
-  label,
-  pct,
+  tint,
   color,
 }: {
-  icon: typeof UsersIcon;
+  icon: React.ReactNode;
   label: string;
-  pct: number;
+  value: number;
+  tint: string;
   color: string;
 }) {
   return (
-    <div className={`${CARD} flex flex-col justify-between p-5`}>
-      <div className="flex items-center gap-2">
-        <Icon className="h-5 w-5 text-white/50" />
-        <p className="section-title">{label}</p>
-      </div>
-      <p className="my-3 text-4xl font-bold text-white">{pct}%</p>
-      <div className="h-2 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-      </div>
+    <div className="dq-card p-[18px]">
+      <span
+        className="grid h-9 w-9 place-items-center rounded-[10px]"
+        style={{ background: tint, color }}
+      >
+        {icon}
+      </span>
+      <p className="mt-3 text-[26px] font-black leading-none text-fg">
+        {value.toLocaleString()}
+      </p>
+      <p className="mt-1.5 text-[11px] font-bold text-fg-dim">{label}</p>
     </div>
   );
 }
 
 /* ── Workflow diagram (static SVG — clean, no per-frame animation) ── */
 
-const C = { blue: "#60a5fa", violet: "#a78bfa", emerald: "#34d399", gold: "#fbbf24" };
+const C = { blue: "#6E96F0", violet: "#A78BFA", teal: "#2CC9B5", gold: "#EFB65A" };
 
 type N = {
   x: number;
   y: number;
-  w?: number;
   accent: string;
   title: string;
   sub: string;
@@ -328,12 +328,26 @@ function WorkflowDiagram({ learners, recs }: { learners: number; recs: number })
   const nodes: Record<string, N> = {
     app: { x: 16, y: 96, accent: C.blue, title: "App", sub: "DeenQuest" },
     kafka: { x: 196, y: 96, accent: C.violet, title: "Kafka", sub: "learning.events" },
-    state: { x: 376, y: 96, accent: C.emerald, title: "StateUpdater", sub: "consumer" },
-    states: { x: 556, y: 96, accent: C.gold, title: "learner_states", sub: "MongoDB", big: learners },
-    rec: { x: 736, y: 96, accent: C.emerald, title: "Recommender", sub: "rules · SM-2" },
-    recs: { x: 916, y: 96, accent: C.gold, title: "recommendations", sub: "MongoDB", big: recs },
+    state: { x: 376, y: 96, accent: C.teal, title: "StateUpdater", sub: "consumer" },
+    states: {
+      x: 556,
+      y: 96,
+      accent: C.gold,
+      title: "learner_states",
+      sub: "MongoDB",
+      big: learners,
+    },
+    rec: { x: 736, y: 96, accent: C.teal, title: "Recommender", sub: "rules · SM-2" },
+    recs: {
+      x: 916,
+      y: 96,
+      accent: C.gold,
+      title: "recommendations",
+      sub: "MongoDB",
+      big: recs,
+    },
     ai: { x: 196, y: 206, accent: C.violet, title: "Gemini AI", sub: "optional" },
-    sweep: { x: 736, y: 206, accent: C.emerald, title: "Pattern Sweep", sub: "cron · 15m" },
+    sweep: { x: 736, y: 206, accent: C.teal, title: "Pattern Sweep", sub: "cron · 15m" },
   };
 
   const right = (n: N) => ({ x: n.x + NW, y: cy(n) });
@@ -341,17 +355,21 @@ function WorkflowDiagram({ learners, recs }: { learners: number; recs: number })
 
   return (
     <div className="overflow-x-auto pb-1">
-      <svg viewBox="0 0 1082 300" className="min-w-[920px]" role="img"
-        aria-label="Event pipeline: app to Kafka to consumers to MongoDB and back to the app">
+      <svg
+        viewBox="0 0 1082 300"
+        className="min-w-[920px]"
+        role="img"
+        aria-label="Event pipeline: app to Kafka to consumers to MongoDB and back to the app"
+      >
         <defs>
           <marker id="wa" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto">
-            <path d="M0,0 L7,3 L0,6 Z" fill="rgba(255,255,255,0.45)" />
+            <path d="M0,0 L7,3 L0,6 Z" fill="rgba(255,255,255,0.4)" />
           </marker>
           <marker id="wv" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto">
-            <path d="M0,0 L7,3 L0,6 Z" fill="rgba(167,139,250,0.65)" />
+            <path d="M0,0 L7,3 L0,6 Z" fill="rgba(167,139,250,0.7)" />
           </marker>
           <marker id="wb" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto">
-            <path d="M0,0 L7,3 L0,6 Z" fill="rgba(96,165,250,0.6)" />
+            <path d="M0,0 L7,3 L0,6 Z" fill="rgba(110,150,240,0.65)" />
           </marker>
         </defs>
 
@@ -366,25 +384,67 @@ function WorkflowDiagram({ learners, recs }: { learners: number; recs: number })
           const r = right(nodes[a]);
           const l = left(nodes[b]);
           return (
-            <line key={`${a}${b}`} x1={r.x} y1={r.y} x2={l.x - 3} y2={l.y}
-              stroke="rgba(255,255,255,0.2)" strokeWidth="1.6" markerEnd="url(#wa)" />
+            <line
+              key={`${a}${b}`}
+              x1={r.x}
+              y1={r.y}
+              x2={l.x - 3}
+              y2={l.y}
+              stroke="rgba(255,255,255,0.18)"
+              strokeWidth="1.6"
+              markerEnd="url(#wa)"
+            />
           );
         })}
 
         {/* Kafka -> Gemini AI */}
-        <line x1={nodes.kafka.x + NW / 2} y1={nodes.kafka.y + NH} x2={nodes.ai.x + NW / 2} y2={nodes.ai.y - 3}
-          stroke="rgba(255,255,255,0.2)" strokeWidth="1.6" markerEnd="url(#wa)" />
+        <line
+          x1={nodes.kafka.x + NW / 2}
+          y1={nodes.kafka.y + NH}
+          x2={nodes.ai.x + NW / 2}
+          y2={nodes.ai.y - 3}
+          stroke="rgba(255,255,255,0.18)"
+          strokeWidth="1.6"
+          markerEnd="url(#wa)"
+        />
         {/* Gemini AI -> learner_states (motivation, dashed) */}
-        <path d={`M${nodes.ai.x + NW},${cy(nodes.ai)} C${nodes.ai.x + NW + 120},${cy(nodes.ai)} ${nodes.states.x - 40},${nodes.states.y + NH + 6} ${nodes.states.x + NW / 2 - 8},${nodes.states.y + NH + 3}`}
-          fill="none" stroke="rgba(167,139,250,0.5)" strokeWidth="1.5" strokeDasharray="4 4" markerEnd="url(#wv)" />
+        <path
+          d={`M${nodes.ai.x + NW},${cy(nodes.ai)} C${nodes.ai.x + NW + 120},${cy(nodes.ai)} ${nodes.states.x - 40},${nodes.states.y + NH + 6} ${nodes.states.x + NW / 2 - 8},${nodes.states.y + NH + 3}`}
+          fill="none"
+          stroke="rgba(167,139,250,0.55)"
+          strokeWidth="1.5"
+          strokeDasharray="4 4"
+          markerEnd="url(#wv)"
+        />
         {/* Pattern Sweep -> Recommender */}
-        <line x1={nodes.sweep.x + NW / 2} y1={nodes.sweep.y - 3} x2={nodes.rec.x + NW / 2} y2={nodes.rec.y + NH}
-          stroke="rgba(255,255,255,0.2)" strokeWidth="1.6" markerEnd="url(#wa)" />
+        <line
+          x1={nodes.sweep.x + NW / 2}
+          y1={nodes.sweep.y - 3}
+          x2={nodes.rec.x + NW / 2}
+          y2={nodes.rec.y + NH}
+          stroke="rgba(255,255,255,0.18)"
+          strokeWidth="1.6"
+          markerEnd="url(#wa)"
+        />
 
         {/* feedback: recommendations -> app (served), along the bottom */}
-        <path d={`M${nodes.recs.x + NW / 2},${nodes.recs.y + NH} C${nodes.recs.x + NW / 2},285 ${nodes.recs.x},285 540,285 C140,285 ${nodes.app.x + NW / 2},285 ${nodes.app.x + NW / 2},${nodes.app.y + NH + 3}`}
-          fill="none" stroke="rgba(96,165,250,0.4)" strokeWidth="1.5" strokeDasharray="5 5" markerEnd="url(#wb)" />
-        <text x="540" y="280" textAnchor="middle" fill="rgba(96,165,250,0.85)" fontSize="11" fontWeight="600">
+        <path
+          d={`M${nodes.recs.x + NW / 2},${nodes.recs.y + NH} C${nodes.recs.x + NW / 2},285 ${nodes.recs.x},285 540,285 C140,285 ${nodes.app.x + NW / 2},285 ${nodes.app.x + NW / 2},${nodes.app.y + NH + 3}`}
+          fill="none"
+          stroke="rgba(110,150,240,0.45)"
+          strokeWidth="1.5"
+          strokeDasharray="5 5"
+          markerEnd="url(#wb)"
+        />
+        <text
+          x="540"
+          y="280"
+          textAnchor="middle"
+          fill="#6E96F0"
+          fontSize="11"
+          fontWeight="800"
+          fontFamily="Nunito, sans-serif"
+        >
           served to the learner&apos;s app
         </text>
 
@@ -397,16 +457,54 @@ function WorkflowDiagram({ learners, recs }: { learners: number; recs: number })
 }
 
 function Node({ n, w, h }: { n: N; w: number; h: number }) {
+  // Nodes carrying a live count stack three lines; the rest sit centred on two.
+  const hasBig = n.big !== undefined;
+  const titleY = hasBig ? n.y + 22 : n.y + 29;
+  const subY = hasBig ? n.y + 37 : n.y + 45;
+
   return (
     <g>
-      <rect x={n.x} y={n.y} width={w} height={h} rx="14" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" />
+      <rect
+        x={n.x}
+        y={n.y}
+        width={w}
+        height={h}
+        rx="14"
+        fill="#0C181B"
+        stroke="#1E3238"
+      />
       <rect x={n.x} y={n.y + 12} width="4" height={h - 24} rx="2" fill={n.accent} />
-      <circle cx={n.x + 22} cy={n.y + 25} r="4.5" fill={n.accent} opacity="0.9" />
-      <text x={n.x + 36} y={n.y + 29} fill="#fff" fontSize="13.5" fontWeight="700">{n.title}</text>
-      <text x={n.x + 18} y={n.y + 49} fill="rgba(255,255,255,0.45)" fontSize="10.5">{n.sub}</text>
-      {n.big !== undefined && (
-        <text x={n.x + w - 14} y={n.y + 30} textAnchor="end" fill={n.accent} fontSize="18" fontWeight="800">
-          {n.big.toLocaleString()}
+      <circle cx={n.x + 22} cy={titleY - 4} r="4.5" fill={n.accent} opacity="0.9" />
+      <text
+        x={n.x + 36}
+        y={titleY}
+        fill="#EDF5F4"
+        fontSize="13"
+        fontWeight="800"
+        fontFamily="Nunito, sans-serif"
+      >
+        {n.title}
+      </text>
+      <text
+        x={n.x + 18}
+        y={subY}
+        fill="#5F7E7C"
+        fontSize="10.5"
+        fontWeight="600"
+        fontFamily="Nunito, sans-serif"
+      >
+        {n.sub}
+      </text>
+      {hasBig && (
+        <text
+          x={n.x + 18}
+          y={n.y + 55}
+          fill={n.accent}
+          fontSize="15"
+          fontWeight="900"
+          fontFamily="Nunito, sans-serif"
+        >
+          {n.big!.toLocaleString()}
         </text>
       )}
     </g>
