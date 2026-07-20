@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
+import { trackAnswer } from "../../../services/telemetry";
 import type { LessonComponentProps } from "./types";
 import {
   CoachCorrectionSheet,
@@ -45,7 +46,12 @@ function normalize(data: Record<string, any>): Question[] {
   ];
 }
 
-export function MCQComponent({ lesson, onComplete }: LessonComponentProps) {
+export function MCQComponent({
+  lesson,
+  onComplete,
+  levelId,
+  lessonIndex,
+}: LessonComponentProps) {
   const questions = useMemo(
     () => normalize(lesson.data as Record<string, any>),
     [lesson.data],
@@ -55,14 +61,17 @@ export function MCQComponent({ lesson, onComplete }: LessonComponentProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [wrongAttempts, setWrongAttempts] = useState(0);
 
+  const shownAtRef = useRef(Date.now());
+  useEffect(() => {
+    shownAtRef.current = Date.now();
+  }, [qIndex]);
+
   const q = questions[qIndex];
   const answered = selected !== null;
   const isCorrect = answered && selected === q.correct;
   const isLast = qIndex >= questions.length - 1;
   const gridLayout = useGridLayout(q.options);
 
-  // G3: the coach steps in (instead of the plain "wrong" banner) when an
-  // Arabic answer was confused with another Arabic answer.
   const coachEligible =
     answered &&
     !isCorrect &&
@@ -73,6 +82,17 @@ export function MCQComponent({ lesson, onComplete }: LessonComponentProps) {
   const handleSelect = (idx: number) => {
     if (answered) return;
     setSelected(idx);
+    trackAnswer({
+      interaction: "choice",
+      skillTags: lesson.skill_tags,
+      correct: idx === q.correct,
+      expected: q.options[q.correct],
+      chosen: q.options[idx],
+      attempt: wrongAttempts + 1,
+      latencyMs: Date.now() - shownAtRef.current,
+      levelId,
+      lessonIndex,
+    });
     if (idx === q.correct) {
       haptics.success();
       sfx.correct();

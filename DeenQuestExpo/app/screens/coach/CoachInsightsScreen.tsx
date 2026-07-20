@@ -14,14 +14,11 @@ import { theme } from "../../theme/themes";
 import { dq } from "../../theme/designTokens";
 import {
   COACH_PRACTICE_COURSE,
-  getMockCoachState,
   type CoachInsight,
   type CoachSeverity,
 } from "../../services/coach";
-import {
-  useGetDailyTasksQuery,
-  useGetProgressQuery,
-} from "../../store/services/api";
+import { useGetCoachInsightsQuery } from "../../store/services/api";
+import { Loader } from "../../components/Loader";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 
@@ -105,23 +102,27 @@ function InsightCard({
 }
 
 export function CoachInsightsScreen({ navigation }: Props) {
-  const { data: progressData } = useGetProgressQuery();
-  const { data: tasksData } = useGetDailyTasksQuery();
+  const { data: coachRes, isLoading } = useGetCoachInsightsQuery();
+  const coach = coachRes?.data ?? null;
+  const hasWin = !!coach?.win?.bold;
 
-  const totalXP = progressData?.data?.xp ?? 0;
-  const completedTasks = (tasksData?.data ?? []).filter(
-    (t) => t.completed,
-  ).length;
-  const coach = getMockCoachState({ xp: totalXP, completedTasks });
-
-  const startPractice = (levelId?: number) => {
-    if (levelId == null) return;
+  const startPractice = (insight: CoachInsight) => {
+    if (insight.practiceLevelId == null) return;
     navigation.navigate("LessonPlayer", {
-      levelId,
+      levelId: insight.practiceLevelId,
       startLessonIndex: 0,
       courseType: COACH_PRACTICE_COURSE,
+      coachInsightId: insight.id,
     });
   };
+
+  if (isLoading) {
+    return (
+      <ScreenWrapper innerStyle={{ flex: 1 }}>
+        <Loader fullScreen />
+      </ScreenWrapper>
+    );
+  }
 
   if (!coach) {
     return (
@@ -175,7 +176,13 @@ export function CoachInsightsScreen({ navigation }: Props) {
         <View style={s.trendCard}>
           <View style={s.trendHeader}>
             <Text style={s.trendTitle}>Accuracy this week</Text>
-            <Text style={s.trendDelta}>▲ +{coach.weekDeltaPct}%</Text>
+            <Text
+              style={[s.trendDelta, coach.weekDeltaPct < 0 && { color: "#F0838C" }]}
+            >
+              {coach.weekDeltaPct >= 0
+                ? `▲ +${coach.weekDeltaPct}%`
+                : `▼ ${coach.weekDeltaPct}%`}
+            </Text>
           </View>
           <View style={s.chart}>
             {coach.weekAccuracy.map((v, i) => {
@@ -221,26 +228,27 @@ export function CoachInsightsScreen({ navigation }: Props) {
             <InsightCard
               key={insight.id}
               insight={insight}
-              onPractice={() => startPractice(insight.practiceLevelId)}
+              onPractice={() => startPractice(insight)}
             />
           ))}
         </View>
 
-        {/* win banner */}
-        <LinearGradient
-          colors={["#26301C", "#16272B"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.7, y: 1 }}
-          style={s.winCard}
-        >
-          <Text style={s.winStar}>✦</Text>
-          <Text style={s.winText}>
-            Your <Text style={s.winBold}>{coach.win.bold}</Text>
-            {coach.win.middle}
-            <Text style={s.winAccent}>{coach.win.boldAccent}</Text>
-            {coach.win.tail}
-          </Text>
-        </LinearGradient>
+        {hasWin && (
+          <LinearGradient
+            colors={["#26301C", "#16272B"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.7, y: 1 }}
+            style={s.winCard}
+          >
+            <Text style={s.winStar}>✦</Text>
+            <Text style={s.winText}>
+              Your <Text style={s.winBold}>{coach.win.bold}</Text>
+              {coach.win.middle}
+              <Text style={s.winAccent}>{coach.win.boldAccent}</Text>
+              {coach.win.tail}
+            </Text>
+          </LinearGradient>
+        )}
       </ScrollView>
     </ScreenWrapper>
   );

@@ -28,14 +28,19 @@ import {
   useGetDailyTasksQuery,
   useGetProgressQuery,
   useGetProfileQuery,
+  useGetCoachInsightsQuery,
 } from "../../store/services/api";
 import type { DailyTask } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 import {
   COACH_PRACTICE_COURSE,
-  getMockCoachState,
+  coachHasTopInsight,
   type CoachState,
 } from "../../services/coach";
+import {
+  trackCoachCardShown,
+  trackCoachCTATapped,
+} from "../../services/telemetry";
 
 // Icon shown on each mission row, keyed by the task's category.
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -192,7 +197,11 @@ function CoachCard({
           haptic="medium"
           onPress={onFix}
         >
-          <Text style={styles.fixBtnText}>FIX IT · {coach.fixMinutes} MIN</Text>
+          <Text style={styles.fixBtnText}>
+            {coach.fixMinutes > 0
+              ? `FIX IT · ${coach.fixMinutes} MIN`
+              : "VIEW INSIGHTS"}
+          </Text>
         </TactilePressable>
         <AnimatedPressable style={styles.insightsBtn} onPress={onInsights}>
           <Text style={styles.insightsBtnText}>ALL INSIGHTS</Text>
@@ -228,11 +237,19 @@ export const HomeScreen = () => {
   const xpInLevel = totalXP % XP_PER_LEVEL;
   const xpPct = (xpInLevel / XP_PER_LEVEL) * 100;
 
-  // AI Coach mock — null for brand-new users → plain B1 Home.
-  const coach = getMockCoachState({
-    xp: totalXP,
-    completedTasks: completedCount,
-  });
+  // The coach Home variant only renders when the coach actually found
+  // something to suggest: no telemetry yet, or telemetry with zero insight
+  // tiles, both fall back to the plain B1 Home (a win banner alone is
+  // praise, not a suggestion).
+  const { data: coachRes } = useGetCoachInsightsQuery();
+  const coachData = coachRes?.data ?? null;
+  const coach: CoachState | null =
+    coachData && coachData.insights.length > 0 ? coachData : null;
+  const coachActionable = coach != null && coachHasTopInsight(coach);
+
+  React.useEffect(() => {
+    if (coach) trackCoachCardShown();
+  }, [coach]);
 
   const handleTaskPress = (task: DailyTask) => {
     navigation.navigate("DailyTaskDetail", { task });
@@ -240,10 +257,16 @@ export const HomeScreen = () => {
 
   const startCoachPractice = () => {
     if (!coach) return;
+    trackCoachCTATapped();
+    if (!coachHasTopInsight(coach)) {
+      navigation.navigate("CoachInsights");
+      return;
+    }
     navigation.navigate("LessonPlayer", {
       levelId: coach.practiceLevelId,
       startLessonIndex: 0,
       courseType: COACH_PRACTICE_COURSE,
+      coachInsightId: coach.insightId,
     });
   };
 
@@ -298,7 +321,7 @@ export const HomeScreen = () => {
   };
 
   // Coach-suggested practice row, injected under the first mission (G1).
-  const coachMissionRow = coach ? (
+  const coachMissionRow = coachActionable && coach ? (
     <Pressable
       key="coach-practice"
       onPress={startCoachPractice}

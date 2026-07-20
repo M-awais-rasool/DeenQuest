@@ -29,8 +29,13 @@ export type AppStackParamList = {
     levelId: number;
     startLessonIndex: number;
     courseType?: CourseType;
+    coachInsightId?: string;
   };
-  MiniGamePlayer: { levelId: number; courseType?: CourseType };
+  MiniGamePlayer: {
+    levelId: number;
+    courseType?: CourseType;
+    coachInsightId?: string;
+  };
   SurahDetail: { surahId: number | string };
   Settings: undefined;
   EditProfile: undefined;

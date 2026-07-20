@@ -4,6 +4,7 @@ import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
 import { useQuranFont } from "../../../hooks/useQuranFont";
+import { trackAnswer } from "../../../services/telemetry";
 import type { LessonComponentProps } from "./types";
 import {
   ArabicChip,
@@ -11,13 +12,13 @@ import {
   type FeedbackStatus,
 } from "./shared";
 
-/**
- * "Find every …" scanning game: a target letter/word is shown at the top
- * and the learner taps every occurrence inside a grid of lookalikes.
- * Correct cells lock in green; wrong taps flash red and shake. Trains
- * visual discrimination between similar Arabic letterforms.
- */
-export function LetterHuntComponent({ lesson, onComplete }: LessonComponentProps) {
+
+export function LetterHuntComponent({
+  lesson,
+  onComplete,
+  levelId,
+  lessonIndex,
+}: LessonComponentProps) {
   const { fontFamily } = useQuranFont();
   const data = lesson.data as Record<string, any>;
   const target: string = data.target ?? "";
@@ -32,11 +33,23 @@ export function LetterHuntComponent({ lesson, onComplete }: LessonComponentProps
   const [found, setFound] = useState<Set<number>>(() => new Set());
   const [wrongIdx, setWrongIdx] = useState<number | null>(null);
   const wrongTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTapAtRef = useRef(Date.now());
 
   const solved = found.size === total && total > 0;
 
   const handleTap = (idx: number) => {
     if (solved || found.has(idx)) return;
+    trackAnswer({
+      interaction: "hunt",
+      skillTags: lesson.skill_tags,
+      correct: grid[idx] === target,
+      expected: target,
+      chosen: grid[idx],
+      latencyMs: Date.now() - lastTapAtRef.current,
+      levelId,
+      lessonIndex,
+    });
+    lastTapAtRef.current = Date.now();
     if (grid[idx] === target) {
       const next = new Set(found);
       next.add(idx);

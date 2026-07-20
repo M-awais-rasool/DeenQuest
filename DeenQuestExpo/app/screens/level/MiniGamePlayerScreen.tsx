@@ -13,7 +13,9 @@ import type { RouteProp } from "@react-navigation/native";
 import { theme } from "../../theme/themes";
 import {
   useGetLevelDetailQuery,
+  useGetCoachPracticeQuery,
   useCompleteLevelMutation,
+  useCompleteCoachPracticeMutation,
   useGetProgressQuery,
 } from "../../store/services/api";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
@@ -26,7 +28,11 @@ import { MCQGame } from "../../components/level/lesson/MCQGame";
 import { MemoryGame } from "../../components/level/lesson/MemoryGame";
 import { BuildGame } from "../../components/level/lesson/BuildGame";
 import { ListenGame } from "../../components/level/lesson/ListenGame";
-import type { MiniGameType, NewlyGrantedReward } from "../../store/services/api";
+import type {
+  LevelWithStatus,
+  MiniGameType,
+  NewlyGrantedReward,
+} from "../../store/services/api";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "MiniGamePlayer">;
@@ -34,12 +40,23 @@ type Route = RouteProp<AppStackParamList, "MiniGamePlayer">;
 export function MiniGamePlayerScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { levelId, courseType } = route.params;
+  const { levelId, courseType, coachInsightId } = route.params;
 
-  const { data: res } = useGetLevelDetailQuery({ levelId, courseType });
+  // Coach practice levels are ephemeral — fetched by insight, completed via
+  // /coach/practice/complete (which awards the practice XP and retires the
+  // insight) instead of the stored-level completion endpoint.
+  const isCoachPractice = !!coachInsightId;
+  const { data: res } = useGetLevelDetailQuery(
+    { levelId, courseType },
+    { skip: isCoachPractice },
+  );
+  const { data: practiceRes } = useGetCoachPracticeQuery(coachInsightId ?? "", {
+    skip: !isCoachPractice,
+  });
   const { data: progressRes } = useGetProgressQuery();
-  const level = res?.data;
+  const level = isCoachPractice ? practiceRes?.data : res?.data;
   const [completeLevel] = useCompleteLevelMutation();
+  const [completeCoachPractice] = useCompleteCoachPracticeMutation();
   const currentTotalXP = progressRes?.data?.xp ?? 0;
 
   const startTimeRef = useRef<number>(Date.now());
@@ -61,6 +78,24 @@ export function MiniGamePlayerScreen() {
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
       const timeString = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+      if (coachInsightId) {
+        try {
+          const apiRes = await completeCoachPractice(coachInsightId).unwrap();
+          setCompletionResult({
+            xpEarned: apiRes.data?.xp_earned ?? level.xp_reward,
+            accuracy: stats.accuracy,
+            timeString,
+          });
+        } catch {
+          setCompletionResult({
+            xpEarned: level.xp_reward,
+            accuracy: stats.accuracy,
+            timeString,
+          });
+        }
+        return;
+      }
 
       try {
         const apiRes = await completeLevel({
@@ -84,7 +119,7 @@ export function MiniGamePlayerScreen() {
         });
       }
     },
-    [courseType, level, completeLevel],
+    [courseType, coachInsightId, level, completeLevel, completeCoachPractice],
   );
 
   const handleContinue = useCallback(() => {
@@ -107,11 +142,19 @@ export function MiniGamePlayerScreen() {
           accuracy={completionResult.accuracy}
           timeString={completionResult.timeString}
           currentTotalXP={currentTotalXP}
-          levelTitle={`Level ${level.course_level || level.id} · ${level.title}`}
+          levelTitle={
+            isCoachPractice
+              ? level.title
+              : `Level ${level.course_level || level.id} · ${level.title}`
+          }
           unlockReward={completionResult.unlockReward}
           treasureOpen={completionResult.treasureOpen}
           newRewards={completionResult.newRewards}
-          lessonsDone={level.lessons_complete}
+          lessonsDone={
+            isCoachPractice
+              ? level.lessons.length
+              : (level as LevelWithStatus).lessons_complete
+          }
           lessonsTotal={level.lessons.length}
           onContinue={handleContinue}
         />

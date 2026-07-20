@@ -8,6 +8,7 @@ import type { RouteProp } from "@react-navigation/native";
 import { theme } from "../../theme/themes";
 import {
   useGetLevelDetailQuery,
+  useGetCoachPracticeQuery,
   useCompleteLessonMutation,
 } from "../../store/services/api";
 import type { Lesson } from "../../store/services/api";
@@ -15,6 +16,10 @@ import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { LESSON_COMPONENT_MAP } from "../../components/level/lesson";
+import {
+  trackLessonCompleted,
+  trackLessonStarted,
+} from "../../services/telemetry";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "LessonPlayer">;
@@ -102,10 +107,18 @@ const LessonRenderer = memo(function LessonRenderer({
 export function LessonPlayerScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { levelId, startLessonIndex, courseType } = route.params;
+  const { levelId, startLessonIndex, courseType, coachInsightId } =
+    route.params;
 
-  const { data: res } = useGetLevelDetailQuery({ levelId, courseType });
-  const level = res?.data;
+  const isCoachPractice = !!coachInsightId;
+  const { data: levelRes } = useGetLevelDetailQuery(
+    { levelId, courseType },
+    { skip: isCoachPractice },
+  );
+  const { data: practiceRes } = useGetCoachPracticeQuery(coachInsightId ?? "", {
+    skip: !isCoachPractice,
+  });
+  const level = isCoachPractice ? practiceRes?.data : levelRes?.data;
   const [completeLesson] = useCompleteLessonMutation();
 
   const [currentIndex, setCurrentIndex] = useState(startLessonIndex);
@@ -114,16 +127,23 @@ export function LessonPlayerScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const advancingRef = useRef(false);
 
+  useEffect(() => {
+    if (level) trackLessonStarted(level.id, currentIndex);
+  }, [level, currentIndex]);
+
   const handleComplete = useCallback(() => {
     if (!level) return;
     if (advancingRef.current) return;
     advancingRef.current = true;
 
-    completeLesson({
-      levelId: level.id,
-      lessonIndex: currentIndex,
-      courseType: level.course_type ?? courseType,
-    }).catch(() => {});
+    trackLessonCompleted(level.id, currentIndex);
+    if (!isCoachPractice) {
+      completeLesson({
+        levelId: level.id,
+        lessonIndex: currentIndex,
+        courseType: level.course_type ?? courseType,
+      }).catch(() => {});
+    }
 
     const isLast = currentIndex >= level.lessons.length - 1;
 
@@ -137,6 +157,7 @@ export function LessonPlayerScreen() {
         navigation.replace("MiniGamePlayer", {
           levelId: level.id,
           courseType: level.course_type ?? courseType,
+          coachInsightId,
         });
       } else {
         setCurrentIndex((prev) => prev + 1);
@@ -149,7 +170,16 @@ export function LessonPlayerScreen() {
         });
       }
     });
-  }, [courseType, level, currentIndex, completeLesson, navigation, fadeAnim]);
+  }, [
+    courseType,
+    coachInsightId,
+    isCoachPractice,
+    level,
+    currentIndex,
+    completeLesson,
+    navigation,
+    fadeAnim,
+  ]);
 
   const handleClose = useCallback(() => {
     navigation.goBack();

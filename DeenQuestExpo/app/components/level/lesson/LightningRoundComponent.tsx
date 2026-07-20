@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
 import { theme } from "../../../theme/themes";
+import { trackAnswer } from "../../../services/telemetry";
 import type { LessonComponentProps } from "./types";
 import {
   FeedbackBanner,
@@ -19,12 +20,12 @@ type Question = { question: string; options: string[]; correct: number };
 
 const DEFAULT_SECONDS = 8;
 
-/**
- * Timed quiz round: every question runs against a draining countdown bar.
- * Answering stops the clock; running out counts as a wrong answer. Builds
- * urgency + streaks for an arcade feel, ends with a score summary.
- */
-export function LightningRoundComponent({ lesson, onComplete }: LessonComponentProps) {
+export function LightningRoundComponent({
+  lesson,
+  onComplete,
+  levelId,
+  lessonIndex,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
   const seconds: number = data.seconds ?? DEFAULT_SECONDS;
   const questions = useMemo<Question[]>(
@@ -76,6 +77,14 @@ export function LightningRoundComponent({ lesson, onComplete }: LessonComponentP
         setSelected(-1);
         setStreak(0);
         setResults((r) => [...r, false]);
+        trackAnswer({
+          interaction: "choice",
+          skillTags: lesson.skill_tags,
+          correct: false, // timed out
+          latencyMs: seconds * 1000,
+          levelId,
+          lessonIndex,
+        });
         haptics.error();
         sfx.wrong();
       }
@@ -92,6 +101,16 @@ export function LightningRoundComponent({ lesson, onComplete }: LessonComponentP
     timer.stopAnimation();
     setSelected(idx);
     const right = idx === q.correct;
+    trackAnswer({
+      interaction: "choice",
+      skillTags: lesson.skill_tags,
+      correct: right,
+      expected: q.options[q.correct],
+      chosen: q.options[idx],
+      latencyMs: (seconds - secondsLeft) * 1000 || 1000,
+      levelId,
+      lessonIndex,
+    });
     setResults((r) => [...r, right]);
     if (right) {
       haptics.success();

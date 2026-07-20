@@ -2,10 +2,13 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../storage/authStorage";
 import type { AyahTimingInput } from "../../types/quranSync";
+import type { CoachState } from "../../services/coach";
+
+export const API_BASE_URL = "http://192.168.18.9:8080";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
-  baseUrl: "http://192.168.18.14:8080",
+  baseUrl: API_BASE_URL,
   prepareHeaders: async (headers, { getState }) => {
     try {
       const stateToken = (getState() as any)?.main?.accessToken;
@@ -415,6 +418,12 @@ export interface QuranSurahRequest {
   translation?: string;
 }
 
+// ─── Coach Types ───
+
+export interface CoachPracticeCompletion {
+  xp_earned: number;
+}
+
 // API Service
 export const API = createApi({
   reducerPath: "API",
@@ -430,6 +439,7 @@ export const API = createApi({
     "Recitation",
     "Notifications",
     "Quran",
+    "Coach",
   ],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
@@ -588,7 +598,34 @@ export const API = createApi({
         params: courseType ? { course_type: courseType } : undefined,
         body: { course_type: courseType },
       }),
-      invalidatesTags: ["Levels", "Progress", "Leaderboard", "Rewards"],
+      invalidatesTags: ["Levels", "Progress", "Leaderboard", "Rewards", "Coach"],
+    }),
+
+    getCoachInsights: builder.query<APIResponse<CoachState>, void>({
+      query: () => ({ url: "/api/v1/coach/insights", method: "GET" }),
+      providesTags: ["Coach"],
+      keepUnusedDataFor: 30,
+    }),
+    getCoachPractice: builder.query<APIResponse<Level>, string>({
+      query: (insightId) => ({
+        url: "/api/v1/coach/practice",
+        method: "GET",
+        params: { insight_id: insightId },
+      }),
+      providesTags: (_result, _error, insightId) => [
+        { type: "Coach", id: `practice:${insightId}` },
+      ],
+    }),
+    completeCoachPractice: builder.mutation<
+      APIResponse<CoachPracticeCompletion>,
+      string
+    >({
+      query: (insightId) => ({
+        url: "/api/v1/coach/practice/complete",
+        method: "POST",
+        body: { insight_id: insightId },
+      }),
+      invalidatesTags: ["Coach", "Progress", "Leaderboard"],
     }),
 
     // ─── Recitation ───
@@ -693,6 +730,9 @@ export const {
   useGetLevelDetailQuery,
   useCompleteLessonMutation,
   useCompleteLevelMutation,
+  useGetCoachInsightsQuery,
+  useGetCoachPracticeQuery,
+  useCompleteCoachPracticeMutation,
   useGetRewardsQuery,
   useCheckRecitationMutation,
   useGenerateLearningPathMutation,

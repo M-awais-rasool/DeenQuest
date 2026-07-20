@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { Check, X } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
+import { trackAnswer } from "../../../services/telemetry";
 import { theme } from "../../../theme/themes";
 import { useQuranFont } from "../../../hooks/useQuranFont";
 import { TactilePressable } from "../../ui";
@@ -17,12 +18,12 @@ import {
 
 type Round = { prompt: string; arabic?: string; answer: boolean };
 
-/**
- * Quick-fire true/false rounds: a statement (optionally with a large
- * Arabic display) and two big tactile YES/NO buttons. Consecutive correct
- * answers build a streak; the banner advances between rounds.
- */
-export function TrueFalseComponent({ lesson, onComplete }: LessonComponentProps) {
+export function TrueFalseComponent({
+  lesson,
+  onComplete,
+  levelId,
+  lessonIndex,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
   const rounds = useMemo<Round[]>(
     () =>
@@ -39,6 +40,11 @@ export function TrueFalseComponent({ lesson, onComplete }: LessonComponentProps)
   const [selected, setSelected] = useState<boolean | null>(null);
   const [streak, setStreak] = useState(0);
 
+  const shownAtRef = useRef(Date.now());
+  useEffect(() => {
+    shownAtRef.current = Date.now();
+  }, [index]);
+
   const round = rounds[index];
   const answered = selected !== null;
   const isCorrect = answered && selected === round.answer;
@@ -47,6 +53,14 @@ export function TrueFalseComponent({ lesson, onComplete }: LessonComponentProps)
   const handleSelect = (value: boolean) => {
     if (answered) return;
     setSelected(value);
+    trackAnswer({
+      interaction: "choice",
+      skillTags: lesson.skill_tags,
+      correct: value === round.answer,
+      latencyMs: Date.now() - shownAtRef.current,
+      levelId,
+      lessonIndex,
+    });
     if (value === round.answer) {
       haptics.success();
       sfx.correct();

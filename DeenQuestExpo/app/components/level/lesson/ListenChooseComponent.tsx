@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { TactilePressable } from "../../ui";
 import { Volume2 } from "lucide-react-native";
 import { haptics } from "../../../utils/haptics";
 import { sfx } from "../../../utils/sfx";
+import { trackAnswer } from "../../../services/telemetry";
 import { Speech } from "../../../utils/speech";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
@@ -14,12 +15,12 @@ import {
   type FeedbackStatus,
 } from "./shared";
 
-/**
- * Listen & choose: tap the speaker to hear the Arabic, then pick the matching
- * Arabic option. Uses the safe Speech wrapper (Arabic TTS). Wrong answers
- * highlight the correct option; everything is Arabic — no romanization.
- */
-export function ListenChooseComponent({ lesson, onComplete }: LessonComponentProps) {
+export function ListenChooseComponent({
+  lesson,
+  onComplete,
+  levelId,
+  lessonIndex,
+}: LessonComponentProps) {
   const data = lesson.data as Record<string, any>;
   const audio: string = data.audio ?? data.text ?? "";
   const options: string[] = data.options ?? [];
@@ -31,6 +32,7 @@ export function ListenChooseComponent({ lesson, onComplete }: LessonComponentPro
   const [speaking, setSpeaking] = useState(false);
   const answered = selected !== null;
   const isCorrect = answered && selected === correct;
+  const shownAtRef = useRef(Date.now());
 
   const speak = useCallback(() => {
     if (!audio) return;
@@ -57,6 +59,16 @@ export function ListenChooseComponent({ lesson, onComplete }: LessonComponentPro
   const handleSelect = (idx: number) => {
     if (answered) return;
     setSelected(idx);
+    trackAnswer({
+      interaction: "choice",
+      skillTags: lesson.skill_tags,
+      correct: idx === correct,
+      expected: options[correct],
+      chosen: options[idx],
+      latencyMs: Date.now() - shownAtRef.current,
+      levelId,
+      lessonIndex,
+    });
     if (idx === correct) {
       haptics.success();
       sfx.correct();
