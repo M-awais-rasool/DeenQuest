@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/chawais/deenquest/backend/internal/analytics"
+	"github.com/chawais/deenquest/backend/internal/coach"
 	"github.com/chawais/deenquest/backend/internal/content"
 	"github.com/chawais/deenquest/backend/internal/dailytask"
 	"github.com/chawais/deenquest/backend/internal/level"
@@ -43,6 +44,7 @@ func TestLearningRoutesRegister(t *testing.T) {
 	reward.RegisterAdminRoutes(admin, reward.NewAdminHandler(rewardSvc))
 	content.RegisterAdminRoutes(admin, content.NewHandler())
 	analytics.RegisterAdminRoutes(admin, analytics.NewHandler(nil))
+	coach.RegisterAdminRoutes(admin, coach.NewAdminHandler(coach.NewAdminService(nil)))
 
 	want := []string{
 		"GET /api/v1/progress/user/:id",
@@ -73,6 +75,8 @@ func TestLearningRoutesRegister(t *testing.T) {
 		"GET /api/v1/admin/rewards/:id",
 		"PUT /api/v1/admin/rewards/:id",
 		"DELETE /api/v1/admin/rewards/:id",
+		"GET /api/v1/admin/learning/stats",
+		"GET /api/v1/admin/learning/curriculum",
 	}
 
 	got := make(map[string]bool)

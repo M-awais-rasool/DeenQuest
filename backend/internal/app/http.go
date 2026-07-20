@@ -68,6 +68,9 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	reward.RegisterAdminRoutes(admin, m.RewardAdminHandler)
 	content.RegisterAdminRoutes(admin, m.ContentHandler)
 	analytics.RegisterAdminRoutes(admin, m.AnalyticsHandler)
+	if m.CoachAdminHandler != nil {
+		coach.RegisterAdminRoutes(admin, m.CoachAdminHandler)
+	}
 
 	quran.RegisterRoutes(v1.Group("/quran"), m.QuranHandler)
 	quran.RegisterRoutes(r.Group("/api/quran"), m.QuranHandler) // legacy path used by older clients

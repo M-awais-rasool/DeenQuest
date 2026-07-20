@@ -14,3 +14,11 @@ func RegisterRoutes(authed *gin.RouterGroup, h *Handler) {
 	coach.GET("/practice", h.GetPractice)
 	coach.POST("/practice/complete", h.CompletePractice)
 }
+
+//	GET /admin/learning/stats
+//	GET /admin/learning/curriculum
+func RegisterAdminRoutes(admin *gin.RouterGroup, h *AdminHandler) {
+	learning := admin.Group("/learning")
+	learning.GET("/stats", h.GetStats)
+	learning.GET("/curriculum", h.GetCurriculum)
+}

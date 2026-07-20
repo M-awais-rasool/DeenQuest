@@ -44,8 +44,9 @@ type Modules struct {
 	ContentHandler     *content.Handler    // authoring registry (/admin/registry)
 	AnalyticsHandler   *analytics.Handler  // admin dashboards (/admin/analytics)
 
-	CoachService *coach.Service
-	CoachHandler *coach.Handler
+	CoachService      *coach.Service
+	CoachHandler      *coach.Handler
+	CoachAdminHandler *coach.AdminHandler // /admin/learning/*
 
 	// quran — surah reading and audio (external AlQuran API + Redis cache).
 	QuranHandler *quran.Handler
@@ -115,6 +116,7 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 
 	var coachService *coach.Service
 	var coachHandler *coach.Handler
+	var coachAdminHandler *coach.AdminHandler
 	if cfg.CoachEnabled {
 		coachRepo, err := coach.NewMongoRepository(db)
 		if err != nil {
@@ -127,6 +129,7 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		phraser := coach.NewPhraser(coachLLM, infra.Redis, cfg.CoachLLMEnabled)
 		coachService = coach.NewService(coachRepo, progressService, phraser)
 		coachHandler = coach.NewHandler(coachService)
+		coachAdminHandler = coach.NewAdminHandler(coach.NewAdminService(coachRepo))
 		logger.Info("Coach module initialized",
 			zap.Bool("llm_enabled", cfg.CoachLLMEnabled && infra.Gemini != nil))
 	}
@@ -156,8 +159,9 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		ContentHandler:     content.NewHandler(),
 		AnalyticsHandler:   analytics.NewHandler(analyticsRepo),
 
-		CoachService: coachService,
-		CoachHandler: coachHandler,
+		CoachService:      coachService,
+		CoachHandler:      coachHandler,
+		CoachAdminHandler: coachAdminHandler,
 
 		QuranHandler: quran.NewHandler(quranService),
 

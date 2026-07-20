@@ -9,7 +9,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import api from "../lib/api";
-import { PageLoader, PageMessage } from "../components/PageHeader";
+import { PageLoader } from "../components/PageHeader";
 import { Donut, DonutLegend, Gauge, type DonutSlice } from "../components/Charts";
 
 type AgentStats = {
@@ -49,33 +49,40 @@ const SEGMENTS: { key: string; label: string; color: string }[] = [
 export default function LearningAgentPage() {
   const [s, setS] = useState<AgentStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<number | null>(null); // HTTP status, 0 = network
   const [cur, setCur] = useState<Curriculum | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
-    const load = () => {
-      api
-        .get("/v1/admin/learning/stats")
-        .then((r) => {
-          if (!alive) return;
-          setS(r.data.data);
-          setError(false);
-        })
-        .catch(() => alive && setError(true))
-        .finally(() => alive && setLoading(false));
-      api
-        .get("/v1/admin/learning/curriculum")
-        .then((r) => alive && setCur(r.data.data))
-        .catch(() => {});
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    const load = async () => {
+      try {
+        const [stats, curriculum] = await Promise.all([
+          api.get("/v1/admin/learning/stats"),
+          api.get("/v1/admin/learning/curriculum"),
+        ]);
+        if (!alive) return;
+        setS(stats.data.data);
+        setCur(curriculum.data.data);
+        setError(null);
+      } catch (e: any) {
+        if (!alive) return;
+        setError(e?.response?.status ?? 0);
+        if (timer) clearInterval(timer);
+      } finally {
+        if (alive) setLoading(false);
+      }
     };
+
     load();
-    const t = setInterval(load, 30000); // light refresh; no heavy animation
+    timer = setInterval(load, 30000); // light refresh; no heavy animation
     return () => {
       alive = false;
-      clearInterval(t);
+      if (timer) clearInterval(timer);
     };
-  }, []);
+  }, [reloadKey]);
 
   const slices: DonutSlice[] = useMemo(
     () =>
@@ -90,12 +97,9 @@ export default function LearningAgentPage() {
 
   if (loading) return <PageLoader />;
 
-  if (error || !s) {
+  if (error !== null || !s) {
     return (
-      <PageMessage>
-        Failed to load agent stats. Is the API running and your account on the
-        admin allowlist?
-      </PageMessage>
+      <AgentError status={error} onRetry={() => setReloadKey((k) => k + 1)} />
     );
   }
 
@@ -274,6 +278,57 @@ export default function LearningAgentPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function AgentError({
+  status,
+  onRetry,
+}: {
+  status: number | null;
+  onRetry: () => void;
+}) {
+  // A 404 means the route isn't mounted at all — almost always COACH_ENABLED
+  // being off, or an API that predates these endpoints.
+  const notFound = status === 404;
+  const forbidden = status === 401 || status === 403;
+
+  return (
+    <div className="dq-card p-12 text-center">
+      <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-gold-tint text-gold">
+        <ExclamationTriangleIcon className="h-6 w-6" strokeWidth={2.1} />
+      </span>
+      <h2 className="mt-4 text-lg font-black text-fg">
+        {notFound
+          ? "Learning Agent isn’t enabled on this API"
+          : forbidden
+            ? "You don’t have access to this dashboard"
+            : "Couldn’t reach the learning engine"}
+      </h2>
+      <p className="mx-auto mt-2 max-w-md text-[13px] font-semibold leading-relaxed text-fg-dimmer">
+        {notFound ? (
+          <>
+            The API returned 404 for{" "}
+            <code className="font-mono text-fg-dim">/admin/learning/stats</code>.
+            Set <code className="font-mono text-fg-dim">COACH_ENABLED=true</code>{" "}
+            and restart the backend.
+          </>
+        ) : forbidden ? (
+          <>Your account needs to be on the admin allowlist.</>
+        ) : (
+          <>
+            {status
+              ? `The API responded with ${status}.`
+              : "The API didn’t respond."}{" "}
+            Auto-refresh is paused.
+          </>
+        )}
+      </p>
+      <button onClick={onRetry} className="dq-btn mx-auto mt-5">
+        <ArrowPathIcon className="h-4 w-4" strokeWidth={2.6} />
+        Try again
+      </button>
     </div>
   );
 }
