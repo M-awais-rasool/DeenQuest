@@ -11,6 +11,7 @@
   "dependencies": {
     "@expo-google-fonts/amiri": "^0.4.1",
     "@expo-google-fonts/nunito": "^0.4.2",
+    "@g9k/expo-dynamic-app-icon": "^2.0.8",
     "@react-native-async-storage/async-storage": "^3.0.2",
     "@react-native/new-app-screen": "^0.80.3",
     "@react-navigation/bottom-tabs": "^7.15.9",
@@ -28,6 +29,7 @@
     "expo-linear-gradient": "^55.0.13",
     "expo-notifications": "~0.32.17",
     "expo-speech": "^55.0.13",
+    "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-three": "^8.0.0",
     "lucide-react-native": "^1.8.0",

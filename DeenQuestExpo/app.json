@@ -4,7 +4,7 @@
     "slug": "deenquestexpo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/logo/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "deenquest",
@@ -16,13 +16,57 @@
         }
       ],
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      [
+        "@g9k/expo-dynamic-app-icon",
+        {
+          "onfire": {
+            "ios": "./assets/logo/logo-1.png",
+            "android": {
+              "foregroundImage": "./assets/logo/logo-1.png",
+              "backgroundColor": "#000000"
+            }
+          },
+          "worried": {
+            "ios": "./assets/logo/logo-2.png",
+            "android": {
+              "foregroundImage": "./assets/logo/logo-2.png",
+              "backgroundColor": "#000000"
+            }
+          },
+          "fading": {
+            "ios": "./assets/logo/logo-3.png",
+            "android": {
+              "foregroundImage": "./assets/logo/logo-3.png",
+              "backgroundColor": "#000000"
+            }
+          },
+          "sleeping": {
+            "ios": "./assets/logo/logo-4.png",
+            "android": {
+              "foregroundImage": "./assets/logo/logo-4.png",
+              "backgroundColor": "#000000"
+            }
+          },
+          "celebrating": {
+            "ios": "./assets/logo/logo-5.png",
+            "android": {
+              "foregroundImage": "./assets/logo/logo-5.png",
+              "backgroundColor": "#000000"
+            }
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo/logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1517"
+        }
+      ]
     ],
-    "splash": {
-      "image": "./assets/logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.awaisrasool.DeenQuestExpo",
@@ -34,14 +78,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/logo/logo.png",
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.awaisrasool.DeenQuestExpo"
     },
     "web": {
-      "favicon": "./assets/logo.png"
+      "favicon": "./assets/logo/logo.png"
     },
     "extra": {
       "eas": {
