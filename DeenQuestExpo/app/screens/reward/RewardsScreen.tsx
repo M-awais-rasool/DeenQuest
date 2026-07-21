@@ -160,7 +160,7 @@ export function RewardsScreen() {
   }, [rewards]);
 
   // grid cell width: screen − 2×22px padding − 2×14px gaps, split 3 ways
-  const cellWidth = (width - 44 - 28) / 3;
+  const cellWidth = (width - 46 - 28) / 3;
 
   const [activeUnlock, setActiveUnlock] = useState<NewlyGrantedReward | null>(null);
   const popAnim = useRef(new Animated.Value(0.75)).current;
@@ -335,7 +335,7 @@ const s = StyleSheet.create({
   },
   cell: {
     alignItems: "center",
-    gap: 8,
+    gap: 5,
     backgroundColor: dq.card,
     borderWidth: 1,
     borderColor: dq.cardBorder,
