@@ -52,6 +52,11 @@ func (s *Service) GetUserProgress(ctx context.Context, userID string) (*Progress
 		weekly[i] = completedDates[d]
 	}
 
+	lastCompleted := ""
+	if !streak.LastCompletedAt.IsZero() {
+		lastCompleted = streak.LastCompletedAt.UTC().Format(time.RFC3339)
+	}
+
 	return &ProgressResponse{
 		XP:                prog.TotalXP,
 		Level:             prog.Level,
@@ -60,6 +65,7 @@ func (s *Service) GetUserProgress(ctx context.Context, userID string) (*Progress
 		LongestStreak:     streak.LongestStreak,
 		Freezes:           streak.Freezes,
 		WeeklyCompletions: weekly,
+		LastCompletedAt:   lastCompleted,
 	}, nil
 }
 

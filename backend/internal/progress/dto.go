@@ -9,6 +9,7 @@ type ProgressResponse struct {
 	LongestStreak     int    `json:"longest_streak"`
 	Freezes           int    `json:"freezes"`            // streak freezes available
 	WeeklyCompletions []bool `json:"weekly_completions"` // index 0 = 6 days ago, index 6 = today
+	LastCompletedAt string `json:"last_completed_at"`
 }
 
 // PublicProgressResponse contains only the fields safe to expose without authentication.

@@ -22,3 +22,10 @@ func RegisterRoutes(public, authed *gin.RouterGroup, h *Handler) {
 	authed.PUT("/users/me/password", h.ChangePassword)
 	authed.DELETE("/users/me", h.DeleteAccount)
 }
+
+//	GET /admin/users?search=&limit=
+//	PUT /admin/users/:id/app-icon
+func RegisterAdminRoutes(admin *gin.RouterGroup, h *AdminHandler) {
+	admin.GET("/users", h.ListUsers)
+	admin.PUT("/users/:id/app-icon", h.SetAppIcon)
+}

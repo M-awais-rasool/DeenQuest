@@ -13,6 +13,7 @@ import (
 	"github.com/chawais/deenquest/backend/internal/progress"
 	"github.com/chawais/deenquest/backend/internal/recitation"
 	"github.com/chawais/deenquest/backend/internal/reward"
+	"github.com/chawais/deenquest/backend/internal/user"
 )
 
 // TestLearningRoutesRegister assembles the learning-feature routes on the same
@@ -39,6 +40,7 @@ func TestLearningRoutesRegister(t *testing.T) {
 	reward.RegisterRoutes(authed, reward.NewHandler(rewardSvc))
 	recitation.RegisterRoutes(authed, recitation.NewHandler(recSvc))
 
+	user.RegisterAdminRoutes(admin, user.NewAdminHandler(user.NewService(nil)))
 	level.RegisterAdminRoutes(admin, level.NewAdminHandler(levelSvc))
 	dailytask.RegisterAdminRoutes(admin, dailytask.NewAdminHandler(taskSvc))
 	reward.RegisterAdminRoutes(admin, reward.NewAdminHandler(rewardSvc))
@@ -58,6 +60,8 @@ func TestLearningRoutesRegister(t *testing.T) {
 		"POST /api/v1/levels/:id/complete",
 		"GET /api/v1/rewards",
 		"POST /api/v1/recitation/check",
+		"GET /api/v1/admin/users",
+		"PUT /api/v1/admin/users/:id/app-icon",
 		"GET /api/v1/admin/registry",
 		"GET /api/v1/admin/analytics",
 		"GET /api/v1/admin/levels",

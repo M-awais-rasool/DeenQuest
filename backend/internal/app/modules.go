@@ -24,9 +24,10 @@ import (
 
 type Modules struct {
 	// auth & user — accounts, login, profiles.
-	AuthService *auth.Service
-	AuthHandler *auth.Handler
-	UserHandler *user.Handler
+	AuthService      *auth.Service
+	AuthHandler      *auth.Handler
+	UserHandler      *user.Handler
+	UserAdminHandler *user.AdminHandler // /admin/users (App Icons page)
 
 	// learning — the gamification currency plus the features that write to it.
 	ProgressHandler    *progress.Handler   // XP, streaks, leaderboard
@@ -140,9 +141,10 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	}
 
 	return &Modules{
-		AuthService: authService,
-		AuthHandler: auth.NewHandler(authService),
-		UserHandler: user.NewHandler(userService),
+		AuthService:      authService,
+		AuthHandler:      auth.NewHandler(authService),
+		UserHandler:      user.NewHandler(userService),
+		UserAdminHandler: user.NewAdminHandler(userService),
 
 		ProgressHandler:    progress.NewHandler(progressService),
 		ProgressService:    progressService,

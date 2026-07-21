@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 	"errors"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -73,6 +75,7 @@ func (r *MongoRepository) Update(ctx context.Context, user *User) error {
 		"bio":           user.Bio,
 		"title":         user.Title,
 		"is_verified":   user.IsVerified,
+		"icon_override": user.IconOverride,
 		"updated_at":    user.UpdatedAt,
 	}})
 	return err
@@ -97,4 +100,50 @@ func (r *MongoRepository) EmailExists(ctx context.Context, email string, exclude
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (r *MongoRepository) ListUsers(ctx context.Context, search string, limit int) ([]User, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{}
+	if search = strings.TrimSpace(search); search != "" {
+		rx := bson.M{"$regex": regexp.QuoteMeta(search), "$options": "i"}
+		filter["$or"] = bson.A{
+			bson.M{"email": rx},
+			bson.M{"display_name": rx},
+		}
+	}
+
+	opts := options.Find().
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetLimit(int64(limit))
+
+	cur, err := r.collection.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	users := make([]User, 0, limit)
+	if err := cur.All(ctx, &users); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (r *MongoRepository) SetIconOverride(ctx context.Context, id, icon string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	res, err := r.collection.UpdateByID(ctx, id, bson.M{"$set": bson.M{
+		"icon_override": icon,
+		"updated_at":    time.Now().UTC(),
+	}})
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+	return nil
 }
