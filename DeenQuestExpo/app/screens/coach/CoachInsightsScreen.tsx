@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Alert,
+  Animated,
+  Easing,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ChevronLeft, Mic } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { AnimatedPressable, TactilePressable } from "../../components/ui";
+import { FadeInView } from "../../components/level/lesson/shared";
 import { theme } from "../../theme/themes";
 import { dq } from "../../theme/designTokens";
 import {
@@ -34,6 +37,39 @@ const SEVERITY_STYLE: Record<
   med: { label: "MED", bg: "#3A2F16", fg: "#EFB65A" },
   low: { label: "LOW", bg: "#123B34", fg: "#5EE0CE" },
 };
+
+function AnimatedBar({
+  heightPct,
+  delay,
+  children,
+}: {
+  heightPct: number;
+  delay: number;
+  children: React.ReactNode;
+}) {
+  const grow = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(grow, {
+      toValue: 1,
+      duration: 460,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [grow, delay]);
+  return (
+    <Animated.View
+      style={{
+        width: "100%",
+        height: `${heightPct}%`,
+        transformOrigin: "bottom",
+        transform: [{ scaleY: grow }],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
 
 function InsightCard({
   insight,
@@ -173,7 +209,7 @@ export function CoachInsightsScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {/* accuracy trend */}
-        <View style={s.trendCard}>
+        <FadeInView delay={60} style={s.trendCard}>
           <View style={s.trendHeader}>
             <Text style={s.trendTitle}>Accuracy this week</Text>
             <Text
@@ -189,24 +225,29 @@ export function CoachInsightsScreen({ navigation }: Props) {
               const noData = v < 0;
               const isBest = !noData && v === Math.max(...coach.weekAccuracy);
               const strong = !noData && v >= 0.65;
+              const barDelay = 160 + i * 55;
               return (
                 <View key={i} style={s.chartCol}>
-                  {noData ? (
-                    <View style={[s.bar, s.barNoData, { height: "20%" }]} />
-                  ) : isBest ? (
-                    <LinearGradient
-                      colors={["#5EE0CE", "#2CC9B5"]}
-                      style={[s.bar, { height: `${Math.round(v * 100)}%` }]}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        s.bar,
-                        { height: `${Math.round(v * 100)}%` },
-                        { backgroundColor: strong ? "#2CC9B5" : "#1E4A44" },
-                      ]}
-                    />
-                  )}
+                  <AnimatedBar
+                    heightPct={noData ? 20 : Math.round(v * 100)}
+                    delay={barDelay}
+                  >
+                    {noData ? (
+                      <View style={[s.barFill, s.barNoData]} />
+                    ) : isBest ? (
+                      <LinearGradient
+                        colors={["#5EE0CE", "#2CC9B5"]}
+                        style={s.barFill}
+                      />
+                    ) : (
+                      <View
+                        style={[
+                          s.barFill,
+                          { backgroundColor: strong ? "#2CC9B5" : "#1E4A44" },
+                        ]}
+                      />
+                    )}
+                  </AnimatedBar>
                   <Text style={[s.chartLabel, isBest && { color: dq.text }]}>
                     {WEEK_LETTERS[i]}
                   </Text>
@@ -214,40 +255,43 @@ export function CoachInsightsScreen({ navigation }: Props) {
               );
             })}
           </View>
-        </View>
+        </FadeInView>
 
         {/* things to fix */}
-        <View style={s.fixHeader}>
+        <FadeInView delay={220} style={s.fixHeader}>
           <Text style={s.fixTitle}>Things to fix</Text>
           <Text style={s.fixCount}>
             {coach.insights.length} patterns found
           </Text>
-        </View>
+        </FadeInView>
         <View style={s.insightList}>
-          {coach.insights.map((insight) => (
-            <InsightCard
-              key={insight.id}
-              insight={insight}
-              onPractice={() => startPractice(insight)}
-            />
+          {coach.insights.map((insight, i) => (
+            <FadeInView key={insight.id} delay={300 + i * 110}>
+              <InsightCard
+                insight={insight}
+                onPractice={() => startPractice(insight)}
+              />
+            </FadeInView>
           ))}
         </View>
 
         {hasWin && (
-          <LinearGradient
-            colors={["#26301C", "#16272B"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0.7, y: 1 }}
-            style={s.winCard}
-          >
-            <Text style={s.winStar}>✦</Text>
-            <Text style={s.winText}>
-              Your <Text style={s.winBold}>{coach.win.bold}</Text>
-              {coach.win.middle}
-              <Text style={s.winAccent}>{coach.win.boldAccent}</Text>
-              {coach.win.tail}
-            </Text>
-          </LinearGradient>
+          <FadeInView delay={300 + coach.insights.length * 110 + 120}>
+            <LinearGradient
+              colors={["#26301C", "#16272B"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0.7, y: 1 }}
+              style={s.winCard}
+            >
+              <Text style={s.winStar}>✦</Text>
+              <Text style={s.winText}>
+                Your <Text style={s.winBold}>{coach.win.bold}</Text>
+                {coach.win.middle}
+                <Text style={s.winAccent}>{coach.win.boldAccent}</Text>
+                {coach.win.tail}
+              </Text>
+            </LinearGradient>
+          </FadeInView>
         )}
       </ScrollView>
     </ScreenWrapper>
@@ -330,8 +374,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-  bar: {
+  // fill inside AnimatedBar — takes the column's full animated height
+  barFill: {
     width: "100%",
+    height: "100%",
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     borderBottomLeftRadius: 4,

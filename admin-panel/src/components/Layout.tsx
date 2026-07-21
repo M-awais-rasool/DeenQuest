@@ -13,6 +13,7 @@ import {
   ChevronDoubleLeftIcon,
   MagnifyingGlassIcon,
   CpuChipIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { type ReactNode, useState } from "react";
 
@@ -25,6 +26,7 @@ const navGroups: {
     items: [
       { label: "Dashboard", path: "/", icon: HomeIcon },
       { label: "Learning Agent", path: "/learning-agent", icon: CpuChipIcon },
+      { label: "App Icons", path: "/app-icons", icon: SparklesIcon },
     ],
   },
   {

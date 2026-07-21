@@ -11,6 +11,7 @@ import EventsPage from "./pages/EventsPage";
 import AuditLogPage from "./pages/AuditLogPage";
 import SettingsPage from "./pages/SettingsPage";
 import LearningAgentPage from "./pages/LearningAgentPage";
+import AppIconsPage from "./pages/AppIconsPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -66,6 +67,7 @@ export default function App() {
                   element={<ContentEditorPage kind="level" />}
                 />
                 <Route path="/learning-agent" element={<LearningAgentPage />} />
+                <Route path="/app-icons" element={<AppIconsPage />} />
                 <Route path="/themes" element={<ThemesPage />} />
                 <Route path="/rewards" element={<RewardsPage />} />
                 <Route path="/events" element={<EventsPage />} />
