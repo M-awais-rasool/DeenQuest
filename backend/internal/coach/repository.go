@@ -27,6 +27,8 @@ type Repository interface {
 	GetInsight(ctx context.Context, userID, insightID string) (*Insight, error)
 	MarkInsightDone(ctx context.Context, userID, insightID string) error
 
+	ClearConfusionPair(ctx context.Context, userID, a, b string) error
+
 	// EachSkillState streams every user's state for the nightly sweep.
 	EachSkillState(ctx context.Context, fn func(*UserSkillState) error) error
 

@@ -175,29 +175,48 @@ func ConfusionCount(days map[string]int, now time.Time) int {
 	return total
 }
 
-// TopConfusions returns pairs with their 7-day counts, highest first.
 type ConfusionPair struct {
-	Expected string
-	Chosen   string
-	Count    int
+	A     string
+	B     string
+	Count int
+}
+
+func CanonicalPair(x, y string) (string, string) {
+	ix, okX := letterIndex[x]
+	iy, okY := letterIndex[y]
+	if okX && okY {
+		if ix <= iy {
+			return x, y
+		}
+		return y, x
+	}
+	if x <= y {
+		return x, y
+	}
+	return y, x
 }
 
 func TopConfusions(state *UserSkillState, now time.Time) []ConfusionPair {
-	out := make([]ConfusionPair, 0, len(state.Confusions))
+	merged := map[[2]string]int{}
 	for pair, days := range state.Confusions {
 		parts := strings.SplitN(pair, "→", 2)
 		if len(parts) != 2 {
 			continue
 		}
 		if n := ConfusionCount(days, now); n > 0 {
-			out = append(out, ConfusionPair{Expected: parts[0], Chosen: parts[1], Count: n})
+			a, b := CanonicalPair(parts[0], parts[1])
+			merged[[2]string{a, b}] += n
 		}
+	}
+	out := make([]ConfusionPair, 0, len(merged))
+	for key, n := range merged {
+		out = append(out, ConfusionPair{A: key[0], B: key[1], Count: n})
 	}
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Count != out[j].Count {
 			return out[i].Count > out[j].Count
 		}
-		return out[i].Expected+out[i].Chosen < out[j].Expected+out[j].Chosen // stable order
+		return out[i].A+out[i].B < out[j].A+out[j].B // stable order
 	})
 	return out
 }

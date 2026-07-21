@@ -60,20 +60,19 @@ func newInsight(state *UserSkillState, rule, severity string, skills []string, c
 	}
 }
 
-// confusion_pair: confusions[A→B] ≥ 3 in 7 days ⇒ HIGH + practice CTA.
+// confusion_pair: A↔B confusions ≥ 3 in 7 days (both directions merged)
 func ruleConfusionPairs(state *UserSkillState, now time.Time) []Insight {
 	var out []Insight
 	for _, p := range TopConfusions(state, now) {
 		if p.Count < confusionMinCount {
 			continue
 		}
-		// Practice drills both directions; skills ordered [expected, chosen].
-		skills := []string{p.Expected, p.Chosen}
+		skills := []string{p.A, p.B} // canonical order; practice drills both directions
 		ins := newInsight(state, RuleConfusionPair, SeverityHigh, skills, p.Count, now)
-		ins.Title = fmt.Sprintf("Mixing up %s & %s", LatinName(p.Expected), LatinName(p.Chosen))
+		ins.Title = fmt.Sprintf("Mixing up %s & %s", LatinName(p.A), LatinName(p.B))
 		ins.Detail = fmt.Sprintf("%d mistakes this week", p.Count)
-		ins.Why = confusionWhy(p.Expected, p.Chosen)
-		ins.PracticeLevelID = PairPracticeID(p.Expected, p.Chosen)
+		ins.Why = confusionWhy(p.A, p.B)
+		ins.PracticeLevelID = PairPracticeID(p.A, p.B)
 		ins.PracticeMinutes = 2
 		out = append(out, ins)
 	}

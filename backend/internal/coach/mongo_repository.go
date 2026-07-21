@@ -201,6 +201,19 @@ func (r *MongoRepository) MarkInsightDone(ctx context.Context, userID, insightID
 	return nil
 }
 
+func (r *MongoRepository) ClearConfusionPair(ctx context.Context, userID, a, b string) error {
+	_, err := r.skillStates.UpdateOne(ctx,
+		bson.M{"_id": userID},
+		bson.M{"$unset": bson.M{
+			"confusions." + a + "→" + b: "",
+			"confusions." + b + "→" + a: "",
+		}})
+	if err != nil {
+		return fmt.Errorf("clear confusion pair: %w", err)
+	}
+	return nil
+}
+
 func (r *MongoRepository) EachSkillState(ctx context.Context, fn func(*UserSkillState) error) error {
 	cur, err := r.skillStates.Find(ctx, bson.M{})
 	if err != nil {

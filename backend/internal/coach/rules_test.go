@@ -30,8 +30,8 @@ func TestConfusionRuleFiresAtThreshold(t *testing.T) {
 	if ins.Count != 3 {
 		t.Errorf("count = %d, want 3", ins.Count)
 	}
-	if ins.PracticeLevelID != PairPracticeID("ث", "ت") {
-		t.Errorf("practice level id = %d, want %d", ins.PracticeLevelID, PairPracticeID("ث", "ت"))
+	if ins.PracticeLevelID != PairPracticeID("ت", "ث") {
+		t.Errorf("practice level id = %d, want %d (canonical pair)", ins.PracticeLevelID, PairPracticeID("ت", "ث"))
 	}
 	if !strings.Contains(ins.Title, "Tha") || !strings.Contains(ins.Title, "Ta") {
 		t.Errorf("title should name both letters, got %q", ins.Title)
@@ -126,6 +126,34 @@ func TestRankingAndCap(t *testing.T) {
 	}
 	if insights[0].Severity != SeverityHigh {
 		t.Errorf("first insight severity = %s, want high (ranked first)", insights[0].Severity)
+	}
+}
+
+func TestConfusionDirectionsMergeIntoOneInsight(t *testing.T) {
+	state := NewUserSkillState("u1")
+	ApplyEvent(state, confusionEvent("ص", "ض", testNow), testNow)
+	ApplyEvent(state, confusionEvent("ص", "ض", testNow), testNow)
+	ApplyEvent(state, confusionEvent("ض", "ص", testNow), testNow)
+	ApplyEvent(state, confusionEvent("ض", "ص", testNow), testNow)
+
+	insights := EvaluateRules(state, testNow)
+	if len(insights) != 1 {
+		t.Fatalf("both directions must merge into 1 insight, got %d: %+v", len(insights), insights)
+	}
+	ins := insights[0]
+	if ins.Count != 4 {
+		t.Errorf("merged count = %d, want 4 (2 + 2 across directions)", ins.Count)
+	}
+	if ins.Skills[0] != "ص" || ins.Skills[1] != "ض" {
+		t.Errorf("skills = %v, want canonical [ص ض]", ins.Skills)
+	}
+	// Same id regardless of which direction is evaluated.
+	reversed := NewUserSkillState("u1")
+	for i := 0; i < 3; i++ {
+		ApplyEvent(reversed, confusionEvent("ض", "ص", testNow), testNow)
+	}
+	if got := EvaluateRules(reversed, testNow)[0].ID; got != ins.ID {
+		t.Errorf("reversed-direction id %q != %q", got, ins.ID)
 	}
 }
 

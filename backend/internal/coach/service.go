@@ -282,6 +282,15 @@ func (s *Service) CompletePractice(ctx context.Context, userID, insightID string
 	if err := s.repo.MarkInsightDone(ctx, userID, insightID); err != nil {
 		return 0, err
 	}
+
+	if ins.Rule == RuleConfusionPair && len(ins.Skills) == 2 {
+		if err := s.repo.ClearConfusionPair(ctx, userID, ins.Skills[0], ins.Skills[1]); err != nil {
+			logger.Warn("coach: clearing confusion counters failed", zap.Error(err))
+		} else if err := s.EvaluateUser(ctx, userID); err != nil {
+			logger.Warn("coach: post-practice re-evaluation failed", zap.Error(err))
+		}
+	}
+
 	xp := 0
 	if s.progress != nil {
 		if _, err := s.progress.Award(ctx, userID, PracticeXP, 0); err != nil {

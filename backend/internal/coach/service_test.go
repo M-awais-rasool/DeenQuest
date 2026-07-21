@@ -45,16 +45,42 @@ func (f *fakeRepo) StoreEvents(_ context.Context, events []StoredEvent) error {
 	return nil
 }
 
+func cloneState(s *UserSkillState) *UserSkillState {
+	if s == nil {
+		return nil
+	}
+	cp := *s
+	cp.Skills = make(map[string]*SkillStat, len(s.Skills))
+	for k, v := range s.Skills {
+		vv := *v
+		cp.Skills[k] = &vv
+	}
+	cp.Confusions = make(map[string]map[string]int, len(s.Confusions))
+	for k, days := range s.Confusions {
+		dd := make(map[string]int, len(days))
+		for d, n := range days {
+			dd[d] = n
+		}
+		cp.Confusions[k] = dd
+	}
+	cp.Days = make(map[string]*DayStat, len(s.Days))
+	for k, v := range s.Days {
+		vv := *v
+		cp.Days[k] = &vv
+	}
+	return &cp
+}
+
 func (f *fakeRepo) GetSkillState(_ context.Context, userID string) (*UserSkillState, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	return f.states[userID], nil
+	return cloneState(f.states[userID]), nil
 }
 
 func (f *fakeRepo) SaveSkillState(_ context.Context, state *UserSkillState) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.states[state.UserID] = state
+	f.states[state.UserID] = cloneState(state)
 	return nil
 }
 
@@ -119,11 +145,21 @@ func (f *fakeRepo) MarkInsightDone(_ context.Context, userID, insightID string) 
 	return nil
 }
 
+func (f *fakeRepo) ClearConfusionPair(_ context.Context, userID, a, b string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if st := f.states[userID]; st != nil {
+		delete(st.Confusions, a+"→"+b)
+		delete(st.Confusions, b+"→"+a)
+	}
+	return nil
+}
+
 func (f *fakeRepo) EachSkillState(_ context.Context, fn func(*UserSkillState) error) error {
 	f.mu.Lock()
 	states := make([]*UserSkillState, 0, len(f.states))
 	for _, s := range f.states {
-		states = append(states, s)
+		states = append(states, cloneState(s))
 	}
 	f.mu.Unlock()
 	for _, s := range states {
@@ -231,8 +267,9 @@ func TestThreeMistakesProduceInsight(t *testing.T) {
 	if ins.Severity != SeverityHigh || ins.PracticeLevelID == 0 {
 		t.Errorf("expected a high-severity insight with practice, got %+v", ins)
 	}
-	if state.Message.ArabicA != "ث" || state.Message.ArabicB != "ت" {
-		t.Errorf("home message letters = %q/%q, want ث/ت", state.Message.ArabicA, state.Message.ArabicB)
+	// Pair is canonical (alphabet order): ت before ث regardless of direction.
+	if state.Message.ArabicA != "ت" || state.Message.ArabicB != "ث" {
+		t.Errorf("home message letters = %q/%q, want ت/ث", state.Message.ArabicA, state.Message.ArabicB)
 	}
 	if state.SuggestedMission.LevelID != ins.PracticeLevelID {
 		t.Errorf("mission level %d != insight practice level %d", state.SuggestedMission.LevelID, ins.PracticeLevelID)
@@ -263,13 +300,13 @@ func TestPracticeFlowAwardsXPOnce(t *testing.T) {
 	_, _ = svc.Ingest(ctx, "u1", "b1", events)
 	_ = svc.EvaluateUser(ctx, "u1")
 
-	insightID := InsightID("u1", RuleConfusionPair, []string{"ث", "ت"})
+	insightID := InsightID("u1", RuleConfusionPair, []string{"ت", "ث"})
 
 	lvl, err := svc.Practice(ctx, "u1", insightID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if lvl.ID != PairPracticeID("ث", "ت") || len(lvl.Lessons) != 4 {
+	if lvl.ID != PairPracticeID("ت", "ث") || len(lvl.Lessons) != 4 {
 		t.Errorf("practice level = id %d with %d lessons", lvl.ID, len(lvl.Lessons))
 	}
 
@@ -296,6 +333,46 @@ func TestPracticeUnknownInsight(t *testing.T) {
 	svc := newTestService(newFakeRepo(), nil)
 	if _, err := svc.Practice(context.Background(), "u1", "missing"); err != ErrInsightNotFound {
 		t.Errorf("err = %v, want ErrInsightNotFound", err)
+	}
+}
+
+func TestCompletePracticeStaysDoneAcrossReEvaluation(t *testing.T) {
+	repo := newFakeRepo()
+	svc := newTestService(repo, &fakeAwarder{})
+	ctx := context.Background()
+
+	var events []TelemetryEvent
+	for i := 0; i < 3; i++ {
+		events = append(events, confusionEvent("ص", "ض", testNow))
+	}
+	_, _ = svc.Ingest(ctx, "u1", "b1", events)
+	_ = svc.EvaluateUser(ctx, "u1")
+
+	insightID := InsightID("u1", RuleConfusionPair, []string{"ص", "ض"})
+	if _, err := svc.CompletePractice(ctx, "u1", insightID); err != nil {
+		t.Fatal(err)
+	}
+
+	// The practice's telemetry lands afterwards (all-correct answers) and
+	// triggers another evaluation — the insight must stay gone.
+	correct := answerEvent("ص", true, testNow)
+	_, _ = svc.Ingest(ctx, "u1", "b2", []TelemetryEvent{correct})
+	_ = svc.EvaluateUser(ctx, "u1")
+	active, _ := repo.ActiveInsights(ctx, "u1", testNow)
+	if len(active) != 0 {
+		t.Fatalf("insight resurrected after clean practice: %+v", active)
+	}
+
+	// Three FRESH confusions bring it back (updated, single tile).
+	var fresh []TelemetryEvent
+	for i := 0; i < 3; i++ {
+		fresh = append(fresh, confusionEvent("ض", "ص", testNow))
+	}
+	_, _ = svc.Ingest(ctx, "u1", "b3", fresh)
+	_ = svc.EvaluateUser(ctx, "u1")
+	active, _ = repo.ActiveInsights(ctx, "u1", testNow)
+	if len(active) != 1 || active[0].ID != insightID {
+		t.Fatalf("fresh mistakes should reactivate the same single insight, got %+v", active)
 	}
 }
 
