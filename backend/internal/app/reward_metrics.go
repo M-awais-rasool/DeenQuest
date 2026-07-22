@@ -5,28 +5,28 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/chawais/deenquest/backend/internal/level"
-	"github.com/chawais/deenquest/backend/internal/progress"
-	"github.com/chawais/deenquest/backend/internal/reward"
+	levelapp "github.com/chawais/deenquest/backend/internal/level/application"
+	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
+	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
 )
 
 type rewardMetrics struct {
-	level    *level.Service
-	progress *progress.Service
+	level    *levelapp.Service
+	progress *progressapp.Service
 }
 
-func (m rewardMetrics) Metrics(ctx context.Context, userID string) (reward.Metrics, error) {
+func (m rewardMetrics) Metrics(ctx context.Context, userID string) (rewardapp.Metrics, error) {
 	var (
 		completed int
-		pub       *progress.PublicProgressResponse
+		pub       *progressapp.PublicProgressResponse
 	)
 	g, gctx := errgroup.WithContext(ctx)
 	g.Go(func() (err error) { completed, err = m.level.CompletedLevelCount(gctx, userID); return })
 	g.Go(func() (err error) { pub, err = m.progress.GetPublicProgress(gctx, userID); return })
 	if err := g.Wait(); err != nil {
-		return reward.Metrics{}, err
+		return rewardapp.Metrics{}, err
 	}
-	return reward.Metrics{
+	return rewardapp.Metrics{
 		CompletedLevels: completed,
 		XP:              pub.XP,
 		StreakDays:      pub.CurrentStreak,

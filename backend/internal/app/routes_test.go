@@ -5,15 +5,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/chawais/deenquest/backend/internal/analytics"
-	"github.com/chawais/deenquest/backend/internal/coach"
-	"github.com/chawais/deenquest/backend/internal/content"
-	"github.com/chawais/deenquest/backend/internal/dailytask"
-	"github.com/chawais/deenquest/backend/internal/level"
-	"github.com/chawais/deenquest/backend/internal/progress"
-	"github.com/chawais/deenquest/backend/internal/recitation"
-	"github.com/chawais/deenquest/backend/internal/reward"
-	"github.com/chawais/deenquest/backend/internal/user"
+	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
+	coachapp "github.com/chawais/deenquest/backend/internal/coach/application"
+	coachhttp "github.com/chawais/deenquest/backend/internal/coach/interfaces/http"
+	contenthttp "github.com/chawais/deenquest/backend/internal/content/interfaces/http"
+	dailytaskapp "github.com/chawais/deenquest/backend/internal/dailytask/application"
+	dailytaskhttp "github.com/chawais/deenquest/backend/internal/dailytask/interfaces/http"
+	levelapp "github.com/chawais/deenquest/backend/internal/level/application"
+	levelhttp "github.com/chawais/deenquest/backend/internal/level/interfaces/http"
+	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
+	progresshttp "github.com/chawais/deenquest/backend/internal/progress/interfaces/http"
+	recitationapp "github.com/chawais/deenquest/backend/internal/recitation/application"
+	recitationhttp "github.com/chawais/deenquest/backend/internal/recitation/interfaces/http"
+	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
+	rewardhttp "github.com/chawais/deenquest/backend/internal/reward/interfaces/http"
+	userapp "github.com/chawais/deenquest/backend/internal/user/application"
+	userhttp "github.com/chawais/deenquest/backend/internal/user/interfaces/http"
 )
 
 // TestLearningRoutesRegister assembles the learning-feature routes on the same
@@ -28,25 +35,25 @@ func TestLearningRoutesRegister(t *testing.T) {
 	authed := v1.Group("")
 	admin := v1.Group("/admin")
 
-	progressSvc := progress.NewService(nil)
-	rewardSvc := reward.NewService(nil)
-	levelSvc := level.NewService(nil, progressSvc, rewardSvc)
-	taskSvc := dailytask.NewService(nil, progressSvc)
-	recSvc := recitation.NewService(nil, "", levelSvc, progressSvc)
+	progressSvc := progressapp.NewService(nil)
+	rewardSvc := rewardapp.NewService(nil)
+	levelSvc := levelapp.NewService(nil, progressSvc, rewardSvc)
+	taskSvc := dailytaskapp.NewService(nil, progressSvc)
+	recSvc := recitationapp.NewService(nil, "", levelSvc, progressSvc)
 
-	progress.RegisterRoutes(v1, authed, progress.NewHandler(progressSvc))
-	level.RegisterRoutes(authed, level.NewHandler(levelSvc))
-	dailytask.RegisterRoutes(authed, dailytask.NewHandler(taskSvc))
-	reward.RegisterRoutes(authed, reward.NewHandler(rewardSvc))
-	recitation.RegisterRoutes(authed, recitation.NewHandler(recSvc))
+	progresshttp.RegisterRoutes(v1, authed, progresshttp.NewHandler(progressSvc))
+	levelhttp.RegisterRoutes(authed, levelhttp.NewHandler(levelSvc))
+	dailytaskhttp.RegisterRoutes(authed, dailytaskhttp.NewHandler(taskSvc))
+	rewardhttp.RegisterRoutes(authed, rewardhttp.NewHandler(rewardSvc))
+	recitationhttp.RegisterRoutes(authed, recitationhttp.NewHandler(recSvc))
 
-	user.RegisterAdminRoutes(admin, user.NewAdminHandler(user.NewService(nil)))
-	level.RegisterAdminRoutes(admin, level.NewAdminHandler(levelSvc))
-	dailytask.RegisterAdminRoutes(admin, dailytask.NewAdminHandler(taskSvc))
-	reward.RegisterAdminRoutes(admin, reward.NewAdminHandler(rewardSvc))
-	content.RegisterAdminRoutes(admin, content.NewHandler())
-	analytics.RegisterAdminRoutes(admin, analytics.NewHandler(nil))
-	coach.RegisterAdminRoutes(admin, coach.NewAdminHandler(coach.NewAdminService(nil)))
+	userhttp.RegisterAdminRoutes(admin, userhttp.NewAdminHandler(userapp.NewService(nil)))
+	levelhttp.RegisterAdminRoutes(admin, levelhttp.NewAdminHandler(levelSvc))
+	dailytaskhttp.RegisterAdminRoutes(admin, dailytaskhttp.NewAdminHandler(taskSvc))
+	rewardhttp.RegisterAdminRoutes(admin, rewardhttp.NewAdminHandler(rewardSvc))
+	contenthttp.RegisterAdminRoutes(admin, contenthttp.NewHandler())
+	analyticshttp.RegisterAdminRoutes(admin, analyticshttp.NewHandler(nil))
+	coachhttp.RegisterAdminRoutes(admin, coachhttp.NewAdminHandler(coachapp.NewAdminService(nil)))
 
 	want := []string{
 		"GET /api/v1/progress/user/:id",

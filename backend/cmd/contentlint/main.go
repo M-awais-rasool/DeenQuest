@@ -10,15 +10,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/chawais/deenquest/backend/internal/content"
-	"github.com/chawais/deenquest/backend/internal/level"
+	contentdomain "github.com/chawais/deenquest/backend/internal/content/domain"
+	leveldomain "github.com/chawais/deenquest/backend/internal/level/domain"
 )
 
 func main() {
-	levels := level.SeedLevels()
-	chunks := level.SeedContentChunks()
+	levels := leveldomain.SeedLevels()
+	chunks := leveldomain.SeedContentChunks()
 
-	issues := content.LintLevels(levels)
+	issues := contentdomain.LintLevels(levels)
 	if len(issues) > 0 {
 		fmt.Fprintf(os.Stderr, "content lint: %d issue(s)\n", len(issues))
 		for _, issue := range issues {
@@ -30,12 +30,12 @@ func main() {
 	qaida, practice := 0, 0
 	for _, l := range levels {
 		switch l.CourseType {
-		case level.CourseQaida:
+		case leveldomain.CourseQaida:
 			qaida++
-		case level.CoursePractice:
+		case leveldomain.CoursePractice:
 			practice++
 		}
 	}
 	fmt.Printf("content lint: clean ✓ (%d chunks · %d qaida levels · %d practice drills · seed v%d)\n",
-		len(chunks), qaida, practice, level.SeedDataVersion)
+		len(chunks), qaida, practice, leveldomain.SeedDataVersion)
 }

@@ -1,0 +1,168 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "qaida",
+  "section": 4,
+  "section_title": "Reading Words",
+  "levels": [
+    {
+      "id": 31,
+      "title": "Letters Change Shape",
+      "theme": "Letter Forms",
+      "goal": "See how ب changes at the start, middle and end",
+      "xp_reward": 65,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Ba in Four Forms", "description": "Same letter, four outfits", "screen_type": "ACTION", "component": "LetterFormsComponent", "skill_tags": ["ب"], "data": { "letter": "ب", "forms": { "isolated": "ب", "initial": "بـ", "medial": "ـبـ", "final": "ـب" } } },
+        { "type": "qaida", "title": "Meem in Four Forms", "description": "Watch Meem change its shape", "screen_type": "ACTION", "component": "LetterFormsComponent", "skill_tags": ["م"], "data": { "letter": "م", "forms": { "isolated": "م", "initial": "مـ", "medial": "ـمـ", "final": "ـم" } } },
+        { "type": "quiz", "title": "Same Letter?", "description": "True or false — is it the same letter?", "screen_type": "QUIZ", "component": "TrueFalseComponent", "skill_tags": ["ب", "م"], "data": { "rounds": [ { "prompt": "This is Ba at the start of a word", "arabic": "بـ", "answer": true }, { "prompt": "This is Meem at the end of a word", "arabic": "ـم", "answer": true }, { "prompt": "This is Ba in the middle of a word", "arabic": "ـمـ", "answer": false } ] } },
+        { "type": "quiz", "title": "Pick the Form", "description": "Choose the right shape", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["ب"], "data": { "questions": [ { "question": "Tap Ba as it looks at the START of a word", "options": ["ب", "بـ", "ـب"], "correct": 1 }, { "question": "Tap Ba as it looks at the END of a word", "options": ["ـب", "بـ", "ب"], "correct": 0 } ] } }
+      ],
+      "mini_game": { "type": "tap_match", "description": "Match each form to its position", "skill_tags": ["ب"], "data": { "pairs": [ { "left": "بـ", "right": "بِدَايَة" }, { "left": "ـبـ", "right": "وَسَط" }, { "left": "ـب", "right": "نِهَايَة" } ] } }
+    },
+    {
+      "id": 32,
+      "title": "Joining Two Letters",
+      "theme": "Joining Letters",
+      "goal": "Connect two letters into one flowing shape",
+      "xp_reward": 65,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Watch Them Join", "description": "بَ + بَ = بَبَ — tap to hear", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["وَصْل"], "data": { "items": [ { "arabic": "لَبَ" }, { "arabic": "سَمَ" }, { "arabic": "نَحَ" } ] } },
+        { "type": "quiz", "title": "Find the Join", "description": "Which two letters made this?", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["وَصْل"], "data": { "questions": [ { "question": "Which letters join to make لَبَ?", "options": ["ل + ب", "ك + ب", "ل + ت"], "correct": 0 }, { "question": "Which letters join to make سَمَ?", "options": ["ش + م", "س + م", "س + ن"], "correct": 1 } ] } },
+        { "type": "qaida", "title": "Build the Join", "description": "Connect the letters yourself", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["وَصْل"], "data": { "instruction": "Join the sounds to read 'nama'", "parts": ["نَ", "مَ"], "distractors": ["تَ"], "meaning": "na · ma" } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the joined pair", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["وَصْل"], "data": { "audio": "سَمَ", "options": ["سَمَ", "لَبَ", "نَحَ"], "correct": 0 } }
+      ],
+      "mini_game": { "type": "drag_drop", "description": "Join the letters into pairs", "skill_tags": ["وَصْل"], "data": { "rounds": [ { "parts": ["لَ", "بَ"], "word": "لَبَ", "meaning": "la · ba" }, { "parts": ["نَ", "حَ"], "word": "نَحَ", "meaning": "na · ha" } ] } }
+    },
+    {
+      "id": 33,
+      "title": "Joining Three Letters",
+      "theme": "Joining Letters",
+      "goal": "Read full three-letter joined words",
+      "xp_reward": 70,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Three in a Row", "description": "Whole words, smoothly joined", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["وَصْل", "كَلِمَة"], "data": { "items": [ { "arabic": "جَلَسَ" }, { "arabic": "نَصَرَ" }, { "arabic": "سَمِعَ" } ] } },
+        { "type": "quiz", "title": "Read and Find", "description": "Choose the word you read", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["كَلِمَة"], "data": { "questions": [ { "question": "Tap the word 'jalasa' — he sat", "options": ["جَلَسَ", "نَصَرَ", "سَمِعَ"], "correct": 0 }, { "question": "Tap the word 'sami'a' — he heard", "options": ["نَصَرَ", "سَمِعَ", "جَلَسَ"], "correct": 1 } ] } },
+        { "type": "qaida", "title": "Build the Word", "description": "Join three letters into a word", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["كَلِمَة"], "data": { "instruction": "Build the word 'nasara' — he helped", "parts": ["نَ", "صَ", "رَ"], "distractors": ["سَ"], "meaning": "nasara — he helped" } },
+        { "type": "quiz", "title": "Complete the Word", "description": "Fill in the missing letter", "screen_type": "QUIZ", "component": "FillBlankComponent", "skill_tags": ["كَلِمَة"], "data": { "instruction": "Complete the word 'jalasa'", "sentence": [ { "text": "جَ" }, { "blank": true, "answer": "لَ" }, { "text": "سَ" } ], "bank": ["لَ", "نَ", "بَ"], "meaning": "jalasa — he sat" } }
+      ],
+      "mini_game": { "type": "drag_drop", "description": "Build each three-letter word", "skill_tags": ["كَلِمَة"], "data": { "rounds": [ { "parts": ["جَ", "لَ", "سَ"], "word": "جَلَسَ", "meaning": "he sat" }, { "parts": ["سَ", "مِ", "عَ"], "word": "سَمِعَ", "meaning": "he heard" } ] } }
+    },
+    {
+      "id": 34,
+      "title": "Tanween",
+      "theme": "Harakat",
+      "goal": "Double marks at the end — an, in, un",
+      "xp_reward": 70,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Meet Tanween", "description": "Two fathas, two kasras, two dammas", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["تَنْوِين"], "data": { "letters": [ { "letter": "بًا", "name": "بًا" }, { "letter": "بٍ", "name": "بٍ" }, { "letter": "بٌ", "name": "بٌ" } ] } },
+        { "type": "pronunciation", "title": "Say the Endings", "description": "Tap each tanween to hear it", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["تَنْوِين"], "data": { "items": [ { "arabic": "كِتَابًا" }, { "arabic": "بَيْتٍ" }, { "arabic": "نُورٌ" } ] } },
+        { "type": "qaida", "title": "Sort the Tanween", "description": "An, in or un?", "screen_type": "ACTION", "component": "SortBucketsComponent", "skill_tags": ["تَنْوِين"], "data": { "instruction": "Sort each word by its tanween ending", "buckets": ["ـًا", "ـٍ", "ـٌ"], "items": [ { "text": "كِتَابًا", "bucket": 0 }, { "text": "بَيْتٍ", "bucket": 1 }, { "text": "نُورٌ", "bucket": 2 }, { "text": "قَلَمٌ", "bucket": 2 } ] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the ending you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["تَنْوِين"], "data": { "audio": "نُورٌ", "options": ["نُورًا", "نُورٍ", "نُورٌ"], "correct": 2 } }
+      ],
+      "mini_game": { "type": "listen_choose", "description": "Hear each tanween ending", "skill_tags": ["تَنْوِين"], "data": { "questions": [ { "audio": "كِتَابًا", "options": ["كِتَابًا", "كِتَابٍ", "كِتَابٌ"], "correct": 0 }, { "audio": "بَيْتٍ", "options": ["بَيْتًا", "بَيْتٍ", "بَيْتٌ"], "correct": 1 } ] } }
+    },
+    {
+      "id": 35,
+      "title": "Review: Word Workshop",
+      "theme": "Review & Treasure",
+      "goal": "Forms, joins and tanween together — treasure awaits",
+      "xp_reward": 70,
+      "unlock_reward": "treasure:words",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "revision", "title": "Form Match", "description": "Match forms to their positions", "screen_type": "ACTION", "component": "MatchPairsComponent", "skill_tags": ["ب", "م"], "data": { "instruction": "Match each form to its position", "pairs": [ { "left": "مـ", "right": "بِدَايَة" }, { "left": "ـمـ", "right": "وَسَط" }, { "left": "ـم", "right": "نِهَايَة" } ] } },
+        { "type": "revision", "title": "Word Builder", "description": "Build the words you've learned", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["كَلِمَة"], "data": { "instruction": "Build the word 'sami'a' — he heard", "parts": ["سَ", "مِ", "عَ"], "distractors": ["شَ"], "meaning": "sami'a — he heard" } },
+        { "type": "revision", "title": "Lightning Words", "description": "Fast rounds — read and tap", "screen_type": "QUIZ", "component": "LightningRoundComponent", "skill_tags": ["كَلِمَة", "تَنْوِين"], "data": { "seconds": 8, "questions": [ { "question": "Tap the word 'kataba'", "options": ["كَتَبَ", "جَلَسَ", "نَصَرَ"], "correct": 0 }, { "question": "Tap the word ending in 'un'", "options": ["نُورًا", "نُورٌ", "نُورٍ"], "correct": 1 }, { "question": "Tap Ba at the start of a word", "options": ["ـب", "ب", "بـ"], "correct": 2 }, { "question": "Tap the word 'jalasa'", "options": ["جَلَسَ", "سَمِعَ", "خَلَقَ"], "correct": 0 } ] } },
+        { "type": "revision", "title": "Say It Back", "description": "Read each word aloud", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["كَلِمَة"], "data": { "items": [ { "arabic": "نَصَرَ" }, { "arabic": "قَلَمٌ" }, { "arabic": "كِتَابًا" } ] } }
+      ],
+      "mini_game": { "type": "drag_drop", "description": "Build the review words", "skill_tags": ["كَلِمَة"], "data": { "rounds": [ { "parts": ["نَ", "صَ", "رَ"], "word": "نَصَرَ", "meaning": "he helped" }, { "parts": ["كَ", "تَ", "بَ"], "word": "كَتَبَ", "meaning": "he wrote" } ] } }
+    },
+    {
+      "id": 36,
+      "title": "Long Vowels — Madd",
+      "theme": "Reading Rules",
+      "goal": "Stretch the sound: ا و ي make vowels long",
+      "xp_reward": 70,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Meet the Stretchers", "description": "بَا بُو بِي — hold for two counts", "screen_type": "ACTION", "component": "LetterIntroComponent", "skill_tags": ["مَدّ"], "data": { "letters": [ { "letter": "بَا", "name": "بَا" }, { "letter": "بُو", "name": "بُو" }, { "letter": "بِي", "name": "بِي" } ] } },
+        { "type": "pronunciation", "title": "Stretch and Say", "description": "Hold each long sound for two counts", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["مَدّ"], "data": { "items": [ { "arabic": "قَالَ" }, { "arabic": "نُور" }, { "arabic": "فِيل" } ] } },
+        { "type": "quiz", "title": "Long or Short?", "description": "True or false — is the sound stretched?", "screen_type": "QUIZ", "component": "TrueFalseComponent", "skill_tags": ["مَدّ"], "data": { "rounds": [ { "prompt": "This word has a long 'aa' sound", "arabic": "قَالَ", "answer": true }, { "prompt": "This word has a long sound", "arabic": "كَتَبَ", "answer": false }, { "prompt": "This word has a long 'oo' sound", "arabic": "نُور", "answer": true } ] } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen for the stretch", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["مَدّ"], "data": { "audio": "قَالَ", "options": ["قَلَ", "قَالَ", "قُل"], "correct": 1 } }
+      ],
+      "mini_game": { "type": "listen_choose", "description": "Hear the long vowels", "skill_tags": ["مَدّ"], "data": { "questions": [ { "audio": "نُور", "options": ["نُور", "نَر", "نِير"], "correct": 0 }, { "audio": "فِيل", "options": ["فَل", "فِيل", "فُول"], "correct": 1 } ] } }
+    },
+    {
+      "id": 37,
+      "title": "Words You'll Meet Often",
+      "theme": "Common Words",
+      "goal": "Read the words that fill the Qur'an",
+      "xp_reward": 70,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Special Words", "description": "You'll see these everywhere", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["كَلِمَات"], "data": { "items": [ { "arabic": "اللّٰه" }, { "arabic": "رَبّ" }, { "arabic": "قُلْ" } ] } },
+        { "type": "quiz", "title": "Find the Word", "description": "Choose the word you read", "screen_type": "QUIZ", "component": "MCQComponent", "skill_tags": ["كَلِمَات"], "data": { "questions": [ { "question": "Tap the blessed name — Allah", "options": ["اللّٰه", "رَبّ", "قُلْ"], "correct": 0 }, { "question": "Tap the word 'qul' — say!", "options": ["كُل", "قُلْ", "قَال"], "correct": 1 } ] } },
+        { "type": "quiz", "title": "Complete the Phrase", "description": "Fill in the missing word", "screen_type": "QUIZ", "component": "FillBlankComponent", "skill_tags": ["كَلِمَات"], "data": { "instruction": "Complete the phrase 'Rabbi zidni ilma'", "sentence": [ { "text": "رَبِّ" }, { "blank": true, "answer": "زِدْنِي" }, { "text": "عِلْمًا" } ], "bank": ["زِدْنِي", "عِنْدِي", "مِنِّي"], "meaning": "My Lord, increase me in knowledge" } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the word you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["كَلِمَات"], "data": { "audio": "رَبّ", "options": ["رَبّ", "قُلْ", "نُور"], "correct": 0 } }
+      ],
+      "mini_game": { "type": "memory_cards", "description": "Match each word to its meaning", "skill_tags": ["كَلِمَات"], "data": { "pairs": [ { "left": "نُور", "right": "رَوشنی" }, { "left": "رَبّ", "right": "پالنے والا" }, { "left": "قُلْ", "right": "کہو" } ] } }
+    },
+    {
+      "id": 38,
+      "title": "Bismillah, Word by Word",
+      "theme": "Reading the Basmalah",
+      "goal": "Read the most beloved sentence yourself",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "qaida", "title": "Read the Basmalah", "description": "One word at a time", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["بَسْمَلَة"], "data": { "items": [ { "arabic": "بِسْمِ" }, { "arabic": "اللّٰهِ" }, { "arabic": "الرَّحْمٰنِ" }, { "arabic": "الرَّحِيمِ" } ] } },
+        { "type": "qaida", "title": "Build the Basmalah", "description": "Arrange the words in order", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["بَسْمَلَة"], "data": { "instruction": "Build the Basmalah in order", "parts": ["بِسْمِ", "اللّٰهِ", "الرَّحْمٰنِ", "الرَّحِيمِ"], "distractors": [], "meaning": "In the name of Allah, the Most Gracious, the Most Merciful" } },
+        { "type": "quiz", "title": "Complete the Basmalah", "description": "Fill in the missing word", "screen_type": "QUIZ", "component": "FillBlankComponent", "skill_tags": ["بَسْمَلَة"], "data": { "instruction": "Complete the Basmalah", "sentence": [ { "text": "بِسْمِ" }, { "text": "اللّٰهِ" }, { "blank": true, "answer": "الرَّحْمٰنِ" }, { "text": "الرَّحِيمِ" } ], "bank": ["الرَّحْمٰنِ", "الرَّحِيمِ", "الْعَالَمِين"], "meaning": "In the name of Allah, the Most Gracious, the Most Merciful" } },
+        { "type": "dua", "title": "When We Say It", "description": "The Basmalah in your day", "screen_type": "HADITH_CARD", "component": "DuaCardComponent", "data": { "arabic": "بِسْمِ اللّٰهِ", "meaning": "In the name of Allah", "context": "Say it before eating, drinking, and starting anything good" } }
+      ],
+      "mini_game": { "type": "drag_drop", "description": "Build the Basmalah from memory", "skill_tags": ["بَسْمَلَة"], "data": { "rounds": [ { "parts": ["بِسْمِ", "اللّٰهِ", "الرَّحْمٰنِ", "الرَّحِيمِ"], "word": "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ", "meaning": "In the name of Allah, the Most Gracious, the Most Merciful" } ] } }
+    },
+    {
+      "id": 39,
+      "title": "Your First Dua",
+      "theme": "Reading Duas",
+      "goal": "Read a whole dua in Arabic — on your own",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "dua", "title": "Dua for Knowledge", "description": "A dua straight from the Qur'an", "screen_type": "HADITH_CARD", "component": "DuaCardComponent", "skill_tags": ["دُعَاء"], "data": { "arabic": "رَبِّ زِدْنِي عِلْمًا", "meaning": "My Lord, increase me in knowledge", "context": "Say it before you study or learn something new" } },
+        { "type": "pronunciation", "title": "Read It Yourself", "description": "Word by word, out loud", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["دُعَاء"], "data": { "items": [ { "arabic": "رَبِّ" }, { "arabic": "زِدْنِي" }, { "arabic": "عِلْمًا" } ] } },
+        { "type": "qaida", "title": "Build the Dua", "description": "Arrange the words in order", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["دُعَاء"], "data": { "instruction": "Build the dua for knowledge — one word is a decoy", "parts": ["رَبِّ", "زِدْنِي", "عِلْمًا"], "distractors": ["كَثِيرًا"], "meaning": "My Lord, increase me in knowledge" } },
+        { "type": "pronunciation", "title": "Listen & Choose", "description": "Listen, then tap the word you heard", "screen_type": "ACTION", "component": "ListenChooseComponent", "skill_tags": ["دُعَاء"], "data": { "audio": "زِدْنِي", "options": ["زِدْنِي", "رَبِّ", "عِلْمًا"], "correct": 0 } }
+      ],
+      "mini_game": { "type": "listen_choose", "description": "Hear each word of the dua", "skill_tags": ["دُعَاء"], "data": { "questions": [ { "audio": "رَبِّ", "options": ["رَبِّ", "زِدْنِي", "عِلْمًا"], "correct": 0 }, { "audio": "عِلْمًا", "options": ["زِدْنِي", "عِلْمًا", "رَبِّ"], "correct": 1 } ] } }
+    },
+    {
+      "id": 40,
+      "title": "Checkpoint: Word Reader",
+      "theme": "Checkpoint & Certificate",
+      "goal": "Read words, tanween and the Basmalah — certificate time",
+      "xp_reward": 80,
+      "unlock_reward": "title:word_reader",
+      "difficulty": "medium",
+      "lessons": [
+        { "type": "revision", "title": "Grand Word Build", "description": "Everything joined together", "screen_type": "ACTION", "component": "AyahBuilderComponent", "skill_tags": ["كَلِمَة", "بَسْمَلَة"], "data": { "instruction": "Build 'bismillah' — in the name of Allah", "parts": ["بِسْمِ", "اللّٰهِ"], "distractors": ["رَبِّ"], "meaning": "In the name of Allah" } },
+        { "type": "revision", "title": "Reading Check", "description": "Read each one aloud", "screen_type": "ACTION", "component": "PronunciationComponent", "skill_tags": ["مَدّ", "كَلِمَات"], "data": { "items": [ { "arabic": "قَالَ" }, { "arabic": "نُورٌ" }, { "arabic": "الرَّحِيمِ" } ] } },
+        { "type": "revision", "title": "Lightning Checkpoint", "description": "Fast rounds across the section", "screen_type": "QUIZ", "component": "LightningRoundComponent", "skill_tags": ["كَلِمَة", "مَدّ", "تَنْوِين"], "data": { "seconds": 7, "questions": [ { "question": "Tap the long-vowel word", "options": ["قَالَ", "قَلَ", "قُل"], "correct": 0 }, { "question": "Tap the word ending in 'in'", "options": ["بَيْتٌ", "بَيْتٍ", "بَيْتًا"], "correct": 1 }, { "question": "Tap 'the Most Merciful'", "options": ["الرَّحْمٰنِ", "بِسْمِ", "الرَّحِيمِ"], "correct": 2 }, { "question": "Tap the word 'nasara'", "options": ["نَصَرَ", "جَلَسَ", "سَمِعَ"], "correct": 0 } ] } },
+        { "type": "revision", "title": "Certificate Ceremony", "description": "You read real words now!", "screen_type": "ACTION", "component": "CertificateComponent", "data": { "title": "Word Reader", "message": "MashaAllah! You can read joined words, long vowels, tanween — and the Basmalah itself. The Qur'an's pages are opening before you!", "next_phase": "Next: your first recitations" } }
+      ],
+      "mini_game": { "type": "mcq", "description": "Checkpoint quiz — reading words", "skill_tags": ["كَلِمَة", "بَسْمَلَة"], "data": { "questions": [ { "question": "Which word means 'he wrote'?", "options": ["كَتَبَ", "جَلَسَ", "نَصَرَ"], "correct": 0 }, { "question": "Which word is the blessed name?", "options": ["رَبّ", "اللّٰه", "نُور"], "correct": 1 }, { "question": "Which comes first in the Basmalah?", "options": ["الرَّحِيمِ", "اللّٰهِ", "بِسْمِ"], "correct": 2 } ] } }
+    }
+  ]
+}

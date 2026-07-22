@@ -6,9 +6,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/chawais/deenquest/backend/internal/coach"
-	"github.com/chawais/deenquest/backend/internal/notification"
-	"github.com/chawais/deenquest/backend/internal/notification/smart"
+	coachapp "github.com/chawais/deenquest/backend/internal/coach/application"
+	notifinfra "github.com/chawais/deenquest/backend/internal/notification/infrastructure"
+	smartapp "github.com/chawais/deenquest/backend/internal/notification/smart/application"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 	"github.com/chawais/deenquest/backend/internal/platform/kafka"
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
@@ -19,7 +19,7 @@ func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modu
 	var closers []io.Closer
 
 	// 1. notification.send topic → Expo push delivery (with job logging).
-	jobConsumer := notification.NewJobConsumer(m.JobLogs, m.NotificationService)
+	jobConsumer := notifinfra.NewJobConsumer(m.JobLogs, m.NotificationService)
 	sendConsumer := kafka.NewConsumer(brokers, "notification.send", "worker-notification-send-group")
 	closers = append(closers, sendConsumer)
 	go func() {
@@ -27,11 +27,11 @@ func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modu
 	}()
 
 	// 2. Daily job-log heartbeat.
-	go notification.NewJobScheduler(m.JobLogs).Start(ctx)
+	go notifinfra.NewJobScheduler(m.JobLogs).Start(ctx)
 
 	// 3. Smart notifications cron: every minute, evaluate the rules engine
 	//    (daily-task reminders, streak savers, ...) against all users.
-	smartScheduler := smart.NewScheduler(m.SmartNotifications)
+	smartScheduler := smartapp.NewScheduler(m.SmartNotifications)
 	go func() {
 		if err := smartScheduler.Start(ctx); err != nil {
 			logger.Error("smart notification scheduler error", zap.Error(err))
@@ -39,7 +39,7 @@ func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modu
 	}()
 
 	if m.CoachService != nil {
-		coachSweeper := coach.NewSweeper(m.CoachService)
+		coachSweeper := coachapp.NewSweeper(m.CoachService)
 		go func() {
 			if err := coachSweeper.Start(ctx); err != nil {
 				logger.Error("coach sweeper error", zap.Error(err))

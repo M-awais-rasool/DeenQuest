@@ -5,132 +5,153 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/chawais/deenquest/backend/internal/analytics"
-	"github.com/chawais/deenquest/backend/internal/auth"
-	"github.com/chawais/deenquest/backend/internal/coach"
-	"github.com/chawais/deenquest/backend/internal/content"
-	"github.com/chawais/deenquest/backend/internal/dailytask"
-	"github.com/chawais/deenquest/backend/internal/level"
-	"github.com/chawais/deenquest/backend/internal/notification"
-	"github.com/chawais/deenquest/backend/internal/notification/smart"
+	analyticsinfra "github.com/chawais/deenquest/backend/internal/analytics/infrastructure"
+	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
+	authapp "github.com/chawais/deenquest/backend/internal/auth/application"
+	authhttp "github.com/chawais/deenquest/backend/internal/auth/interfaces/http"
+	coachapp "github.com/chawais/deenquest/backend/internal/coach/application"
+	coachinfra "github.com/chawais/deenquest/backend/internal/coach/infrastructure"
+	coachhttp "github.com/chawais/deenquest/backend/internal/coach/interfaces/http"
+	contenthttp "github.com/chawais/deenquest/backend/internal/content/interfaces/http"
+	dailytaskapp "github.com/chawais/deenquest/backend/internal/dailytask/application"
+	dailytaskinfra "github.com/chawais/deenquest/backend/internal/dailytask/infrastructure"
+	dailytaskhttp "github.com/chawais/deenquest/backend/internal/dailytask/interfaces/http"
+	levelapp "github.com/chawais/deenquest/backend/internal/level/application"
+	levelinfra "github.com/chawais/deenquest/backend/internal/level/infrastructure"
+	levelhttp "github.com/chawais/deenquest/backend/internal/level/interfaces/http"
+	notifapp "github.com/chawais/deenquest/backend/internal/notification/application"
+	notifinfra "github.com/chawais/deenquest/backend/internal/notification/infrastructure"
+	notifhttp "github.com/chawais/deenquest/backend/internal/notification/interfaces/http"
+	smartapp "github.com/chawais/deenquest/backend/internal/notification/smart/application"
+	smartinfra "github.com/chawais/deenquest/backend/internal/notification/smart/infrastructure"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
-	"github.com/chawais/deenquest/backend/internal/progress"
-	"github.com/chawais/deenquest/backend/internal/quran"
-	"github.com/chawais/deenquest/backend/internal/recitation"
-	"github.com/chawais/deenquest/backend/internal/reward"
-	"github.com/chawais/deenquest/backend/internal/user"
+	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
+	progressinfra "github.com/chawais/deenquest/backend/internal/progress/infrastructure"
+	progresshttp "github.com/chawais/deenquest/backend/internal/progress/interfaces/http"
+	quranapp "github.com/chawais/deenquest/backend/internal/quran/application"
+	quraninfra "github.com/chawais/deenquest/backend/internal/quran/infrastructure"
+	quranhttp "github.com/chawais/deenquest/backend/internal/quran/interfaces/http"
+	recitationapp "github.com/chawais/deenquest/backend/internal/recitation/application"
+	recitationinfra "github.com/chawais/deenquest/backend/internal/recitation/infrastructure"
+	recitationhttp "github.com/chawais/deenquest/backend/internal/recitation/interfaces/http"
+	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
+	rewardinfra "github.com/chawais/deenquest/backend/internal/reward/infrastructure"
+	rewardhttp "github.com/chawais/deenquest/backend/internal/reward/interfaces/http"
+	userapp "github.com/chawais/deenquest/backend/internal/user/application"
+	userinfra "github.com/chawais/deenquest/backend/internal/user/infrastructure"
+	userhttp "github.com/chawais/deenquest/backend/internal/user/interfaces/http"
 )
 
 type Modules struct {
 	// auth & user — accounts, login, profiles.
-	AuthService      *auth.Service
-	AuthHandler      *auth.Handler
-	UserHandler      *user.Handler
-	UserAdminHandler *user.AdminHandler // /admin/users (App Icons page)
+	AuthService      *authapp.Service
+	AuthHandler      *authhttp.Handler
+	UserHandler      *userhttp.Handler
+	UserAdminHandler *userhttp.AdminHandler // /admin/users (App Icons page)
 
 	// learning — the gamification currency plus the features that write to it.
-	ProgressHandler    *progress.Handler   // XP, streaks, leaderboard
-	ProgressService    *progress.Service   // shared "currency" used by level/dailytask/recitation
-	LevelService       *level.Service      // curriculum + progression (seeded on boot)
-	LevelHandler       *level.Handler      // /levels
-	LevelAdminHandler  *level.AdminHandler // admin CRUD
-	TaskService        *dailytask.Service  // daily tasks (seeded on boot)
-	TaskHandler        *dailytask.Handler
-	TaskAdminHandler   *dailytask.AdminHandler
-	RewardService      *reward.Service // reward catalog + granting (seeded on boot)
-	RewardHandler      *reward.Handler
-	RewardAdminHandler *reward.AdminHandler
-	RecitationHandler  *recitation.Handler // whisper + coach
-	ContentHandler     *content.Handler    // authoring registry (/admin/registry)
-	AnalyticsHandler   *analytics.Handler  // admin dashboards (/admin/analytics)
+	ProgressHandler    *progresshttp.Handler   // XP, streaks, leaderboard
+	ProgressService    *progressapp.Service    // shared "currency" used by level/dailytask/recitation
+	LevelService       *levelapp.Service       // curriculum + progression (seeded on boot)
+	LevelHandler       *levelhttp.Handler      // /levels
+	LevelAdminHandler  *levelhttp.AdminHandler // admin CRUD
+	TaskService        *dailytaskapp.Service   // daily tasks (seeded on boot)
+	TaskHandler        *dailytaskhttp.Handler
+	TaskAdminHandler   *dailytaskhttp.AdminHandler
+	RewardService      *rewardapp.Service // reward catalog + granting (seeded on boot)
+	RewardHandler      *rewardhttp.Handler
+	RewardAdminHandler *rewardhttp.AdminHandler
+	RecitationHandler  *recitationhttp.Handler // whisper + coach
+	ContentHandler     *contenthttp.Handler    // authoring registry (/admin/registry)
+	AnalyticsHandler   *analyticshttp.Handler  // admin dashboards (/admin/analytics)
 
-	CoachService      *coach.Service
-	CoachHandler      *coach.Handler
-	CoachAdminHandler *coach.AdminHandler // /admin/learning/*
+	CoachService      *coachapp.Service
+	CoachHandler      *coachhttp.Handler
+	CoachAdminHandler *coachhttp.AdminHandler // /admin/learning/*
 
 	// quran — surah reading and audio (external AlQuran API + Redis cache).
-	QuranHandler *quran.Handler
+	QuranHandler *quranhttp.Handler
 
 	// notification — push tokens, Expo delivery, job log, smart rules engine.
-	NotificationService *notification.Service
-	NotificationHandler *notification.Handler
-	JobLogs             *notification.JobLogRepository
-	SmartNotifications  *smart.Service
+	NotificationService *notifapp.Service
+	NotificationHandler *notifhttp.Handler
+	JobLogs             *notifinfra.JobLogRepository
+	SmartNotifications  *smartapp.Service
 }
 
 func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	db := infra.DB
 
 	// --- repositories (each module owns its own MongoDB collections) ---
-	userRepo, err := user.NewMongoRepository(db)
+	userRepo, err := userinfra.NewMongoRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init user repository: %w", err)
 	}
-	progressRepo, err := progress.NewMongoRepository(db)
+	progressRepo, err := progressinfra.NewMongoRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init progress repository: %w", err)
 	}
-	levelRepo, err := level.NewMongoRepository(db)
+	levelRepo, err := levelinfra.NewMongoRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init level repository: %w", err)
 	}
-	taskRepo, err := dailytask.NewMongoRepository(db)
+	taskRepo, err := dailytaskinfra.NewMongoRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init daily-task repository: %w", err)
 	}
-	rewardRepo, err := reward.NewMongoRepository(db)
+	rewardRepo, err := rewardinfra.NewMongoRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init reward repository: %w", err)
 	}
-	recitationRepo, err := recitation.NewMongoRepository(db)
+	recitationRepo, err := recitationinfra.NewMongoRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init recitation repository: %w", err)
 	}
-	analyticsRepo := analytics.NewMongoRepository(db)
-	tokenRepo, err := notification.NewMongoTokenRepository(db)
+	analyticsRepo := analyticsinfra.NewMongoRepository(db)
+	tokenRepo, err := notifinfra.NewMongoTokenRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init notification token repository: %w", err)
 	}
-	jobRepo := notification.NewJobLogRepository(db)
+	jobRepo := notifinfra.NewJobLogRepository(db)
 
 	// --- services (built in dependency order: progress/reward are leaves) ---
-	authService := auth.NewService(userRepo, infra.JWT)
-	userService := user.NewService(userRepo)
+	authService := authapp.NewService(userRepo, infra.JWT)
+	userService := userapp.NewService(userRepo)
 
-	progressService := progress.NewService(progressRepo)
-	rewardService := reward.NewService(rewardRepo)
-	levelService := level.NewService(levelRepo, progressService, rewardService)
-	taskService := dailytask.NewService(taskRepo, progressService)
-	recitationService := recitation.NewService(recitationRepo, cfg.WhisperURL, levelService, progressService)
+	progressService := progressapp.NewService(progressRepo)
+	rewardService := rewardapp.NewService(rewardRepo)
+	levelService := levelapp.NewService(levelRepo, progressService, rewardService)
+	taskService := dailytaskapp.NewService(taskRepo, progressService)
+	recitationService := recitationapp.NewService(recitationRepo, cfg.WhisperURL, levelService, progressService)
 	logger.Info("Recitation service initialized", zap.String("whisper_url", cfg.WhisperURL))
 
 	// reward evaluation needs level + progress metrics; wire the adapter that
 	// composes them so the reward package stays decoupled from both.
 	rewardService.SetMetricsProvider(rewardMetrics{level: levelService, progress: progressService})
 
-	notificationService := notification.NewService(tokenRepo, infra.Expo)
-	smartNotifications := smart.NewService(smart.NewUserFetcher(db), smart.NewMongoLogRepository(db), notificationService)
+	notificationService := notifapp.NewService(tokenRepo, infra.Expo)
+	smartNotifications := smartapp.NewService(smartinfra.NewUserFetcher(db), smartinfra.NewMongoLogRepository(db), notificationService)
 
-	quranClient := quran.NewClient(cfg.AlQuranBaseURL, cfg.QuranAudioCDNURL, cfg.QuranAudioEdition, cfg.QuranAudioBitrate)
-	quranService := quran.NewService(quranClient, infra.Redis)
+	quranClient := quraninfra.NewClient(cfg.AlQuranBaseURL, cfg.QuranAudioCDNURL, cfg.QuranAudioEdition, cfg.QuranAudioBitrate)
+	quranService := quranapp.NewService(quranClient, infra.Redis)
 
-	var coachService *coach.Service
-	var coachHandler *coach.Handler
-	var coachAdminHandler *coach.AdminHandler
+	var coachService *coachapp.Service
+	var coachHandler *coachhttp.Handler
+	var coachAdminHandler *coachhttp.AdminHandler
 	if cfg.CoachEnabled {
-		coachRepo, err := coach.NewMongoRepository(db)
+		coachRepo, err := coachinfra.NewMongoRepository(db)
 		if err != nil {
 			return nil, fmt.Errorf("init coach repository: %w", err)
 		}
-		var coachLLM coach.Generator
+		var coachLLM coachapp.Generator
 		if infra.Gemini != nil {
 			coachLLM = infra.Gemini
 		}
-		phraser := coach.NewPhraser(coachLLM, infra.Redis, cfg.CoachLLMEnabled)
-		coachService = coach.NewService(coachRepo, progressService, phraser)
-		coachHandler = coach.NewHandler(coachService)
-		coachAdminHandler = coach.NewAdminHandler(coach.NewAdminService(coachRepo))
+		phraser := coachapp.NewPhraser(coachLLM, infra.Redis, cfg.CoachLLMEnabled)
+		coachService = coachapp.NewService(coachRepo, progressService, phraser)
+		coachHandler = coachhttp.NewHandler(coachService)
+		coachAdminHandler = coachhttp.NewAdminHandler(coachapp.NewAdminService(coachRepo))
 		logger.Info("Coach module initialized",
 			zap.Bool("llm_enabled", cfg.CoachLLMEnabled && infra.Gemini != nil))
 	}
@@ -142,33 +163,33 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 
 	return &Modules{
 		AuthService:      authService,
-		AuthHandler:      auth.NewHandler(authService),
-		UserHandler:      user.NewHandler(userService),
-		UserAdminHandler: user.NewAdminHandler(userService),
+		AuthHandler:      authhttp.NewHandler(authService),
+		UserHandler:      userhttp.NewHandler(userService),
+		UserAdminHandler: userhttp.NewAdminHandler(userService),
 
-		ProgressHandler:    progress.NewHandler(progressService),
+		ProgressHandler:    progresshttp.NewHandler(progressService),
 		ProgressService:    progressService,
 		LevelService:       levelService,
-		LevelHandler:       level.NewHandler(levelService),
-		LevelAdminHandler:  level.NewAdminHandler(levelService),
+		LevelHandler:       levelhttp.NewHandler(levelService),
+		LevelAdminHandler:  levelhttp.NewAdminHandler(levelService),
 		TaskService:        taskService,
-		TaskHandler:        dailytask.NewHandler(taskService),
-		TaskAdminHandler:   dailytask.NewAdminHandler(taskService),
+		TaskHandler:        dailytaskhttp.NewHandler(taskService),
+		TaskAdminHandler:   dailytaskhttp.NewAdminHandler(taskService),
 		RewardService:      rewardService,
-		RewardHandler:      reward.NewHandler(rewardService),
-		RewardAdminHandler: reward.NewAdminHandler(rewardService),
-		RecitationHandler:  recitation.NewHandler(recitationService),
-		ContentHandler:     content.NewHandler(),
-		AnalyticsHandler:   analytics.NewHandler(analyticsRepo),
+		RewardHandler:      rewardhttp.NewHandler(rewardService),
+		RewardAdminHandler: rewardhttp.NewAdminHandler(rewardService),
+		RecitationHandler:  recitationhttp.NewHandler(recitationService),
+		ContentHandler:     contenthttp.NewHandler(),
+		AnalyticsHandler:   analyticshttp.NewHandler(analyticsRepo),
 
 		CoachService:      coachService,
 		CoachHandler:      coachHandler,
 		CoachAdminHandler: coachAdminHandler,
 
-		QuranHandler: quran.NewHandler(quranService),
+		QuranHandler: quranhttp.NewHandler(quranService),
 
 		NotificationService: notificationService,
-		NotificationHandler: notification.NewHandler(notificationService),
+		NotificationHandler: notifhttp.NewHandler(notificationService),
 		JobLogs:             jobRepo,
 		SmartNotifications:  smartNotifications,
 	}, nil

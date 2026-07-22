@@ -5,20 +5,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/chawais/deenquest/backend/internal/analytics"
-	"github.com/chawais/deenquest/backend/internal/auth"
-	"github.com/chawais/deenquest/backend/internal/coach"
-	"github.com/chawais/deenquest/backend/internal/content"
-	"github.com/chawais/deenquest/backend/internal/dailytask"
-	"github.com/chawais/deenquest/backend/internal/level"
-	"github.com/chawais/deenquest/backend/internal/notification"
+	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
+	authhttp "github.com/chawais/deenquest/backend/internal/auth/interfaces/http"
+	coachhttp "github.com/chawais/deenquest/backend/internal/coach/interfaces/http"
+	contenthttp "github.com/chawais/deenquest/backend/internal/content/interfaces/http"
+	dailytaskhttp "github.com/chawais/deenquest/backend/internal/dailytask/interfaces/http"
+	levelhttp "github.com/chawais/deenquest/backend/internal/level/interfaces/http"
+	notifhttp "github.com/chawais/deenquest/backend/internal/notification/interfaces/http"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 	"github.com/chawais/deenquest/backend/internal/platform/middleware"
-	"github.com/chawais/deenquest/backend/internal/progress"
-	"github.com/chawais/deenquest/backend/internal/quran"
-	"github.com/chawais/deenquest/backend/internal/recitation"
-	"github.com/chawais/deenquest/backend/internal/reward"
-	"github.com/chawais/deenquest/backend/internal/user"
+	progresshttp "github.com/chawais/deenquest/backend/internal/progress/interfaces/http"
+	quranhttp "github.com/chawais/deenquest/backend/internal/quran/interfaces/http"
+	recitationhttp "github.com/chawais/deenquest/backend/internal/recitation/interfaces/http"
+	rewardhttp "github.com/chawais/deenquest/backend/internal/reward/interfaces/http"
+	userhttp "github.com/chawais/deenquest/backend/internal/user/interfaces/http"
 )
 
 // buildRouter assembles the HTTP surface: global middleware, the three route
@@ -50,33 +50,33 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	admin := v1.Group("/admin")
 	admin.Use(middleware.JWTAuth(infra.JWT), middleware.AdminOnly(cfg.AdminEmailList()))
 
-	auth.RegisterRoutes(v1, m.AuthHandler)
-	user.RegisterRoutes(v1, authed, m.UserHandler)
+	authhttp.RegisterRoutes(v1, m.AuthHandler)
+	userhttp.RegisterRoutes(v1, authed, m.UserHandler)
 
 	// learning features (formerly the single "progress" module)
-	progress.RegisterRoutes(v1, authed, m.ProgressHandler)
-	level.RegisterRoutes(authed, m.LevelHandler)
-	dailytask.RegisterRoutes(authed, m.TaskHandler)
-	reward.RegisterRoutes(authed, m.RewardHandler)
-	recitation.RegisterRoutes(authed, m.RecitationHandler)
+	progresshttp.RegisterRoutes(v1, authed, m.ProgressHandler)
+	levelhttp.RegisterRoutes(authed, m.LevelHandler)
+	dailytaskhttp.RegisterRoutes(authed, m.TaskHandler)
+	rewardhttp.RegisterRoutes(authed, m.RewardHandler)
+	recitationhttp.RegisterRoutes(authed, m.RecitationHandler)
 	if m.CoachHandler != nil {
-		coach.RegisterRoutes(authed, m.CoachHandler)
+		coachhttp.RegisterRoutes(authed, m.CoachHandler)
 	}
 
-	user.RegisterAdminRoutes(admin, m.UserAdminHandler)
-	level.RegisterAdminRoutes(admin, m.LevelAdminHandler)
-	dailytask.RegisterAdminRoutes(admin, m.TaskAdminHandler)
-	reward.RegisterAdminRoutes(admin, m.RewardAdminHandler)
-	content.RegisterAdminRoutes(admin, m.ContentHandler)
-	analytics.RegisterAdminRoutes(admin, m.AnalyticsHandler)
+	userhttp.RegisterAdminRoutes(admin, m.UserAdminHandler)
+	levelhttp.RegisterAdminRoutes(admin, m.LevelAdminHandler)
+	dailytaskhttp.RegisterAdminRoutes(admin, m.TaskAdminHandler)
+	rewardhttp.RegisterAdminRoutes(admin, m.RewardAdminHandler)
+	contenthttp.RegisterAdminRoutes(admin, m.ContentHandler)
+	analyticshttp.RegisterAdminRoutes(admin, m.AnalyticsHandler)
 	if m.CoachAdminHandler != nil {
-		coach.RegisterAdminRoutes(admin, m.CoachAdminHandler)
+		coachhttp.RegisterAdminRoutes(admin, m.CoachAdminHandler)
 	}
 
-	quran.RegisterRoutes(v1.Group("/quran"), m.QuranHandler)
-	quran.RegisterRoutes(r.Group("/api/quran"), m.QuranHandler) // legacy path used by older clients
+	quranhttp.RegisterRoutes(v1.Group("/quran"), m.QuranHandler)
+	quranhttp.RegisterRoutes(r.Group("/api/quran"), m.QuranHandler) // legacy path used by older clients
 
-	notification.RegisterRoutes(authed, m.NotificationHandler)
+	notifhttp.RegisterRoutes(authed, m.NotificationHandler)
 
 	return r
 }
