@@ -35,7 +35,9 @@ import { SignupScreen } from "../screens/auth/SignupScreen";
 import { WelcomeScreen } from "../screens/auth/WelcomeScreen";
 import { SurahDetailScreen } from "../screens/quran/SurahDetailScreen";
 import { CoachInsightsScreen } from "../screens/coach/CoachInsightsScreen";
-import { PrayerTimesScreen } from "../screens/extras/PrayerTimesScreen";
+import { PrayerTimesScreen } from "../screens/prayer/PrayerTimesScreen";
+import { PrayerSettingsScreen } from "../screens/prayer/PrayerSettingsScreen";
+import { AdhanScreen } from "../screens/prayer/AdhanScreen";
 import { HifzTrackerScreen } from "../screens/extras/HifzTrackerScreen";
 import { ChallengesScreen } from "../screens/extras/ChallengesScreen";
 import { ParentDashboardScreen } from "../screens/extras/ParentDashboardScreen";
@@ -58,6 +60,7 @@ const linking: LinkingOptions<AppStackParamList> = {
       },
       PublicProfile: "profile/:userId",
       SurahDetail: "quran/surah/:surahId",
+      AdhanAlarm: "adhan/:prayer",
     },
   },
 };
@@ -156,6 +159,19 @@ const AppStack = () => {
           <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
           <Stack.Screen name="CoachInsights" component={CoachInsightsScreen} />
           <Stack.Screen name="PrayerTimes" component={PrayerTimesScreen} />
+          <Stack.Screen
+            name="PrayerSettings"
+            component={PrayerSettingsScreen}
+          />
+          <Stack.Screen
+            name="AdhanAlarm"
+            component={AdhanScreen}
+            options={{
+              presentation: "fullScreenModal",
+              gestureEnabled: false,
+              animation: "fade",
+            }}
+          />
           <Stack.Screen name="HifzTracker" component={HifzTrackerScreen} />
           <Stack.Screen name="Challenges" component={ChallengesScreen} />
           <Stack.Screen

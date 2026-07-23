@@ -5,7 +5,17 @@ import { getExpoPushRegistrationAsync } from "../services/notificationService";
 import * as Notifications from "expo-notifications";
 import { Linking } from "react-native";
 
+const ADHAN_PRAYERS = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
+
 const openNotificationTarget = async (data?: Record<string, unknown>) => {
+  // Prayer reminder → open the full-screen Adhan player.
+  if (data?.type === "adhan") {
+    const prayer = typeof data.prayer === "string" ? data.prayer : "fajr";
+    const safe = ADHAN_PRAYERS.includes(prayer) ? prayer : "fajr";
+    await Linking.openURL(`deenquest://adhan/${safe}`);
+    return;
+  }
+
   const rawURL = data?.url;
   if (typeof rawURL === "string" && rawURL.length > 0) {
     await Linking.openURL(rawURL);

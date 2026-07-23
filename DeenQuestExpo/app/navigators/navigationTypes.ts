@@ -7,6 +7,7 @@ import {
 } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CourseType, DailyTask } from "../store/services/api";
+import type { PrayerName } from "../types/prayer";
 
 export type DemoTabParamList = {
   PathScreen: undefined;
@@ -44,6 +45,8 @@ export type AppStackParamList = {
   Leaderboard: undefined;
   CoachInsights: undefined;
   PrayerTimes: undefined;
+  PrayerSettings: undefined;
+  AdhanAlarm: { prayer: PrayerName };
   HifzTracker: undefined;
   Challenges: undefined;
   ParentDashboard: undefined;
