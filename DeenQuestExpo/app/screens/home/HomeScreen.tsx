@@ -69,21 +69,18 @@ const XP_PER_LEVEL = 500;
 
 // Quick links to the new power-feature screens (H1–H4).
 const EXPLORE_LINKS: {
-  route: "PrayerTimes" | "HifzTracker" | "Challenges" | "ParentDashboard";
+  route: "PrayerTimes" | "HifzHome" | "Challenges" | "ParentDashboard";
   label: string;
   Icon: LucideIcon;
   bg: string;
   fg: string;
 }[] = [
   { route: "PrayerTimes", label: "Prayers", Icon: Clock, bg: "#12303A", fg: "#6EC1E8" },
-  { route: "HifzTracker", label: "My Hifz", Icon: Brain, bg: "#3A2F16", fg: "#EFB65A" },
+  { route: "HifzHome", label: "My Hifz", Icon: Brain, bg: "#3A2F16", fg: "#EFB65A" },
   { route: "Challenges", label: "Challenges", Icon: Swords, bg: "#2A2440", fg: "#A78BFA" },
   { route: "ParentDashboard", label: "Family", Icon: Users, bg: "#3A2030", fg: "#F8A9CC" },
 ];
 
-// Day letters indexed by Date.getDay() (Sun..Sat). weekly_completions is
-// relative to today (index 0 = 6 days ago, index 6 = today), so the labels are
-// derived from real dates rather than a fixed Mon..Sun.
 function buildWeek(): { letter: string; isToday: boolean }[] {
   const LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
   const today = new Date();
@@ -103,9 +100,6 @@ function rankWord(title?: string): string {
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
-/* ─────────────────────────── G1 pieces ─────────────────────────── */
-
-/** Small conic-style progress ring for the condensed level card. */
 function LevelRing({ pct }: { pct: number }) {
   const r = 14;
   const c = 2 * Math.PI * r;
@@ -133,7 +127,6 @@ function LevelRing({ pct }: { pct: number }) {
   );
 }
 
-/** The G1 coach hero card. */
 function CoachCard({
   coach,
   onFix,
@@ -237,10 +230,6 @@ export const HomeScreen = () => {
   const xpInLevel = totalXP % XP_PER_LEVEL;
   const xpPct = (xpInLevel / XP_PER_LEVEL) * 100;
 
-  // The coach Home variant only renders when the coach actually found
-  // something to suggest: no telemetry yet, or telemetry with zero insight
-  // tiles, both fall back to the plain B1 Home (a win banner alone is
-  // praise, not a suggestion).
   const { data: coachRes } = useGetCoachInsightsQuery();
   const coachData = coachRes?.data ?? null;
   const coach: CoachState | null =
@@ -272,7 +261,6 @@ export const HomeScreen = () => {
 
   const openInsights = () => navigation.navigate("CoachInsights");
 
-  /* ── mission rows (shared by both variants) ── */
   const renderMissionRow = (task: DailyTask, last: boolean) => {
     const Icon = CATEGORY_ICONS[task.category] ?? Feather;
     return (
@@ -320,7 +308,6 @@ export const HomeScreen = () => {
     );
   };
 
-  // Coach-suggested practice row, injected under the first mission (G1).
   const coachMissionRow = coachActionable && coach ? (
     <Pressable
       key="coach-practice"
@@ -382,7 +369,6 @@ export const HomeScreen = () => {
         </View>
 
         {coach ? (
-          /* ═══════════ G1 · Home With Coach ═══════════ */
           <>
             <CoachCard
               coach={coach}
@@ -413,7 +399,6 @@ export const HomeScreen = () => {
             </View>
           </>
         ) : (
-          /* ═══════════ B1 · classic streak hero ═══════════ */
           <LinearGradient
             colors={["#26301C", "#16272B"]}
             start={{ x: 0, y: 0 }}
