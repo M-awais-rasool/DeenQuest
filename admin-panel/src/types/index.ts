@@ -279,3 +279,118 @@ export interface ApiResponse<T> {
   data: T;
   error?: string;
 }
+
+// ─── Hifz Challenge ───
+
+export interface HifzPlanScope {
+  surah_ids?: number[];
+  juz?: number;
+}
+
+export interface HifzManualRange {
+  surah_id: number;
+  ayah_start: number;
+  ayah_end: number;
+  label?: string;
+}
+
+export interface HifzSegmentation {
+  mode: "auto" | "manual";
+  ayahs_per_portion: number;
+  ranges?: HifzManualRange[];
+}
+
+export interface HifzPlan {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: string;
+  accent: string;
+  order: number;
+  published: boolean;
+  scope: HifzPlanScope;
+  segmentation: HifzSegmentation;
+  preset_name: string;
+  xp_per_portion: number;
+  seed_version?: number;
+}
+
+export interface HifzPreviewPortion {
+  id: string;
+  surah_id: number;
+  surah_name: string;
+  ayah_start: number;
+  ayah_end: number;
+  order_index: number;
+  label: string;
+  ayah_count: number;
+  ayahs?: string[];
+}
+
+export interface HifzPreview {
+  portions: HifzPreviewPortion[];
+  total_ayahs: number;
+  warnings?: string[];
+}
+
+export interface HifzDifficultyPreset {
+  name: string;
+  label: string;
+  listen_repeats: number;
+  shadow_required: boolean;
+  ayahs_per_portion: number;
+  open_recite_pass: number;
+  blind_recite_pass: number;
+  blind_required_to_seal: boolean;
+  challenge_count: number;
+  enabled_challenges: string[];
+  challenge_weights?: Record<string, number>;
+  allow_hints: boolean;
+  show_translation: boolean;
+  lenience_bonus: number;
+}
+
+export interface HifzChallengeConfig {
+  hidden_word_pct: number;
+  distractor_count: number;
+  rounds: number;
+  fade_steps: number[];
+  time_limit_s: number;
+  enabled: boolean;
+}
+
+export interface HifzSRSConfig {
+  interval_ladder: number[];
+  base_half_life_days: number;
+  ema_alpha: number;
+  strong_threshold: number;
+  medium_threshold: number;
+  unverified_penalty: number;
+  sabqi_window_days: number;
+  manzil_daily_cap: number;
+  hint_penalty: number;
+}
+
+export interface HifzReciter {
+  id: string;
+  name: string;
+  style: string;
+}
+
+export interface HifzSettings {
+  presets: HifzDifficultyPreset[];
+  challenges: Record<string, HifzChallengeConfig>;
+  srs: HifzSRSConfig;
+  reciters: HifzReciter[];
+  updated_at?: string;
+}
+
+export interface HifzChallengeCatalogEntry {
+  kind: string;
+  label: string;
+  icon: string;
+  description: string;
+  config: HifzChallengeConfig;
+}

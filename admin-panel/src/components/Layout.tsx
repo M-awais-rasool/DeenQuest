@@ -14,6 +14,8 @@ import {
   MagnifyingGlassIcon,
   CpuChipIcon,
   SparklesIcon,
+  BookOpenIcon,
+  AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import { type ReactNode, useState } from "react";
 
@@ -36,6 +38,13 @@ const navGroups: {
       { label: "Tasks", path: "/tasks", icon: ClipboardDocumentListIcon },
       { label: "Themes", path: "/themes", icon: SwatchIcon },
       { label: "Rewards", path: "/rewards", icon: GiftIcon },
+    ],
+  },
+  {
+    heading: "Hifz",
+    items: [
+      { label: "Plans", path: "/hifz/plans", icon: BookOpenIcon },
+      { label: "Challenge Settings", path: "/hifz/settings", icon: AdjustmentsHorizontalIcon },
     ],
   },
   {

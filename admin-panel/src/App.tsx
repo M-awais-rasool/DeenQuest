@@ -12,6 +12,8 @@ import AuditLogPage from "./pages/AuditLogPage";
 import SettingsPage from "./pages/SettingsPage";
 import LearningAgentPage from "./pages/LearningAgentPage";
 import AppIconsPage from "./pages/AppIconsPage";
+import HifzPlansPage from "./pages/HifzPlansPage";
+import HifzSettingsPage from "./pages/HifzSettingsPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -66,6 +68,8 @@ export default function App() {
                   path="/levels/:id"
                   element={<ContentEditorPage kind="level" />}
                 />
+                <Route path="/hifz/plans" element={<HifzPlansPage />} />
+                <Route path="/hifz/settings" element={<HifzSettingsPage />} />
                 <Route path="/learning-agent" element={<LearningAgentPage />} />
                 <Route path="/app-icons" element={<AppIconsPage />} />
                 <Route path="/themes" element={<ThemesPage />} />
