@@ -1,0 +1,10 @@
+export { ProgressRing } from "./ProgressRing";
+export { ListenStage } from "./ListenStage";
+export { ShadowStage } from "./ShadowStage";
+export { ReciteStage } from "./ReciteStage";
+export { HifzSessionEngine, type SessionHeaderMeta } from "./HifzSessionEngine";
+export { useAyahAudio } from "./useAyahAudio";
+export { useHifzRecorder } from "./useHifzRecorder";
+export { resolveChallenge, CHALLENGE_REGISTRY } from "./challenges/registry";
+export type { ChallengeOutcome, HifzChallengeProps } from "./challenges/types";
+export * from "./ui";

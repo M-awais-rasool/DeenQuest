@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 import type { AyahTimingInput } from "../../types/quranSync";
 import type { CoachState } from "../../services/coach";
 
-export const API_BASE_URL = "http://192.168.18.12:8080";
+export const API_BASE_URL = "http://192.168.18.6:8080";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
@@ -428,6 +428,274 @@ export interface CoachPracticeCompletion {
   xp_earned: number;
 }
 
+// ─── Hifz Types ───
+
+export type HifzStage =
+  | "listen"
+  | "shadow"
+  | "open_recite"
+  | "challenges"
+  | "blind_recite"
+  | "sealed";
+
+export type HifzQueue = "sabqi" | "manzil" | "sabaq";
+export type HifzRating = "Strong" | "Medium" | "Weak";
+
+export interface HifzPortion {
+  id: string;
+  plan_id: string;
+  surah_id: number;
+  surah_name: string;
+  ayah_start: number;
+  ayah_end: number;
+  order_index: number;
+  label: string;
+}
+
+export interface HifzPortionStrength {
+  portion_id: string;
+  surah_id: number;
+  surah_name: string;
+  label: string;
+  ayah_start: number;
+  ayah_end: number;
+  order_index: number;
+  stage: HifzStage | "";
+  started: boolean;
+  sealed: boolean;
+  strength: number;
+  strength_pct: number;
+  rating: HifzRating;
+  due: boolean;
+  next_review_at?: string;
+  reps: number;
+  blind_verified: boolean;
+}
+
+export interface HifzSurahStrength {
+  surah_id: number;
+  surah_name: string;
+  english_name: string;
+  total_portions: number;
+  sealed_portions: number;
+  ayahs_memorized: number;
+  total_ayahs: number;
+  strength: number;
+  strength_pct: number;
+  rating: HifzRating;
+  due_count: number;
+  portions?: HifzPortionStrength[];
+}
+
+export interface HifzOverview {
+  enrolled: boolean;
+  plan_id?: string;
+  plan_title?: string;
+  plan_accent?: string;
+  portions_sealed: number;
+  portions_total: number;
+  ayahs_memorized: number;
+  ayahs_total: number;
+  overall_strength: number;
+  overall_pct: number;
+  rating: HifzRating;
+  sabqi_count: number;
+  manzil_count: number;
+  sabaq_count: number;
+  streak_days: number;
+  longest_streak: number;
+  reviewed_today: boolean;
+  next_up_label?: string;
+  next_up_id?: string;
+  weakest: HifzPortionStrength[];
+  surahs: HifzSurahStrength[];
+  mistake_count: number;
+}
+
+export interface HifzPlan {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: string;
+  accent: string;
+  order: number;
+  preset_name: string;
+  xp_per_portion: number;
+  portion_count: number;
+  ayah_count: number;
+  enrolled: boolean;
+  portions_sealed: number;
+}
+
+export interface HifzPreset {
+  name: string;
+  label: string;
+  listen_repeats: number;
+  shadow_required: boolean;
+  ayahs_per_portion: number;
+  open_recite_pass: number;
+  blind_recite_pass: number;
+  blind_required_to_seal: boolean;
+  challenge_count: number;
+  enabled_challenges: string[];
+  allow_hints: boolean;
+  show_translation: boolean;
+  lenience_bonus: number;
+}
+
+export interface HifzReciter {
+  id: string;
+  name: string;
+  style: string;
+}
+
+export interface HifzSettings {
+  presets: HifzPreset[];
+  reciters: HifzReciter[];
+}
+
+export interface HifzQueueItem {
+  portion: HifzPortion;
+  strength: HifzPortionStrength;
+}
+
+export interface HifzToday {
+  enrolled: boolean;
+  plan_id?: string;
+  plan_title?: string;
+  preset_name?: string;
+  reciter_id?: string;
+  sabqi: HifzQueueItem[];
+  manzil: HifzQueueItem[];
+  sabaq: HifzQueueItem[];
+  estimated_minutes: number;
+  all_done: boolean;
+  streak_days: number;
+  reviewed_today: boolean;
+}
+
+/** One slot in a cloze sentence: a fixed word, or a gap to be filled. */
+export interface HifzClozeToken {
+  text?: string;
+  blank?: boolean;
+  answer?: string;
+  hint?: string;
+}
+
+export interface HifzChallenge {
+  id: string;
+  kind: string;
+  interaction: string;
+  component: string;
+  title: string;
+  instruction: string;
+  ayah_number?: number;
+  content: Record<string, any>;
+}
+
+export interface HifzSession {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  portion_id: string;
+  queue: HifzQueue;
+  portion: HifzPortion;
+  ayah_texts: string[];
+  preset_name: string;
+  stage: HifzStage;
+  challenges: HifzChallenge[];
+  challenge_idx: number;
+  xp_awarded: number;
+  finished: boolean;
+}
+
+export interface HifzSessionAyah {
+  number: number;
+  text: string;
+  translation?: string;
+}
+
+export interface HifzSessionView {
+  session: HifzSession;
+  preset: HifzPreset;
+  ayahs: HifzSessionAyah[];
+  reciter_id: string;
+  strength: HifzPortionStrength;
+}
+
+export interface HifzWordResult {
+  text: string;
+  status: "correct" | "wrong" | "missing" | "extra";
+  confidence: number;
+}
+
+export interface HifzReciteResult {
+  score: number;
+  words: HifzWordResult[];
+  message: string;
+  transcript: string;
+  passed: boolean;
+  tip?: string;
+  explanation?: string;
+  stage: HifzStage;
+  next_stage: HifzStage;
+  ayah_number?: number;
+}
+
+export interface HifzCompletion {
+  portion_label: string;
+  queue: HifzQueue;
+  accuracy: number;
+  accuracy_pct: number;
+  passed: boolean;
+  sealed: boolean;
+  first_seal: boolean;
+  xp_earned: number;
+  before: HifzPortionStrength;
+  after: HifzPortionStrength;
+  next_review_at?: string;
+  interval_days: number;
+  streak_days: number;
+  streak_extended: boolean;
+  ayahs_memorized: number;
+}
+
+export interface HifzMistake {
+  id: string;
+  surah_id: number;
+  ayah_number: number;
+  word_index: number;
+  word: string;
+  miss_count: number;
+  last_missed_at: string;
+}
+
+export interface HifzEnrollRequest {
+  plan_id: string;
+  preset_name?: string;
+  daily_new_portions?: number;
+  reciter_id?: string;
+}
+
+export interface HifzStageRequest {
+  sessionId: string;
+  stage: HifzStage;
+  challenge_type?: string;
+  raw_score: number;
+  hints_used?: number;
+  latency_ms?: number;
+}
+
+export interface HifzReciteRequest {
+  sessionId: string;
+  ayahNumber: number;
+  lastAyah: boolean;
+  audioUri: string;
+  audioMimeType?: string;
+}
+
 // API Service
 export const API = createApi({
   reducerPath: "API",
@@ -444,6 +712,7 @@ export const API = createApi({
     "Notifications",
     "Quran",
     "Coach",
+    "Hifz",
   ],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
@@ -712,6 +981,92 @@ export const API = createApi({
       ],
       keepUnusedDataFor: 604800,
     }),
+
+    // ─── Hifz Challenge ───
+    getHifzOverview: builder.query<APIResponse<HifzOverview>, void>({
+      query: () => ({ url: "/api/v1/hifz/overview", method: "GET" }),
+      providesTags: ["Hifz"],
+    }),
+    getHifzPlans: builder.query<APIResponse<HifzPlan[]>, void>({
+      query: () => ({ url: "/api/v1/hifz/plans", method: "GET" }),
+      providesTags: ["Hifz"],
+    }),
+    getHifzSettings: builder.query<APIResponse<HifzSettings>, void>({
+      query: () => ({ url: "/api/v1/hifz/settings", method: "GET" }),
+      keepUnusedDataFor: 3600,
+    }),
+    getHifzToday: builder.query<APIResponse<HifzToday>, void>({
+      query: () => ({ url: "/api/v1/hifz/today", method: "GET" }),
+      providesTags: ["Hifz"],
+    }),
+    getHifzMistakes: builder.query<APIResponse<HifzMistake[]>, number | void>({
+      query: (limit) => ({
+        url: "/api/v1/hifz/mistakes",
+        method: "GET",
+        params: limit ? { limit } : undefined,
+      }),
+      providesTags: ["Hifz"],
+    }),
+    enrollHifz: builder.mutation<APIResponse<unknown>, HifzEnrollRequest>({
+      query: (body) => ({ url: "/api/v1/hifz/enroll", method: "POST", body }),
+      invalidatesTags: ["Hifz"],
+    }),
+    startHifzSession: builder.mutation<
+      APIResponse<HifzSessionView>,
+      { portionId: string; queue: HifzQueue }
+    >({
+      query: ({ portionId, queue }) => ({
+        url: "/api/v1/hifz/sessions",
+        method: "POST",
+        body: { portion_id: portionId, queue },
+      }),
+    }),
+    submitHifzStage: builder.mutation<APIResponse<HifzSession>, HifzStageRequest>({
+      query: ({ sessionId, ...body }) => ({
+        url: `/api/v1/hifz/sessions/${sessionId}/stage`,
+        method: "POST",
+        body,
+      }),
+    }),
+    submitHifzRecitation: builder.mutation<
+      APIResponse<HifzReciteResult>,
+      HifzReciteRequest
+    >({
+      queryFn: async (
+        { sessionId, ayahNumber, lastAyah, audioUri, audioMimeType = "audio/m4a" },
+        _api,
+        _extraOptions,
+        baseQuery,
+      ) => {
+        const formData = new FormData();
+        formData.append("ayah_number", String(ayahNumber));
+        formData.append("last_ayah", lastAyah ? "true" : "false");
+        (formData as any).append("audio", {
+          uri: audioUri,
+          type: audioMimeType,
+          name: `hifz_${Date.now()}.m4a`,
+        });
+        return baseQuery({
+          url: `/api/v1/hifz/sessions/${sessionId}/recite`,
+          method: "POST",
+          body: formData,
+        }) as any;
+      },
+    }),
+    completeHifzSession: builder.mutation<APIResponse<HifzCompletion>, string>({
+      query: (sessionId) => ({
+        url: `/api/v1/hifz/sessions/${sessionId}/complete`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Hifz", "Progress", "Leaderboard", "Rewards"],
+    }),
+    resetHifzPortion: builder.mutation<APIResponse<null>, string>({
+      query: (portionId) => ({
+        url: `/api/v1/hifz/portions/${portionId}/reset`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Hifz"],
+    }),
   }),
 });
 
@@ -743,4 +1098,15 @@ export const {
   useGetSurahsQuery,
   useGetSurahByIdQuery,
   useGetSurahAudioQuery,
+  useGetHifzOverviewQuery,
+  useGetHifzPlansQuery,
+  useGetHifzSettingsQuery,
+  useGetHifzTodayQuery,
+  useGetHifzMistakesQuery,
+  useEnrollHifzMutation,
+  useStartHifzSessionMutation,
+  useSubmitHifzStageMutation,
+  useSubmitHifzRecitationMutation,
+  useCompleteHifzSessionMutation,
+  useResetHifzPortionMutation,
 } = API;
