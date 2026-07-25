@@ -11,6 +11,8 @@ import (
 	contenthttp "github.com/chawais/deenquest/backend/internal/content/interfaces/http"
 	dailytaskapp "github.com/chawais/deenquest/backend/internal/dailytask/application"
 	dailytaskhttp "github.com/chawais/deenquest/backend/internal/dailytask/interfaces/http"
+	hifzapp "github.com/chawais/deenquest/backend/internal/hifz/application"
+	hifzhttp "github.com/chawais/deenquest/backend/internal/hifz/interfaces/http"
 	levelapp "github.com/chawais/deenquest/backend/internal/level/application"
 	levelhttp "github.com/chawais/deenquest/backend/internal/level/interfaces/http"
 	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
@@ -23,11 +25,6 @@ import (
 	userhttp "github.com/chawais/deenquest/backend/internal/user/interfaces/http"
 )
 
-// TestLearningRoutesRegister assembles the learning-feature routes on the same
-// group structure buildRouter uses. It guards the package split against two
-// regressions: a gin duplicate-route panic (features registering the same
-// path) and a dropped endpoint. Services are built with nil repositories — the
-// handlers are never invoked, only registered.
 func TestLearningRoutesRegister(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -47,6 +44,9 @@ func TestLearningRoutesRegister(t *testing.T) {
 	rewardhttp.RegisterRoutes(authed, rewardhttp.NewHandler(rewardSvc))
 	recitationhttp.RegisterRoutes(authed, recitationhttp.NewHandler(recSvc))
 
+	hifzSvc := hifzapp.NewService(nil, nil, recSvc, progressSvc)
+	hifzhttp.RegisterRoutes(authed, hifzhttp.NewHandler(hifzSvc))
+
 	userhttp.RegisterAdminRoutes(admin, userhttp.NewAdminHandler(userapp.NewService(nil)))
 	levelhttp.RegisterAdminRoutes(admin, levelhttp.NewAdminHandler(levelSvc))
 	dailytaskhttp.RegisterAdminRoutes(admin, dailytaskhttp.NewAdminHandler(taskSvc))
@@ -54,6 +54,8 @@ func TestLearningRoutesRegister(t *testing.T) {
 	contenthttp.RegisterAdminRoutes(admin, contenthttp.NewHandler())
 	analyticshttp.RegisterAdminRoutes(admin, analyticshttp.NewHandler(nil))
 	coachhttp.RegisterAdminRoutes(admin, coachhttp.NewAdminHandler(coachapp.NewAdminService(nil)))
+	hifzhttp.RegisterAdminRoutes(admin, hifzhttp.NewAdminHandler(
+		hifzapp.NewAdminService(nil, nil, hifzSvc)))
 
 	want := []string{
 		"GET /api/v1/progress/user/:id",
@@ -88,6 +90,29 @@ func TestLearningRoutesRegister(t *testing.T) {
 		"DELETE /api/v1/admin/rewards/:id",
 		"GET /api/v1/admin/learning/stats",
 		"GET /api/v1/admin/learning/curriculum",
+
+		"GET /api/v1/hifz/overview",
+		"GET /api/v1/hifz/plans",
+		"GET /api/v1/hifz/settings",
+		"GET /api/v1/hifz/today",
+		"GET /api/v1/hifz/mistakes",
+		"POST /api/v1/hifz/enroll",
+		"POST /api/v1/hifz/sessions",
+		"POST /api/v1/hifz/sessions/:id/stage",
+		"POST /api/v1/hifz/sessions/:id/recite",
+		"POST /api/v1/hifz/sessions/:id/complete",
+		"POST /api/v1/hifz/portions/:id/reset",
+		"GET /api/v1/admin/hifz/plans",
+		"POST /api/v1/admin/hifz/plans",
+		// Static "preview" must coexist with the /:id wildcard — registering it
+		// after /:id is how gin panics on a route conflict.
+		"POST /api/v1/admin/hifz/plans/preview",
+		"GET /api/v1/admin/hifz/plans/:id",
+		"PUT /api/v1/admin/hifz/plans/:id",
+		"DELETE /api/v1/admin/hifz/plans/:id",
+		"GET /api/v1/admin/hifz/settings",
+		"PUT /api/v1/admin/hifz/settings",
+		"GET /api/v1/admin/hifz/challenges",
 	}
 
 	got := make(map[string]bool)
