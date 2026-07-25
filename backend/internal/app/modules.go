@@ -16,6 +16,9 @@ import (
 	dailytaskapp "github.com/chawais/deenquest/backend/internal/dailytask/application"
 	dailytaskinfra "github.com/chawais/deenquest/backend/internal/dailytask/infrastructure"
 	dailytaskhttp "github.com/chawais/deenquest/backend/internal/dailytask/interfaces/http"
+	hifzapp "github.com/chawais/deenquest/backend/internal/hifz/application"
+	hifzinfra "github.com/chawais/deenquest/backend/internal/hifz/infrastructure"
+	hifzhttp "github.com/chawais/deenquest/backend/internal/hifz/interfaces/http"
 	levelapp "github.com/chawais/deenquest/backend/internal/level/application"
 	levelinfra "github.com/chawais/deenquest/backend/internal/level/infrastructure"
 	levelhttp "github.com/chawais/deenquest/backend/internal/level/interfaces/http"
@@ -72,6 +75,12 @@ type Modules struct {
 
 	// quran — surah reading and audio (external AlQuran API + Redis cache).
 	QuranHandler *quranhttp.Handler
+
+	// Sabaq/Sabqi/Manzil daily queues, and the session pipeline.
+	HifzService      *hifzapp.Service
+	HifzAdminService *hifzapp.AdminService
+	HifzHandler      *hifzhttp.Handler
+	HifzAdminHandler *hifzhttp.AdminHandler
 
 	// notification — push tokens, Expo delivery, job log, smart rules engine.
 	NotificationService *notifapp.Service
@@ -136,6 +145,14 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	quranClient := quraninfra.NewClient(cfg.AlQuranBaseURL, cfg.QuranAudioCDNURL, cfg.QuranAudioEdition, cfg.QuranAudioBitrate)
 	quranService := quranapp.NewService(quranClient, infra.Redis)
 
+	// recitation service's text-based seam, and spends the shared XP currency.
+	hifzRepo, err := hifzinfra.NewMongoRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("init hifz repository: %w", err)
+	}
+	hifzService := hifzapp.NewService(hifzRepo, quranService, recitationService, progressService)
+	hifzAdminService := hifzapp.NewAdminService(hifzRepo, quranService, hifzService)
+
 	var coachService *coachapp.Service
 	var coachHandler *coachhttp.Handler
 	var coachAdminHandler *coachhttp.AdminHandler
@@ -187,6 +204,11 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		CoachAdminHandler: coachAdminHandler,
 
 		QuranHandler: quranhttp.NewHandler(quranService),
+
+		HifzService:      hifzService,
+		HifzAdminService: hifzAdminService,
+		HifzHandler:      hifzhttp.NewHandler(hifzService),
+		HifzAdminHandler: hifzhttp.NewAdminHandler(hifzAdminService),
 
 		NotificationService: notificationService,
 		NotificationHandler: notifhttp.NewHandler(notificationService),

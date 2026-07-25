@@ -135,6 +135,40 @@ func extractLessonXP(lesson leveldomain.Lesson) int {
 	return defaultLessonXP
 }
 
+type Grade struct {
+	Score      int
+	Words      []domain.WordResult
+	Message    string
+	Transcript string
+	Coaching   *domain.RecitationCoaching
+}
+
+func (s *Service) GradeAgainstText(
+	ctx context.Context,
+	expectedText string,
+	audio io.Reader,
+	audioFilename string,
+) (*Grade, error) {
+	if strings.TrimSpace(expectedText) == "" {
+		return nil, fmt.Errorf("expected text is empty")
+	}
+
+	transcript, err := s.callWhisper(ctx, audio, audioFilename, expectedText)
+	if err != nil {
+		logger.Error("Whisper call failed", zap.Error(err))
+		return nil, fmt.Errorf("transcription service unavailable: %w", err)
+	}
+
+	words, score := domain.CompareRecitation(expectedText, transcript.Text)
+	return &Grade{
+		Score:      score,
+		Words:      words,
+		Message:    domain.ScoreToFeedback(score),
+		Transcript: transcript.Text,
+		Coaching:   s.buildCoaching(ctx, score, words),
+	}, nil
+}
+
 func (s *Service) CheckRecitation(
 	ctx context.Context,
 	userID string,
@@ -161,14 +195,13 @@ func (s *Service) CheckRecitation(
 	}
 	baseXP := extractLessonXP(lesson)
 
-	transcript, err := s.callWhisper(ctx, audio, audioFilename, arabicText)
+	grade, err := s.GradeAgainstText(ctx, arabicText, audio, audioFilename)
 	if err != nil {
-		logger.Error("Whisper call failed", zap.Error(err))
-		return nil, fmt.Errorf("transcription service unavailable: %w", err)
+		return nil, err
 	}
 
-	words, score := domain.CompareRecitation(arabicText, transcript.Text)
-	message := domain.ScoreToFeedback(score)
+	words, score := grade.Words, grade.Score
+	message := grade.Message
 	xpEarned := domain.ScoreToXP(score, baseXP)
 
 	attemptNum, err := s.repo.CountUserRecitationAttempts(ctx, userID, levelID, lessonIndex)
@@ -185,7 +218,7 @@ func (s *Service) CheckRecitation(
 		Score:       score,
 		Words:       words,
 		XPEarned:    xpEarned,
-		Transcript:  transcript.Text,
+		Transcript:  grade.Transcript,
 		AttemptNum:  attemptNum,
 		CreatedAt:   time.Now(),
 	}
@@ -204,9 +237,9 @@ func (s *Service) CheckRecitation(
 		Words:      words,
 		Message:    message,
 		XPEarned:   xpEarned,
-		Transcript: transcript.Text,
+		Transcript: grade.Transcript,
 		AttemptNum: attemptNum,
-		Coaching:   s.buildCoaching(ctx, score, words),
+		Coaching:   grade.Coaching,
 	}, nil
 }
 

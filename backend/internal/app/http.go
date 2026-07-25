@@ -10,6 +10,7 @@ import (
 	coachhttp "github.com/chawais/deenquest/backend/internal/coach/interfaces/http"
 	contenthttp "github.com/chawais/deenquest/backend/internal/content/interfaces/http"
 	dailytaskhttp "github.com/chawais/deenquest/backend/internal/dailytask/interfaces/http"
+	hifzhttp "github.com/chawais/deenquest/backend/internal/hifz/interfaces/http"
 	levelhttp "github.com/chawais/deenquest/backend/internal/level/interfaces/http"
 	notifhttp "github.com/chawais/deenquest/backend/internal/notification/interfaces/http"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
@@ -21,9 +22,6 @@ import (
 	userhttp "github.com/chawais/deenquest/backend/internal/user/interfaces/http"
 )
 
-// buildRouter assembles the HTTP surface: global middleware, the three route
-// groups (public /api/v1, JWT-authenticated, admin-only), and each module's
-// routes. The actual endpoints live in every module's routes.go.
 func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -59,6 +57,7 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	dailytaskhttp.RegisterRoutes(authed, m.TaskHandler)
 	rewardhttp.RegisterRoutes(authed, m.RewardHandler)
 	recitationhttp.RegisterRoutes(authed, m.RecitationHandler)
+	hifzhttp.RegisterRoutes(authed, m.HifzHandler)
 	if m.CoachHandler != nil {
 		coachhttp.RegisterRoutes(authed, m.CoachHandler)
 	}
@@ -69,6 +68,7 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	rewardhttp.RegisterAdminRoutes(admin, m.RewardAdminHandler)
 	contenthttp.RegisterAdminRoutes(admin, m.ContentHandler)
 	analyticshttp.RegisterAdminRoutes(admin, m.AnalyticsHandler)
+	hifzhttp.RegisterAdminRoutes(admin, m.HifzAdminHandler)
 	if m.CoachAdminHandler != nil {
 		coachhttp.RegisterAdminRoutes(admin, m.CoachAdminHandler)
 	}

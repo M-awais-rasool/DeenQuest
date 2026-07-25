@@ -10,9 +10,6 @@ import (
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
 )
 
-// seedStartupData makes sure baseline data exists on boot: the admin account,
-// the daily-task catalog, levels, and rewards. Only missing daily tasks are
-// fatal — everything else logs a warning and retries on next startup.
 func seedStartupData(cfg *config.Config, m *Modules) error {
 	ctx := context.Background()
 
@@ -39,6 +36,12 @@ func seedStartupData(cfg *config.Config, m *Modules) error {
 		logger.Warn("failed to seed rewards (will retry on next startup)", zap.Error(err))
 	} else {
 		logger.Info("Rewards seeded successfully")
+	}
+
+	if n, err := m.HifzAdminService.Seed(ctx); err != nil {
+		logger.Warn("failed to seed hifz plans (will retry on next startup)", zap.Error(err))
+	} else {
+		logger.Info("Hifz plans seeded successfully", zap.Int("written", n))
 	}
 
 	return nil
