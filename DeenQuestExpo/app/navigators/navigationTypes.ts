@@ -6,7 +6,7 @@ import {
   NavigatorScreenParams,
 } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { CourseType, DailyTask } from "../store/services/api";
+import type { CourseType, DailyTask, HifzQueue } from "../store/services/api";
 import type { PrayerName } from "../types/prayer";
 
 export type DemoTabParamList = {
@@ -47,7 +47,11 @@ export type AppStackParamList = {
   PrayerTimes: undefined;
   PrayerSettings: undefined;
   AdhanAlarm: { prayer: PrayerName };
-  HifzTracker: undefined;
+  HifzHome: undefined;
+  HifzPlanPicker: undefined;
+  HifzSession: { portionId: string; queue: HifzQueue };
+  HifzResult: { sessionId: string };
+  HifzMistakes: undefined;
   Challenges: undefined;
   ParentDashboard: undefined;
 };

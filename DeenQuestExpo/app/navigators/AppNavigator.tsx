@@ -38,7 +38,11 @@ import { CoachInsightsScreen } from "../screens/coach/CoachInsightsScreen";
 import { PrayerTimesScreen } from "../screens/prayer/PrayerTimesScreen";
 import { PrayerSettingsScreen } from "../screens/prayer/PrayerSettingsScreen";
 import { AdhanScreen } from "../screens/prayer/AdhanScreen";
-import { HifzTrackerScreen } from "../screens/extras/HifzTrackerScreen";
+import { HifzHomeScreen } from "../screens/hifz/HifzHomeScreen";
+import { HifzPlanPickerScreen } from "../screens/hifz/HifzPlanPickerScreen";
+import { HifzSessionScreen } from "../screens/hifz/HifzSessionScreen";
+import { HifzResultScreen } from "../screens/hifz/HifzResultScreen";
+import { HifzMistakesScreen } from "../screens/hifz/HifzMistakesScreen";
 import { ChallengesScreen } from "../screens/extras/ChallengesScreen";
 import { ParentDashboardScreen } from "../screens/extras/ParentDashboardScreen";
 
@@ -172,7 +176,23 @@ const AppStack = () => {
               animation: "fade",
             }}
           />
-          <Stack.Screen name="HifzTracker" component={HifzTrackerScreen} />
+          <Stack.Screen name="HifzHome" component={HifzHomeScreen} />
+          <Stack.Screen
+            name="HifzPlanPicker"
+            component={HifzPlanPickerScreen}
+            options={{ animation: "slide_from_bottom" }}
+          />
+          <Stack.Screen
+            name="HifzSession"
+            component={HifzSessionScreen}
+            options={{ gestureEnabled: false }}
+          />
+          <Stack.Screen
+            name="HifzResult"
+            component={HifzResultScreen}
+            options={{ gestureEnabled: false, animation: "fade" }}
+          />
+          <Stack.Screen name="HifzMistakes" component={HifzMistakesScreen} />
           <Stack.Screen name="Challenges" component={ChallengesScreen} />
           <Stack.Screen
             name="ParentDashboard"
