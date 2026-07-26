@@ -54,7 +54,7 @@ export function HifzSessionEngine({
   const [resultMeta, setResultMeta] = useState<SessionHeaderMeta | null>(null);
   const [submitStage] = useSubmitHifzStageMutation();
 
-  const { session, preset, ayahs } = view;
+  const { session, rules, ayahs } = view;
   const challenges = session.challenges ?? [];
   const queue = session.queue;
 
@@ -197,8 +197,9 @@ export function HifzSessionEngine({
         <ListenStage
           surahId={session.portion.surah_id}
           ayahs={ayahs}
-          repeats={preset.listen_repeats}
+          repeats={rules.listen_repeats}
           reciterName={reciterName}
+          reciterId={view.reciter_id}
           onDone={() =>
             advance("listen", { rawScore: 100, hintsUsed: 0, latencyMs: 0 })
           }
@@ -210,6 +211,7 @@ export function HifzSessionEngine({
         <ShadowStage
           surahId={session.portion.surah_id}
           ayahs={ayahs}
+          reciterId={view.reciter_id}
           onDone={() =>
             advance("shadow", { rawScore: 100, hintsUsed: 0, latencyMs: 0 })
           }
@@ -222,7 +224,7 @@ export function HifzSessionEngine({
           sessionId={session.id}
           ayahs={ayahs}
           blind={false}
-          passScore={preset.open_recite_pass}
+          passScore={rules.open_recite_pass}
           onResultView={handleResultView}
           onDone={(next) => (next === "sealed" ? onFinished() : setStage(next))}
         />
@@ -234,7 +236,7 @@ export function HifzSessionEngine({
           sessionId={session.id}
           ayahs={ayahs}
           blind
-          passScore={preset.blind_recite_pass}
+          passScore={rules.blind_recite_pass}
           onResultView={handleResultView}
           onDone={() => onFinished()}
         />
@@ -273,8 +275,7 @@ export function HifzSessionEngine({
         <ChallengeComponent
           key={currentChallenge.id}
           challenge={currentChallenge}
-          allowHints={preset.allow_hints}
-          showTranslation={preset.show_translation}
+          allowHints={rules.allow_hints}
           surahRef={surahRef}
           onWrong={loseHeart}
           onDone={(outcome) =>

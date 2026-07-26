@@ -9,7 +9,6 @@ export interface ChallengeOutcome {
 export interface HifzChallengeProps {
   challenge: HifzChallenge;
   allowHints: boolean;
-  showTranslation: boolean;
   surahRef?: { englishName: string; surahId: number };
   onWrong?: () => void;
   onDone: (outcome: ChallengeOutcome) => void;

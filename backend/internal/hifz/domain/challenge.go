@@ -123,7 +123,7 @@ type GenParams struct {
 	// Context words come from the rest of the surah and make better distractors
 	// than random vocabulary. Optional.
 	ContextWords []string
-	Preset       DifficultyPreset
+	Rules        SessionRules
 	Settings     *Settings
 	// Seed makes generation deterministic for a given session.
 	Seed string
@@ -137,12 +137,12 @@ func GenerateChallenges(p GenParams) []Challenge {
 
 	rng := rand.New(rand.NewSource(int64(hashSeed(p.Seed))))
 
-	count := p.Preset.ChallengeCount
+	count := p.Rules.ChallengeCount
 	if count <= 0 {
 		count = 3
 	}
 
-	ordered := weightedOrder(kinds, p.Preset.ChallengeWeights, rng)
+	ordered := weightedOrder(kinds, p.Rules.ChallengeWeights, rng)
 
 	out := make([]Challenge, 0, count)
 	used := make(map[string]int, len(ordered))
@@ -172,7 +172,7 @@ func maxPerSession(kind string) int {
 }
 
 func eligibleKinds(p GenParams) []string {
-	enabled := p.Preset.EnabledChallenges
+	enabled := p.Rules.EnabledChallenges
 	if len(enabled) == 0 {
 		enabled = []string{ChallengeClozeWord, ChallengeAyahOrder}
 	}
@@ -230,7 +230,6 @@ func challengeID(kind string, seq int, seed string) string {
 	return fmt.Sprintf("%s-%d-%x", kind, seq, hashSeed(seed+kind)%0xffff)
 }
 
-
 func genCloze(p GenParams, rng *rand.Rand, seq int) *Challenge {
 	i := rng.Intn(len(p.AyahTexts))
 	words := SplitWords(p.AyahTexts[i])
@@ -257,7 +256,7 @@ func genCloze(p GenParams, rng *rand.Rand, seq int) *Challenge {
 			"sentence":    tokens,
 			"bank":        bank,
 			"ayah_number": p.AyahNumbers[i],
-			"allow_hints": p.Preset.AllowHints,
+			"allow_hints": p.Rules.AllowHints,
 		},
 	}
 }
@@ -299,7 +298,7 @@ func genProgressiveFade(p GenParams, rng *rand.Rand, seq int) *Challenge {
 		Content: map[string]any{
 			"rounds":      rounds,
 			"ayah_number": p.AyahNumbers[i],
-			"allow_hints": p.Preset.AllowHints,
+			"allow_hints": p.Rules.AllowHints,
 		},
 	}
 }

@@ -43,17 +43,17 @@ func (s Stage) Index() int {
 	return -1
 }
 
-// Next returns the stage that follows s, honouring the preset's skip flags.
-func (s Stage) Next(preset DifficultyPreset) Stage {
+// Next returns the stage that follows s, honouring the session rules' skip flags.
+func (s Stage) Next(rules SessionRules) Stage {
 	i := s.Index()
 	if i < 0 || i >= len(StageOrder)-1 {
 		return StageSealed
 	}
 	for _, cand := range StageOrder[i+1:] {
-		if cand == StageShadow && !preset.ShadowRequired {
+		if cand == StageShadow && !rules.ShadowRequired {
 			continue
 		}
-		if cand == StageBlindRecite && !preset.BlindRequiredToSeal {
+		if cand == StageBlindRecite && !rules.BlindRequiredToSeal {
 			continue
 		}
 		return cand
@@ -88,7 +88,7 @@ type PlanScope struct {
 type SegmentationMode string
 
 const (
-	SegmentAuto SegmentationMode = "auto"
+	SegmentAuto   SegmentationMode = "auto"
 	SegmentManual SegmentationMode = "manual"
 )
 
@@ -119,7 +119,6 @@ type Plan struct {
 	Published    bool         `bson:"published"    json:"published"`
 	Scope        PlanScope    `bson:"scope"        json:"scope"`
 	Segmentation Segmentation `bson:"segmentation" json:"segmentation"`
-	PresetName   string       `bson:"preset_name"  json:"preset_name"` // default difficulty
 	XPPerPortion int          `bson:"xp_per_portion" json:"xp_per_portion"`
 	SeedVersion  int          `bson:"seed_version" json:"seed_version"`
 	CreatedAt    time.Time    `bson:"created_at"   json:"created_at"`
@@ -147,13 +146,13 @@ func PortionID(planID string, surahID, start, end int) string {
 }
 
 type Enrollment struct {
-	ID         string `bson:"_id"     json:"id"`
-	UserID     string `bson:"user_id" json:"user_id"`
-	PlanID     string `bson:"plan_id" json:"plan_id"`
-	PresetName string `bson:"preset_name" json:"preset_name"`
+	ID     string `bson:"_id"     json:"id"`
+	UserID string `bson:"user_id" json:"user_id"`
+	PlanID string `bson:"plan_id" json:"plan_id"`
 
-	DailyNewPortions int    `bson:"daily_new_portions" json:"daily_new_portions"`
-	ReciterID        string `bson:"reciter_id"         json:"reciter_id"`
+	ReciterID string `bson:"reciter_id" json:"reciter_id"`
+
+	AyahsPerPortion int `bson:"ayahs_per_portion" json:"ayahs_per_portion"`
 
 	StreakDays    int       `bson:"streak_days"     json:"streak_days"`
 	LongestStreak int       `bson:"longest_streak"  json:"longest_streak"`
@@ -247,9 +246,8 @@ type Session struct {
 	PortionID string `bson:"portion_id" json:"portion_id"`
 	Queue     Queue  `bson:"queue"      json:"queue"`
 
-	Portion    Portion  `bson:"portion"     json:"portion"`
-	AyahTexts  []string `bson:"ayah_texts"  json:"ayah_texts"`
-	PresetName string   `bson:"preset_name" json:"preset_name"`
+	Portion   Portion  `bson:"portion"    json:"portion"`
+	AyahTexts []string `bson:"ayah_texts" json:"ayah_texts"`
 
 	Stage        Stage       `bson:"stage"       json:"stage"`
 	Challenges   []Challenge `bson:"challenges"  json:"challenges"`
@@ -263,21 +261,22 @@ type Session struct {
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
-type DifficultyPreset struct {
-	Name                string         `bson:"name"  json:"name"`
-	Label               string         `bson:"label" json:"label"`
-	ListenRepeats       int            `bson:"listen_repeats"        json:"listen_repeats"`
-	ShadowRequired      bool           `bson:"shadow_required"       json:"shadow_required"`
-	AyahsPerPortion     int            `bson:"ayahs_per_portion"     json:"ayahs_per_portion"`
-	OpenRecitePass      int            `bson:"open_recite_pass"      json:"open_recite_pass"`
-	BlindRecitePass     int            `bson:"blind_recite_pass"     json:"blind_recite_pass"`
+// SessionRules is the single set of rules every session runs by.
+//
+// There is deliberately no difficulty level: one experience for everyone. These
+// remain admin-tunable so the whole app can be adjusted at once, but they are
+// never a per-learner choice.
+type SessionRules struct {
+	ListenRepeats       int            `bson:"listen_repeats"         json:"listen_repeats"`
+	ShadowRequired      bool           `bson:"shadow_required"        json:"shadow_required"`
+	OpenRecitePass      int            `bson:"open_recite_pass"       json:"open_recite_pass"`
+	BlindRecitePass     int            `bson:"blind_recite_pass"      json:"blind_recite_pass"`
 	BlindRequiredToSeal bool           `bson:"blind_required_to_seal" json:"blind_required_to_seal"`
-	ChallengeCount      int            `bson:"challenge_count"       json:"challenge_count"`
-	EnabledChallenges   []string       `bson:"enabled_challenges"    json:"enabled_challenges"`
+	ChallengeCount      int            `bson:"challenge_count"        json:"challenge_count"`
+	EnabledChallenges   []string       `bson:"enabled_challenges"     json:"enabled_challenges"`
 	ChallengeWeights    map[string]int `bson:"challenge_weights,omitempty" json:"challenge_weights,omitempty"`
-	AllowHints          bool           `bson:"allow_hints"      json:"allow_hints"`
-	ShowTranslation     bool           `bson:"show_translation" json:"show_translation"`
-	LenienceBonus       int            `bson:"lenience_bonus"   json:"lenience_bonus"` // points added to recitation scores
+	AllowHints          bool           `bson:"allow_hints"    json:"allow_hints"`
+	LenienceBonus       int            `bson:"lenience_bonus" json:"lenience_bonus"` // added to recitation scores
 }
 
 // ChallengeConfig holds the per-type generation parameters.
@@ -301,6 +300,7 @@ type SRSConfig struct {
 	UnverifiedPenalty float64 `bson:"unverified_penalty" json:"unverified_penalty"`
 	SabqiWindowDays   int     `bson:"sabqi_window_days"  json:"sabqi_window_days"`
 	ManzilDailyCap    int     `bson:"manzil_daily_cap"   json:"manzil_daily_cap"`
+	NewPortionsPerDay int     `bson:"new_portions_per_day" json:"new_portions_per_day"`
 	HintPenalty       float64 `bson:"hint_penalty"       json:"hint_penalty"`
 }
 
@@ -314,7 +314,7 @@ type Reciter struct {
 // Settings is the single tunable document for the whole module.
 type Settings struct {
 	ID          string                     `bson:"_id"      json:"-"`
-	Presets     []DifficultyPreset         `bson:"presets"  json:"presets"`
+	Session     SessionRules               `bson:"session"  json:"session"`
 	Challenges  map[string]ChallengeConfig `bson:"challenges" json:"challenges"`
 	SRS         SRSConfig                  `bson:"srs"      json:"srs"`
 	Reciters    []Reciter                  `bson:"reciters" json:"reciters"`
@@ -322,17 +322,13 @@ type Settings struct {
 	UpdatedAt   time.Time                  `bson:"updated_at"   json:"updated_at"`
 }
 
-// Preset returns the named preset, falling back to the first one.
-func (s *Settings) Preset(name string) DifficultyPreset {
-	for _, p := range s.Presets {
-		if p.Name == name {
-			return p
-		}
+// Rules returns the session rules, falling back to the shipped defaults when
+// the stored document predates them or was saved empty.
+func (s *Settings) Rules() SessionRules {
+	if s == nil || s.Session.ChallengeCount == 0 {
+		return DefaultSettings().Session
 	}
-	if len(s.Presets) > 0 {
-		return s.Presets[0]
-	}
-	return DefaultSettings().Presets[0]
+	return s.Session
 }
 
 // ChallengeCfg returns the config for a challenge type, or a sane default.

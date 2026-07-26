@@ -521,7 +521,6 @@ export interface HifzPlan {
   icon: string;
   accent: string;
   order: number;
-  preset_name: string;
   xp_per_portion: number;
   portion_count: number;
   ayah_count: number;
@@ -529,19 +528,15 @@ export interface HifzPlan {
   portions_sealed: number;
 }
 
-export interface HifzPreset {
-  name: string;
-  label: string;
+export interface HifzSessionRules {
   listen_repeats: number;
   shadow_required: boolean;
-  ayahs_per_portion: number;
   open_recite_pass: number;
   blind_recite_pass: number;
   blind_required_to_seal: boolean;
   challenge_count: number;
   enabled_challenges: string[];
   allow_hints: boolean;
-  show_translation: boolean;
   lenience_bonus: number;
 }
 
@@ -552,7 +547,6 @@ export interface HifzReciter {
 }
 
 export interface HifzSettings {
-  presets: HifzPreset[];
   reciters: HifzReciter[];
 }
 
@@ -565,7 +559,6 @@ export interface HifzToday {
   enrolled: boolean;
   plan_id?: string;
   plan_title?: string;
-  preset_name?: string;
   reciter_id?: string;
   sabqi: HifzQueueItem[];
   manzil: HifzQueueItem[];
@@ -603,7 +596,6 @@ export interface HifzSession {
   queue: HifzQueue;
   portion: HifzPortion;
   ayah_texts: string[];
-  preset_name: string;
   stage: HifzStage;
   challenges: HifzChallenge[];
   challenge_idx: number;
@@ -619,7 +611,7 @@ export interface HifzSessionAyah {
 
 export interface HifzSessionView {
   session: HifzSession;
-  preset: HifzPreset;
+  rules: HifzSessionRules;
   ayahs: HifzSessionAyah[];
   reciter_id: string;
   strength: HifzPortionStrength;
@@ -674,8 +666,6 @@ export interface HifzMistake {
 
 export interface HifzEnrollRequest {
   plan_id: string;
-  preset_name?: string;
-  daily_new_portions?: number;
   reciter_id?: string;
 }
 
@@ -971,14 +961,24 @@ export const API = createApi({
       ],
       keepUnusedDataFor: 604800,
     }),
-    getSurahAudio: builder.query<APIResponse<QuranSurahAudio>, number>({
-      query: (id) => ({
-        url: `/api/v1/quran/surah/${id}/audio`,
-        method: "GET",
-      }),
-      providesTags: (_result, _error, id) => [
-        { type: "Quran", id: `surah:${id}:audio` },
-      ],
+    getSurahAudio: builder.query<
+      APIResponse<QuranSurahAudio>,
+      number | { id: number; reciter?: string }
+    >({
+      query: (arg) => {
+        const { id, reciter } =
+          typeof arg === "number" ? { id: arg, reciter: undefined } : arg;
+        return {
+          url: `/api/v1/quran/surah/${id}/audio`,
+          method: "GET",
+          params: reciter ? { reciter } : undefined,
+        };
+      },
+      providesTags: (_result, _error, arg) => {
+        const { id, reciter } =
+          typeof arg === "number" ? { id: arg, reciter: undefined } : arg;
+        return [{ type: "Quran", id: `surah:${id}:audio:${reciter ?? "default"}` }];
+      },
       keepUnusedDataFor: 604800,
     }),
 

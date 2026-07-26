@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -17,53 +17,51 @@ import {
   useEnrollHifzMutation,
   useGetHifzPlansQuery,
   useGetHifzSettingsQuery,
-  type HifzPreset,
+  useGetHifzTodayQuery,
 } from "../../store/services/api";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
 
 type Props = NativeStackScreenProps<AppStackParamList, "HifzPlanPicker">;
 
-function presetBlurb(preset: HifzPreset): string {
-  if (!preset.allow_hints) return `No peeks, ${preset.blind_recite_pass}% pass`;
-  if (preset.blind_required_to_seal) return "Blind recite required";
-  return "Open book allowed";
-}
-
 export function HifzPlanPickerScreen({ navigation }: Props) {
   const plansQ = useGetHifzPlansQuery();
   const settingsQ = useGetHifzSettingsQuery();
+  const todayQ = useGetHifzTodayQuery();
   const [enroll, { isLoading: enrolling }] = useEnrollHifzMutation();
 
   const plans = plansQ.data?.data ?? [];
-  const presets = settingsQ.data?.data?.presets ?? [];
   const reciters = settingsQ.data?.data?.reciters ?? [];
 
   const [planId, setPlanId] = useState<string | null>(null);
-  const [presetName, setPresetName] = useState<string | null>(null);
   const [reciterId, setReciterId] = useState<string | null>(null);
-  const [dailyNew, setDailyNew] = useState(1);
 
+  const enrolled = todayQ.data?.data?.enrolled ? todayQ.data.data : null;
+
+  const hydratedRef = useRef(false);
   useEffect(() => {
-    if (planId || plans.length === 0) return;
+    if (hydratedRef.current) return;
+    // Wait for both queries so we never hydrate from half the picture.
+    if (plans.length === 0 || todayQ.isLoading) return;
+    hydratedRef.current = true;
+
     const current = plans.find((p) => p.enrolled) ?? plans[0];
     setPlanId(current.id);
-    setPresetName(current.preset_name);
-  }, [plans, planId]);
+    setReciterId(enrolled?.reciter_id ?? reciters[0]?.id ?? null);
+  }, [plans, todayQ.isLoading, enrolled, reciters]);
 
+  // A reciter list that arrives after hydration still needs a valid selection.
   useEffect(() => {
     if (!reciterId && reciters.length > 0) setReciterId(reciters[0].id);
   }, [reciters, reciterId]);
 
-  const loading = plansQ.isLoading || settingsQ.isLoading;
+  const loading = plansQ.isLoading || settingsQ.isLoading || todayQ.isLoading;
 
   const start = async () => {
     if (!planId) return;
     try {
       await enroll({
         plan_id: planId,
-        preset_name: presetName ?? undefined,
-        daily_new_portions: dailyNew,
         reciter_id: reciterId ?? undefined,
       }).unwrap();
       haptics.success();
@@ -103,7 +101,6 @@ export function HifzPlanPickerScreen({ navigation }: Props) {
                   onPress={() => {
                     haptics.selection();
                     setPlanId(plan.id);
-                    setPresetName(plan.preset_name);
                   }}
                   style={[
                     s.planCard,
@@ -161,67 +158,7 @@ export function HifzPlanPickerScreen({ navigation }: Props) {
               );
             })}
 
-            <SectionLabel style={s.groupLabel}>DIFFICULTY</SectionLabel>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              {presets.map((preset) => {
-                const active = preset.name === presetName;
-                return (
-                  <Pressable
-                    key={preset.name}
-                    onPress={() => {
-                      haptics.selection();
-                      setPresetName(preset.name);
-                    }}
-                    style={[s.presetChip, active && s.presetChipActive]}
-                  >
-                    <Text
-                      style={[s.presetName, active && { color: hz.tealBright }]}
-                    >
-                      {preset.label}
-                    </Text>
-                    <Text
-                      style={[s.presetSub, active && { color: "#4E8079" }]}
-                      numberOfLines={2}
-                    >
-                      {presetBlurb(preset)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
 
-            <SectionLabel style={s.groupLabel}>NEW PORTIONS PER DAY</SectionLabel>
-            <View style={s.stepper}>
-              <Pressable
-                onPress={() => {
-                  haptics.light();
-                  setDailyNew((n) => Math.max(1, n - 1));
-                }}
-                style={({ pressed }) => [s.stepBtn, pressed && { opacity: 0.7 }]}
-              >
-                <Text style={s.stepMinus}>−</Text>
-              </Pressable>
-              <Text style={s.stepValue}>
-                {dailyNew}
-                <Text style={s.stepUnit}>
-                  {" "}
-                  portion{dailyNew === 1 ? "" : "s"}/day
-                </Text>
-              </Text>
-              <Pressable
-                onPress={() => {
-                  haptics.light();
-                  setDailyNew((n) => Math.min(5, n + 1));
-                }}
-                style={({ pressed }) => [
-                  s.stepBtn,
-                  s.stepBtnPlus,
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Text style={s.stepPlus}>+</Text>
-              </Pressable>
-            </View>
 
             {reciters.length > 0 && (
               <>
@@ -391,52 +328,7 @@ const s = StyleSheet.create({
 
   groupLabel: { marginTop: 16, marginBottom: 8, marginLeft: 4 },
 
-  presetChip: {
-    flex: 1,
-    backgroundColor: hz.card,
-    borderWidth: 1.5,
-    borderColor: hz.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    alignItems: "center",
-  },
-  presetChipActive: { backgroundColor: hz.tealTint, borderColor: hz.teal },
-  presetName: { fontFamily: "Nunito_900Black", fontSize: 12.5, color: hz.muted },
-  presetSub: {
-    fontFamily: "Nunito_600SemiBold",
-    fontSize: 9.5,
-    color: hz.faint,
-    marginTop: 3,
-    textAlign: "center",
-  },
 
-  stepper: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: hz.card,
-    borderWidth: 1,
-    borderColor: hz.cardBorder,
-    borderRadius: 16,
-    paddingVertical: 11,
-    paddingHorizontal: 15,
-  },
-  stepBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
-    backgroundColor: hz.inset,
-    borderWidth: 1,
-    borderColor: hz.cardBorder,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepBtnPlus: { backgroundColor: hz.tealTint, borderWidth: 0 },
-  stepMinus: { fontFamily: "Nunito_900Black", fontSize: 17, color: hz.muted },
-  stepPlus: { fontFamily: "Nunito_900Black", fontSize: 17, color: hz.tealBright },
-  stepValue: { fontFamily: "Nunito_900Black", fontSize: 20, color: hz.text },
-  stepUnit: { fontFamily: "Nunito_700Bold", fontSize: 12, color: hz.faint },
 
   reciterChip: {
     backgroundColor: hz.card,

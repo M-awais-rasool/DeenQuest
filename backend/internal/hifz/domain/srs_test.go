@@ -251,8 +251,8 @@ func TestNextStreak(t *testing.T) {
 	}
 }
 
-func TestStageNext_RespectsPresetSkips(t *testing.T) {
-	full := DifficultyPreset{ShadowRequired: true, BlindRequiredToSeal: true}
+func TestStageNext_RespectsRuleSkips(t *testing.T) {
+	full := SessionRules{ShadowRequired: true, BlindRequiredToSeal: true}
 	if got := StageListen.Next(full); got != StageShadow {
 		t.Errorf("listen → %s, want shadow", got)
 	}
@@ -260,7 +260,7 @@ func TestStageNext_RespectsPresetSkips(t *testing.T) {
 		t.Errorf("challenges → %s, want blind_recite", got)
 	}
 
-	lean := DifficultyPreset{ShadowRequired: false, BlindRequiredToSeal: false}
+	lean := SessionRules{ShadowRequired: false, BlindRequiredToSeal: false}
 	if got := StageListen.Next(lean); got != StageOpenRecite {
 		t.Errorf("with shadow off, listen → %s, want open_recite", got)
 	}

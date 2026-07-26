@@ -10,6 +10,7 @@ export interface AyahAudioOptions {
   surahId: number;
   ayahStart: number;
   ayahEnd: number;
+  reciterId?: string;
   /** Called when the last ayah of a pass finishes. */
   onPassComplete?: () => void;
   /** Called after each ayah finishes, with its number in the surah. */
@@ -37,12 +38,13 @@ export function useAyahAudio({
   surahId,
   ayahStart,
   ayahEnd,
+  reciterId,
   onPassComplete,
   onAyahComplete,
   stepMode = false,
 }: AyahAudioOptions) {
   const { data: surahRes } = useGetSurahByIdQuery({ id: surahId });
-  const { data: audioRes } = useGetSurahAudioQuery(surahId);
+  const { data: audioRes } = useGetSurahAudioQuery({ id: surahId, reciter: reciterId });
 
   const soundRef = useRef<Audio.Sound | null>(null);
   const tokenRef = useRef(0);
@@ -52,6 +54,7 @@ export function useAyahAudio({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rate, setRate] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
   const cbRef = useRef({ onPassComplete, onAyahComplete, stepMode, ayahEnd });
   cbRef.current = { onPassComplete, onAyahComplete, stepMode, ayahEnd };
@@ -90,13 +93,17 @@ export function useAyahAudio({
   const playAyah = useCallback(
     async (ayahNumber: number) => {
       const url = urls?.get(ayahNumber);
-      if (!url) return;
+      if (!url) {
+        if (urls) setError("No audio is available for this portion.");
+        return;
+      }
 
       const token = ++tokenRef.current;
       const isCurrent = () => tokenRef.current === token && mountedRef.current;
 
       setIsLoading(true);
       setIsPlaying(false);
+      setError(null);
       setCurrentAyah(ayahNumber);
 
       const previous = soundRef.current;
@@ -152,6 +159,7 @@ export function useAyahAudio({
         if (isCurrent()) {
           setIsLoading(false);
           setIsPlaying(false);
+          setError("This recitation couldn't be loaded. Try another reciter.");
         }
       }
     },
@@ -242,6 +250,8 @@ export function useAyahAudio({
     currentAyah,
     isPlaying,
     isLoading,
+    error,
+    /** Loading *or* playing — the state a "continue" button should wait out. */
     isBusy: isLoading || isPlaying,
     canGoNext: currentAyah < ayahEnd,
     canGoPrevious: currentAyah > ayahStart,

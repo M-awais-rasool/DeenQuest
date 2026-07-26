@@ -1,6 +1,6 @@
 package domain
 
-const PlanSeedVersion = 1
+const PlanSeedVersion = 2 
 
 var juz30Descending = []int{
 	114, 113, 112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100,
@@ -26,7 +26,6 @@ func SeedPlans() []Plan {
 				Mode:            SegmentAuto,
 				AyahsPerPortion: 3,
 			},
-			PresetName:   "beginner",
 			XPPerPortion: 40,
 			SeedVersion:  PlanSeedVersion,
 		},
@@ -45,7 +44,6 @@ func SeedPlans() []Plan {
 				Mode:            SegmentAuto,
 				AyahsPerPortion: 4,
 			},
-			PresetName:   "beginner",
 			XPPerPortion: 45,
 			SeedVersion:  PlanSeedVersion,
 		},
@@ -64,7 +62,6 @@ func SeedPlans() []Plan {
 				Mode:            SegmentAuto,
 				AyahsPerPortion: 5,
 			},
-			PresetName:   "intermediate",
 			XPPerPortion: 50,
 			SeedVersion:  PlanSeedVersion,
 		},
@@ -90,7 +87,6 @@ func SeedPlans() []Plan {
 					{SurahID: 2, AyahStart: 286, AyahEnd: 286, Label: "Al-Baqarah · 286"},
 				},
 			},
-			PresetName:   "intermediate",
 			XPPerPortion: 60,
 			SeedVersion:  PlanSeedVersion,
 		},
@@ -113,7 +109,6 @@ func SeedPlans() []Plan {
 					{SurahID: 18, AyahStart: 7, AyahEnd: 10, Label: "Al-Kahf · 7–10"},
 				},
 			},
-			PresetName:   "intermediate",
 			XPPerPortion: 55,
 			SeedVersion:  PlanSeedVersion,
 		},
@@ -132,7 +127,6 @@ func SeedPlans() []Plan {
 				Mode:            SegmentAuto,
 				AyahsPerPortion: 5,
 			},
-			PresetName:   "hafiz",
 			XPPerPortion: 55,
 			SeedVersion:  PlanSeedVersion,
 		},

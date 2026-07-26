@@ -6,17 +6,10 @@ import PageHeader, { PageLoader, PageMessage } from "../components/PageHeader";
 import type {
   HifzChallengeCatalogEntry,
   HifzChallengeConfig,
-  HifzDifficultyPreset,
+  HifzSessionRules,
   HifzSettings,
 } from "../types";
 
-/**
- * Every dial behind the Hifz Challenge: what each difficulty demands, how each
- * challenge type generates, and the spaced-repetition schedule itself.
- *
- * These are live settings, not a deploy — so the page explains what each number
- * does to a learner rather than just labelling the field.
- */
 export default function HifzSettingsPage() {
   const [settings, setSettings] = useState<HifzSettings | null>(null);
   const [catalog, setCatalog] = useState<HifzChallengeCatalogEntry[]>([]);
@@ -53,15 +46,8 @@ export default function HifzSettingsPage() {
     }
   };
 
-  const setPreset = (idx: number, patch: Partial<HifzDifficultyPreset>) =>
-    setSettings((s) =>
-      s
-        ? {
-            ...s,
-            presets: s.presets.map((p, i) => (i === idx ? { ...p, ...patch } : p)),
-          }
-        : s,
-    );
+  const setRules = (patch: Partial<HifzSessionRules>) =>
+    setSettings((s) => (s ? { ...s, session: { ...s.session, ...patch } } : s));
 
   const setChallenge = (kind: string, patch: Partial<HifzChallengeConfig>) =>
     setSettings((s) =>
@@ -83,7 +69,7 @@ export default function HifzSettingsPage() {
     <div>
       <PageHeader
         title="Hifz Settings"
-        subtitle="Difficulty, challenge generation and the review schedule"
+        subtitle="Session rules, challenge generation and the review schedule"
         action={
           <div className="flex gap-2">
             <button onClick={load} className="dq-btn-ghost" disabled={saving}>
@@ -97,140 +83,123 @@ export default function HifzSettingsPage() {
         }
       />
 
-      {/* ── Difficulty presets ── */}
+      {/* ── Session rules ── */}
       <h2 className="mt-8 text-sm font-black uppercase tracking-wide text-fg-faint">
-        Difficulty presets
+        Session rules
       </h2>
       <p className="mt-1 text-sm font-semibold text-fg-dimmer">
-        A preset decides portion size, how many listens are required, the pass
-        marks, and whether a blind recite is needed to seal a portion.
+        One experience for everyone — there is no difficulty level. These apply to
+        every learner in the app.
       </p>
 
-      <div className="mt-4 grid grid-cols-1 gap-[18px] xl:grid-cols-3">
-        {settings.presets.map((preset, idx) => (
-          <div key={preset.name} className="dq-card space-y-3 p-5">
-            <div className="flex items-center gap-2">
-              <input
-                className="dq-input flex-1 !text-base !font-black"
-                value={preset.label}
-                onChange={(e) => setPreset(idx, { label: e.target.value })}
-              />
-              <span className="dq-badge dq-badge-neutral">{preset.name}</span>
-            </div>
+      <div className="dq-card mt-4 grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
+        <NumberField
+          label="Listen repeats"
+          hint="Passes required before the Listen stage unlocks."
+          value={settings.session.listen_repeats}
+          min={1}
+          max={10}
+          onChange={(v) => setRules({ listen_repeats: v })}
+        />
+        <NumberField
+          label="Challenges per session"
+          value={settings.session.challenge_count}
+          min={1}
+          max={10}
+          onChange={(v) => setRules({ challenge_count: v })}
+        />
+        <NumberField
+          label="Open recite pass %"
+          value={settings.session.open_recite_pass}
+          min={0}
+          max={100}
+          onChange={(v) => setRules({ open_recite_pass: v })}
+        />
+        <NumberField
+          label="Blind recite pass %"
+          value={settings.session.blind_recite_pass}
+          min={0}
+          max={100}
+          onChange={(v) => setRules({ blind_recite_pass: v })}
+        />
+        <NumberField
+          label="Leniency bonus"
+          hint="Points added to every recitation score. Raise it when the transcriber is harsh — a false 'wrong word' is what makes people quit."
+          value={settings.session.lenience_bonus}
+          min={0}
+          max={25}
+          onChange={(v) => setRules({ lenience_bonus: v })}
+        />
+        <NumberField
+          label="New portions per day"
+          hint="How much fresh material the Sabaq queue offers each day."
+          value={settings.srs.new_portions_per_day}
+          min={1}
+          max={10}
+          onChange={(v) =>
+            setSettings({
+              ...settings,
+              srs: { ...settings.srs, new_portions_per_day: v },
+            })
+          }
+        />
 
-            <NumberField
-              label="Ayahs per portion"
-              hint="Overrides an auto-split plan's own size."
-              value={preset.ayahs_per_portion}
-              min={1}
-              max={20}
-              onChange={(v) => setPreset(idx, { ayahs_per_portion: v })}
-            />
-            <NumberField
-              label="Listen repeats"
-              hint="Passes required before the Listen stage unlocks."
-              value={preset.listen_repeats}
-              min={1}
-              max={10}
-              onChange={(v) => setPreset(idx, { listen_repeats: v })}
-            />
-            <NumberField
-              label="Challenges per session"
-              value={preset.challenge_count}
-              min={1}
-              max={10}
-              onChange={(v) => setPreset(idx, { challenge_count: v })}
-            />
+        <div className="space-y-2 border-t border-ink-500 pt-3 md:col-span-2">
+          <Toggle
+            label="Repeat-after-me stage"
+            checked={settings.session.shadow_required}
+            onChange={(v) => setRules({ shadow_required: v })}
+          />
+          <Toggle
+            label="Blind recite required to seal"
+            hint="Off means a portion can be sealed from open-book recitation alone — its strength stays capped until a blind pass."
+            checked={settings.session.blind_required_to_seal}
+            onChange={(v) => setRules({ blind_required_to_seal: v })}
+          />
+          <Toggle
+            label="Allow hints"
+            checked={settings.session.allow_hints}
+            onChange={(v) => setRules({ allow_hints: v })}
+          />
+        </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <NumberField
-                label="Open pass %"
-                value={preset.open_recite_pass}
-                min={0}
-                max={100}
-                onChange={(v) => setPreset(idx, { open_recite_pass: v })}
-              />
-              <NumberField
-                label="Blind pass %"
-                value={preset.blind_recite_pass}
-                min={0}
-                max={100}
-                onChange={(v) => setPreset(idx, { blind_recite_pass: v })}
-              />
-            </div>
-
-            <NumberField
-              label="Leniency bonus"
-              hint="Points added to every recitation score. Raise it when the transcriber is harsh on this cohort — a false 'wrong word' is what makes people quit."
-              value={preset.lenience_bonus}
-              min={0}
-              max={25}
-              onChange={(v) => setPreset(idx, { lenience_bonus: v })}
-            />
-
-            <div className="space-y-2 border-t border-ink-500 pt-3">
-              <Toggle
-                label="Repeat-after-me stage"
-                checked={preset.shadow_required}
-                onChange={(v) => setPreset(idx, { shadow_required: v })}
-              />
-              <Toggle
-                label="Blind recite required to seal"
-                hint="Off means a portion can be sealed from open-book recitation alone — its strength stays capped until a blind pass."
-                checked={preset.blind_required_to_seal}
-                onChange={(v) => setPreset(idx, { blind_required_to_seal: v })}
-              />
-              <Toggle
-                label="Allow hints"
-                checked={preset.allow_hints}
-                onChange={(v) => setPreset(idx, { allow_hints: v })}
-              />
-              <Toggle
-                label="Show translation"
-                checked={preset.show_translation}
-                onChange={(v) => setPreset(idx, { show_translation: v })}
-              />
-            </div>
-
-            <div className="border-t border-ink-500 pt-3">
-              <label className="dq-label">Enabled challenges</label>
-              <div className="space-y-1.5">
-                {catalog.map((entry) => {
-                  const on = preset.enabled_challenges?.includes(entry.kind);
-                  return (
-                    <label
-                      key={entry.kind}
-                      className="flex cursor-pointer items-center gap-2"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={!!on}
-                        onChange={(e) =>
-                          setPreset(idx, {
-                            enabled_challenges: e.target.checked
-                              ? [...(preset.enabled_challenges ?? []), entry.kind]
-                              : (preset.enabled_challenges ?? []).filter(
-                                  (k) => k !== entry.kind,
-                                ),
-                          })
-                        }
-                        className="h-3.5 w-3.5 accent-teal"
-                      />
-                      <span className="text-xs font-bold text-fg">
-                        {entry.icon} {entry.label}
-                      </span>
-                      {!settings.challenges[entry.kind]?.enabled && (
-                        <span className="text-[10px] font-black uppercase text-gold">
-                          off globally
-                        </span>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+        <div className="border-t border-ink-500 pt-3 md:col-span-2">
+          <label className="dq-label">Enabled challenges</label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {catalog.map((entry) => {
+              const on = settings.session.enabled_challenges?.includes(entry.kind);
+              return (
+                <label
+                  key={entry.kind}
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!on}
+                    onChange={(e) =>
+                      setRules({
+                        enabled_challenges: e.target.checked
+                          ? [...(settings.session.enabled_challenges ?? []), entry.kind]
+                          : (settings.session.enabled_challenges ?? []).filter(
+                              (k: string) => k !== entry.kind,
+                            ),
+                      })
+                    }
+                    className="h-3.5 w-3.5 accent-teal"
+                  />
+                  <span className="text-xs font-bold text-fg">
+                    {entry.icon} {entry.label}
+                  </span>
+                  {!settings.challenges[entry.kind]?.enabled && (
+                    <span className="text-[10px] font-black uppercase text-gold">
+                      off globally
+                    </span>
+                  )}
+                </label>
+              );
+            })}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* ── Challenge types ── */}
@@ -238,8 +207,8 @@ export default function HifzSettingsPage() {
         Challenge types
       </h2>
       <p className="mt-1 text-sm font-semibold text-fg-dimmer">
-        Generation parameters. Turning a type off here disables it everywhere,
-        whatever the presets say.
+        Generation parameters. Turning a type off here disables it everywhere, even
+        if it is ticked above.
       </p>
 
       <div className="mt-4 grid grid-cols-1 gap-[18px] lg:grid-cols-2">

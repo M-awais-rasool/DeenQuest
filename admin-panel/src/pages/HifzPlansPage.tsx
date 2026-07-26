@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import api from "../lib/api";
 import PageHeader, { PageLoader, PageMessage } from "../components/PageHeader";
 import DataTable from "../components/DataTable";
-import type { HifzPlan, HifzPreview, HifzSettings } from "../types";
+import type { HifzPlan, HifzPreview } from "../types";
 
 function blankPlan(): HifzPlan {
   return {
@@ -27,14 +27,12 @@ function blankPlan(): HifzPlan {
     published: false,
     scope: { surah_ids: [] },
     segmentation: { mode: "auto", ayahs_per_portion: 4 },
-    preset_name: "beginner",
     xp_per_portion: 45,
   };
 }
 
 export default function HifzPlansPage() {
   const [plans, setPlans] = useState<HifzPlan[]>([]);
-  const [presets, setPresets] = useState<HifzSettings["presets"]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<HifzPlan | null>(null);
   const [isNew, setIsNew] = useState(false);
@@ -48,15 +46,7 @@ export default function HifzPlansPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => {
-    fetchPlans();
-    api
-      .get("/v1/admin/hifz/settings")
-      .then((r) => setPresets(r.data.data?.presets ?? []))
-      .catch(() => {
-        // Non-fatal: the editor falls back to a free-text preset name.
-      });
-  }, []);
+  useEffect(fetchPlans, []);
 
   const save = async (plan: HifzPlan) => {
     try {
@@ -100,7 +90,6 @@ export default function HifzPlansPage() {
       <PlanEditor
         initial={editing}
         isNew={isNew}
-        presets={presets}
         onCancel={() => setEditing(null)}
         onSave={save}
       />
@@ -180,15 +169,6 @@ export default function HifzPlansPage() {
                 ),
               },
               {
-                key: "preset_name",
-                label: "Default difficulty",
-                render: (p: HifzPlan) => (
-                  <span className="dq-badge dq-badge-neutral">
-                    {p.preset_name}
-                  </span>
-                ),
-              },
-              {
                 key: "published",
                 label: "Live",
                 render: (p: HifzPlan) => (
@@ -248,13 +228,11 @@ export default function HifzPlansPage() {
 function PlanEditor({
   initial,
   isNew,
-  presets,
   onCancel,
   onSave,
 }: {
   initial: HifzPlan;
   isNew: boolean;
-  presets: HifzSettings["presets"];
   onCancel: () => void;
   onSave: (plan: HifzPlan) => void;
 }) {
@@ -292,7 +270,6 @@ function PlanEditor({
     plan.segmentation.mode,
     plan.segmentation.ayahs_per_portion,
     plan.segmentation.ranges?.length,
-    plan.preset_name,
     runPreview,
   ]);
 
@@ -302,7 +279,7 @@ function PlanEditor({
     <div>
       <PageHeader
         title={isNew ? "New Hifz Plan" : plan.title || "Edit Plan"}
-        subtitle="Scope, segmentation and difficulty — preview updates as you type"
+        subtitle="Scope and segmentation — preview updates as you type"
         action={
           <div className="flex gap-2">
             <button onClick={onCancel} className="dq-btn-ghost">
@@ -382,33 +359,14 @@ function PlanEditor({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="dq-label">Default difficulty</label>
-              <select
-                className="dq-input"
-                value={plan.preset_name}
-                onChange={(e) => set("preset_name", e.target.value)}
-              >
-                {(presets.length
-                  ? presets
-                  : [{ name: "beginner", label: "Beginner" }]
-                ).map((p) => (
-                  <option key={p.name} value={p.name}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="dq-label">XP per portion</label>
+          <div>
+            <label className="dq-label">XP per portion</label>
               <input
                 type="number"
                 className="dq-input"
                 value={plan.xp_per_portion}
                 onChange={(e) => set("xp_per_portion", Number(e.target.value))}
               />
-            </div>
           </div>
 
           <label className="flex cursor-pointer items-center gap-2.5 pt-1">
@@ -506,8 +464,8 @@ function PlanEditor({
                 }
               />
               <p className="mt-1 text-xs font-semibold text-fg-faint">
-                The learner's difficulty preset overrides this — a beginner gets
-                3-ayah portions of the same plan a hafiz takes 6 at a time.
+                Frozen onto each learner when they enroll, so changing it later
+                never re-cuts portions people have already memorized.
               </p>
             </div>
           ) : (
@@ -669,8 +627,8 @@ function ManualRangeEditor({
         Add range
       </button>
       <p className="mt-2 text-xs font-semibold text-fg-faint">
-        Manual ranges are never resized by a learner's difficulty preset — use
-        them wherever the boundaries carry meaning.
+        Manual ranges are never auto-resized — use them wherever the boundaries
+        carry meaning.
       </p>
     </div>
   );

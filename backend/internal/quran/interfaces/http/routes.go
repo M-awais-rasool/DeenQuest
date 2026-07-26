@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//	GET /surahs
-//	GET /surah/:id
-//	GET /surah/:id/audio
+// GET /surahs
+// GET /surah/:id
+// GET /surah/:id/audio
 func RegisterRoutes(group *gin.RouterGroup, h *Handler) {
 	group.GET("/surahs", h.GetSurahList)
 	group.GET("/surah/:id", h.GetSurahByID)

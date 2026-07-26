@@ -22,7 +22,7 @@ const (
 type Provider interface {
 	GetSurahList(ctx context.Context) ([]domain.SurahSummary, error)
 	GetSurahByID(ctx context.Context, id int, translationEdition string) (*domain.SurahDetail, error)
-	GetSurahAudio(ctx context.Context, id int) (*domain.SurahAudio, error)
+	GetSurahAudio(ctx context.Context, id int, reciter string) (*domain.SurahAudio, error)
 }
 
 type memEntry struct {
@@ -83,18 +83,22 @@ func (s *Service) GetSurahByID(ctx context.Context, id int, translationEdition s
 	return surah, nil
 }
 
-func (s *Service) GetSurahAudio(ctx context.Context, id int) (*domain.SurahAudio, error) {
+func (s *Service) GetSurahAudio(ctx context.Context, id int, reciter string) (*domain.SurahAudio, error) {
 	if err := domain.ValidateSurahID(id); err != nil {
 		return nil, err
 	}
 
-	key := fmt.Sprintf("quran:surah:%d:audio:v1", id)
+	reciter = domain.NormalizeReciter(reciter)
+	// v3: the bitrate is now chosen per edition. Entries cached under v2 hold
+	// URLs built at the old fixed bitrate — which 403 for some reciters — and
+	// the TTL is a week, so the version has to move for the fix to take effect.
+	key := fmt.Sprintf("quran:surah:%d:audio:%s:v3", id, cacheToken(reciter))
 	var cached domain.SurahAudio
 	if s.getCached(ctx, key, &cached) {
 		return &cached, nil
 	}
 
-	audio, err := s.provider.GetSurahAudio(ctx, id)
+	audio, err := s.provider.GetSurahAudio(ctx, id, reciter)
 	if err != nil {
 		return nil, err
 	}

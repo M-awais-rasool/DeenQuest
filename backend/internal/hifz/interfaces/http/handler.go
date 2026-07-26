@@ -42,10 +42,8 @@ func (h *Handler) GetPlans(c *gin.Context) {
 }
 
 type enrollRequest struct {
-	PlanID     string `json:"plan_id" binding:"required"`
-	PresetName string `json:"preset_name"`
-	DailyNew   int    `json:"daily_new_portions"`
-	ReciterID  string `json:"reciter_id"`
+	PlanID    string `json:"plan_id" binding:"required"`
+	ReciterID string `json:"reciter_id"`
 }
 
 // PostEnroll handles POST /hifz/enroll.
@@ -57,10 +55,8 @@ func (h *Handler) PostEnroll(c *gin.Context) {
 	}
 
 	enrollment, err := h.service.Enroll(c.Request.Context(), c.GetString("user_id"), application.EnrollInput{
-		PlanID:     req.PlanID,
-		PresetName: req.PresetName,
-		DailyNew:   req.DailyNew,
-		ReciterID:  req.ReciterID,
+		PlanID:    req.PlanID,
+		ReciterID: req.ReciterID,
 	})
 	if err != nil {
 		if errors.Is(err, domain.ErrPlanNotFound) {
@@ -89,8 +85,8 @@ func (h *Handler) GetSettings(c *gin.Context) {
 		response.InternalError(c, "Failed to load hifz settings")
 		return
 	}
+	// Reciters are the only setting the app still lets a learner choose.
 	response.OK(c, "Hifz settings", gin.H{
-		"presets":  cfg.Presets,
 		"reciters": cfg.Reciters,
 	})
 }

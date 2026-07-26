@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 var (
 	ErrInvalidSurahID = errors.New("invalid surah id")
@@ -51,4 +54,33 @@ func ValidateSurahID(id int) error {
 		return ErrInvalidSurahID
 	}
 	return nil
+}
+
+var audioBitrateByEdition = map[string]int{
+	"ar.alafasy":            128,
+	"ar.abdulbasitmurattal": 192,
+	"ar.husary":             128,
+	"ar.minshawi":           128,
+}
+
+func AudioBitrateFor(edition string, fallback int) int {
+	if br, ok := audioBitrateByEdition[NormalizeReciter(edition)]; ok {
+		return br
+	}
+	return fallback
+}
+
+func NormalizeReciter(edition string) string {
+	edition = strings.ToLower(strings.TrimSpace(edition))
+	if edition == "" || len(edition) > 48 || strings.Contains(edition, "..") {
+		return ""
+	}
+	for _, r := range edition {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9', r == '.', r == '_', r == '-':
+		default:
+			return ""
+		}
+	}
+	return edition
 }

@@ -51,7 +51,7 @@ func (h *Handler) GetSurahAudio(c *gin.Context) {
 		return
 	}
 
-	audio, err := h.service.GetSurahAudio(c.Request.Context(), id)
+	audio, err := h.service.GetSurahAudio(c.Request.Context(), id, c.Query("reciter"))
 	if err != nil {
 		writeQuranError(c, err, "failed to fetch surah audio")
 		return

@@ -5,44 +5,24 @@ import (
 	"time"
 )
 
-const SettingsSeedVersion = 1
+const SettingsSeedVersion = 2
 
 func DefaultSettings() Settings {
 	return Settings{
 		ID: settingsDocID,
-		Presets: []DifficultyPreset{
-			{
-				Name: "beginner", Label: "Beginner",
-				ListenRepeats: 3, ShadowRequired: true, AyahsPerPortion: 3,
-				OpenRecitePass: 55, BlindRecitePass: 60, BlindRequiredToSeal: false,
-				ChallengeCount: 3,
-				EnabledChallenges: []string{
-					ChallengeClozeWord, ChallengeAyahOrder, ChallengeWordMeaning,
-				},
-				AllowHints: true, ShowTranslation: true, LenienceBonus: 8,
+		Session: SessionRules{
+			ListenRepeats:       2,
+			ShadowRequired:      true,
+			OpenRecitePass:      60,
+			BlindRecitePass:     65,
+			BlindRequiredToSeal: true,
+			ChallengeCount:      4,
+			EnabledChallenges: []string{
+				ChallengeClozeWord, ChallengeAyahOrder, ChallengeProgressiveFade,
+				ChallengeNextAyah, ChallengeFirstLetter,
 			},
-			{
-				Name: "intermediate", Label: "Intermediate",
-				ListenRepeats: 2, ShadowRequired: true, AyahsPerPortion: 4,
-				OpenRecitePass: 65, BlindRecitePass: 70, BlindRequiredToSeal: true,
-				ChallengeCount: 4,
-				EnabledChallenges: []string{
-					ChallengeClozeWord, ChallengeAyahOrder, ChallengeProgressiveFade,
-					ChallengeNextAyah, ChallengeWordMeaning,
-				},
-				AllowHints: true, ShowTranslation: true, LenienceBonus: 4,
-			},
-			{
-				Name: "hafiz", Label: "Hafiz",
-				ListenRepeats: 1, ShadowRequired: false, AyahsPerPortion: 6,
-				OpenRecitePass: 75, BlindRecitePass: 85, BlindRequiredToSeal: true,
-				ChallengeCount: 5,
-				EnabledChallenges: []string{
-					ChallengeClozeWord, ChallengeAyahOrder, ChallengeProgressiveFade,
-					ChallengeNextAyah, ChallengeFirstLetter,
-				},
-				AllowHints: false, ShowTranslation: false, LenienceBonus: 0,
-			},
+			AllowHints:    true,
+			LenienceBonus: 6,
 		},
 		Challenges: map[string]ChallengeConfig{
 			ChallengeClozeWord:       {HiddenWordPct: 30, DistractorCount: 3, Rounds: 1, Enabled: true},
@@ -61,6 +41,7 @@ func DefaultSettings() Settings {
 			UnverifiedPenalty: 0.7,
 			SabqiWindowDays:   7,
 			ManzilDailyCap:    5,
+			NewPortionsPerDay: 1,
 			HintPenalty:       0.15,
 		},
 		Reciters: []Reciter{

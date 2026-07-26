@@ -69,7 +69,7 @@ func TestBuildPortions_AbsorbsSingleAyahTail(t *testing.T) {
 	}
 }
 
-func TestBuildPortions_PresetSizeOverridesPlan(t *testing.T) {
+func TestBuildPortions_ExplicitSizeOverridesPlan(t *testing.T) {
 	plan := Plan{
 		ID:           "p",
 		Scope:        PlanScope{SurahIDs: []int{67}},
@@ -101,7 +101,7 @@ func TestBuildPortions_ManualRangesAreNotResized(t *testing.T) {
 			},
 		},
 	}
-	// Manual ranges were authored on meaningful boundaries — a preset size of 6
+	// Manual ranges were authored on meaningful boundaries — an explicit size of 6
 	// must not touch them.
 	portions, err := BuildPortions(plan, testMeta, 6)
 	if err != nil {
@@ -189,25 +189,14 @@ func TestSeedPlans_AreWellFormed(t *testing.T) {
 		if p.SeedVersion != PlanSeedVersion {
 			t.Errorf("plan %q seed version %d, want %d", p.ID, p.SeedVersion, PlanSeedVersion)
 		}
-		if p.PresetName == "" {
-			t.Errorf("plan %q has no default difficulty preset", p.ID)
-		}
-		// Every seeded plan's preset must actually exist.
-		s := DefaultSettings()
-		if s.Preset(p.PresetName).Name != p.PresetName {
-			t.Errorf("plan %q references unknown preset %q", p.ID, p.PresetName)
-		}
 	}
 }
 
 func TestDefaultSettings_ChallengeConfigsExistForEnabledKinds(t *testing.T) {
 	s := DefaultSettings()
-	for _, preset := range s.Presets {
-		for _, kind := range preset.EnabledChallenges {
-			if _, ok := s.Challenges[kind]; !ok {
-				t.Errorf("preset %q enables %q but there is no challenge config for it",
-					preset.Name, kind)
-			}
+	for _, kind := range s.Session.EnabledChallenges {
+		if _, ok := s.Challenges[kind]; !ok {
+			t.Errorf("session rules enable %q but there is no challenge config for it", kind)
 		}
 	}
 }

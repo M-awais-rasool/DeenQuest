@@ -13,12 +13,14 @@ export function ListenStage({
   ayahs,
   repeats,
   reciterName,
+  reciterId,
   onDone,
 }: {
   surahId: number;
   ayahs: HifzSessionAyah[];
   repeats: number;
   reciterName: string;
+  reciterId?: string;
   onDone: () => void;
 }) {
   const [passes, setPasses] = useState(0);
@@ -30,6 +32,7 @@ export function ListenStage({
     surahId,
     ayahStart: start,
     ayahEnd: end,
+    reciterId,
     onPassComplete: () => setPasses((n) => n + 1),
   });
 
@@ -98,6 +101,12 @@ export function ListenStage({
           );
         })}
       </ScrollView>
+
+      {!!audio.error && (
+        <View style={s.errorBanner}>
+          <Text style={s.errorText}>{audio.error}</Text>
+        </View>
+      )}
 
       {/* player card (J5) */}
       <View style={s.player}>
@@ -219,6 +228,23 @@ const s = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     color: hz.sky,
+  },
+
+  errorBanner: {
+    backgroundColor: hz.roseTint,
+    borderWidth: 1,
+    borderColor: hz.roseEdge,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: 12,
+  },
+  errorText: {
+    fontFamily: "Nunito_700Bold",
+    fontSize: 12,
+    lineHeight: 18,
+    color: hz.rose,
+    textAlign: "center",
   },
 
   player: {

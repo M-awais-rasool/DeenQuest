@@ -23,10 +23,12 @@ function SoundWave({ size = 38, color = hz.skyBright }: { size?: number; color?:
 export function ShadowStage({
   surahId,
   ayahs,
+  reciterId,
   onDone,
 }: {
   surahId: number;
   ayahs: HifzSessionAyah[];
+  reciterId?: string;
   onDone: () => void;
 }) {
   const [index, setIndex] = useState(0);
@@ -41,6 +43,7 @@ export function ShadowStage({
     surahId,
     ayahStart: start,
     ayahEnd: end,
+    reciterId,
     stepMode: true, // stop after each ayah so the learner can echo it
     onAyahComplete: () => setHeard(true),
   });
@@ -109,13 +112,18 @@ export function ShadowStage({
               <SoundWave />
             </Pressable>
           </View>
-          <Text style={s.circleCaption}>
-            {audio.isLoading
-              ? "LOADING…"
-              : audio.isPlaying
-                ? "PLAYING…"
-                : "TAP TO HEAR IT AGAIN"}
+          <Text
+            style={[s.circleCaption, !!audio.error && { color: hz.rose }]}
+          >
+            {audio.error
+              ? "AUDIO UNAVAILABLE"
+              : audio.isLoading
+                ? "LOADING…"
+                : audio.isPlaying
+                  ? "PLAYING…"
+                  : "TAP TO HEAR IT AGAIN"}
           </Text>
+          {!!audio.error && <Text style={s.errorHint}>{audio.error}</Text>}
         </View>
 
         {/* per-ayah dots (J6): done teal · current sky · todo dim */}
@@ -219,6 +227,15 @@ const s = StyleSheet.create({
     fontSize: 12.5,
     letterSpacing: 1.2,
     color: hz.skyBright,
+  },
+
+  errorHint: {
+    fontFamily: "Nunito_600SemiBold",
+    fontSize: 11.5,
+    lineHeight: 17,
+    color: hz.muted,
+    textAlign: "center",
+    paddingHorizontal: 30,
   },
 
   dots: {

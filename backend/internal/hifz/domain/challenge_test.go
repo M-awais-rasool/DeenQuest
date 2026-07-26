@@ -15,7 +15,7 @@ var ikhlas = []string{
 	"وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ",
 }
 
-func testParams(seed string, preset DifficultyPreset) GenParams {
+func testParams(seed string, rules SessionRules) GenParams {
 	s := DefaultSettings()
 	texts := make([]string, len(ikhlas))
 	for i, t := range ikhlas {
@@ -25,7 +25,7 @@ func testParams(seed string, preset DifficultyPreset) GenParams {
 		Portion:     Portion{ID: "p1", SurahID: 112, AyahStart: 1, AyahEnd: 4},
 		AyahNumbers: []int{1, 2, 3, 4},
 		AyahTexts:   texts,
-		Preset:      preset,
+		Rules:       rules,
 		Settings:    &s,
 		Seed:        seed,
 	}
@@ -96,9 +96,9 @@ func TestFirstLetter(t *testing.T) {
 
 func TestGenerateChallenges_IsDeterministic(t *testing.T) {
 	settings := DefaultSettings()
-	preset := settings.Preset("intermediate")
-	a := GenerateChallenges(testParams("session-abc", preset))
-	b := GenerateChallenges(testParams("session-abc", preset))
+	rules := settings.Rules()
+	a := GenerateChallenges(testParams("session-abc", rules))
+	b := GenerateChallenges(testParams("session-abc", rules))
 
 	if len(a) == 0 {
 		t.Fatal("expected challenges to be generated")
@@ -107,19 +107,19 @@ func TestGenerateChallenges_IsDeterministic(t *testing.T) {
 		t.Error("the same seed must reproduce the identical challenge set — a mid-session reload depends on it")
 	}
 
-	c := GenerateChallenges(testParams("session-xyz", preset))
+	c := GenerateChallenges(testParams("session-xyz", rules))
 	if reflect.DeepEqual(a, c) {
 		t.Error("different seeds should produce different challenge sets")
 	}
 }
 
 func TestGenerateChallenges_RespectsCountAndEnabledKinds(t *testing.T) {
-	preset := DifficultyPreset{
+	rules := SessionRules{
 		ChallengeCount:    2,
 		EnabledChallenges: []string{ChallengeClozeWord},
 		AllowHints:        true,
 	}
-	got := GenerateChallenges(testParams("seed", preset))
+	got := GenerateChallenges(testParams("seed", rules))
 	if len(got) != 2 {
 		t.Fatalf("expected exactly 2 challenges, got %d", len(got))
 	}
@@ -131,7 +131,7 @@ func TestGenerateChallenges_RespectsCountAndEnabledKinds(t *testing.T) {
 }
 
 func TestGenerateChallenges_SkipsKindsNeedingMultipleAyahs(t *testing.T) {
-	p := testParams("seed", DifficultyPreset{
+	p := testParams("seed", SessionRules{
 		ChallengeCount:    4,
 		EnabledChallenges: []string{ChallengeAyahOrder, ChallengeNextAyah, ChallengeClozeWord},
 	})
@@ -149,12 +149,12 @@ func TestGenerateChallenges_SkipsKindsNeedingMultipleAyahs(t *testing.T) {
 func TestGenerateChallenges_NoDuplicateWholePortionKinds(t *testing.T) {
 	// ayah_order has exactly one form per portion, so generating it twice would
 	// ask the identical question twice in one session.
-	preset := DifficultyPreset{
+	rules := SessionRules{
 		ChallengeCount:    4,
 		EnabledChallenges: []string{ChallengeAyahOrder, ChallengeProgressiveFade, ChallengeClozeWord},
 	}
 	counts := map[string]int{}
-	for _, ch := range GenerateChallenges(testParams("dup-kind-seed", preset)) {
+	for _, ch := range GenerateChallenges(testParams("dup-kind-seed", rules)) {
 		counts[ch.Kind]++
 	}
 	for _, kind := range []string{ChallengeAyahOrder, ChallengeProgressiveFade} {
@@ -167,8 +167,8 @@ func TestGenerateChallenges_NoDuplicateWholePortionKinds(t *testing.T) {
 
 func TestGenerateChallenges_NoTwoIdenticalChallenges(t *testing.T) {
 	settings := DefaultSettings()
-	preset := settings.Preset("beginner")
-	got := GenerateChallenges(testParams("identical-seed", preset))
+	rules := settings.Rules()
+	got := GenerateChallenges(testParams("identical-seed", rules))
 
 	seen := map[string]bool{}
 	for _, ch := range got {
@@ -181,8 +181,8 @@ func TestGenerateChallenges_NoTwoIdenticalChallenges(t *testing.T) {
 }
 
 func TestGenCloze_ShapeMatchesFillBlankContract(t *testing.T) {
-	preset := DifficultyPreset{ChallengeCount: 1, EnabledChallenges: []string{ChallengeClozeWord}}
-	got := GenerateChallenges(testParams("cloze-seed", preset))
+	rules := SessionRules{ChallengeCount: 1, EnabledChallenges: []string{ChallengeClozeWord}}
+	got := GenerateChallenges(testParams("cloze-seed", rules))
 	if len(got) != 1 {
 		t.Fatalf("expected 1 challenge, got %d", len(got))
 	}
@@ -236,8 +236,8 @@ func TestGenCloze_ShapeMatchesFillBlankContract(t *testing.T) {
 }
 
 func TestGenProgressiveFade_RoundsGetHarder(t *testing.T) {
-	preset := DifficultyPreset{ChallengeCount: 1, EnabledChallenges: []string{ChallengeProgressiveFade}}
-	got := GenerateChallenges(testParams("fade-seed", preset))
+	rules := SessionRules{ChallengeCount: 1, EnabledChallenges: []string{ChallengeProgressiveFade}}
+	got := GenerateChallenges(testParams("fade-seed", rules))
 	if len(got) != 1 {
 		t.Fatalf("expected 1 challenge, got %d", len(got))
 	}
@@ -276,8 +276,8 @@ func TestGenProgressiveFade_RoundsGetHarder(t *testing.T) {
 }
 
 func TestGenFirstLetter_GivesLetterHints(t *testing.T) {
-	preset := DifficultyPreset{ChallengeCount: 1, EnabledChallenges: []string{ChallengeFirstLetter}}
-	got := GenerateChallenges(testParams("fl-seed", preset))
+	rules := SessionRules{ChallengeCount: 1, EnabledChallenges: []string{ChallengeFirstLetter}}
+	got := GenerateChallenges(testParams("fl-seed", rules))
 	if len(got) != 1 {
 		t.Fatalf("expected 1 challenge, got %d", len(got))
 	}
@@ -298,8 +298,8 @@ func TestGenFirstLetter_GivesLetterHints(t *testing.T) {
 }
 
 func TestGenNextAyah_CorrectIndexPointsAtTheAnswer(t *testing.T) {
-	preset := DifficultyPreset{ChallengeCount: 1, EnabledChallenges: []string{ChallengeNextAyah}}
-	p := testParams("next-seed", preset)
+	rules := SessionRules{ChallengeCount: 1, EnabledChallenges: []string{ChallengeNextAyah}}
+	p := testParams("next-seed", rules)
 	got := GenerateChallenges(p)
 	if len(got) != 1 {
 		t.Fatalf("expected 1 challenge, got %d", len(got))
@@ -330,8 +330,8 @@ func TestGenNextAyah_CorrectIndexPointsAtTheAnswer(t *testing.T) {
 }
 
 func TestBuildBank_NoDuplicateNormalisedWords(t *testing.T) {
-	preset := DifficultyPreset{ChallengeCount: 3, EnabledChallenges: []string{ChallengeClozeWord}}
-	for _, ch := range GenerateChallenges(testParams("dupe-seed", preset)) {
+	rules := SessionRules{ChallengeCount: 3, EnabledChallenges: []string{ChallengeClozeWord}}
+	for _, ch := range GenerateChallenges(testParams("dupe-seed", rules)) {
 		bank := ch.Content["bank"].([]string)
 		seen := map[string]bool{}
 		for _, w := range bank {

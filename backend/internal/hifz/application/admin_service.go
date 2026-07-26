@@ -118,17 +118,11 @@ func (a *AdminService) PreviewPortions(ctx context.Context, plan *domain.Plan, w
 		return nil, err
 	}
 
-	cfg, err := a.svc.Settings(ctx)
-	if err != nil {
-		return nil, err
-	}
-	preset := cfg.Preset(plan.PresetName)
-
 	meta, err := a.svc.surahMeta(ctx)
 	if err != nil {
 		return nil, err
 	}
-	portions, err := domain.BuildPortions(*plan, meta, preset.AyahsPerPortion)
+	portions, err := domain.BuildPortions(*plan, meta, plan.Segmentation.AyahsPerPortion)
 	if err != nil {
 		return nil, err
 	}
@@ -170,50 +164,59 @@ func (a *AdminService) GetSettings(ctx context.Context) (*domain.Settings, error
 }
 
 func (a *AdminService) SaveSettings(ctx context.Context, in *domain.Settings) (*domain.Settings, error) {
-	if in == nil || len(in.Presets) == 0 {
-		return nil, errors.New("at least one difficulty preset is required")
+	if in == nil {
+		return nil, errors.New("settings are required")
 	}
-	for i := range in.Presets {
-		if strings.TrimSpace(in.Presets[i].Name) == "" {
-			return nil, errors.New("every preset needs a name")
-		}
-		if in.Presets[i].AyahsPerPortion <= 0 {
-			in.Presets[i].AyahsPerPortion = 4
-		}
-		if in.Presets[i].ChallengeCount <= 0 {
-			in.Presets[i].ChallengeCount = 3
-		}
+
+	defaults := domain.DefaultSettings()
+
+	if in.Session.ChallengeCount <= 0 {
+		in.Session.ChallengeCount = defaults.Session.ChallengeCount
+	}
+	if in.Session.ListenRepeats <= 0 {
+		in.Session.ListenRepeats = defaults.Session.ListenRepeats
+	}
+	if in.Session.OpenRecitePass <= 0 || in.Session.OpenRecitePass > 100 {
+		in.Session.OpenRecitePass = defaults.Session.OpenRecitePass
+	}
+	if in.Session.BlindRecitePass <= 0 || in.Session.BlindRecitePass > 100 {
+		in.Session.BlindRecitePass = defaults.Session.BlindRecitePass
+	}
+	if len(in.Session.EnabledChallenges) == 0 {
+		in.Session.EnabledChallenges = defaults.Session.EnabledChallenges
 	}
 
 	// Guard the SRS knobs: a zeroed half-life or an empty ladder would make every
 	// portion read as Weak forever.
-	defaults := domain.DefaultSettings().SRS
 	if len(in.SRS.IntervalLadder) == 0 {
-		in.SRS.IntervalLadder = defaults.IntervalLadder
+		in.SRS.IntervalLadder = defaults.SRS.IntervalLadder
 	}
 	if in.SRS.BaseHalfLifeDays <= 0 {
-		in.SRS.BaseHalfLifeDays = defaults.BaseHalfLifeDays
+		in.SRS.BaseHalfLifeDays = defaults.SRS.BaseHalfLifeDays
 	}
 	if in.SRS.EMAAlpha <= 0 || in.SRS.EMAAlpha > 1 {
-		in.SRS.EMAAlpha = defaults.EMAAlpha
+		in.SRS.EMAAlpha = defaults.SRS.EMAAlpha
 	}
 	if in.SRS.StrongThreshold <= 0 || in.SRS.StrongThreshold > 1 {
-		in.SRS.StrongThreshold = defaults.StrongThreshold
+		in.SRS.StrongThreshold = defaults.SRS.StrongThreshold
 	}
 	if in.SRS.MediumThreshold <= 0 || in.SRS.MediumThreshold >= in.SRS.StrongThreshold {
-		in.SRS.MediumThreshold = defaults.MediumThreshold
+		in.SRS.MediumThreshold = defaults.SRS.MediumThreshold
 	}
 	if in.SRS.UnverifiedPenalty <= 0 || in.SRS.UnverifiedPenalty > 1 {
-		in.SRS.UnverifiedPenalty = defaults.UnverifiedPenalty
+		in.SRS.UnverifiedPenalty = defaults.SRS.UnverifiedPenalty
 	}
 	if in.SRS.SabqiWindowDays <= 0 {
-		in.SRS.SabqiWindowDays = defaults.SabqiWindowDays
+		in.SRS.SabqiWindowDays = defaults.SRS.SabqiWindowDays
+	}
+	if in.SRS.NewPortionsPerDay <= 0 {
+		in.SRS.NewPortionsPerDay = defaults.SRS.NewPortionsPerDay
 	}
 	if in.Challenges == nil {
-		in.Challenges = domain.DefaultSettings().Challenges
+		in.Challenges = defaults.Challenges
 	}
 	if len(in.Reciters) == 0 {
-		in.Reciters = domain.DefaultSettings().Reciters
+		in.Reciters = defaults.Reciters
 	}
 
 	in.ID = domain.SettingsDocID()

@@ -107,7 +107,7 @@ func (s *Service) Settings(ctx context.Context) (*domain.Settings, error) {
 	if err != nil {
 		return nil, err
 	}
-	if cfg == nil || len(cfg.Presets) == 0 {
+	if cfg == nil || cfg.Session.ChallengeCount == 0 {
 		seeded := domain.DefaultSettings()
 		if err := s.repo.SaveSettings(ctx, &seeded); err != nil {
 			logger.Warn("hifz: could not persist default settings", zap.Error(err))
@@ -117,13 +117,26 @@ func (s *Service) Settings(ctx context.Context) (*domain.Settings, error) {
 	return cfg, nil
 }
 
-// portionsFor derives the portion list for an enrollment.
-func (s *Service) portionsFor(ctx context.Context, plan *domain.Plan, preset domain.DifficultyPreset) ([]domain.Portion, error) {
+func (s *Service) portionsFor(
+	ctx context.Context,
+	plan *domain.Plan,
+	enrollment *domain.Enrollment,
+) ([]domain.Portion, error) {
 	meta, err := s.surahMeta(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return domain.BuildPortions(*plan, meta, preset.AyahsPerPortion)
+	return domain.BuildPortions(*plan, meta, portionSize(enrollment, plan))
+}
+
+func portionSize(enrollment *domain.Enrollment, plan *domain.Plan) int {
+	if enrollment != nil && enrollment.AyahsPerPortion > 0 {
+		return enrollment.AyahsPerPortion
+	}
+	if plan != nil {
+		return plan.Segmentation.AyahsPerPortion
+	}
+	return 0
 }
 
 func (s *Service) ayahTexts(ctx context.Context, p domain.Portion) (numbers []int, texts []string, err error) {
@@ -175,10 +188,6 @@ func (s *Service) ListPlans(ctx context.Context, userID string) ([]PlanView, err
 	if err != nil {
 		return nil, err
 	}
-	cfg, err := s.Settings(ctx)
-	if err != nil {
-		return nil, err
-	}
 	meta, err := s.surahMeta(ctx)
 	if err != nil {
 		return nil, err
@@ -188,8 +197,7 @@ func (s *Service) ListPlans(ctx context.Context, userID string) ([]PlanView, err
 
 	views := make([]PlanView, 0, len(plans))
 	for _, plan := range plans {
-		preset := cfg.Preset(plan.PresetName)
-		portions, err := domain.BuildPortions(plan, meta, preset.AyahsPerPortion)
+		portions, err := domain.BuildPortions(plan, meta, plan.Segmentation.AyahsPerPortion)
 		if err != nil {
 			logger.Warn("hifz: skipping unbuildable plan",
 				zap.String("plan", plan.ID), zap.Error(err))
@@ -218,10 +226,8 @@ func (s *Service) ListPlans(ctx context.Context, userID string) ([]PlanView, err
 }
 
 type EnrollInput struct {
-	PlanID     string
-	PresetName string
-	DailyNew   int
-	ReciterID  string
+	PlanID    string
+	ReciterID string
 }
 
 // Enroll activates a plan for a user, deactivating any previous one. Portion
@@ -240,16 +246,6 @@ func (s *Service) Enroll(ctx context.Context, userID string, in EnrollInput) (*d
 		return nil, err
 	}
 
-	presetName := in.PresetName
-	if presetName == "" {
-		presetName = plan.PresetName
-	}
-	preset := cfg.Preset(presetName)
-
-	daily := in.DailyNew
-	if daily <= 0 {
-		daily = 1
-	}
 	reciter := in.ReciterID
 	if reciter == "" && len(cfg.Reciters) > 0 {
 		reciter = cfg.Reciters[0].ID
@@ -261,14 +257,13 @@ func (s *Service) Enroll(ctx context.Context, userID string, in EnrollInput) (*d
 
 	existing, _ := s.repo.ListEnrollments(ctx, userID)
 	enrollment := &domain.Enrollment{
-		ID:               userID + ":" + plan.ID,
-		UserID:           userID,
-		PlanID:           plan.ID,
-		PresetName:       preset.Name,
-		DailyNewPortions: daily,
-		ReciterID:        reciter,
-		StartedAt:        time.Now(),
-		Active:           true,
+		ID:              userID + ":" + plan.ID,
+		UserID:          userID,
+		PlanID:          plan.ID,
+		ReciterID:       reciter,
+		AyahsPerPortion: plan.Segmentation.AyahsPerPortion,
+		StartedAt:       time.Now(),
+		Active:          true,
 	}
 	for _, e := range existing {
 		if e.LongestStreak > enrollment.LongestStreak {
@@ -278,6 +273,9 @@ func (s *Service) Enroll(ctx context.Context, userID string, in EnrollInput) (*d
 			enrollment.StreakDays = e.StreakDays
 			enrollment.LastStreakDay = e.LastStreakDay
 			enrollment.StartedAt = e.StartedAt
+			if e.AyahsPerPortion > 0 {
+				enrollment.AyahsPerPortion = e.AyahsPerPortion
+			}
 		}
 	}
 
@@ -312,9 +310,7 @@ func (s *Service) Overview(ctx context.Context, userID string) (*domain.Overview
 	if err != nil {
 		return nil, err
 	}
-	preset := cfg.Preset(enrollment.PresetName)
-
-	portions, err := s.portionsFor(ctx, plan, preset)
+	portions, err := s.portionsFor(ctx, plan, enrollment)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +367,7 @@ func (s *Service) Overview(ctx context.Context, userID string) (*domain.Overview
 		}
 	}
 
-	out.SabaqCount = min(enrollment.DailyNewPortions, countUnsealed(portions, byPortion))
+	out.SabaqCount = min(newPortionsPerDay(cfg), countUnsealed(portions, byPortion))
 	if cap := cfg.SRS.ManzilDailyCap; cap > 0 && out.ManzilCount > cap {
 		out.ManzilCount = cap
 	}
@@ -428,11 +424,12 @@ type QueueItem struct {
 // TodayPlan is the three-queue daily session, in the order it should be run:
 // revision before new memorization.
 type TodayPlan struct {
-	Enrolled   bool   `json:"enrolled"`
-	PlanID     string `json:"plan_id,omitempty"`
-	PlanTitle  string `json:"plan_title,omitempty"`
-	PresetName string `json:"preset_name,omitempty"`
-	ReciterID  string `json:"reciter_id,omitempty"`
+	Enrolled  bool   `json:"enrolled"`
+	PlanID    string `json:"plan_id,omitempty"`
+	PlanTitle string `json:"plan_title,omitempty"`
+	// ReciterID is echoed back so the plan picker can restore the learner's
+	// chosen voice instead of defaulting to the first one.
+	ReciterID string `json:"reciter_id,omitempty"`
 
 	Sabqi  []QueueItem `json:"sabqi"`
 	Manzil []QueueItem `json:"manzil"`
@@ -462,9 +459,7 @@ func (s *Service) Today(ctx context.Context, userID string) (*TodayPlan, error) 
 	if err != nil {
 		return nil, err
 	}
-	preset := cfg.Preset(enrollment.PresetName)
-
-	portions, err := s.portionsFor(ctx, plan, preset)
+	portions, err := s.portionsFor(ctx, plan, enrollment)
 	if err != nil {
 		return nil, err
 	}
@@ -479,13 +474,13 @@ func (s *Service) Today(ctx context.Context, userID string) (*TodayPlan, error) 
 		Enrolled:      true,
 		PlanID:        plan.ID,
 		PlanTitle:     plan.Title,
-		PresetName:    preset.Name,
 		ReciterID:     enrollment.ReciterID,
 		StreakDays:    enrollment.StreakDays,
 		ReviewedToday: enrollment.LastStreakDay == domain.DayKey(now),
-		Sabqi:         []QueueItem{},
-		Manzil:        []QueueItem{},
-		Sabaq:         []QueueItem{},
+
+		Sabqi:  []QueueItem{},
+		Manzil: []QueueItem{},
+		Sabaq:  []QueueItem{},
 	}
 
 	var manzil []QueueItem
@@ -499,7 +494,7 @@ func (s *Service) Today(ctx context.Context, userID string) (*TodayPlan, error) 
 		case domain.IsDue(st, now):
 			manzil = append(manzil, item)
 		case st == nil || st.Stage != domain.StageSealed:
-			if len(out.Sabaq) < enrollment.DailyNewPortions {
+			if len(out.Sabaq) < newPortionsPerDay(cfg) {
 				out.Sabaq = append(out.Sabaq, item)
 			}
 		}
@@ -528,11 +523,11 @@ func (s *Service) Today(ctx context.Context, userID string) (*TodayPlan, error) 
 
 // SessionView is what the client needs to render a session.
 type SessionView struct {
-	Session   *domain.Session         `json:"session"`
-	Preset    domain.DifficultyPreset `json:"preset"`
-	Ayahs     []SessionAyah           `json:"ayahs"`
-	ReciterID string                  `json:"reciter_id"`
-	Strength  domain.PortionStrength  `json:"strength"`
+	Session   *domain.Session        `json:"session"`
+	Rules     domain.SessionRules    `json:"rules"`
+	Ayahs     []SessionAyah          `json:"ayahs"`
+	ReciterID string                 `json:"reciter_id"`
+	Strength  domain.PortionStrength `json:"strength"`
 }
 
 type SessionAyah struct {
@@ -561,9 +556,9 @@ func (s *Service) StartSession(ctx context.Context, userID, portionID string, qu
 	if err != nil {
 		return nil, err
 	}
-	preset := cfg.Preset(enrollment.PresetName)
+	rules := cfg.Rules()
 
-	portions, err := s.portionsFor(ctx, plan, preset)
+	portions, err := s.portionsFor(ctx, plan, enrollment)
 	if err != nil {
 		return nil, err
 	}
@@ -595,17 +590,16 @@ func (s *Service) StartSession(ctx context.Context, userID, portionID string, qu
 	}
 
 	session := &domain.Session{
-		ID:         uuid.New().String(),
-		UserID:     userID,
-		PlanID:     plan.ID,
-		PortionID:  portion.ID,
-		Queue:      queue,
-		Portion:    portion,
-		AyahTexts:  texts,
-		PresetName: preset.Name,
-		Stage:      startStage(state, queue, preset),
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		ID:        uuid.New().String(),
+		UserID:    userID,
+		PlanID:    plan.ID,
+		PortionID: portion.ID,
+		Queue:     queue,
+		Portion:   portion,
+		AyahTexts: texts,
+		Stage:     startStage(state, queue, rules),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	session.Challenges = domain.GenerateChallenges(domain.GenParams{
@@ -613,7 +607,7 @@ func (s *Service) StartSession(ctx context.Context, userID, portionID string, qu
 		AyahNumbers:  numbers,
 		AyahTexts:    texts,
 		ContextWords: s.contextWords(ctx, portion),
-		Preset:       preset,
+		Rules:        rules,
 		Settings:     cfg,
 		Seed:         session.ID,
 	})
@@ -629,21 +623,21 @@ func (s *Service) StartSession(ctx context.Context, userID, portionID string, qu
 
 	return &SessionView{
 		Session:   session,
-		Preset:    preset,
+		Rules:     rules,
 		Ayahs:     ayahs,
 		ReciterID: enrollment.ReciterID,
 		Strength:  domain.BuildPortionStrength(portion, state, cfg.SRS, time.Now()),
 	}, nil
 }
 
-func startStage(state *domain.PortionState, queue domain.Queue, preset domain.DifficultyPreset) domain.Stage {
+func startStage(state *domain.PortionState, queue domain.Queue, rules domain.SessionRules) domain.Stage {
 	if queue == domain.QueueSabaq || state == nil || state.Stage != domain.StageSealed {
 		if state != nil && state.Stage != "" && state.Stage != domain.StageSealed {
 			return state.Stage // resume where the learner left off
 		}
 		return domain.StageListen
 	}
-	if preset.BlindRequiredToSeal {
+	if rules.BlindRequiredToSeal {
 		return domain.StageChallenges
 	}
 	return domain.StageChallenges
@@ -660,7 +654,7 @@ type StageResult struct {
 }
 
 func (s *Service) SubmitStage(ctx context.Context, userID, sessionID string, in StageResult) (*domain.Session, error) {
-	session, cfg, preset, err := s.loadSession(ctx, userID, sessionID)
+	session, cfg, rules, err := s.loadSession(ctx, userID, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -701,7 +695,7 @@ func (s *Service) SubmitStage(ctx context.Context, userID, sessionID string, in 
 		}
 	}
 
-	session.Stage = session.Stage.Next(preset)
+	session.Stage = session.Stage.Next(rules)
 	session.UpdatedAt = time.Now()
 	return session, s.repo.SaveSession(ctx, session)
 }
@@ -728,7 +722,7 @@ func (s *Service) SubmitRecitation(
 	audio io.Reader,
 	filename string,
 ) (*ReciteResult, error) {
-	session, cfg, preset, err := s.loadSession(ctx, userID, sessionID)
+	session, cfg, rules, err := s.loadSession(ctx, userID, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -743,14 +737,14 @@ func (s *Service) SubmitRecitation(
 		return nil, err
 	}
 
-	score := grade.Score + preset.LenienceBonus
+	score := grade.Score + rules.LenienceBonus
 	if score > 100 {
 		score = 100
 	}
 
-	threshold := preset.OpenRecitePass
+	threshold := rules.OpenRecitePass
 	if session.Stage == domain.StageBlindRecite {
-		threshold = preset.BlindRecitePass
+		threshold = rules.BlindRecitePass
 	}
 	passed := score >= threshold
 
@@ -800,7 +794,7 @@ func (s *Service) SubmitRecitation(
 				logger.Warn("hifz: failed to mark blind verified", zap.Error(err))
 			}
 		}
-		session.Stage = session.Stage.Next(preset)
+		session.Stage = session.Stage.Next(rules)
 		result.NextStage = session.Stage
 	}
 
@@ -831,7 +825,7 @@ type CompletionResult struct {
 }
 
 func (s *Service) CompleteSession(ctx context.Context, userID, sessionID string) (*CompletionResult, error) {
-	session, cfg, preset, err := s.loadSession(ctx, userID, sessionID)
+	session, cfg, rules, err := s.loadSession(ctx, userID, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -848,9 +842,9 @@ func (s *Service) CompleteSession(ctx context.Context, userID, sessionID string)
 	before := domain.BuildPortionStrength(session.Portion, state, cfg.SRS, now)
 
 	accuracy := mean(session.Accuracies)
-	threshold := float64(preset.BlindRecitePass) / 100
-	if !preset.BlindRequiredToSeal {
-		threshold = float64(preset.OpenRecitePass) / 100
+	threshold := float64(rules.BlindRecitePass) / 100
+	if !rules.BlindRequiredToSeal {
+		threshold = float64(rules.OpenRecitePass) / 100
 	}
 	passed := accuracy >= threshold
 
@@ -985,23 +979,23 @@ func (s *Service) recordMistakes(ctx context.Context, userID string, session *do
 // ─────────────────────────────────────────────
 
 func (s *Service) loadSession(ctx context.Context, userID, sessionID string) (
-	*domain.Session, *domain.Settings, domain.DifficultyPreset, error,
+	*domain.Session, *domain.Settings, domain.SessionRules, error,
 ) {
 	session, err := s.repo.GetSession(ctx, sessionID)
 	if err != nil {
-		return nil, nil, domain.DifficultyPreset{}, err
+		return nil, nil, domain.SessionRules{}, err
 	}
 	if session == nil || session.UserID != userID {
-		return nil, nil, domain.DifficultyPreset{}, domain.ErrSessionNotFound
+		return nil, nil, domain.SessionRules{}, domain.ErrSessionNotFound
 	}
 	if session.Finished {
-		return nil, nil, domain.DifficultyPreset{}, domain.ErrSessionFinished
+		return nil, nil, domain.SessionRules{}, domain.ErrSessionFinished
 	}
 	cfg, err := s.Settings(ctx)
 	if err != nil {
-		return nil, nil, domain.DifficultyPreset{}, err
+		return nil, nil, domain.SessionRules{}, err
 	}
-	return session, cfg, cfg.Preset(session.PresetName), nil
+	return session, cfg, cfg.Rules(), nil
 }
 
 func (s *Service) markBlindVerified(ctx context.Context, userID string, session *domain.Session, score int) error {
@@ -1110,6 +1104,15 @@ func sessionXP(base int, accuracy float64, firstSeal bool) int {
 		xp = 5
 	}
 	return xp
+}
+
+// newPortionsPerDay is the global pace that replaced the old per-learner
+// setting. Falls back to one portion a day.
+func newPortionsPerDay(cfg *domain.Settings) int {
+	if cfg != nil && cfg.SRS.NewPortionsPerDay > 0 {
+		return cfg.SRS.NewPortionsPerDay
+	}
+	return 1
 }
 
 func min(a, b int) int {

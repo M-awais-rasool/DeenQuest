@@ -139,16 +139,23 @@ func (c *Client) GetSurahByID(ctx context.Context, id int, translationEdition st
 	return detail, nil
 }
 
-func (c *Client) GetSurahAudio(_ context.Context, id int) (*domain.SurahAudio, error) {
+func (c *Client) GetSurahAudio(_ context.Context, id int, reciter string) (*domain.SurahAudio, error) {
 	if err := domain.ValidateSurahID(id); err != nil {
 		return nil, err
 	}
 
+	edition := domain.NormalizeReciter(reciter)
+	if edition == "" {
+		edition = c.audioEdition
+	}
+
+	bitrate := domain.AudioBitrateFor(edition, c.audioBitrate)
+
 	return &domain.SurahAudio{
 		SurahID: id,
-		Reciter: c.audioEdition,
-		Bitrate: c.audioBitrate,
-		URL:     fmt.Sprintf("%s/quran/audio-surah/%d/%s/%d.mp3", c.audioCDNURL, c.audioBitrate, c.audioEdition, id),
+		Reciter: edition,
+		Bitrate: bitrate,
+		URL:     fmt.Sprintf("%s/quran/audio-surah/%d/%s/%d.mp3", c.audioCDNURL, bitrate, edition, id),
 		Source:  "alquran.cloud-cdn",
 	}, nil
 }

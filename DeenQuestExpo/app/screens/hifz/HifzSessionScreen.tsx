@@ -112,8 +112,8 @@ export function HifzSessionScreen({ navigation, route }: Props) {
   }
 
   const rail = PIPELINE.filter((st) => {
-    if (st === "shadow") return view.preset.shadow_required;
-    if (st === "blind_recite") return view.preset.blind_required_to_seal;
+    if (st === "shadow") return view.rules.shadow_required;
+    if (st === "blind_recite") return view.rules.blind_required_to_seal;
     return true;
   });
 

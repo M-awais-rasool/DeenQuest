@@ -312,7 +312,6 @@ export interface HifzPlan {
   published: boolean;
   scope: HifzPlanScope;
   segmentation: HifzSegmentation;
-  preset_name: string;
   xp_per_portion: number;
   seed_version?: number;
 }
@@ -335,12 +334,13 @@ export interface HifzPreview {
   warnings?: string[];
 }
 
-export interface HifzDifficultyPreset {
-  name: string;
-  label: string;
+/**
+ * The one set of rules every session runs by — there is no difficulty level.
+ * Global and admin-tunable, never a per-learner choice.
+ */
+export interface HifzSessionRules {
   listen_repeats: number;
   shadow_required: boolean;
-  ayahs_per_portion: number;
   open_recite_pass: number;
   blind_recite_pass: number;
   blind_required_to_seal: boolean;
@@ -348,7 +348,6 @@ export interface HifzDifficultyPreset {
   enabled_challenges: string[];
   challenge_weights?: Record<string, number>;
   allow_hints: boolean;
-  show_translation: boolean;
   lenience_bonus: number;
 }
 
@@ -370,6 +369,7 @@ export interface HifzSRSConfig {
   unverified_penalty: number;
   sabqi_window_days: number;
   manzil_daily_cap: number;
+  new_portions_per_day: number;
   hint_penalty: number;
 }
 
@@ -380,7 +380,7 @@ export interface HifzReciter {
 }
 
 export interface HifzSettings {
-  presets: HifzDifficultyPreset[];
+  session: HifzSessionRules;
   challenges: Record<string, HifzChallengeConfig>;
   srs: HifzSRSConfig;
   reciters: HifzReciter[];
