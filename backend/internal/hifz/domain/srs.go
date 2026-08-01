@@ -140,7 +140,11 @@ func Fold(st *PortionState, accuracy float64, passed bool, cfg SRSConfig, now ti
 
 	if passed {
 		st.Reps++
-		st.IntervalDays = advanceLadder(ladder, st.IntervalDays)
+		if InSabqiWindow(st, cfg, now) {
+			st.IntervalDays = ladder[0]
+		} else {
+			st.IntervalDays = advanceLadder(ladder, st.IntervalDays)
+		}
 	} else {
 		st.Lapses++
 		st.Reps = 0
@@ -176,29 +180,60 @@ func updateDifficulty(current, accuracy float64) float64 {
 	return math.Max(1, math.Min(10, d))
 }
 
-// ─────────────────────────────────────────────
-// Queue selection
-// ─────────────────────────────────────────────
+func QueueOf(st *PortionState, cfg SRSConfig, now time.Time) Queue {
+	if !st.IsSealed() {
+		return QueueSabaq
+	}
+	if InSabqiWindow(st, cfg, now) {
+		return QueueSabqi
+	}
+	return QueueManzil
+}
 
-// IsDue reports whether a sealed portion's review is due.
+func InSabqiWindow(st *PortionState, cfg SRSConfig, now time.Time) bool {
+	if st == nil || st.SealedAt == nil {
+		return false
+	}
+	return now.Sub(*st.SealedAt).Hours() < float64(sabqiWindowDays(cfg)*24)
+}
+
+func sabqiWindowDays(cfg SRSConfig) int {
+	if cfg.SabqiWindowDays <= 0 {
+		return 7
+	}
+	return cfg.SabqiWindowDays
+}
+
 func IsDue(st *PortionState, now time.Time) bool {
-	if st == nil || st.Stage != StageSealed || st.NextReviewAt == nil {
+	if !st.IsSealed() || st.NextReviewAt == nil {
 		return false
 	}
 	return !st.NextReviewAt.After(now)
 }
 
-// IsSabqi reports whether a portion was sealed recently enough to count as
-// short-term revision rather than long-term Manzil.
+// IsSabqi reports whether a portion belongs to the recent-revision queue.
 func IsSabqi(st *PortionState, cfg SRSConfig, now time.Time) bool {
-	if st == nil || st.Stage != StageSealed || st.SealedAt == nil {
-		return false
-	}
-	window := cfg.SabqiWindowDays
-	if window <= 0 {
-		window = 7
-	}
-	return now.Sub(*st.SealedAt).Hours() < float64(window*24)
+	return QueueOf(st, cfg, now) == QueueSabqi
+}
+
+func IsManzil(st *PortionState, cfg SRSConfig, now time.Time) bool {
+	return QueueOf(st, cfg, now) == QueueManzil
+}
+
+func SabqiDue(st *PortionState, cfg SRSConfig, now time.Time) bool {
+	return IsSabqi(st, cfg, now) && !ReviewedOn(st, now)
+}
+
+func ManzilDue(st *PortionState, cfg SRSConfig, now time.Time) bool {
+	return IsManzil(st, cfg, now) && IsDue(st, now)
+}
+
+func ReviewedOn(st *PortionState, t time.Time) bool {
+	return st != nil && st.LastReviewAt != nil && DayKey(*st.LastReviewAt) == DayKey(t)
+}
+
+func SealedOn(st *PortionState, t time.Time) bool {
+	return st != nil && st.SealedAt != nil && DayKey(*st.SealedAt) == DayKey(t)
 }
 
 // DayKey formats a UTC day stamp, matching the coach module's streak keys.

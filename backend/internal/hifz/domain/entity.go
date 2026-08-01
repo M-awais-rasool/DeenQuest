@@ -64,13 +64,22 @@ func (s Stage) Next(rules SessionRules) Stage {
 type Queue string
 
 const (
-	QueueSabqi  Queue = "sabqi"  // recent revision — sealed in the last week
-	QueueManzil Queue = "manzil" // long-term revision — SRS says it is due
-	QueueSabaq  Queue = "sabaq"  // new memorization
+	QueueSabaq  Queue = "sabaq"  // سبق — today's new lesson
+	QueueSabqi  Queue = "sabqi"  // سبقی — the last few days of lessons, revised daily
+	QueueManzil Queue = "manzil" // منزل — older memorization, on the long-term schedule
 )
 
-// QueueOrder is the order a daily session runs in.
-var QueueOrder = []Queue{QueueSabqi, QueueManzil, QueueSabaq}
+var QueueOrder = []Queue{QueueSabaq, QueueSabqi, QueueManzil}
+
+type QueueStatus string
+
+const (
+	QueueDue      QueueStatus = "due"      // work waiting right now
+	QueueDone     QueueStatus = "done"     // today's share is finished
+	QueueRest     QueueStatus = "rest"     // material exists, none scheduled today
+	QueueLocked   QueueStatus = "locked"   // nothing has aged into this queue yet
+	QueueComplete QueueStatus = "complete" // no material left at all (Sabaq only)
+)
 
 type StrengthLabel string
 
@@ -193,6 +202,10 @@ type PortionState struct {
 }
 
 func PortionStateID(userID, portionID string) string { return userID + ":" + portionID }
+
+func (st *PortionState) IsSealed() bool {
+	return st != nil && st.Stage == StageSealed && st.SealedAt != nil
+}
 
 type WordResult struct {
 	Text       string  `bson:"text"       json:"text"`

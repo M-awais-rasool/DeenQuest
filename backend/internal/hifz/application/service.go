@@ -213,7 +213,7 @@ func (s *Service) ListPlans(ctx context.Context, userID string) ([]PlanView, err
 		if view.Enrolled {
 			states, _ := s.repo.ListPortionStates(ctx, userID, plan.ID)
 			for i := range states {
-				if states[i].Stage == domain.StageSealed {
+				if states[i].IsSealed() {
 					view.PortionsSealed++
 				}
 			}
@@ -355,21 +355,21 @@ func (s *Service) Overview(ctx context.Context, userID string) (*domain.Overview
 			out.PortionsSealed++
 			out.AyahsMemorized += p.AyahCount()
 		}
-		switch {
-		case domain.IsSabqi(st, cfg.SRS, now):
-			out.SabqiCount++
-		case domain.IsDue(st, now):
-			out.ManzilCount++
-		}
-		if out.NextUpID == "" && (st == nil || st.Stage != domain.StageSealed) {
+		if out.NextUpID == "" && !st.IsSealed() {
 			out.NextUpID = p.ID
 			out.NextUpLabel = p.Label
 		}
 	}
 
-	out.SabaqCount = min(newPortionsPerDay(cfg), countUnsealed(portions, byPortion))
-	if cap := cfg.SRS.ManzilDailyCap; cap > 0 && out.ManzilCount > cap {
-		out.ManzilCount = cap
+	for _, q := range buildQueues(portions, byPortion, cfg, now) {
+		switch q.Key {
+		case domain.QueueSabaq:
+			out.SabaqCount = len(q.Items)
+		case domain.QueueSabqi:
+			out.SabqiCount = len(q.Items)
+		case domain.QueueManzil:
+			out.ManzilCount = len(q.Items)
+		}
 	}
 
 	if weight > 0 {
@@ -421,19 +421,22 @@ type QueueItem struct {
 	Strength domain.PortionStrength `json:"strength"`
 }
 
-// TodayPlan is the three-queue daily session, in the order it should be run:
-// revision before new memorization.
+type QueueView struct {
+	Key    domain.Queue       `json:"key"`
+	Status domain.QueueStatus `json:"status"`
+	Items  []QueueItem        `json:"items"`
+	TotalPortions int `json:"total_portions"`
+	ReviewedToday    int        `json:"reviewed_today"`
+	EstimatedMinutes int        `json:"estimated_minutes"`
+	NextReviewAt     *time.Time `json:"next_review_at,omitempty"`
+}
+
 type TodayPlan struct {
 	Enrolled  bool   `json:"enrolled"`
 	PlanID    string `json:"plan_id,omitempty"`
 	PlanTitle string `json:"plan_title,omitempty"`
-	// ReciterID is echoed back so the plan picker can restore the learner's
-	// chosen voice instead of defaulting to the first one.
 	ReciterID string `json:"reciter_id,omitempty"`
-
-	Sabqi  []QueueItem `json:"sabqi"`
-	Manzil []QueueItem `json:"manzil"`
-	Sabaq  []QueueItem `json:"sabaq"`
+	Queues []QueueView `json:"queues"`
 
 	EstimatedMinutes int  `json:"estimated_minutes"`
 	AllDone          bool `json:"all_done"`
@@ -477,44 +480,121 @@ func (s *Service) Today(ctx context.Context, userID string) (*TodayPlan, error) 
 		ReciterID:     enrollment.ReciterID,
 		StreakDays:    enrollment.StreakDays,
 		ReviewedToday: enrollment.LastStreakDay == domain.DayKey(now),
-
-		Sabqi:  []QueueItem{},
-		Manzil: []QueueItem{},
-		Sabaq:  []QueueItem{},
+		Queues:        buildQueues(portions, byPortion, cfg, now),
 	}
 
-	var manzil []QueueItem
+	out.AllDone = true
+	for _, q := range out.Queues {
+		out.EstimatedMinutes += q.EstimatedMinutes
+		if len(q.Items) > 0 {
+			out.AllDone = false
+		}
+	}
+	return out, nil
+}
+
+var queueMinutes = map[domain.Queue]int{
+	domain.QueueSabaq:  6,
+	domain.QueueSabqi:  2,
+	domain.QueueManzil: 3,
+}
+
+func buildQueues(
+	portions []domain.Portion,
+	byPortion map[string]*domain.PortionState,
+	cfg *domain.Settings,
+	now time.Time,
+) []QueueView {
+	allowance := newPortionsPerDay(cfg) - sealedToday(byPortion, now)
+
+	views := make(map[domain.Queue]*QueueView, len(domain.QueueOrder))
+	for _, q := range domain.QueueOrder {
+		views[q] = &QueueView{Key: q, Items: []QueueItem{}}
+	}
+
 	for _, p := range portions {
 		st := byPortion[p.ID]
+		view := views[domain.QueueOf(st, cfg.SRS, now)]
+		view.TotalPortions++
+		if domain.ReviewedOn(st, now) {
+			view.ReviewedToday++
+		}
 		item := QueueItem{Portion: p, Strength: domain.BuildPortionStrength(p, st, cfg.SRS, now)}
 
-		switch {
-		case domain.IsSabqi(st, cfg.SRS, now):
-			out.Sabqi = append(out.Sabqi, item)
-		case domain.IsDue(st, now):
-			manzil = append(manzil, item)
-		case st == nil || st.Stage != domain.StageSealed:
-			if len(out.Sabaq) < newPortionsPerDay(cfg) {
-				out.Sabaq = append(out.Sabaq, item)
+		switch view.Key {
+		case domain.QueueSabqi:
+			if domain.SabqiDue(st, cfg.SRS, now) {
+				view.Items = append(view.Items, item)
+			}
+		case domain.QueueManzil:
+			if domain.ManzilDue(st, cfg.SRS, now) {
+				view.Items = append(view.Items, item)
+			}
+			if st.NextReviewAt != nil &&
+				(view.NextReviewAt == nil || st.NextReviewAt.Before(*view.NextReviewAt)) {
+				view.NextReviewAt = st.NextReviewAt
+			}
+		default: // Sabaq — portions in plan order, up to today's allowance.
+			if started(st) || len(view.Items) < allowance {
+				view.Items = append(view.Items, item)
 			}
 		}
 	}
 
 	// Weakest first, then capped: an uncapped review queue is how SRS apps die.
-	sort.SliceStable(manzil, func(i, j int) bool {
-		return manzil[i].Strength.Strength < manzil[j].Strength.Strength
+	manzil := views[domain.QueueManzil]
+	sort.SliceStable(manzil.Items, func(i, j int) bool {
+		return manzil.Items[i].Strength.Strength < manzil.Items[j].Strength.Strength
 	})
-	if cap := cfg.SRS.ManzilDailyCap; cap > 0 && len(manzil) > cap {
-		manzil = manzil[:cap]
-	}
-	if manzil != nil {
-		out.Manzil = manzil
+	if cap := cfg.SRS.ManzilDailyCap; cap > 0 && len(manzil.Items) > cap {
+		manzil.Items = manzil.Items[:cap]
 	}
 
-	// Rough pacing: revision is fast, new memorization is not.
-	out.EstimatedMinutes = len(out.Sabqi)*2 + len(out.Manzil)*3 + len(out.Sabaq)*6
-	out.AllDone = len(out.Sabqi) == 0 && len(out.Manzil) == 0 && len(out.Sabaq) == 0
-	return out, nil
+	out := make([]QueueView, 0, len(domain.QueueOrder))
+	for _, q := range domain.QueueOrder {
+		view := views[q]
+		view.Status = queueStatus(*view)
+		view.EstimatedMinutes = len(view.Items) * queueMinutes[q]
+		out = append(out, *view)
+	}
+	return out
+}
+
+func queueStatus(v QueueView) domain.QueueStatus {
+	if len(v.Items) > 0 {
+		return domain.QueueDue
+	}
+	if v.Key == domain.QueueSabaq {
+		if v.TotalPortions == 0 {
+			return domain.QueueComplete // every portion in the plan is memorized
+		}
+		return domain.QueueDone // today's allowance is used up
+	}
+	switch {
+	case v.TotalPortions == 0:
+		return domain.QueueLocked // nothing has aged into this queue yet
+	case v.ReviewedToday > 0:
+		return domain.QueueDone
+	default:
+		return domain.QueueRest // material exists, none of it is scheduled today
+	}
+}
+
+// started reports an opened-but-unfinished portion: it stays today's Sabaq
+// until it is actually sealed, so an abandoned session is always picked up.
+func started(st *domain.PortionState) bool {
+	return st != nil && st.Stage != "" && !st.IsSealed()
+}
+
+// sealedToday counts the portions first sealed today — the Sabaq already taken.
+func sealedToday(byPortion map[string]*domain.PortionState, now time.Time) int {
+	n := 0
+	for _, st := range byPortion {
+		if domain.SealedOn(st, now) {
+			n++
+		}
+	}
+	return n
 }
 
 // ─────────────────────────────────────────────
@@ -630,17 +710,33 @@ func (s *Service) StartSession(ctx context.Context, userID, portionID string, qu
 	}, nil
 }
 
+// startStage picks where a session opens. Unsealed material runs the pipeline
+// from wherever it was left; sealed material is revision, so it skips to recall
+// — Manzil recites the old portion from memory, Sabqi warms up on the drills.
 func startStage(state *domain.PortionState, queue domain.Queue, rules domain.SessionRules) domain.Stage {
-	if queue == domain.QueueSabaq || state == nil || state.Stage != domain.StageSealed {
-		if state != nil && state.Stage != "" && state.Stage != domain.StageSealed {
-			return state.Stage // resume where the learner left off
-		}
+	if state == nil || state.Stage == "" {
 		return domain.StageListen
 	}
-	if rules.BlindRequiredToSeal {
-		return domain.StageChallenges
+	if !state.IsSealed() {
+		return resumeStage(state.Stage, rules) // resume where the learner left off
+	}
+	if queue == domain.QueueManzil {
+		if rules.BlindRequiredToSeal {
+			return domain.StageBlindRecite
+		}
+		return domain.StageOpenRecite
 	}
 	return domain.StageChallenges
+}
+
+func resumeStage(stage domain.Stage, rules domain.SessionRules) domain.Stage {
+	if stage != "" && stage != domain.StageSealed {
+		return stage
+	}
+	if rules.BlindRequiredToSeal {
+		return domain.StageBlindRecite
+	}
+	return domain.StageOpenRecite
 }
 
 // StageResult is one submitted stage or challenge outcome.
@@ -848,7 +944,7 @@ func (s *Service) CompleteSession(ctx context.Context, userID, sessionID string)
 	}
 	passed := accuracy >= threshold
 
-	wasSealed := state.Stage == domain.StageSealed
+	wasSealed := state.IsSealed()
 	if passed {
 		state.Stage = domain.StageSealed
 		if state.SealedAt == nil {
@@ -856,9 +952,7 @@ func (s *Service) CompleteSession(ctx context.Context, userID, sessionID string)
 			state.SealedAt = &sealed
 		}
 	} else if !wasSealed {
-		// Keep an unsealed portion where it is so the learner resumes mid-pipeline
-		// rather than starting over.
-		state.Stage = session.Stage
+		state.Stage = resumeStage(session.Stage, rules)
 	}
 
 	domain.Fold(state, accuracy, passed, cfg.SRS, now)
@@ -872,8 +966,8 @@ func (s *Service) CompleteSession(ctx context.Context, userID, sessionID string)
 		Accuracy:     accuracy,
 		AccuracyPct:  int(accuracy*100 + 0.5),
 		Passed:       passed,
-		Sealed:       state.Stage == domain.StageSealed,
-		FirstSeal:    !wasSealed && state.Stage == domain.StageSealed,
+		Sealed:       state.IsSealed(),
+		FirstSeal:    !wasSealed && state.IsSealed(),
 		Before:       before,
 		After:        domain.BuildPortionStrength(session.Portion, state, cfg.SRS, now),
 		NextReviewAt: state.NextReviewAt,
@@ -1069,16 +1163,6 @@ func findPortion(portions []domain.Portion, id string) (domain.Portion, bool) {
 	return domain.Portion{}, false
 }
 
-func countUnsealed(portions []domain.Portion, states map[string]*domain.PortionState) int {
-	n := 0
-	for _, p := range portions {
-		if st := states[p.ID]; st == nil || st.Stage != domain.StageSealed {
-			n++
-		}
-	}
-	return n
-}
-
 func mean(xs []float64) float64 {
 	if len(xs) == 0 {
 		return 0
@@ -1113,11 +1197,4 @@ func newPortionsPerDay(cfg *domain.Settings) int {
 		return cfg.SRS.NewPortionsPerDay
 	}
 	return 1
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

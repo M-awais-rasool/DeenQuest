@@ -16,6 +16,7 @@ type PortionStrength struct {
 	OrderIndex int    `json:"order_index"`
 
 	Stage         Stage         `json:"stage"`
+	Queue         Queue         `json:"queue"` // which part of the cycle it sits in
 	Started       bool          `json:"started"`
 	Sealed        bool          `json:"sealed"`
 	Strength      float64       `json:"strength"` // 0–1
@@ -53,6 +54,7 @@ func BuildPortionStrength(p Portion, st *PortionState, cfg SRSConfig, now time.T
 		AyahEnd:    p.AyahEnd,
 		OrderIndex: p.OrderIndex,
 		Stage:      "",
+		Queue:      QueueOf(st, cfg, now),
 	}
 	if st == nil {
 		out.Rating = StrengthWeak
@@ -62,7 +64,7 @@ func BuildPortionStrength(p Portion, st *PortionState, cfg SRSConfig, now time.T
 	s := Strength(st, cfg, now)
 	out.Stage = st.Stage
 	out.Started = true
-	out.Sealed = st.Stage == StageSealed
+	out.Sealed = st.IsSealed()
 	out.Strength = s
 	out.StrengthPct = int(s*100 + 0.5)
 	out.Rating = Label(s, cfg)
