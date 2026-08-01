@@ -201,8 +201,8 @@ func TestIsDueAndIsSabqi(t *testing.T) {
 	sealed := now.AddDate(0, 0, -2)
 	old := now.AddDate(0, 0, -30)
 
-	due := &PortionState{Stage: StageSealed, NextReviewAt: &past}
-	notDue := &PortionState{Stage: StageSealed, NextReviewAt: &future}
+	due := &PortionState{Stage: StageSealed, SealedAt: &old, NextReviewAt: &past}
+	notDue := &PortionState{Stage: StageSealed, SealedAt: &old, NextReviewAt: &future}
 	unsealed := &PortionState{Stage: StageChallenges, NextReviewAt: &past}
 
 	if !IsDue(due, now) {
