@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
-import { ChevronLeft, Flame } from "lucide-react-native";
+import { ChevronLeft, Flame, Lock } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { AnimatedPressable } from "../../components/ui";
 import { ProgressRing } from "../../components/hifz/ProgressRing";
@@ -26,6 +26,7 @@ import {
   useGetHifzTodayQuery,
   type HifzPortionStrength,
   type HifzQueue,
+  type HifzQueueView,
   type HifzSurahStrength,
 } from "../../store/services/api";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -33,22 +34,50 @@ import type { AppStackParamList } from "../../navigators/navigationTypes";
 
 type Props = NativeStackScreenProps<AppStackParamList, "HifzHome">;
 
-/** Queue row config — colours and copy from J2. */
-const QUEUES: {
-  key: HifzQueue;
-  arabic: string;
-  name: string;
-  meta: string;
-  accent: string;
-  tint: string;
-  arabicColor: string;
-}[] = [
-  { key: "sabqi", arabic: "سَبْقِي", name: "Sabqi", meta: "· this week", accent: hz.teal, tint: hz.tealTint, arabicColor: hz.tealBright },
-  { key: "manzil", arabic: "مَنْزِل", name: "Manzil", meta: "· maintenance", accent: hz.gold, tint: hz.goldTint, arabicColor: hz.gold },
-  { key: "sabaq", arabic: "سَبَق", name: "Sabaq", meta: "· new", accent: hz.violet, tint: hz.violetTint, arabicColor: hz.violetBright },
-];
+const QUEUE_META: Record<
+  HifzQueue,
+  { arabic: string; name: string; meta: string; accent: string; tint: string; arabicColor: string }
+> = {
+  sabaq: { arabic: "سَبَق", name: "Sabaq", meta: "· new lesson", accent: hz.violet, tint: hz.violetTint, arabicColor: hz.violetBright },
+  sabqi: { arabic: "سَبْقِي", name: "Sabqi", meta: "· recent revision", accent: hz.teal, tint: hz.tealTint, arabicColor: hz.tealBright },
+  manzil: { arabic: "مَنْزِل", name: "Manzil", meta: "· older revision", accent: hz.gold, tint: hz.goldTint, arabicColor: hz.gold },
+};
 
-const QUEUE_MINUTES: Record<HifzQueue, number> = { sabqi: 2, manzil: 3, sabaq: 5 };
+function queueSubtitle(q: HifzQueueView): string {
+  const portions = (n: number) => `${n} portion${n === 1 ? "" : "s"}`;
+  switch (q.status) {
+    case "due":
+      return q.key === "sabaq" && q.items[0]
+        ? `${q.items[0].portion.label} · ${q.estimated_minutes} min`
+        : `${portions(q.items.length)} · ${q.estimated_minutes} min`;
+    case "done":
+      return q.key === "sabaq"
+        ? "Today's lesson is done — the next one unlocks tomorrow"
+        : `Revised today · ${portions(q.total_portions)}`;
+    case "complete":
+      return "Every portion in this plan is memorized";
+    case "rest":
+      return q.next_review_at
+        ? `${portions(q.total_portions)} resting · next ${formatDue(q.next_review_at)}`
+        : `${portions(q.total_portions)} resting · nothing due today`;
+    case "locked":
+    default:
+      return q.key === "sabqi"
+        ? "Starts the day after you seal your first portion"
+        : "Portions land here once they graduate from Sabqi";
+  }
+}
+
+function formatDue(iso: string): string {
+  const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "soon";
+  const days = Math.round((midnight(date) - midnight(new Date())) / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "tomorrow";
+  if (days < 7) return date.toLocaleDateString(undefined, { weekday: "long" });
+  return `in ${days} days`;
+}
 
 export function HifzHomeScreen({ navigation }: Props) {
   const overviewQ = useGetHifzOverviewQuery();
@@ -66,18 +95,17 @@ export function HifzHomeScreen({ navigation }: Props) {
   const today = todayQ.data?.data;
   const loading = overviewQ.isLoading || todayQ.isLoading;
 
-  const queues: Record<HifzQueue, NonNullable<typeof today>["sabqi"]> = {
-    sabqi: today?.sabqi ?? [],
-    manzil: today?.manzil ?? [],
-    sabaq: today?.sabaq ?? [],
-  };
+  const queues = today?.queues ?? [];
   const weakest = overview?.weakest ?? [];
   const surahs = overview?.surahs ?? [];
 
-  const startQueue = (queue: HifzQueue) => {
-    const first = queues[queue][0];
+  const startQueue = (queue: HifzQueueView) => {
+    const first = queue.items[0];
     if (!first) return;
-    navigation.navigate("HifzSession", { portionId: first.portion.id, queue });
+    navigation.navigate("HifzSession", {
+      portionId: first.portion.id,
+      queue: queue.key,
+    });
   };
 
   const practiseAnyway = () => {
@@ -85,7 +113,7 @@ export function HifzHomeScreen({ navigation }: Props) {
     if (!target) return;
     navigation.navigate("HifzSession", {
       portionId: target.portion_id,
-      queue: "sabqi",
+      queue: target.queue,
     });
   };
 
@@ -118,6 +146,7 @@ export function HifzHomeScreen({ navigation }: Props) {
         <CaughtUp
           streak={overview.streak_days}
           surahs={surahs}
+          queues={queues}
           onPractise={practiseAnyway}
           canPractise={weakest.length > 0}
         />
@@ -206,51 +235,9 @@ export function HifzHomeScreen({ navigation }: Props) {
             <Text style={s.sectionMeta}>≈ {today?.estimated_minutes ?? 0} min</Text>
           </View>
           <View style={{ gap: 8, marginTop: 9 }}>
-            {QUEUES.map((q) => {
-              const items = queues[q.key];
-              const done = items.length === 0;
-              const subtitle =
-                q.key === "sabaq" && items[0]
-                  ? `${items[0].portion.label} · ${items.length * QUEUE_MINUTES.sabaq} min`
-                  : `${items.length} portion${items.length === 1 ? "" : "s"} · ${items.length * QUEUE_MINUTES[q.key]} min`;
-              return (
-                <Pressable
-                  key={q.key}
-                  disabled={done}
-                  onPress={() => startQueue(q.key)}
-                  style={({ pressed }) => [
-                    s.queueRow,
-                    { borderLeftColor: q.accent },
-                    pressed && { opacity: 0.8 },
-                  ]}
-                >
-                  <View style={[s.queueIcon, { backgroundColor: q.tint }]}>
-                    <Text style={[s.queueArabic, { color: q.arabicColor }]}>
-                      {q.arabic}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={s.queueName}>
-                      {q.name} <Text style={s.queueMeta}>{q.meta}</Text>
-                    </Text>
-                    <Text style={s.queueSub} numberOfLines={1}>
-                      {done ? "Done for today" : subtitle}
-                    </Text>
-                  </View>
-                  {done ? (
-                    <View style={s.queueDone}>
-                      <Text style={s.queueDoneGlyph}>✓</Text>
-                    </View>
-                  ) : (
-                    <View style={[s.queueChip, { backgroundColor: q.tint }]}>
-                      <Text style={[s.queueChipText, { color: q.arabicColor }]}>
-                        {q.key === "sabaq" ? "START" : "DUE"}
-                      </Text>
-                    </View>
-                  )}
-                </Pressable>
-              );
-            })}
+            {queues.map((q) => (
+              <QueueRow key={q.key} queue={q} onPress={() => startQueue(q)} />
+            ))}
           </View>
 
           {/* ── memory strength (J2) ── */}
@@ -277,7 +264,7 @@ export function HifzHomeScreen({ navigation }: Props) {
                     onPress={() =>
                       navigation.navigate("HifzSession", {
                         portionId: row.portion_id,
-                        queue: row.due ? "manzil" : "sabqi",
+                        queue: row.queue,
                       })
                     }
                   />
@@ -304,6 +291,57 @@ export function HifzHomeScreen({ navigation }: Props) {
         </ScrollView>
       )}
     </ScreenWrapper>
+  );
+}
+
+function QueueRow({ queue, onPress }: { queue: HifzQueueView; onPress: () => void }) {
+  const meta = QUEUE_META[queue.key];
+  const due = queue.status === "due";
+  const finished = queue.status === "done" || queue.status === "complete";
+  const locked = queue.status === "locked";
+
+  return (
+    <Pressable
+      disabled={!due}
+      onPress={onPress}
+      style={({ pressed }) => [
+        s.queueRow,
+        { borderLeftColor: meta.accent },
+        locked && s.queueRowLocked,
+        pressed && { opacity: 0.8 },
+      ]}
+    >
+      <View style={[s.queueIcon, { backgroundColor: meta.tint }]}>
+        <Text style={[s.queueArabic, { color: meta.arabicColor }]}>{meta.arabic}</Text>
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={s.queueName}>
+          {meta.name} <Text style={s.queueMeta}>{meta.meta}</Text>
+        </Text>
+        <Text style={s.queueSub} numberOfLines={2}>
+          {queueSubtitle(queue)}
+        </Text>
+      </View>
+      {due ? (
+        <View style={[s.queueChip, { backgroundColor: meta.tint }]}>
+          <Text style={[s.queueChipText, { color: meta.arabicColor }]}>
+            {queue.key === "sabaq" ? "START" : "REVISE"}
+          </Text>
+        </View>
+      ) : finished ? (
+        <View style={s.queueDone}>
+          <Text style={s.queueDoneGlyph}>✓</Text>
+        </View>
+      ) : locked ? (
+        <View style={s.queueMutedIcon}>
+          <Lock size={13} color={hz.faint} strokeWidth={2.5} />
+        </View>
+      ) : (
+        <View style={s.queueRestChip}>
+          <Text style={s.queueRestText}>RESTING</Text>
+        </View>
+      )}
+    </Pressable>
   );
 }
 
@@ -408,11 +446,13 @@ function SurahList({
 function CaughtUp({
   streak,
   surahs,
+  queues,
   onPractise,
   canPractise,
 }: {
   streak: number;
   surahs: HifzSurahStrength[];
+  queues: HifzQueueView[];
   onPractise: () => void;
   canPractise: boolean;
 }) {
@@ -443,6 +483,15 @@ function CaughtUp({
             </Text>
           </View>
         </LinearGradient>
+
+        {/* The cycle stays on screen even when nothing is due — this is exactly
+            when a learner needs to see where the next day's work comes from. */}
+        <Text style={[s.sectionTitle, { marginTop: 20 }]}>Today's cycle</Text>
+        <View style={{ gap: 8, marginTop: 11 }}>
+          {queues.map((q) => (
+            <QueueRow key={q.key} queue={q} onPress={() => {}} />
+          ))}
+        </View>
 
         <Text style={[s.sectionTitle, { marginTop: 20 }]}>By surah</Text>
         <SurahList surahs={surahs} style={{ marginTop: 11 }} />
@@ -674,6 +723,7 @@ const s = StyleSheet.create({
     color: hz.muted,
     marginTop: 1,
   },
+  queueRowLocked: { opacity: 0.55 },
   queueDone: {
     width: 26,
     height: 26,
@@ -683,8 +733,23 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   queueDoneGlyph: { fontFamily: "Nunito_900Black", fontSize: 13, color: hz.onTeal },
+  queueMutedIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: hz.track,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   queueChip: { borderRadius: 11, paddingHorizontal: 11, paddingVertical: 6 },
   queueChipText: { fontFamily: "Nunito_900Black", fontSize: 11 },
+  queueRestChip: {
+    borderRadius: 11,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    backgroundColor: hz.track,
+  },
+  queueRestText: { fontFamily: "Nunito_900Black", fontSize: 9.5, color: hz.faint },
 
   listCard: {
     backgroundColor: hz.card,

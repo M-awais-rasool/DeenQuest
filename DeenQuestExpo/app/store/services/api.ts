@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 import type { AyahTimingInput } from "../../types/quranSync";
 import type { CoachState } from "../../services/coach";
 
-export const API_BASE_URL = "http://192.168.18.6:8080";
+export const API_BASE_URL = "http://192.168.18.9:8080";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
@@ -438,7 +438,13 @@ export type HifzStage =
   | "blind_recite"
   | "sealed";
 
-export type HifzQueue = "sabqi" | "manzil" | "sabaq";
+export type HifzQueue = "sabaq" | "sabqi" | "manzil";
+export type HifzQueueStatus =
+  | "due" // work waiting right now
+  | "done" // today's share is finished
+  | "rest" // material exists, none of it is scheduled today
+  | "locked" // nothing has aged into this queue yet
+  | "complete"; // no material left at all (Sabaq only)
 export type HifzRating = "Strong" | "Medium" | "Weak";
 
 export interface HifzPortion {
@@ -461,6 +467,7 @@ export interface HifzPortionStrength {
   ayah_end: number;
   order_index: number;
   stage: HifzStage | "";
+  queue: HifzQueue;
   started: boolean;
   sealed: boolean;
   strength: number;
@@ -555,14 +562,22 @@ export interface HifzQueueItem {
   strength: HifzPortionStrength;
 }
 
+export interface HifzQueueView {
+  key: HifzQueue;
+  status: HifzQueueStatus;
+  items: HifzQueueItem[];
+  total_portions: number;
+  reviewed_today: number;
+  estimated_minutes: number;
+  next_review_at?: string;
+}
+
 export interface HifzToday {
   enrolled: boolean;
   plan_id?: string;
   plan_title?: string;
   reciter_id?: string;
-  sabqi: HifzQueueItem[];
-  manzil: HifzQueueItem[];
-  sabaq: HifzQueueItem[];
+  queues: HifzQueueView[];
   estimated_minutes: number;
   all_done: boolean;
   streak_days: number;

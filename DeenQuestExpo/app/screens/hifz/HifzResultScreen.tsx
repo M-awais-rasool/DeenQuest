@@ -222,23 +222,31 @@ export function HifzResultScreen({ navigation, route }: Props) {
           </View>
           <View style={s.tile}>
             <Text style={[s.tileValue, { color: hz.skyBright }]}>
-              {result.interval_days}d
+              {result.sealed ? `${result.interval_days}d` : "TODAY"}
             </Text>
-            <Text style={s.tileLabel}>NEXT REVIEW</Text>
+            <Text style={s.tileLabel}>
+              {result.sealed ? "NEXT REVIEW" : "TRY AGAIN"}
+            </Text>
           </View>
         </View>
 
-        {/* sky explainer (J14) */}
-        {!!nextReview && (
-          <View style={s.explainCard}>
-            <Text style={s.explainStar}>✦</Text>
+        {/* sky explainer (J14) — a portion that did not seal is still Sabaq */}
+        <View style={s.explainCard}>
+          <Text style={s.explainStar}>✦</Text>
+          {result.sealed ? (
             <Text style={s.explainText}>
               You'll see this portion again{" "}
-              <Text style={s.explainStrong}>{nextReview}</Text> as Sabqi. Each
-              clean recall pushes it further out.
+              <Text style={s.explainStrong}>{nextReview ?? "soon"}</Text> as
+              Sabqi. Each clean recall pushes it further out.
             </Text>
-          </View>
-        )}
+          ) : (
+            <Text style={s.explainText}>
+              This portion stays in <Text style={s.explainStrong}>Sabaq</Text>.
+              It is only memorized once you recite it from memory cleanly — pick
+              it up again whenever you're ready.
+            </Text>
+          )}
+        </View>
       </ScrollView>
 
       <View style={s.footer}>

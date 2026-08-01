@@ -132,7 +132,7 @@ export default function HifzSettingsPage() {
         />
         <NumberField
           label="New portions per day"
-          hint="How much fresh material the Sabaq queue offers each day."
+          hint="How many new lessons Sabaq hands out each day. Sealing that many closes Sabaq until tomorrow."
           value={settings.srs.new_portions_per_day}
           min={1}
           max={10}
@@ -338,7 +338,7 @@ export default function HifzSettingsPage() {
         />
         <NumberField
           label="Sabqi window (days)"
-          hint="How long a freshly sealed portion counts as recent revision."
+          hint="How long a sealed portion is revised every day before it graduates to the Manzil rotation."
           value={settings.srs.sabqi_window_days}
           min={1}
           max={30}
