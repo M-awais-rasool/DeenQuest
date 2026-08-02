@@ -32,12 +32,13 @@ export function ShadowStage({
   onDone: () => void;
 }) {
   const [index, setIndex] = useState(0);
-  const [heard, setHeard] = useState(false);
+  const [heardAyah, setHeardAyah] = useState<number | null>(null);
 
   const start = ayahs[0]?.number ?? 1;
   const end = ayahs[ayahs.length - 1]?.number ?? start;
   const ayah = ayahs[index];
   const isLast = index === ayahs.length - 1;
+  const heard = !!ayah && heardAyah === ayah.number;
 
   const audio = useAyahAudio({
     surahId,
@@ -45,7 +46,7 @@ export function ShadowStage({
     ayahEnd: end,
     reciterId,
     stepMode: true, // stop after each ayah so the learner can echo it
-    onAyahComplete: () => setHeard(true),
+    onAyahComplete: (number) => setHeardAyah(number),
   });
 
   const playAyahRef = useRef(audio.playAyah);
@@ -53,11 +54,9 @@ export function ShadowStage({
 
   const playCurrent = useCallback(() => {
     if (!ayah) return;
-    setHeard(false);
     void playAyahRef.current(ayah.number);
   }, [ayah?.number]);
 
-  // Autoplay each ayah exactly once.
   const autoplayedRef = useRef<number | null>(null);
   useEffect(() => {
     if (!audio.ready || !ayah) return;
@@ -68,13 +67,18 @@ export function ShadowStage({
 
   const advance = () => {
     haptics.medium();
-    void audio.stop();
     if (isLast) {
+      void audio.stop();
       onDone();
       return;
     }
-    setHeard(false);
-    setIndex(index + 1);
+    const nextIndex = index + 1;
+    const nextAyah = ayahs[nextIndex];
+    setIndex(nextIndex);
+    if (nextAyah && audio.ready) {
+      autoplayedRef.current = nextAyah.number;
+      void playAyahRef.current(nextAyah.number);
+    }
   };
 
   if (!ayah) return null;

@@ -28,18 +28,24 @@ export function ListenStage({
   const start = ayahs[0]?.number ?? 1;
   const end = ayahs[ayahs.length - 1]?.number ?? start;
 
+  const passesRef = useRef(0);
+  const restartRef = useRef<() => void>(() => {});
+
   const audio = useAyahAudio({
     surahId,
     ayahStart: start,
     ayahEnd: end,
     reciterId,
-    onPassComplete: () => setPasses((n) => n + 1),
+    onPassComplete: () => {
+      passesRef.current += 1;
+      setPasses(passesRef.current);
+      if (passesRef.current < repeats) restartRef.current();
+    },
   });
+  restartRef.current = audio.restart;
 
   // Autoplay exactly once when audio becomes ready.
   const startedRef = useRef(false);
-  const restartRef = useRef(audio.restart);
-  restartRef.current = audio.restart;
   useEffect(() => {
     if (!audio.ready || startedRef.current) return;
     startedRef.current = true;

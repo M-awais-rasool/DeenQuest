@@ -19,6 +19,14 @@ export interface AyahAudioOptions {
   stepMode?: boolean;
 }
 
+type Phase = "idle" | "loading" | "playing" | "paused";
+
+interface AudioState {
+  ayah: number;
+  phase: Phase;
+  error: string | null;
+}
+
 async function disposeSound(sound: Audio.Sound) {
   try {
     sound.setOnPlaybackStatusUpdate(null);
@@ -47,17 +55,18 @@ export function useAyahAudio({
   const { data: audioRes } = useGetSurahAudioQuery({ id: surahId, reciter: reciterId });
 
   const soundRef = useRef<Audio.Sound | null>(null);
+  // The next ayah, loaded while the current one plays, so moving on does not
+  // wait for the network again.
+  const preloadRef = useRef<{ ayah: number; sound: Audio.Sound } | null>(null);
   const tokenRef = useRef(0);
   const mountedRef = useRef(true);
 
-  const [currentAyah, setCurrentAyah] = useState(ayahStart);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [state, setState] = useState<AudioState>({
+    ayah: ayahStart,
+    phase: "idle",
+    error: null,
+  });
   const [rate, setRate] = useState(1);
-  const [error, setError] = useState<string | null>(null);
-
-  const cbRef = useRef({ onPassComplete, onAyahComplete, stepMode, ayahEnd });
-  cbRef.current = { onPassComplete, onAyahComplete, stepMode, ayahEnd };
 
   const urls = useMemo(() => {
     const surah = surahRes?.data;
@@ -77,34 +86,109 @@ export function useAyahAudio({
 
   const ready = !!urls && urls.size > 0;
 
+  const envRef = useRef({
+    urls,
+    rate,
+    ayahStart,
+    ayahEnd,
+    stepMode,
+    onPassComplete,
+    onAyahComplete,
+    ayah: state.ayah,
+    phase: state.phase,
+  });
+  envRef.current = {
+    urls,
+    rate,
+    ayahStart,
+    ayahEnd,
+    stepMode,
+    onPassComplete,
+    onAyahComplete,
+    ayah: state.ayah,
+    phase: state.phase,
+  };
+
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       tokenRef.current++;
       const sound = soundRef.current;
+      const preloaded = preloadRef.current;
       soundRef.current = null;
+      preloadRef.current = null;
       if (sound) void disposeSound(sound);
+      if (preloaded) void disposeSound(preloaded.sound);
     };
+  }, []);
+
+  const preload = useCallback(async (ayahNumber: number) => {
+    const { urls, ayahEnd, rate } = envRef.current;
+    if (!urls || ayahNumber > ayahEnd) return;
+    if (preloadRef.current?.ayah === ayahNumber) return;
+    const url = urls.get(ayahNumber);
+    if (!url) return;
+
+    const stale = preloadRef.current;
+    preloadRef.current = null;
+    if (stale) void disposeSound(stale.sound);
+
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: url },
+        { shouldPlay: false, rate, shouldCorrectPitch: true },
+      );
+      if (!mountedRef.current || preloadRef.current) {
+        await disposeSound(sound);
+        return;
+      }
+      preloadRef.current = { ayah: ayahNumber, sound };
+    } catch {
+      // The ayah will simply load on demand instead.
+    }
+  }, []);
+
+  /** Take the warmed-up sound if it is the one we want, else load it now. */
+  const openSound = useCallback(async (ayahNumber: number, url: string) => {
+    const preloaded = preloadRef.current;
+    if (preloaded?.ayah === ayahNumber) {
+      preloadRef.current = null;
+      await preloaded.sound.setStatusAsync({
+        positionMillis: 0,
+        rate: envRef.current.rate,
+        shouldCorrectPitch: true,
+        shouldPlay: true,
+      });
+      return preloaded.sound;
+    }
+    const { sound } = await Audio.Sound.createAsync(
+      { uri: url },
+      { shouldPlay: true, rate: envRef.current.rate, shouldCorrectPitch: true },
+    );
+    return sound;
   }, []);
 
   const playRef = useRef<((ayahNumber: number) => Promise<void>) | null>(null);
 
   const playAyah = useCallback(
     async (ayahNumber: number) => {
-      const url = urls?.get(ayahNumber);
+      const url = envRef.current.urls?.get(ayahNumber);
       if (!url) {
-        if (urls) setError("No audio is available for this portion.");
+        if (envRef.current.urls) {
+          setState((s) => ({
+            ...s,
+            phase: "idle",
+            error: "No audio is available for this portion.",
+          }));
+        }
         return;
       }
 
       const token = ++tokenRef.current;
       const isCurrent = () => tokenRef.current === token && mountedRef.current;
 
-      setIsLoading(true);
-      setIsPlaying(false);
-      setError(null);
-      setCurrentAyah(ayahNumber);
+      setState({ ayah: ayahNumber, phase: "loading", error: null });
 
       const previous = soundRef.current;
       soundRef.current = null;
@@ -119,10 +203,7 @@ export function useAyahAudio({
         });
         if (!isCurrent()) return;
 
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: url },
-          { shouldPlay: true, rate, shouldCorrectPitch: true },
-        );
+        const sound = await openSound(ayahNumber, url);
 
         // A newer tap landed while this was loading. Throw this sound away
         // rather than let it play underneath the newer one.
@@ -132,45 +213,49 @@ export function useAyahAudio({
         }
 
         soundRef.current = sound;
-        setIsLoading(false);
-        setIsPlaying(true);
+        setState({ ayah: ayahNumber, phase: "playing", error: null });
+        void preload(ayahNumber + 1);
 
         sound.setOnPlaybackStatusUpdate((status) => {
-          if (!isCurrent()) return;
-          if (!status.isLoaded) return;
+          if (!isCurrent() || !status.isLoaded) return;
 
           if (!status.didJustFinish) {
-            setIsPlaying(status.isPlaying);
+            if (status.shouldPlay) {
+              setState((s) => (s.phase === "playing" ? s : { ...s, phase: "playing" }));
+            } else {
+              setState((s) => (s.phase === "playing" ? { ...s, phase: "paused" } : s));
+            }
             return;
           }
 
-          setIsPlaying(false);
-          cbRef.current.onAyahComplete?.(ayahNumber);
+          envRef.current.onAyahComplete?.(ayahNumber);
 
-          if (ayahNumber >= cbRef.current.ayahEnd) {
-            cbRef.current.onPassComplete?.();
-            return;
-          }
-          if (!cbRef.current.stepMode) {
+          const last = ayahNumber >= envRef.current.ayahEnd;
+          if (!last && !envRef.current.stepMode) {
             void playRef.current?.(ayahNumber + 1);
+            return;
           }
+          setState((s) => ({ ...s, phase: "idle" }));
+          if (last) envRef.current.onPassComplete?.();
         });
       } catch {
         if (isCurrent()) {
-          setIsLoading(false);
-          setIsPlaying(false);
-          setError("This recitation couldn't be loaded. Try another reciter.");
+          setState({
+            ayah: ayahNumber,
+            phase: "idle",
+            error: "This recitation couldn't be loaded. Try another reciter.",
+          });
         }
       }
     },
-    [urls, rate],
+    [openSound, preload],
   );
 
   playRef.current = playAyah;
 
   const pause = useCallback(async () => {
     const sound = soundRef.current;
-    setIsPlaying(false);
+    setState((s) => (s.phase === "playing" ? { ...s, phase: "paused" } : s));
     if (!sound) return;
     try {
       await sound.pauseAsync();
@@ -182,62 +267,70 @@ export function useAyahAudio({
   const resume = useCallback(async () => {
     const sound = soundRef.current;
     if (!sound) {
-      void playAyah(currentAyah);
+      void playAyah(envRef.current.ayah);
       return;
     }
     try {
       const status = await sound.getStatusAsync();
       if (status.isLoaded) {
+        // A sound parked at its end ignores playAsync, so rewind it first.
+        if (
+          status.durationMillis != null &&
+          status.positionMillis >= status.durationMillis - 50
+        ) {
+          await sound.setPositionAsync(0);
+        }
         await sound.playAsync();
-        setIsPlaying(true);
+        setState((s) => ({ ...s, phase: "playing" }));
         return;
       }
     } catch {
       // Fall through to a reload.
     }
-    void playAyah(currentAyah);
-  }, [playAyah, currentAyah]);
+    void playAyah(envRef.current.ayah);
+  }, [playAyah]);
 
   const play = useCallback(() => {
     void resume();
   }, [resume]);
 
   const toggle = useCallback(() => {
-    if (isPlaying) {
+    if (envRef.current.phase === "playing") {
       void pause();
     } else {
       void resume();
     }
-  }, [isPlaying, pause, resume]);
+  }, [pause, resume]);
 
   const stop = useCallback(async () => {
     tokenRef.current++; // cancel anything mid-load
     const sound = soundRef.current;
     soundRef.current = null;
-    setIsPlaying(false);
-    setIsLoading(false);
+    setState((s) => ({ ...s, phase: "idle" }));
     if (sound) await disposeSound(sound);
   }, []);
 
   const restart = useCallback(() => {
-    void playAyah(ayahStart);
-  }, [playAyah, ayahStart]);
+    void playAyah(envRef.current.ayahStart);
+  }, [playAyah]);
 
   const next = useCallback(() => {
-    if (currentAyah >= ayahEnd) return;
-    void playAyah(currentAyah + 1);
-  }, [playAyah, currentAyah, ayahEnd]);
+    const { ayah, ayahEnd } = envRef.current;
+    if (ayah >= ayahEnd) return;
+    void playAyah(ayah + 1);
+  }, [playAyah]);
 
   const previous = useCallback(() => {
-    if (currentAyah <= ayahStart) return;
-    void playAyah(currentAyah - 1);
-  }, [playAyah, currentAyah, ayahStart]);
+    const { ayah, ayahStart } = envRef.current;
+    if (ayah <= ayahStart) return;
+    void playAyah(ayah - 1);
+  }, [playAyah]);
 
-  const setPlaybackRate = useCallback((next: number) => {
-    setRate(next);
+  const setPlaybackRate = useCallback((value: number) => {
+    setRate(value);
     const sound = soundRef.current;
     if (sound) {
-      void sound.setRateAsync(next, true).catch(() => {});
+      void sound.setRateAsync(value, true).catch(() => {});
     }
   }, []);
 
@@ -245,16 +338,19 @@ export function useAyahAudio({
     setPlaybackRate(rate === 1 ? 0.75 : rate === 0.75 ? 0.5 : 1);
   }, [rate, setPlaybackRate]);
 
+  const isLoading = state.phase === "loading";
+  const isPlaying = state.phase === "playing";
+
   return {
     ready,
-    currentAyah,
+    currentAyah: state.ayah,
     isPlaying,
     isLoading,
-    error,
+    error: state.error,
     /** Loading *or* playing — the state a "continue" button should wait out. */
     isBusy: isLoading || isPlaying,
-    canGoNext: currentAyah < ayahEnd,
-    canGoPrevious: currentAyah > ayahStart,
+    canGoNext: state.ayah < ayahEnd,
+    canGoPrevious: state.ayah > ayahStart,
     rate,
     play,
     playAyah,
