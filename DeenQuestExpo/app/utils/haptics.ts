@@ -1,10 +1,5 @@
 import * as Haptics from "expo-haptics";
 
-/**
- * Centralized haptic feedback utilities for DeenQuest.
- * Provides semantic feedback types that map to appropriate haptic patterns.
- */
-
 export const haptics = {
   /** Light tap — for subtle interactions like navigation, toggles, tabs */
   light: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),

@@ -1,9 +1,3 @@
-/**
- * Centralized configuration for the Personalized Onboarding flow.
- * All step data, copy, and loading states live here so the UI component
- * stays focused purely on rendering and animation.
- */
-
 export interface OnboardingOption {
   id: string;
   icon: string;
@@ -131,7 +125,6 @@ export const LOADING_STEPS = [
   "Your journey is ready!",
 ];
 
-/** Maps answer IDs → human-readable tags for the completion screen */
 export function getSelectedTags(answers: Record<number, string[]>): string[] {
   const tags: string[] = [];
   const growthStep = ONBOARDING_STEPS[3];
@@ -155,7 +148,6 @@ interface NameForm {
   lastName: string;
 }
 
-/** Builds the API payload from collected answers */
 export function buildOnboardingPayload(
   answers: Record<number, string[]>,
   nameForm: NameForm

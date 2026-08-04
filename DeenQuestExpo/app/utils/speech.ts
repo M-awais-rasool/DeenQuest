@@ -1,9 +1,3 @@
-/**
- * Safe wrapper around expo-speech.
- * Falls back silently when the native module is not yet compiled
- * (i.e. before `expo prebuild` + native rebuild).
- */
-
 type SpeechOptions = {
   language?: string;
   rate?: number;
@@ -18,10 +12,8 @@ let SpeechModule: {
 } | null = null;
 
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   SpeechModule = require("expo-speech");
 } catch {
-  // Native module not compiled yet – audio silently unavailable.
 }
 
 export const Speech = {
@@ -41,7 +33,6 @@ export const Speech = {
       // ignore
     }
   },
-  /** Returns true when the native module is available */
   isAvailable(): boolean {
     return SpeechModule !== null;
   },

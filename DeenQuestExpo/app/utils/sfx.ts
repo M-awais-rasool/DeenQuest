@@ -1,14 +1,5 @@
-/**
- * Fail-safe sound-effects player for the learning experience.
- *
- * Mirrors the defensive style of `speech.ts`: if `expo-av` is unavailable
- * (e.g. before a native rebuild) every call becomes a silent no-op so the UI
- * never crashes. Sounds are loaded lazily on first use and reused after that.
- */
-
 type SfxKey = "correct" | "wrong" | "pick" | "complete";
 
-// Static requires so Metro bundles the assets.
 const SOURCES: Record<SfxKey, number> = {
   correct: require("../../assets/sounds/Short_ascending_ding.mp3"),
   wrong: require("../../assets/sounds/Soft_descending_oud.mp3"),
@@ -25,7 +16,6 @@ type SoundLike = {
 
 let AudioModule: any | null = null;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   AudioModule = require("expo-av").Audio;
 } catch {
   AudioModule = null;
@@ -63,11 +53,9 @@ async function play(key: SfxKey): Promise<void> {
   try {
     const sound = await getSound(key);
     if (!sound) return;
-    // Rewind so rapid repeated taps always re-trigger the sound.
     await sound.setPositionAsync(0);
     await sound.playAsync();
   } catch {
-    // ignore – audio is a non-critical enhancement
   }
 }
 
@@ -86,7 +74,6 @@ export const sfx = {
     enabled = value;
   },
 
-  /** Free all loaded sounds (call on unmount of long-lived screens if desired) */
   async unloadAll() {
     const keys = Object.keys(cache) as SfxKey[];
     await Promise.all(
@@ -94,7 +81,6 @@ export const sfx = {
         try {
           await cache[k]?.unloadAsync();
         } catch {
-          // ignore
         }
         delete cache[k];
       }),

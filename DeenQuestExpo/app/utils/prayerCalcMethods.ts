@@ -4,11 +4,9 @@ import type { CalcMethodId, Madhab } from "../types/prayer";
 export interface CalcMethodMeta {
   id: CalcMethodId;
   label: string;
-  /** Short region hint shown under the label in the picker. */
   hint: string;
 }
 
-/** Presets in a sensible display order. `id` maps to an adhan factory name. */
 export const CALC_METHODS: CalcMethodMeta[] = [
   { id: "MuslimWorldLeague", label: "Muslim World League", hint: "Global default" },
   { id: "Karachi", label: "Karachi (Univ. of Islamic Sciences)", hint: "Pakistan, India, Bangladesh" },
@@ -27,8 +25,6 @@ export const CALC_METHODS: CalcMethodMeta[] = [
 export const DEFAULT_METHOD: CalcMethodId = "MuslimWorldLeague";
 export const DEFAULT_MADHAB: Madhab = "shafi";
 
-/** Build adhan CalculationParameters for a method + madhab. Falls back to the
- *  default method if a persisted id is somehow unknown at runtime. */
 export function buildParams(
   method: CalcMethodId,
   madhab: Madhab,

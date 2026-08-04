@@ -8,7 +8,6 @@ import type {
 import { PRAYER_LABELS, PRAYER_ORDER } from "../types/prayer";
 import { buildParams } from "./prayerCalcMethods";
 
-/** Compute the five prayer times for one day at a location. */
 export function computeTimes(
   coords: Coordinates,
   date: Date,
