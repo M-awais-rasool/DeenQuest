@@ -16,3 +16,4 @@ export {
   type FloatingMascotProps,
 } from "./FloatingMascot";
 export { CertificateSeal } from "./CertificateSeal";
+export { CertificateFrame, CERT_TIMELINE } from "./CertificateFrame";

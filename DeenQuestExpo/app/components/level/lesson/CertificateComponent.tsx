@@ -1,101 +1,17 @@
-import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Share, Animated, Easing } from "react-native";
-import type { StyleProp, ViewStyle } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { TactilePressable, AnimatedPressable, CertificateSeal } from "../../ui";
+import React from "react";
+import { View, Text, StyleSheet, Share } from "react-native";
+import {
+  TactilePressable,
+  AnimatedPressable,
+  CertificateFrame,
+  CERT_TIMELINE,
+} from "../../ui";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { FadeInView, RevealText } from "./shared";
 import { useAppSelector } from "../../../store/hooks";
 
-const T = {
-  frame: 260,
-  seal: 620,
-  shine: 900,
-  certLabel: 1000,
-  title: 1180,
-  awardedTo: 1500,
-  name: 1650,
-  meta: 1950,
-  message: 2150,
-  nextPhase: 2450,
-  actions: 2650,
-};
-
-function useSealEntrance(delay: number) {
-  const progress = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const anim = Animated.sequence([
-      Animated.delay(delay),
-      Animated.spring(progress, {
-        toValue: 1,
-        friction: 5,
-        tension: 90,
-        useNativeDriver: true,
-      }),
-    ]);
-    anim.start();
-    return () => anim.stop();
-  }, [progress, delay]);
-
-  return {
-    opacity: progress,
-    transform: [
-      { scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
-      {
-        rotate: progress.interpolate({
-          inputRange: [0, 1],
-          outputRange: ["-38deg", "0deg"],
-        }),
-      },
-    ],
-  } as unknown as StyleProp<ViewStyle>;
-}
-
-function Shine({ delay }: { delay: number }) {
-  const progress = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(progress, {
-          toValue: 1,
-          duration: 1600,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.delay(2600),
-        Animated.timing(progress, { toValue: 0, duration: 0, useNativeDriver: true }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [progress, delay]);
-
-  const translateX = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-260, 320],
-  });
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[s.shine, { opacity: progress.interpolate({
-        inputRange: [0, 0.15, 0.85, 1],
-        outputRange: [0, 1, 1, 0],
-      }), transform: [{ translateX }, { rotate: "18deg" }] }]}
-    >
-      <LinearGradient
-        colors={["transparent", "rgba(255,240,200,0.16)", "transparent"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={StyleSheet.absoluteFill}
-      />
-    </Animated.View>
-  );
-}
+const T = CERT_TIMELINE;
 
 const CONFETTI = [
   { top: 96, right: 60, w: 8, h: 12, rotate: "-28deg", color: "#2CC9B5" },
@@ -111,7 +27,6 @@ export function CertificateComponent({
   const user = useAppSelector((state) => state.main.user);
   const displayName =
     user?.display_name || user?.email?.split("@")[0] || "Student";
-  const sealStyle = useSealEntrance(T.seal);
 
   const dateLabel = new Date()
     .toLocaleDateString("en-US", {
@@ -163,54 +78,42 @@ export function CertificateComponent({
       </View>
 
       {/* certificate frame */}
-      <FadeInView delay={T.frame} style={s.frameOuter}>
-        <View style={s.frameInner}>
-          <Shine delay={T.shine} />
-          <Text style={[s.corner, { top: 8, left: 10 }]}>✦</Text>
-          <Text style={[s.corner, { top: 8, right: 10 }]}>✦</Text>
-          <Text style={[s.corner, { bottom: 8, left: 10 }]}>✦</Text>
-          <Text style={[s.corner, { bottom: 8, right: 10 }]}>✦</Text>
-
-          <Animated.View style={sealStyle}>
-            <CertificateSeal />
-          </Animated.View>
-
-          <RevealText
-            text="CERTIFICATE OF COMPLETION"
-            style={s.certLabel}
-            containerStyle={s.certLabelWrap}
-            delay={T.certLabel}
-            wordStagger={80}
-          />
-          <RevealText
-            text={String(data.title ?? "")}
-            style={s.courseTitle}
-            containerStyle={s.courseTitleWrap}
-            delay={T.title}
-            wordStagger={90}
-          />
-          <RevealText
-            text="awarded to"
-            style={s.awardedTo}
-            containerStyle={s.awardedToWrap}
-            delay={T.awardedTo}
-          />
-          <RevealText
-            text={displayName}
-            style={s.name}
-            containerStyle={s.nameWrap}
-            delay={T.name}
-            wordStagger={120}
-          />
-          <FadeInView delay={T.meta}>
-            <View style={s.metaRow}>
-              <View style={s.metaLine} />
-              <Text style={s.metaText}>{dateLabel}</Text>
-              <View style={s.metaLine} />
-            </View>
-          </FadeInView>
-        </View>
-      </FadeInView>
+      <CertificateFrame sealId="award-seal">
+        <RevealText
+          text="CERTIFICATE OF COMPLETION"
+          style={s.certLabel}
+          containerStyle={s.certLabelWrap}
+          delay={T.label}
+          wordStagger={80}
+        />
+        <RevealText
+          text={String(data.title ?? "")}
+          style={s.courseTitle}
+          containerStyle={s.courseTitleWrap}
+          delay={T.title}
+          wordStagger={90}
+        />
+        <RevealText
+          text="awarded to"
+          style={s.awardedTo}
+          containerStyle={s.awardedToWrap}
+          delay={T.awardedTo}
+        />
+        <RevealText
+          text={displayName}
+          style={s.name}
+          containerStyle={s.nameWrap}
+          delay={T.name}
+          wordStagger={120}
+        />
+        <FadeInView delay={T.meta}>
+          <View style={s.metaRow}>
+            <View style={s.metaLine} />
+            <Text style={s.metaText}>{dateLabel}</Text>
+            <View style={s.metaLine} />
+          </View>
+        </FadeInView>
+      </CertificateFrame>
 
       {/* message + next phase */}
       {!!data.message && (
@@ -269,30 +172,6 @@ const s = StyleSheet.create({
     textAlign: "center",
   },
 
-  frameOuter: {
-    marginTop: 20,
-    backgroundColor: "#0F1D20",
-    borderWidth: 2,
-    borderColor: "#4A3E28",
-    borderRadius: 8,
-    padding: 8,
-  },
-  frameInner: {
-    borderWidth: 1.5,
-    borderColor: theme.colors.secondary,
-    borderRadius: 4,
-    paddingVertical: 30,
-    paddingHorizontal: 22,
-    alignItems: "center",
-    // The shine is clipped to the paper it travels across.
-    overflow: "hidden",
-  },
-  shine: {
-    position: "absolute",
-    top: -40,
-    bottom: -40,
-    width: 120,
-  },
   // RevealText lays each word out itself, so the centering and spacing that
   // used to live on the Text styles moves onto these wrappers.
   certLabelWrap: { marginTop: 16, alignSelf: "stretch" },
@@ -300,11 +179,6 @@ const s = StyleSheet.create({
   awardedToWrap: { marginTop: 8, alignSelf: "stretch" },
   nameWrap: { marginTop: 4, alignSelf: "stretch" },
   messageWrap: { marginTop: 18, alignSelf: "stretch" },
-  corner: {
-    position: "absolute",
-    fontSize: 12,
-    color: theme.colors.secondary,
-  },
   certLabel: {
     fontSize: 11,
     fontFamily: "Nunito_800ExtraBold",

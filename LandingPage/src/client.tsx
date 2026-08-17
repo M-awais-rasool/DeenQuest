@@ -9,8 +9,6 @@ const queryClient = new QueryClient();
 const router = createRouter({
   routeTree,
   context: { queryClient },
-  // Single-page landing with in-page anchor scrolling — router-managed scroll
-  // restoration fights native/programmatic scrolling, so keep it off.
   scrollRestoration: false,
   defaultPreloadStaleTime: 0,
 });
