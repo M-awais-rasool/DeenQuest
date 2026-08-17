@@ -142,10 +142,10 @@ func TestNormalizeArabic_FoldsTheVariantsWhisperProduces(t *testing.T) {
 		{"ٱلرَّحْمَٰنِ", "الرحمان"}, // alef wasla + superscript alef spelled out
 		{"أحمد", "احمد"},
 		{"إسلام", "اسلام"},
-		{"صلاة", "صلاه"},   // taa marbuta → haa
-		{"موسى", "موسي"},   // alef maqsura → ya
+		{"صلاة", "صلاه"},    // taa marbuta → haa
+		{"موسى", "موسي"},    // alef maqsura → ya
 		{"مُؤْمِن", "مومن"}, // waw with hamza
-		{"سـلام", "سلام"},  // tatweel
+		{"سـلام", "سلام"},   // tatweel
 	}
 	for _, tc := range cases {
 		if got := NormalizeArabic(tc.in); got != tc.want {

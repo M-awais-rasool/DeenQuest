@@ -271,7 +271,6 @@ const wordTolerance = 0.5
 // would rest on bit-level equality.
 const toleranceEpsilon = 1e-9
 
-
 // ─────────────────────────────────────────────
 // Wagner-Fischer Word-Sequence Alignment
 // ─────────────────────────────────────────────

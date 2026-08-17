@@ -64,9 +64,15 @@ func newFakeAdminRepo() *fakeAdminRepo {
 	}
 }
 
+func newAdminServiceAt(repo AdminRepository) *AdminService {
+	svc := NewAdminService(repo)
+	svc.now = func() time.Time { return adminNow }
+	return svc
+}
+
 func TestAdminServiceStatsFromRepo(t *testing.T) {
 	repo := newFakeAdminRepo()
-	stats, err := NewAdminService(repo).Stats(context.Background())
+	stats, err := newAdminServiceAt(repo).Stats(context.Background())
 	if err != nil {
 		t.Fatalf("Stats: %v", err)
 	}
@@ -97,7 +103,7 @@ func TestAdminServiceStatsFromRepo(t *testing.T) {
 
 func TestAdminServiceCurriculumFromRepo(t *testing.T) {
 	repo := newFakeAdminRepo()
-	cur, err := NewAdminService(repo).Curriculum(context.Background())
+	cur, err := newAdminServiceAt(repo).Curriculum(context.Background())
 	if err != nil {
 		t.Fatalf("Curriculum: %v", err)
 	}
@@ -117,7 +123,7 @@ func TestAdminServiceCurriculumFromRepo(t *testing.T) {
 // must serve both so a left-open dashboard does not rescan on every request.
 func TestAdminServiceCachesOneSnapshot(t *testing.T) {
 	repo := newFakeAdminRepo()
-	svc := NewAdminService(repo)
+	svc := newAdminServiceAt(repo)
 
 	for i := 0; i < 3; i++ {
 		if _, err := svc.Stats(context.Background()); err != nil {
@@ -135,7 +141,7 @@ func TestAdminServiceCachesOneSnapshot(t *testing.T) {
 
 func TestAdminPayloadJSONKeys(t *testing.T) {
 	repo := newFakeAdminRepo()
-	svc := NewAdminService(repo)
+	svc := newAdminServiceAt(repo)
 
 	stats, _ := svc.Stats(context.Background())
 	blob, err := json.Marshal(stats)

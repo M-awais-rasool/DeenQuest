@@ -6,9 +6,10 @@ COMPOSE ?= docker compose
 
 WHISPER_DIR := whisper-service
 WHISPER_VENV := $(WHISPER_DIR)/.venv
+WHISPER_CONVERT_VENV := $(WHISPER_DIR)/.venv-convert
 
 .PHONY: help tidy fmt vet test lint content-lint build run \
-        whisper-setup whisper-run whisper-dev \
+        whisper-setup whisper-model whisper-run whisper-dev \
         compose-up compose-down compose-build compose-logs compose-ps compose-restart clean
 
 help:
@@ -24,6 +25,7 @@ help:
 	@echo ""
 	@echo "Whisper (Python):"
 	@echo "  make whisper-setup     - Create venv and install Python deps"
+	@echo "  make whisper-model     - Build the Quran-finetuned model (run once)"
 	@echo "  make whisper-run       - Start whisper service (port 8001)"
 	@echo "  make whisper-dev       - Whisper with uvicorn --reload"
 	@echo ""
@@ -85,10 +87,16 @@ whisper-setup:
 	$(PYTHON) -m venv $(WHISPER_VENV)
 	$(WHISPER_VENV)/bin/pip install --upgrade pip
 	$(WHISPER_VENV)/bin/pip install -r $(WHISPER_DIR)/requirements.txt
-	@echo "Done. Run: make whisper-run"
+	@echo "Done. Next: make whisper-model"
+
+whisper-model:
+	@echo "Building the Quran-finetuned Whisper model (one-off, a few minutes)..."
+	$(PYTHON) -m venv $(WHISPER_CONVERT_VENV)
+	$(WHISPER_CONVERT_VENV)/bin/pip install --upgrade pip
+	$(WHISPER_CONVERT_VENV)/bin/pip install -r $(WHISPER_DIR)/requirements-convert.txt
+	cd $(WHISPER_DIR) && .venv-convert/bin/python convert_model.py
 
 whisper-run: $(WHISPER_VENV)
-	WHISPER_MODEL=$(or $(WHISPER_MODEL),small) \
 	WHISPER_DEVICE=$(or $(WHISPER_DEVICE),cpu) \
 	WHISPER_COMPUTE=$(or $(WHISPER_COMPUTE),int8) \
 	$(WHISPER_VENV)/bin/uvicorn main:app \
@@ -97,7 +105,6 @@ whisper-run: $(WHISPER_VENV)
 		--port 8001
 
 whisper-dev: $(WHISPER_VENV)
-	WHISPER_MODEL=$(or $(WHISPER_MODEL),small) \
 	WHISPER_DEVICE=$(or $(WHISPER_DEVICE),cpu) \
 	WHISPER_COMPUTE=$(or $(WHISPER_COMPUTE),int8) \
 	$(WHISPER_VENV)/bin/uvicorn main:app \
@@ -110,5 +117,5 @@ $(WHISPER_VENV):
 	@$(MAKE) whisper-setup
 
 clean:
-	rm -rf build/ $(WHISPER_VENV)/ tmp/
+	rm -rf build/ $(WHISPER_VENV)/ $(WHISPER_CONVERT_VENV)/ tmp/
 	$(GO) clean -cache -testcache

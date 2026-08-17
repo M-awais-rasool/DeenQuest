@@ -187,8 +187,8 @@ type Grade struct {
 	Words      []domain.WordResult
 	Message    string
 	Transcript string
-	Heard    bool
-	Coaching *domain.RecitationCoaching
+	Heard      bool
+	Coaching   *domain.RecitationCoaching
 }
 
 func (s *Service) GradeAgainstText(

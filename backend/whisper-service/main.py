@@ -2,7 +2,12 @@
 DeenQuest Whisper Transcription Service
 ======================================
 A lightweight FastAPI microservice that wraps faster-whisper for Arabic speech-to-text.
-Uses the 'small' model for good accuracy/latency balance at low cost.
+
+Runs a Quran-finetuned Whisper model, built once by convert_model.py
+(`make whisper-model`). Recitation is a narrow, fixed vocabulary in an
+orthography general Arabic ASR rarely sees, and every word the recogniser
+invents is reported to the learner as their own mistake — so the model choice
+here is a correctness concern, not a tuning preference.
 
 POST /transcribe  — accepts multipart audio file, returns JSON transcript
 GET  /health      — liveness probe
@@ -24,7 +29,10 @@ from faster_whisper import WhisperModel
 # ─────────────────────────────────────────────
 # Config from environment
 # ─────────────────────────────────────────────
-MODEL_SIZE = os.getenv("WHISPER_MODEL", "small")   # tiny|base|small|medium
+WHISPER_MODEL = os.getenv(
+    "WHISPER_MODEL",
+    str(Path(__file__).parent / "models" / "quran-base-ct2"),
+)
 DEVICE = os.getenv("WHISPER_DEVICE", "cpu")        # cpu or cuda
 COMPUTE_TYPE = os.getenv("WHISPER_COMPUTE", "int8")  # int8 (CPU) or float16 (GPU)
 BEAM_SIZE = int(os.getenv("WHISPER_BEAM_SIZE", "5"))
@@ -48,19 +56,31 @@ _model: Optional[WhisperModel] = None
 async def lifespan(app: FastAPI):
     """Load model once on startup; free on shutdown."""
     global _model
+
+    # Only a local path can be "missing" in a way worth stopping for. A bare
+    # size name ("small") or a Hub id ("tarteel-ai/whisper-base-ar-quran") is
+    # downloaded by faster-whisper on demand, and both of those contain a slash
+    # or none at all — so the test is whether it points into the filesystem,
+    # not whether it merely looks like it.
+    looks_local = Path(WHISPER_MODEL).is_absolute() or WHISPER_MODEL.startswith((".", os.sep))
+    if looks_local and not Path(WHISPER_MODEL).is_dir():
+        raise RuntimeError(
+            f"Whisper model not found at {WHISPER_MODEL}.\n"
+            "Build it once with:  make whisper-model"
+        )
+
     log.info(
-        "Loading Whisper model: size=%s device=%s compute=%s beam=%d threads=%s",
-        MODEL_SIZE, DEVICE, COMPUTE_TYPE, BEAM_SIZE, CPU_THREADS or "auto",
+        "Loading Whisper model: model=%s device=%s compute=%s beam=%d threads=%s",
+        WHISPER_MODEL, DEVICE, COMPUTE_TYPE, BEAM_SIZE, CPU_THREADS or "auto",
     )
     t0 = time.perf_counter()
     _model = WhisperModel(
-        MODEL_SIZE,
+        WHISPER_MODEL,
         device=DEVICE,
         compute_type=COMPUTE_TYPE,
         cpu_threads=CPU_THREADS,
     )
-    elapsed = time.perf_counter() - t0
-    log.info("Whisper model loaded in %.2fs", elapsed)
+    log.info("Whisper model loaded in %.2fs", time.perf_counter() - t0)
     yield
     log.info("Whisper service shutting down")
     _model = None
@@ -168,7 +188,7 @@ def _transcribe_file(file_path: str, filename: str, initial_prompt: str = "") ->
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "model": MODEL_SIZE, "device": DEVICE}
+    return {"status": "ok", "model": Path(WHISPER_MODEL).name, "device": DEVICE}
 
 
 @app.post("/transcribe")

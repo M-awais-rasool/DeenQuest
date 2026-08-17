@@ -1,0 +1,9 @@
+# Build-time only — for convert_model.py, NOT for serving requests.
+#
+# Install these into their own virtualenv, separate from the
+ctranslate2>=4.3,<4.6
+transformers>=4.40,<4.52
+torch>=2.0,<2.3
+numpy<2
+safetensors>=0.4
+huggingface_hub>=0.20

@@ -5,7 +5,11 @@ uploads/
 !.env.example
 tmp/
 
-# Python virtual environment
+# Python virtual environments (runtime, and the separate one used to build the
+# Quran model — see whisper-service/requirements-convert.txt)
 whisper-service/.venv/
+whisper-service/.venv-convert/
 **/__pycache__/
 *.pyc
+
+whisper-service/models/

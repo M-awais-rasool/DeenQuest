@@ -9,8 +9,8 @@ import (
 )
 
 type AdminService struct {
-	repo AdminRepository
-
+	repo     AdminRepository
+	now      func() time.Time
 	mu       sync.Mutex
 	cached   *snapshot
 	cachedAt time.Time
@@ -23,7 +23,7 @@ type snapshot struct {
 }
 
 func NewAdminService(repo AdminRepository) *AdminService {
-	return &AdminService{repo: repo, ttl: adminCacheTTL}
+	return &AdminService{repo: repo, ttl: adminCacheTTL, now: time.Now}
 }
 
 func (s *AdminService) Stats(ctx context.Context) (*AgentStats, error) {
@@ -56,7 +56,7 @@ func (s *AdminService) load(ctx context.Context) (*snapshot, error) {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
-	now := time.Now().UTC()
+	now := s.now().UTC()
 
 	// One pass over every learner covers segments, both gauges and the
 	// per-skill totals.
