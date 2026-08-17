@@ -52,6 +52,7 @@ export type AppStackParamList = {
   HifzSession: { portionId: string; queue: HifzQueue };
   HifzResult: { sessionId: string };
   HifzMistakes: undefined;
+  Certificates: undefined;
   Challenges: undefined;
   ParentDashboard: undefined;
 };

@@ -771,7 +771,7 @@
           "component": "CertificateComponent",
           "data": {
             "title": "Letter Friend",
-            "message": "MashaAllah! You can now recognise thirteen Arabic letters by shape, name and sound. The alphabet is opening its doors to you!",
+            "message": "MashaAllah! You can now recognise seventeen Arabic letters by shape, name and sound. The alphabet is opening its doors to you!",
             "next_phase": "Next: the rest of the alphabet"
           }
         }

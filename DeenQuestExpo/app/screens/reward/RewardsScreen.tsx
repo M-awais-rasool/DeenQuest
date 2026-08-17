@@ -23,6 +23,86 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { clearPendingRewardUnlocks } from "../../store/slices/mainSlice";
 import { RewardIcon } from "./components/RewardIcon";
 import { UnlockModal } from "./components/UnlockModal";
+import { CertificateSeal } from "./components/CertificateSeal";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { AppStackParamList } from "../../navigators/navigationTypes";
+import { ChevronRight } from "lucide-react-native";
+import { useGetLevelsQuery } from "../../store/services/api";
+import { buildSections } from "../../components/level/path/sections";
+import { FadeInView } from "../../components/level/lesson/shared";
+
+type Nav = NativeStackNavigationProp<AppStackParamList>;
+
+function useMedalBreath() {
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 1900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: 1900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [pulse]);
+
+  return {
+    opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.6] }),
+    transform: [
+      { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) },
+    ],
+  };
+}
+
+/** Shelf entry point: how many certificates are earned, and a way in. */
+function CertificatesBanner({
+  earned,
+  total,
+  onPress,
+}: {
+  earned: number;
+  total: number;
+  onPress: () => void;
+}) {
+  return (
+    <FadeInView delay={140}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [pressed && { opacity: 0.9 }]}
+      >
+        <LinearGradient
+          colors={["#2A2416", "#1A2B2A"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={s.certBanner}
+        >
+          <CertificateSeal size={44} id="rewardseal" />
+          <View style={s.certBannerBody}>
+            <Text style={s.certBannerTitle}>My Certificates</Text>
+            <Text style={s.certBannerSub}>
+              {total > 0
+                ? `${earned} of ${total} earned · tap to view`
+                : "Complete a section to earn your first"}
+            </Text>
+          </View>
+          <ChevronRight size={20} color={dq.gold} />
+        </LinearGradient>
+      </Pressable>
+    </FadeInView>
+  );
+}
 
 const TIERS = [
   {
@@ -139,10 +219,24 @@ function BadgeCell({
 
 export function RewardsScreen() {
   const dispatch = useAppDispatch();
+  const navigation = useNavigation<Nav>();
   const { width } = useWindowDimensions();
   const pendingUnlocks = useAppSelector((state) => state.main.pendingRewardUnlocks);
+  const breath = useMedalBreath();
 
   const { data: rewardsRes, isLoading: rewardsLoading } = useGetRewardsQuery();
+
+  const { data: levelsRes } = useGetLevelsQuery({ courseType: "qaida" });
+  const certificates = useMemo(() => {
+    const sections = buildSections(levelsRes?.data ?? [], "qaida");
+    const closing = sections
+      .map((sec) => sec.data[sec.data.length - 1])
+      .filter(Boolean);
+    return {
+      total: closing.length,
+      earned: closing.filter((l) => l.status === "completed").length,
+    };
+  }, [levelsRes]);
 
   const rewards: RewardWithStatus[] = rewardsRes?.data ?? [];
 
@@ -150,7 +244,6 @@ export function RewardsScreen() {
   const total = rewards.length;
   const { tier, hint } = tierInfo(unlocked, total);
 
-  // The most recently unlocked badge gets the "NEW" tag.
   const newest = useMemo(() => {
     const unlockedRewards = rewards.filter((r) => r.unlocked && r.unlocked_at);
     if (unlockedRewards.length === 0) return undefined;
@@ -159,7 +252,6 @@ export function RewardsScreen() {
     )[0];
   }, [rewards]);
 
-  // grid cell width: screen − 2×22px padding − 2×14px gaps, split 3 ways
   const cellWidth = (width - 46 - 28) / 3;
 
   const [activeUnlock, setActiveUnlock] = useState<NewlyGrantedReward | null>(null);
@@ -220,15 +312,21 @@ export function RewardsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* tier header */}
-        <View style={s.tierHeader}>
-          <LinearGradient
-            colors={tier.gradient}
-            start={{ x: 0.2, y: 0 }}
-            end={{ x: 0.9, y: 1 }}
-            style={[s.tierMedal, { shadowColor: tier.gradient[0] }]}
-          >
-            <Text style={[s.tierMedalIcon, { color: tier.iconColor }]}>✦</Text>
-          </LinearGradient>
+        <FadeInView style={s.tierHeader}>
+          <View style={s.tierMedalWrap}>
+            <Animated.View
+              pointerEvents="none"
+              style={[s.tierGlow, { backgroundColor: tier.glow }, breath]}
+            />
+            <LinearGradient
+              colors={tier.gradient}
+              start={{ x: 0.2, y: 0 }}
+              end={{ x: 0.9, y: 1 }}
+              style={[s.tierMedal, { shadowColor: tier.gradient[0] }]}
+            >
+              <Text style={[s.tierMedalIcon, { color: tier.iconColor }]}>✦</Text>
+            </LinearGradient>
+          </View>
           <Text style={s.tierTitle}>{tier.name} Collector</Text>
           <Text style={s.tierSub}>
             {unlocked} / {total} badges unlocked
@@ -237,7 +335,13 @@ export function RewardsScreen() {
             <Text style={s.hintStar}>✦</Text>
             <Text style={s.hintText}>{hint}</Text>
           </View>
-        </View>
+        </FadeInView>
+
+        <CertificatesBanner
+          earned={certificates.earned}
+          total={certificates.total}
+          onPress={() => navigation.navigate("Certificates")}
+        />
 
         {/* badge grid */}
         {rewardsLoading ? (
@@ -245,17 +349,21 @@ export function RewardsScreen() {
         ) : rewards.length === 0 ? (
           <Text style={s.empty}>No rewards found.</Text>
         ) : (
-          <View style={s.grid}>
-            {rewards.map((reward) => (
-              <BadgeCell
-                key={reward.id}
-                reward={reward}
-                isNew={reward.id === newest?.id}
-                width={cellWidth}
-                onPress={() => handleBadgePress(reward)}
-              />
-            ))}
-          </View>
+          <>
+            <Text style={s.sectionLabel}>BADGES</Text>
+            <View style={s.grid}>
+              {rewards.map((reward, i) => (
+                <FadeInView key={reward.id} delay={220 + i * 45}>
+                  <BadgeCell
+                    reward={reward}
+                    isNew={reward.id === newest?.id}
+                    width={cellWidth}
+                    onPress={() => handleBadgePress(reward)}
+                  />
+                </FadeInView>
+              ))}
+            </View>
+          </>
         )}
       </ScrollView>
 
@@ -283,6 +391,16 @@ const s = StyleSheet.create({
   // tier header
   tierHeader: {
     alignItems: "center",
+  },
+  tierMedalWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tierGlow: {
+    position: "absolute",
+    width: 92,
+    height: 92,
+    borderRadius: 46,
   },
   tierMedal: {
     width: 92,
@@ -326,12 +444,44 @@ const s = StyleSheet.create({
   hintStar: { fontSize: 14, color: dq.gold },
   hintText: { fontSize: 12.5, fontFamily: "Nunito_800ExtraBold", color: dq.gold },
 
+  // certificates banner
+  certBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: dq.goldBorder,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    marginTop: 24,
+  },
+  certBannerBody: { flex: 1, gap: 3 },
+  certBannerTitle: {
+    fontSize: 16.5,
+    fontFamily: "Nunito_900Black",
+    color: dq.text,
+  },
+  certBannerSub: {
+    fontSize: 12,
+    fontFamily: "Nunito_700Bold",
+    color: dq.gold,
+  },
+
+  sectionLabel: {
+    fontSize: 10.5,
+    fontFamily: "Nunito_800ExtraBold",
+    color: dq.faint,
+    letterSpacing: 1.6,
+    marginTop: 28,
+  },
+
   // badge grid
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 14,
-    marginTop: 26,
+    marginTop: 14,
   },
   cell: {
     alignItems: "center",

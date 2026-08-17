@@ -25,6 +25,7 @@ import { DailyTaskDetailScreen } from "../screens/task/DailyTaskDetailScreen";
 import { LevelDetailScreen } from "../screens/level/LevelDetailScreen";
 import { LessonPlayerScreen } from "../screens/level/LessonPlayerScreen";
 import { MiniGamePlayerScreen } from "../screens/level/MiniGamePlayerScreen";
+import { CertificatesScreen } from "../screens/reward/CertificatesScreen";
 import { SettingsScreen } from "../screens/profile/SettingsScreen";
 import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
@@ -152,6 +153,7 @@ const AppStack = () => {
             component={MiniGamePlayerScreen}
             options={{ gestureEnabled: false }}
           />
+          <Stack.Screen name="Certificates" component={CertificatesScreen} />
           <Stack.Screen name="SurahDetail" component={SurahDetailScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
