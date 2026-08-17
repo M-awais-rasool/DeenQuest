@@ -16,8 +16,7 @@ import Svg, { Rect } from "react-native-svg";
 import { Lock, X } from "lucide-react-native";
 import { dq } from "../../../theme/designTokens";
 import { RevealText } from "../../../components/level/lesson/shared";
-import { TactilePressable } from "../../../components/ui";
-import { CertificateSeal } from "./CertificateSeal";
+import { TactilePressable, CertificateSeal } from "../../../components/ui";
 
 const T = {
   borderOuter: 80,

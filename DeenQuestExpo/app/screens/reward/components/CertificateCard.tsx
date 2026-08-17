@@ -4,7 +4,7 @@ import type { StyleProp, ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Lock } from "lucide-react-native";
 import { dq } from "../../../theme/designTokens";
-import { CertificateSeal } from "./CertificateSeal";
+import { CertificateSeal } from "../../../components/ui";
 
 export interface CertificateEntry {
   levelId: number;

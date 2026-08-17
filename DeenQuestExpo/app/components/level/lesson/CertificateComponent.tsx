@@ -2,14 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Share, Animated, Easing } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Path,
-  Stop,
-} from "react-native-svg";
-import { TactilePressable, AnimatedPressable } from "../../ui";
+import { TactilePressable, AnimatedPressable, CertificateSeal } from "../../ui";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
 import { FadeInView, RevealText } from "./shared";
@@ -101,37 +94,6 @@ function Shine({ delay }: { delay: number }) {
         style={StyleSheet.absoluteFill}
       />
     </Animated.View>
-  );
-}
-
-function CertificateSeal({ size = 54 }: { size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 80 80">
-      <Defs>
-        <SvgLinearGradient
-          id="certg"
-          gradientUnits="userSpaceOnUse"
-          x1="12"
-          y1="0"
-          x2="62"
-          y2="80"
-        >
-          <Stop offset="0" stopColor="#F9D98C" />
-          <Stop offset="1" stopColor="#D08A22" />
-        </SvgLinearGradient>
-      </Defs>
-      <Circle cx="40" cy="40" r="36" fill="url(#certg)" />
-      <Circle cx="40" cy="40" r="29" fill="#0F1D20" />
-      <Path
-        d="M38 22 A16 16 0 1 0 38 54 A21 21 0 0 1 38 22 Z"
-        fill="url(#certg)"
-        transform="rotate(-22 40 38)"
-      />
-      <Path
-        d="M47 30 l1.8 4 4 1.8-4 1.8-1.8 4-1.8-4-4-1.8 4-1.8z"
-        fill="#FDF6E3"
-      />
-    </Svg>
   );
 }
 

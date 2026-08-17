@@ -15,3 +15,4 @@ export {
   FloatingMascot,
   type FloatingMascotProps,
 } from "./FloatingMascot";
+export { CertificateSeal } from "./CertificateSeal";

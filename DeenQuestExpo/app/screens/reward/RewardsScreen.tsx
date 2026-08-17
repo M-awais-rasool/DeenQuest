@@ -23,7 +23,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { clearPendingRewardUnlocks } from "../../store/slices/mainSlice";
 import { RewardIcon } from "./components/RewardIcon";
 import { UnlockModal } from "./components/UnlockModal";
-import { CertificateSeal } from "./components/CertificateSeal";
+import { CertificateSeal } from "../../components/ui";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
