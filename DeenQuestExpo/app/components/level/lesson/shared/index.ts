@@ -1,5 +1,6 @@
 export { useShake, usePop, useFeedbackAnim, useEntrance, snapIn } from "./animations";
 export { FadeInView } from "./FadeInView";
+export { RevealText, revealDuration } from "./RevealText";
 export {
   FeedbackBanner,
   ContinueButton,

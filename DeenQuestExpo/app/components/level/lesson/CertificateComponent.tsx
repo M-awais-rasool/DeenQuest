@@ -1,5 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet, Share } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Share, Animated, Easing } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Svg, {
   Circle,
   Defs,
@@ -10,8 +12,97 @@ import Svg, {
 import { TactilePressable, AnimatedPressable } from "../../ui";
 import { theme } from "../../../theme/themes";
 import type { LessonComponentProps } from "./types";
-import { FadeInView } from "./shared";
+import { FadeInView, RevealText } from "./shared";
 import { useAppSelector } from "../../../store/hooks";
+
+const T = {
+  frame: 260,
+  seal: 620,
+  shine: 900,
+  certLabel: 1000,
+  title: 1180,
+  awardedTo: 1500,
+  name: 1650,
+  meta: 1950,
+  message: 2150,
+  nextPhase: 2450,
+  actions: 2650,
+};
+
+function useSealEntrance(delay: number) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const anim = Animated.sequence([
+      Animated.delay(delay),
+      Animated.spring(progress, {
+        toValue: 1,
+        friction: 5,
+        tension: 90,
+        useNativeDriver: true,
+      }),
+    ]);
+    anim.start();
+    return () => anim.stop();
+  }, [progress, delay]);
+
+  return {
+    opacity: progress,
+    transform: [
+      { scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
+      {
+        rotate: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: ["-38deg", "0deg"],
+        }),
+      },
+    ],
+  } as unknown as StyleProp<ViewStyle>;
+}
+
+function Shine({ delay }: { delay: number }) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(progress, {
+          toValue: 1,
+          duration: 1600,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.delay(2600),
+        Animated.timing(progress, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [progress, delay]);
+
+  const translateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-260, 320],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[s.shine, { opacity: progress.interpolate({
+        inputRange: [0, 0.15, 0.85, 1],
+        outputRange: [0, 1, 1, 0],
+      }), transform: [{ translateX }, { rotate: "18deg" }] }]}
+    >
+      <LinearGradient
+        colors={["transparent", "rgba(255,240,200,0.16)", "transparent"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
+    </Animated.View>
+  );
+}
 
 function CertificateSeal({ size = 54 }: { size?: number }) {
   return (
@@ -58,6 +149,7 @@ export function CertificateComponent({
   const user = useAppSelector((state) => state.main.user);
   const displayName =
     user?.display_name || user?.email?.split("@")[0] || "Student";
+  const sealStyle = useSealEntrance(T.seal);
 
   const dateLabel = new Date()
     .toLocaleDateString("en-US", {
@@ -98,59 +190,101 @@ export function CertificateComponent({
       ))}
 
       {/* headline */}
-      <FadeInView style={s.headline}>
-        <Text style={s.eyebrow}>COURSE COMPLETE</Text>
-        <Text style={s.headlineTitle}>MashaAllah, {displayName}!</Text>
-      </FadeInView>
+      <View style={s.headline}>
+        <RevealText text="COURSE COMPLETE" style={s.eyebrow} wordStagger={70} />
+        <RevealText
+          text={`MashaAllah, ${displayName}!`}
+          style={s.headlineTitle}
+          delay={180}
+          wordStagger={110}
+        />
+      </View>
 
       {/* certificate frame */}
-      <FadeInView delay={120} style={s.frameOuter}>
+      <FadeInView delay={T.frame} style={s.frameOuter}>
         <View style={s.frameInner}>
+          <Shine delay={T.shine} />
           <Text style={[s.corner, { top: 8, left: 10 }]}>✦</Text>
           <Text style={[s.corner, { top: 8, right: 10 }]}>✦</Text>
           <Text style={[s.corner, { bottom: 8, left: 10 }]}>✦</Text>
           <Text style={[s.corner, { bottom: 8, right: 10 }]}>✦</Text>
 
-          <CertificateSeal />
-          <Text style={s.certLabel}>CERTIFICATE OF COMPLETION</Text>
-          <Text style={s.courseTitle}>{data.title}</Text>
-          <Text style={s.awardedTo}>awarded to</Text>
-          <Text style={s.name}>{displayName}</Text>
-          <View style={s.metaRow}>
-            <View style={s.metaLine} />
-            <Text style={s.metaText}>{dateLabel}</Text>
-            <View style={s.metaLine} />
-          </View>
+          <Animated.View style={sealStyle}>
+            <CertificateSeal />
+          </Animated.View>
+
+          <RevealText
+            text="CERTIFICATE OF COMPLETION"
+            style={s.certLabel}
+            containerStyle={s.certLabelWrap}
+            delay={T.certLabel}
+            wordStagger={80}
+          />
+          <RevealText
+            text={String(data.title ?? "")}
+            style={s.courseTitle}
+            containerStyle={s.courseTitleWrap}
+            delay={T.title}
+            wordStagger={90}
+          />
+          <RevealText
+            text="awarded to"
+            style={s.awardedTo}
+            containerStyle={s.awardedToWrap}
+            delay={T.awardedTo}
+          />
+          <RevealText
+            text={displayName}
+            style={s.name}
+            containerStyle={s.nameWrap}
+            delay={T.name}
+            wordStagger={120}
+          />
+          <FadeInView delay={T.meta}>
+            <View style={s.metaRow}>
+              <View style={s.metaLine} />
+              <Text style={s.metaText}>{dateLabel}</Text>
+              <View style={s.metaLine} />
+            </View>
+          </FadeInView>
         </View>
       </FadeInView>
 
       {/* message + next phase */}
       {!!data.message && (
-        <FadeInView delay={220}>
-          <Text style={s.message}>{data.message}</Text>
-        </FadeInView>
+        <RevealText
+          text={String(data.message)}
+          style={s.message}
+          containerStyle={s.messageWrap}
+          delay={T.message}
+          wordStagger={45}
+        />
       )}
       {!!data.next_phase && (
-        <View style={s.nextChip}>
-          <Text style={s.nextStar}>✦</Text>
-          <Text style={s.nextText}>{data.next_phase}</Text>
-        </View>
+        <FadeInView delay={T.nextPhase}>
+          <View style={s.nextChip}>
+            <Text style={s.nextStar}>✦</Text>
+            <Text style={s.nextText}>{data.next_phase}</Text>
+          </View>
+        </FadeInView>
       )}
 
       {/* actions */}
-      <TactilePressable
-        edgeColor={theme.colors.goldDark}
-        radius={18}
-        haptic="medium"
-        style={s.shareBtnWrap}
-        faceStyle={s.shareBtn}
-        onPress={handleShare}
-      >
-        <Text style={s.shareBtnText}>SHARE CERTIFICATE</Text>
-      </TactilePressable>
-      <AnimatedPressable style={s.continueBtn} onPress={onComplete}>
-        <Text style={s.continueBtnText}>CONTINUE</Text>
-      </AnimatedPressable>
+      <FadeInView delay={T.actions}>
+        <TactilePressable
+          edgeColor={theme.colors.goldDark}
+          radius={18}
+          haptic="medium"
+          style={s.shareBtnWrap}
+          faceStyle={s.shareBtn}
+          onPress={handleShare}
+        >
+          <Text style={s.shareBtnText}>SHARE CERTIFICATE</Text>
+        </TactilePressable>
+        <AnimatedPressable style={s.continueBtn} onPress={onComplete}>
+          <Text style={s.continueBtnText}>CONTINUE</Text>
+        </AnimatedPressable>
+      </FadeInView>
     </View>
   );
 }
@@ -188,7 +322,22 @@ const s = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 22,
     alignItems: "center",
+    // The shine is clipped to the paper it travels across.
+    overflow: "hidden",
   },
+  shine: {
+    position: "absolute",
+    top: -40,
+    bottom: -40,
+    width: 120,
+  },
+  // RevealText lays each word out itself, so the centering and spacing that
+  // used to live on the Text styles moves onto these wrappers.
+  certLabelWrap: { marginTop: 16, alignSelf: "stretch" },
+  courseTitleWrap: { marginTop: 12, alignSelf: "stretch" },
+  awardedToWrap: { marginTop: 8, alignSelf: "stretch" },
+  nameWrap: { marginTop: 4, alignSelf: "stretch" },
+  messageWrap: { marginTop: 18, alignSelf: "stretch" },
   corner: {
     position: "absolute",
     fontSize: 12,
@@ -199,27 +348,21 @@ const s = StyleSheet.create({
     fontFamily: "Nunito_800ExtraBold",
     color: theme.colors.textMuted,
     letterSpacing: 2.4,
-    marginTop: 16,
   },
   courseTitle: {
     fontSize: 24,
     fontFamily: "Nunito_900Black",
     color: theme.colors.text,
-    marginTop: 12,
-    textAlign: "center",
   },
   awardedTo: {
     fontSize: 12.5,
     fontFamily: "Nunito_600SemiBold",
     color: theme.colors.textMuted,
-    marginTop: 8,
   },
   name: {
     fontSize: 28,
     fontFamily: "Amiri_700Bold",
     color: "#F5CE8A",
-    marginTop: 4,
-    textAlign: "center",
   },
   metaRow: {
     flexDirection: "row",
@@ -244,8 +387,6 @@ const s = StyleSheet.create({
     lineHeight: 21,
     fontFamily: "Nunito_600SemiBold",
     color: theme.colors.textMuted,
-    textAlign: "center",
-    marginTop: 18,
   },
   nextChip: {
     flexDirection: "row",

@@ -16,6 +16,7 @@ import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { LESSON_COMPONENT_MAP } from "../../components/level/lesson";
+import { playableLessonCount } from "../../components/level/lesson/certificate";
 import {
   trackLessonCompleted,
   trackLessonStarted,
@@ -24,8 +25,6 @@ import {
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 type Route = RouteProp<AppStackParamList, "LessonPlayer">;
 
-/** Segmented lesson progress (mock C3): one pill per lesson, filled up to the
- * current one, with a "5/7" counter on the right. */
 function ProgressBar({ current, total }: { current: number; total: number }) {
   return (
     <View style={s.progressBarContainer}>
@@ -128,6 +127,12 @@ export function LessonPlayerScreen() {
   const advancingRef = useRef(false);
 
   useEffect(() => {
+    if (!level) return;
+    const last = Math.max(0, playableLessonCount(level.lessons) - 1);
+    if (currentIndex > last) setCurrentIndex(last);
+  }, [level, currentIndex]);
+
+  useEffect(() => {
     if (level) trackLessonStarted(level.id, currentIndex);
   }, [level, currentIndex]);
 
@@ -145,7 +150,7 @@ export function LessonPlayerScreen() {
       }).catch(() => {});
     }
 
-    const isLast = currentIndex >= level.lessons.length - 1;
+    const isLast = currentIndex >= playableLessonCount(level.lessons) - 1;
 
     Animated.timing(fadeAnim, {
       toValue: 0,
@@ -208,7 +213,10 @@ export function LessonPlayerScreen() {
           >
             <X size={22} color={theme.colors.text} />
           </AnimatedPressable>
-          <ProgressBar current={currentIndex} total={level.lessons.length} />
+          <ProgressBar
+            current={currentIndex}
+            total={playableLessonCount(level.lessons)}
+          />
         </View>
 
         <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>

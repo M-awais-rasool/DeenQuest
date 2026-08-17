@@ -2,24 +2,18 @@ import type { LevelWithStatus, CourseType } from "../../../store/services/api";
 import { colorsForSection } from "./palette";
 import type { PathSection, PathLocation, SectionStatus } from "./types";
 
-/** How many levels make up one section of the path. */
-export const LEVELS_PER_SECTION = 10;
+export const LEVELS_PER_SECTION = 4;
 
 interface SectionMeta {
   title: string;
   subtitle: string;
 }
 
-/**
- * Curated titles per course. Kept as data (not hardcoded in the UI) so adding
- * a course or renaming a section is a one-line change, and anything beyond the
- * curated list falls back to a generated title.
- */
 const CURATED_META: Partial<Record<CourseType, SectionMeta[]>> = {
   qaida: [
     {
       title: "Meet the Letters I",
-      subtitle: "Your first thirteen letters, by shape and sound",
+      subtitle: "Your first seventeen letters, by shape and sound",
     },
     {
       title: "Meet the Letters II",
@@ -63,11 +57,6 @@ function statusFor(levels: LevelWithStatus[]): SectionStatus {
   return "locked";
 }
 
-/**
- * Split a flat, ordered list of levels into fixed-size sections. Pure and
- * O(n) — safe to memoize on the levels array. Works for any number of levels,
- * so the path grows automatically as more content is seeded.
- */
 export function buildSections(
   levels: LevelWithStatus[],
   courseType: CourseType,
@@ -99,12 +88,6 @@ export function buildSections(
   return sections;
 }
 
-/**
- * Locate where the user is along the path so the screen can open there: the
- * frontier level (first one that is unlocked but not yet completed). Falls
- * back to the last level when everything is done, or null when nothing is
- * unlocked yet (open at the top).
- */
 export function findActiveLocation(
   sections: PathSection[],
 ): PathLocation | null {

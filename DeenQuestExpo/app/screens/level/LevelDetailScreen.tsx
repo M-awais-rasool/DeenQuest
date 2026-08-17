@@ -37,6 +37,7 @@ import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { AnimatedPressable, TactilePressable } from "../../components/ui";
+import { playableLessonCount } from "../../components/level/lesson/certificate";
 import { FadeInView } from "../../components/level/lesson/shared";
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
@@ -121,8 +122,9 @@ export function LevelDetailScreen() {
     );
   }
 
-  const total = level.lessons.length;
-  const done = level.lessons_complete;
+  const lessons = level.lessons.slice(0, playableLessonCount(level.lessons));
+  const total = lessons.length;
+  const done = Math.min(level.lessons_complete, total);
   const allLessonsDone = done >= total;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const courseLevel = level.course_level || level.id;
@@ -207,7 +209,7 @@ export function LevelDetailScreen() {
               <View style={s.path}>
                 <View style={s.pathLine} />
 
-                {level.lessons.map((lesson, index) => {
+                {lessons.map((lesson, index) => {
                   const status =
                     index < done ? "done" : index === done ? "current" : "locked";
                   const meta = LESSON_TYPE_META[lesson.type] ?? DEFAULT_META;

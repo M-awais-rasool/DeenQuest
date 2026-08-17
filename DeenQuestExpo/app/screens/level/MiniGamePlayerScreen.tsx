@@ -22,6 +22,11 @@ import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import  CourseCompletionScreen  from "../../components/level/lesson/CourseCompletionScreen";
+import { CertificateComponent } from "../../components/level/lesson/CertificateComponent";
+import {
+  certificateLessonIndex,
+  playableLessonCount,
+} from "../../components/level/lesson/certificate";
 import { TapMatchGame } from "../../components/level/lesson/TapMatchGame";
 import { FallbackGame } from "../../components/level/lesson/FallbackGame";
 import { MCQGame } from "../../components/level/lesson/MCQGame";
@@ -60,6 +65,8 @@ export function MiniGamePlayerScreen() {
   const currentTotalXP = progressRes?.data?.xp ?? 0;
 
   const startTimeRef = useRef<number>(Date.now());
+
+  const [certificateSeen, setCertificateSeen] = useState(false);
 
   const [completionResult, setCompletionResult] = useState<{
     xpEarned: number;
@@ -134,6 +141,26 @@ export function MiniGamePlayerScreen() {
     );
   }
 
+  const certIndex = certificateLessonIndex(level.lessons);
+  if (completionResult && certIndex !== -1 && !certificateSeen) {
+    return (
+      <ScreenWrapper>
+        <ScrollView
+          style={s.scrollView}
+          contentContainerStyle={s.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <CertificateComponent
+            lesson={level.lessons[certIndex]}
+            onComplete={() => setCertificateSeen(true)}
+            levelId={level.id}
+            lessonIndex={certIndex}
+          />
+        </ScrollView>
+      </ScreenWrapper>
+    );
+  }
+
   if (completionResult) {
     return (
       <ScreenWrapper innerStyle={{ flex: 1 }}>
@@ -152,10 +179,13 @@ export function MiniGamePlayerScreen() {
           newRewards={completionResult.newRewards}
           lessonsDone={
             isCoachPractice
-              ? level.lessons.length
-              : (level as LevelWithStatus).lessons_complete
+              ? playableLessonCount(level.lessons)
+              : Math.min(
+                  (level as LevelWithStatus).lessons_complete,
+                  playableLessonCount(level.lessons),
+                )
           }
-          lessonsTotal={level.lessons.length}
+          lessonsTotal={playableLessonCount(level.lessons)}
           onContinue={handleContinue}
         />
       </ScreenWrapper>
