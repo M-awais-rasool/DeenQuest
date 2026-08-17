@@ -7,7 +7,9 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/chawais/deenquest/backend/internal/recitation/domain"
@@ -43,6 +45,9 @@ type Service struct {
 	whisperURL string // e.g. "http://whisper-service:8001"
 	httpClient *http.Client
 	coach      RecitationCoach
+
+	coachMu    sync.Mutex
+	coachCache map[string]string
 }
 
 func NewService(repo domain.Repository, whisperURL string, levels LevelSource, progressSvc *progressapp.Service) *Service {
@@ -64,7 +69,15 @@ const recitationCoachPrompt = "You are a gentle Quran recitation (tajweed) coach
 	"mention the articulation point (makhraj) simply. Keep Arabic words in Arabic script. " +
 	"Do NOT give religious rulings. Plain text only."
 
-func (s *Service) buildCoaching(ctx context.Context, score int, words []domain.WordResult) *domain.RecitationCoaching {
+const maxFocusWords = 5
+
+func (s *Service) buildCoaching(ctx context.Context, score int, words []domain.WordResult, heard bool) *domain.RecitationCoaching {
+	pass := score >= recitationPassScore
+
+	if !heard {
+		return &domain.RecitationCoaching{Pass: false, Tip: domain.NoSpeechFeedback}
+	}
+
 	var focus []string
 	seen := make(map[string]struct{})
 	for _, w := range words {
@@ -76,8 +89,10 @@ func (s *Service) buildCoaching(ctx context.Context, score int, words []domain.W
 			focus = append(focus, w.Text)
 		}
 	}
+	if len(focus) > maxFocusWords {
+		focus = focus[:maxFocusWords]
+	}
 
-	pass := score >= recitationPassScore
 	c := &domain.RecitationCoaching{Pass: pass, FocusWords: focus}
 	switch {
 	case len(focus) == 0 && pass:
@@ -88,16 +103,48 @@ func (s *Service) buildCoaching(ctx context.Context, score int, words []domain.W
 		c.Tip = "Let's practice these again, slowly: " + strings.Join(focus, "، ")
 	}
 
-	// Optional AI explanation for the focus words (short timeout; best-effort).
-	if s.coach != nil && len(focus) > 0 {
-		gctx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	if s.coach != nil && len(focus) > 0 && !pass {
+		if cached, ok := s.cachedCoaching(focus); ok {
+			c.Explanation = cached
+			return c
+		}
+		gctx, cancel := context.WithTimeout(ctx, coachTimeout)
 		defer cancel()
 		prompt := "The learner mispronounced these words: " + strings.Join(focus, "، ") + ". Give one short tip to fix them."
 		if exp, err := s.coach.Generate(gctx, recitationCoachPrompt, prompt); err == nil {
 			c.Explanation = strings.TrimSpace(exp)
+			s.cacheCoaching(focus, c.Explanation)
 		}
 	}
 	return c
+}
+
+const coachTimeout = 3 * time.Second
+const coachCacheMax = 256
+
+func coachCacheKey(focus []string) string {
+	sorted := append([]string(nil), focus...)
+	sort.Strings(sorted)
+	return strings.Join(sorted, "|")
+}
+
+func (s *Service) cachedCoaching(focus []string) (string, bool) {
+	s.coachMu.Lock()
+	defer s.coachMu.Unlock()
+	exp, ok := s.coachCache[coachCacheKey(focus)]
+	return exp, ok
+}
+
+func (s *Service) cacheCoaching(focus []string, explanation string) {
+	if explanation == "" {
+		return
+	}
+	s.coachMu.Lock()
+	defer s.coachMu.Unlock()
+	if s.coachCache == nil || len(s.coachCache) >= coachCacheMax {
+		s.coachCache = make(map[string]string, coachCacheMax)
+	}
+	s.coachCache[coachCacheKey(focus)] = explanation
 }
 
 func extractArabicText(lesson leveldomain.Lesson) (string, error) {
@@ -140,7 +187,8 @@ type Grade struct {
 	Words      []domain.WordResult
 	Message    string
 	Transcript string
-	Coaching   *domain.RecitationCoaching
+	Heard    bool
+	Coaching *domain.RecitationCoaching
 }
 
 func (s *Service) GradeAgainstText(
@@ -153,19 +201,29 @@ func (s *Service) GradeAgainstText(
 		return nil, fmt.Errorf("expected text is empty")
 	}
 
-	transcript, err := s.callWhisper(ctx, audio, audioFilename, expectedText)
+	transcript, err := s.callWhisper(ctx, audio, audioFilename)
 	if err != nil {
 		logger.Error("Whisper call failed", zap.Error(err))
 		return nil, fmt.Errorf("transcription service unavailable: %w", err)
 	}
 
 	words, score := domain.CompareRecitation(expectedText, transcript.Text)
+
+	heard := strings.TrimSpace(transcript.Text) != ""
+	message := domain.ScoreToFeedback(score)
+	if !heard {
+		message = domain.NoSpeechFeedback
+		logger.Warn("Recitation produced an empty transcript",
+			zap.String("filename", audioFilename))
+	}
+
 	return &Grade{
 		Score:      score,
 		Words:      words,
-		Message:    domain.ScoreToFeedback(score),
+		Message:    message,
 		Transcript: transcript.Text,
-		Coaching:   s.buildCoaching(ctx, score, words),
+		Heard:      heard,
+		Coaching:   s.buildCoaching(ctx, score, words, heard),
 	}, nil
 }
 
@@ -247,7 +305,6 @@ func (s *Service) callWhisper(
 	ctx context.Context,
 	audio io.Reader,
 	filename string,
-	prompt string,
 ) (*whisperResponse, error) {
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
@@ -261,12 +318,6 @@ func (s *Service) callWhisper(
 		if _, err := io.Copy(fw, audio); err != nil {
 			_ = pw.CloseWithError(fmt.Errorf("write audio: %w", err))
 			return
-		}
-		if prompt != "" {
-			if err := mw.WriteField("initial_prompt", prompt); err != nil {
-				_ = pw.CloseWithError(fmt.Errorf("write prompt: %w", err))
-				return
-			}
 		}
 		_ = pw.CloseWithError(mw.Close())
 	}()

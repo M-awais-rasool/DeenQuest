@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from faster_whisper import WhisperModel
 
@@ -26,6 +27,8 @@ from faster_whisper import WhisperModel
 MODEL_SIZE = os.getenv("WHISPER_MODEL", "small")   # tiny|base|small|medium
 DEVICE = os.getenv("WHISPER_DEVICE", "cpu")        # cpu or cuda
 COMPUTE_TYPE = os.getenv("WHISPER_COMPUTE", "int8")  # int8 (CPU) or float16 (GPU)
+BEAM_SIZE = int(os.getenv("WHISPER_BEAM_SIZE", "5"))
+CPU_THREADS = int(os.getenv("WHISPER_CPU_THREADS", "0"))
 MAX_AUDIO_MB = int(os.getenv("MAX_AUDIO_MB", "10"))
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
@@ -45,9 +48,17 @@ _model: Optional[WhisperModel] = None
 async def lifespan(app: FastAPI):
     """Load model once on startup; free on shutdown."""
     global _model
-    log.info("Loading Whisper model: size=%s device=%s compute=%s", MODEL_SIZE, DEVICE, COMPUTE_TYPE)
+    log.info(
+        "Loading Whisper model: size=%s device=%s compute=%s beam=%d threads=%s",
+        MODEL_SIZE, DEVICE, COMPUTE_TYPE, BEAM_SIZE, CPU_THREADS or "auto",
+    )
     t0 = time.perf_counter()
-    _model = WhisperModel(MODEL_SIZE, device=DEVICE, compute_type=COMPUTE_TYPE)
+    _model = WhisperModel(
+        MODEL_SIZE,
+        device=DEVICE,
+        compute_type=COMPUTE_TYPE,
+        cpu_threads=CPU_THREADS,
+    )
     elapsed = time.perf_counter() - t0
     log.info("Whisper model loaded in %.2fs", elapsed)
     yield
@@ -84,26 +95,35 @@ def _transcribe_file(file_path: str, filename: str, initial_prompt: str = "") ->
     Args:
         file_path:      Path to the temporary audio file.
         filename:       Original filename (for logging).
-        initial_prompt: Optional Arabic text of the expected ayah/dua.
-                        Passing the expected text as a prompt dramatically
-                        reduces Whisper hallucinations for short Arabic clips
-                        because it biases the beam search toward the known
-                        vocabulary without locking the output to that text.
+        initial_prompt: Text to seed the decoder with. **Never pass the expected
+                        ayah here when the transcript is going to be graded.**
+                        Whisper decodes the prompt as preceding context, and on
+                        a short or quiet clip it simply echoes it back — the
+                        learner then scores near-perfect for saying nothing at
+                        all. It is accepted only for non-graded callers.
     """
     if _model is None:
         raise RuntimeError("Model not loaded")
 
-    log.info("Transcribing file: %s  prompt=%r", filename, initial_prompt[:40] if initial_prompt else "")
+    if initial_prompt:
+        log.warning(
+            "initial_prompt supplied (%d chars) — the transcript may echo it; "
+            "never do this for grading",
+            len(initial_prompt),
+        )
+
+    log.info("Transcribing file: %s", filename)
     t0 = time.perf_counter()
 
-    # Build transcription kwargs — initial_prompt is the single biggest
-    # accuracy lever for short Quran/dua clips on CPU-class hardware.
     transcribe_kwargs: dict = {
         "language": "ar",           # force Arabic; avoids language-detect step
-        "beam_size": 5,
-        "best_of": 5,
-        "patience": 1.0,
-        "temperature": 0,           # deterministic; avoids random hallucinations
+        "beam_size": BEAM_SIZE,
+        "temperature": [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+        "compression_ratio_threshold": 2.4,
+        "log_prob_threshold": -1.0,
+        "no_speech_threshold": 0.6,
+        "repetition_penalty": 1.1,
+        "condition_on_previous_text": False,
         "vad_filter": True,         # strip silence — key for short recordings
         "vad_parameters": {
             "min_silence_duration_ms": 300,
@@ -112,8 +132,6 @@ def _transcribe_file(file_path: str, filename: str, initial_prompt: str = "") ->
         "word_timestamps": False,   # word-level diff is done in Go
     }
     if initial_prompt:
-        # Pass the expected Arabic text (diacritics included if available) so
-        # Whisper's beam search is seeded toward the correct vocabulary.
         transcribe_kwargs["initial_prompt"] = initial_prompt
 
     segments, info = _model.transcribe(file_path, **transcribe_kwargs)
@@ -163,8 +181,9 @@ async def transcribe(
 
     Form fields:
       audio          — audio file upload (m4a / mp3 / wav / ogg / aac / webm)
-      initial_prompt — (optional) expected Arabic text; improves accuracy
-                       significantly for short Quran/dua clips
+      initial_prompt — (optional) decoder seed text. Do NOT send the expected
+                       ayah: the transcript will echo it and any grading built
+                       on top becomes meaningless.
 
     Returns:
         {
@@ -197,7 +216,9 @@ async def transcribe(
         tmp_path = tmp.name
 
     try:
-        result = _transcribe_file(tmp_path, audio.filename or "unknown", initial_prompt=initial_prompt)
+        result = await run_in_threadpool(
+            _transcribe_file, tmp_path, audio.filename or "unknown", initial_prompt
+        )
         return JSONResponse(content=result)
     except Exception as exc:
         log.exception("Transcription failed for %s: %s", audio.filename, exc)

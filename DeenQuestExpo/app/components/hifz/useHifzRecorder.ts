@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { Audio } from "expo-av";
 import { haptics } from "../../utils/haptics";
+import { RECITATION_RECORDING } from "../../utils/recitationRecording";
 import {
   useSubmitHifzRecitationMutation,
   type HifzReciteResult,
@@ -53,9 +54,7 @@ export function useHifzRecorder(sessionId: string) {
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
+      const { recording } = await Audio.Recording.createAsync(RECITATION_RECORDING);
       recordingRef.current = recording;
       haptics.medium();
       setElapsed(0);

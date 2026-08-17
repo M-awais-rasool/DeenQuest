@@ -5,6 +5,7 @@ import * as Haptics from "expo-haptics";
 import { Audio } from "expo-av";
 import { useCheckRecitationMutation } from "../../../../store/services/api";
 import type { RecitationCheckResult } from "../../../../store/services/api";
+import { RECITATION_RECORDING } from "../../../../utils/recitationRecording";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -171,9 +172,7 @@ export function useRecitation(
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
+      const { recording } = await Audio.Recording.createAsync(RECITATION_RECORDING);
       recordingRef.current = recording;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setRecordingState("recording");
