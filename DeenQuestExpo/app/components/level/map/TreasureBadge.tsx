@@ -4,12 +4,14 @@ import { Gift } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import { s } from "./styles";
 
+const SECTION_LENGTH = 4;
+
 export const TreasureBadge = memo(function TreasureBadge({
   courseLevel,
 }: {
   courseLevel: number;
 }) {
-  if (courseLevel % 5 !== 0) return null;
+  if (courseLevel % SECTION_LENGTH !== 0) return null;
   return (
     <View style={s.treasureBadge}>
       <Gift size={12} color={theme.colors.secondary} />

@@ -21,6 +21,8 @@ var (
 	ErrInvalidLessonIndex = errors.New("invalid lesson index")
 )
 
+const treasureEvery = 4
+
 type Service struct {
 	repo     domain.Repository
 	progress *progressapp.Service
@@ -295,7 +297,7 @@ func (s *Service) CompleteLevel(ctx context.Context, userID string, levelID int,
 	return &domain.LevelCompletionResult{
 		XPEarned:     xp,
 		UnlockReward: lvl.UnlockReward,
-		TreasureOpen: lvl.CourseLevel%5 == 0,
+		TreasureOpen: lvl.CourseLevel%treasureEvery == 0,
 		NextLevelID:  nextLevelID,
 		CourseType:   string(lvl.CourseType),
 		NewRewards:   newRewards,

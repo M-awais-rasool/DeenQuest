@@ -21,6 +21,11 @@ func TestSeedContentLoads(t *testing.T) {
 	}
 }
 
+const (
+	qaidaSection = 4
+	qaidaLevels  = 20
+)
+
 func TestCurriculumShape(t *testing.T) {
 	levels := SeedLevels()
 
@@ -37,8 +42,8 @@ func TestCurriculumShape(t *testing.T) {
 		}
 	}
 
-	if qaida != 50 {
-		t.Errorf("qaida levels = %d, want 50", qaida)
+	if qaida != qaidaLevels {
+		t.Errorf("qaida levels = %d, want %d", qaida, qaidaLevels)
 	}
 	if practice < 2 {
 		t.Errorf("practice drills = %d, want ≥ 2", practice)
@@ -49,17 +54,17 @@ func TestCurriculumShape(t *testing.T) {
 		}
 	}
 
-	for id := 5; id <= 45; id += 10 {
+	for id := qaidaSection - 2; id <= qaidaLevels; id += qaidaSection {
 		lvl, ok := byID[id]
 		if !ok {
 			continue
 		}
 		if lvl.UnlockReward == "" {
-			t.Errorf("level %d: review level should carry a treasure unlock_reward", id)
+			t.Errorf("level %d: mid-section level should carry a treasure unlock_reward", id)
 		}
 	}
 
-	for id := 10; id <= 50; id += 10 {
+	for id := qaidaSection; id <= qaidaLevels; id += qaidaSection {
 		lvl, ok := byID[id]
 		if !ok {
 			continue
@@ -79,7 +84,7 @@ func TestCurriculumShape(t *testing.T) {
 	}
 
 	for _, l := range levels {
-		if l.CourseType == CourseQaida && l.ID <= 10 && l.Difficulty != LevelEasy {
+		if l.CourseType == CourseQaida && l.ID <= qaidaSection && l.Difficulty != LevelEasy {
 			t.Errorf("level %d: section 1 must be easy, got %s", l.ID, l.Difficulty)
 		}
 	}

@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-const SeedDataVersion = 3
+const SeedDataVersion = 4
 const ContentChunkSchema = "deenquest.content.chunk/v1"
 
 //go:embed curriculum/qaida curriculum/practice

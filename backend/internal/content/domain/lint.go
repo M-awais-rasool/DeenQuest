@@ -28,9 +28,9 @@ const (
 	maxMatchPairs     = 6
 	minXP             = 10
 	maxXP             = 100
-	qaidaLevelCount   = 50
+	qaidaLevelCount   = 20
 	practiceIDFloor   = 900
-	certificateEvery  = 10
+	certificateEvery  = 4
 	componentCertName = "CertificateComponent"
 )
 
