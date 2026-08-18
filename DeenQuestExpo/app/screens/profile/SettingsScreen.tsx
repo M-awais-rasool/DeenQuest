@@ -19,7 +19,7 @@ import { haptics } from "../../utils/haptics";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { theme } from "../../theme/themes";
 import { useAppDispatch } from "../../store/hooks";
-import { logout } from "../../store/slices/mainSlice";
+import { signOut } from "../../store/authActions";
 import { useDeleteAccountMutation } from "../../store/services/api";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
@@ -76,7 +76,7 @@ export function SettingsScreen({ navigation }: Props) {
       {
         text: "Log Out",
         style: "destructive",
-        onPress: () => dispatch(logout()),
+        onPress: () => dispatch(signOut()),
       },
     ]);
   };
@@ -94,7 +94,7 @@ export function SettingsScreen({ navigation }: Props) {
           onPress: async () => {
             try {
               await deleteAccount().unwrap();
-              dispatch(logout());
+              dispatch(signOut());
             } catch {
               Alert.alert("Error", "Failed to delete account. Try again.");
             }

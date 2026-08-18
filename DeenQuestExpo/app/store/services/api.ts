@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from "../storage/authStorage";
 import type { AyahTimingInput } from "../../types/quranSync";
 import type { CoachState } from "../../services/coach";
 
-export const API_BASE_URL = "http://192.168.18.26:8080";
+export const API_BASE_URL = "http://192.168.18.14:8080";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
@@ -702,6 +702,89 @@ export interface HifzReciteRequest {
 }
 
 // API Service
+/* ─────────────────────────── Challenges ─────────────────────────── */
+
+export type ChallengeMetric =
+  | "xp"
+  | "lessons"
+  | "tasks"
+  | "hifz"
+  | "recitations"
+  | "encouragements";
+
+export type DuelStatus = "pending" | "active" | "completed" | "cancelled";
+
+/** The outcome of a settled duel, from the requesting user's point of view. */
+export type DuelOutcome = "won" | "lost" | "draw";
+
+export interface ChallengeParticipant {
+  user_id: string;
+  display_name: string;
+  initial: string;
+  score: number;
+}
+
+export interface Duel {
+  id: string;
+  status: DuelStatus;
+  /** Only present on a pending duel you created — the code to share. */
+  invite_code?: string;
+  you: ChallengeParticipant;
+  /** null while the duel is still waiting for someone to join. */
+  rival: ChallengeParticipant | null;
+  starts_at: string;
+  ends_at: string;
+  ends_in_sec: number;
+  outcome?: DuelOutcome;
+  reward_xp: number;
+}
+
+export interface GroupChallenge {
+  id: string;
+  name: string;
+  description: string;
+  join_code: string;
+  metric: ChallengeMetric;
+  target: number;
+  progress: number;
+  percent: number;
+  members: ChallengeParticipant[];
+  member_count: number;
+  is_owner: boolean;
+  completed: boolean;
+  ends_at: string;
+}
+
+export interface WeeklyQuest {
+  id: string;
+  title: string;
+  metric: ChallengeMetric;
+  target: number;
+  progress: number;
+  percent: number;
+  reward_xp: number;
+  /** Presentation hints chosen by the server. */
+  glyph: string;
+  accent: string;
+  completed: boolean;
+}
+
+export interface ChallengeOverview {
+  duel: Duel | null;
+  group: GroupChallenge | null;
+  quests: WeeklyQuest[];
+  /** Recently settled duels, newest first. */
+  results: Duel[];
+}
+
+export interface CreateGroupChallengeRequest {
+  name: string;
+  description?: string;
+  metric: ChallengeMetric;
+  target: number;
+  days?: number;
+}
+
 export const API = createApi({
   reducerPath: "API",
   baseQuery: baseQueryWithAuth,
@@ -718,6 +801,7 @@ export const API = createApi({
     "Quran",
     "Coach",
     "Hifz",
+    "Challenges",
   ],
   endpoints: (builder) => ({
     signup: builder.mutation<APIResponse<null>, SignupRequest>({
@@ -1082,6 +1166,54 @@ export const API = createApi({
       }),
       invalidatesTags: ["Hifz"],
     }),
+
+    // Challenges — the whole screen arrives in one call.
+    getChallenges: builder.query<APIResponse<ChallengeOverview>, void>({
+      query: () => ({ url: "/api/v1/challenges", method: "GET" }),
+      providesTags: ["Challenges"],
+    }),
+    createDuel: builder.mutation<APIResponse<Duel>, void>({
+      query: () => ({ url: "/api/v1/challenges/duels", method: "POST" }),
+      invalidatesTags: ["Challenges"],
+    }),
+    joinDuel: builder.mutation<APIResponse<Duel>, string>({
+      query: (code) => ({
+        url: "/api/v1/challenges/duels/join",
+        method: "POST",
+        body: { code },
+      }),
+      invalidatesTags: ["Challenges"],
+    }),
+    cancelDuel: builder.mutation<APIResponse<null>, string>({
+      query: (duelId) => ({
+        url: `/api/v1/challenges/duels/${duelId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Challenges"],
+    }),
+    createGroupChallenge: builder.mutation<
+      APIResponse<GroupChallenge>,
+      CreateGroupChallengeRequest
+    >({
+      query: (body) => ({ url: "/api/v1/challenges/groups", method: "POST", body }),
+      invalidatesTags: ["Challenges"],
+    }),
+    joinGroupChallenge: builder.mutation<APIResponse<GroupChallenge>, string>({
+      query: (code) => ({
+        url: "/api/v1/challenges/groups/join",
+        method: "POST",
+        body: { code },
+      }),
+      invalidatesTags: ["Challenges"],
+    }),
+    sendEncouragement: builder.mutation<APIResponse<null>, string>({
+      query: (targetUserId) => ({
+        url: "/api/v1/challenges/encouragements",
+        method: "POST",
+        body: { target_user_id: targetUserId },
+      }),
+      invalidatesTags: ["Challenges"],
+    }),
   }),
 });
 
@@ -1124,4 +1256,11 @@ export const {
   useSubmitHifzRecitationMutation,
   useCompleteHifzSessionMutation,
   useResetHifzPortionMutation,
+  useGetChallengesQuery,
+  useCreateDuelMutation,
+  useJoinDuelMutation,
+  useCancelDuelMutation,
+  useCreateGroupChallengeMutation,
+  useJoinGroupChallengeMutation,
+  useSendEncouragementMutation,
 } = API;

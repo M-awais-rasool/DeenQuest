@@ -17,12 +17,8 @@ import { LoginRequest, useLoginMutation } from "../../store/services/api";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import type { RootState } from "../../store/store";
 import { AppStackParamList } from "../../navigators/navigationTypes";
-import {
-  setAccessToken,
-  setError,
-  setIsAuthenticated,
-  setUser,
-} from "../../store/slices/mainSlice";
+import { setError } from "../../store/slices/mainSlice";
+import { signIn } from "../../store/authActions";
 import type { MainState } from "../../store/slices/mainSlice";
 import { theme } from "../../theme/themes";
 
@@ -43,8 +39,8 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   );
 
   const [form, setForm] = useState<LoginRequest>({
-    email: "awais@gmail.com",
-    password: "Helo@1234",
+    email: "",
+    password: "",
   });
 
   const [errors, setErrors] = useState({
@@ -104,10 +100,12 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
       const result = await login(form).unwrap();
 
       if (result.data) {
-        dispatch(setUser(result.data.user));
-        dispatch(setAccessToken(result.data.access_token));
-        dispatch(setIsAuthenticated(true));
-        dispatch(setError(null));
+        dispatch(
+          signIn({
+            user: result.data.user,
+            accessToken: result.data.access_token,
+          }),
+        );
       }
     } catch (err: any) {
       const validationErrors = err?.data?.errors as string[] | undefined;
