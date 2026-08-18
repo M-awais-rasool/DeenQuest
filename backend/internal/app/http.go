@@ -7,6 +7,7 @@ import (
 
 	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
 	authhttp "github.com/chawais/deenquest/backend/internal/auth/interfaces/http"
+	challengehttp "github.com/chawais/deenquest/backend/internal/challenge/interfaces/http"
 	coachhttp "github.com/chawais/deenquest/backend/internal/coach/interfaces/http"
 	contenthttp "github.com/chawais/deenquest/backend/internal/content/interfaces/http"
 	dailytaskhttp "github.com/chawais/deenquest/backend/internal/dailytask/interfaces/http"
@@ -58,6 +59,7 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	rewardhttp.RegisterRoutes(authed, m.RewardHandler)
 	recitationhttp.RegisterRoutes(authed, m.RecitationHandler)
 	hifzhttp.RegisterRoutes(authed, m.HifzHandler)
+	challengehttp.RegisterRoutes(authed, m.ChallengeHandler)
 	if m.CoachHandler != nil {
 		coachhttp.RegisterRoutes(authed, m.CoachHandler)
 	}

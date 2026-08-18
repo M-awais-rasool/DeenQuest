@@ -15,6 +15,7 @@ import (
 
 	"github.com/chawais/deenquest/backend/internal/hifz/domain"
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
+	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
 	progressdomain "github.com/chawais/deenquest/backend/internal/progress/domain"
 	qurandomain "github.com/chawais/deenquest/backend/internal/quran/domain"
 	recitationapp "github.com/chawais/deenquest/backend/internal/recitation/application"
@@ -39,7 +40,7 @@ type Grader interface {
 
 // XPAwarder is the progress module's currency seam.
 type XPAwarder interface {
-	Award(ctx context.Context, userID string, xpDelta, barakahDelta int) (*progressdomain.Progress, error)
+	AwardFrom(ctx context.Context, userID string, xpDelta, barakahDelta int, source progressapp.ActivitySource) (*progressdomain.Progress, error)
 }
 
 type Service struct {
@@ -979,7 +980,7 @@ func (s *Service) CompleteSession(ctx context.Context, userID, sessionID string)
 		result.XPEarned = sessionXP(plan.XPPerPortion, accuracy, result.FirstSeal)
 	}
 	if result.XPEarned > 0 && s.xp != nil {
-		if _, err := s.xp.Award(ctx, userID, result.XPEarned, 0); err != nil {
+		if _, err := s.xp.AwardFrom(ctx, userID, result.XPEarned, 0, progressapp.SourceHifz); err != nil {
 			logger.Warn("hifz: failed to award XP", zap.Error(err))
 		}
 	}

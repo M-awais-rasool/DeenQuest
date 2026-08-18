@@ -11,7 +11,8 @@ import (
 )
 
 type Service struct {
-	repo domain.Repository
+	repo     domain.Repository
+	listener ActivityListener
 }
 
 func NewService(repo domain.Repository) *Service {
@@ -121,7 +122,18 @@ func (s *Service) GetLeaderboard(ctx context.Context, limit int) ([]LeaderboardE
 }
 
 func (s *Service) Award(ctx context.Context, userID string, xpDelta, barakahDelta int) (*domain.Progress, error) {
-	return s.repo.IncrementProgress(ctx, userID, xpDelta, barakahDelta)
+	return s.AwardFrom(ctx, userID, xpDelta, barakahDelta, SourceOther)
+}
+
+func (s *Service) AwardFrom(ctx context.Context, userID string, xpDelta, barakahDelta int, source ActivitySource) (*domain.Progress, error) {
+	prog, err := s.repo.IncrementProgress(ctx, userID, xpDelta, barakahDelta)
+	if err != nil {
+		return nil, err
+	}
+	if s.listener != nil {
+		s.listener.OnActivity(ctx, userID, source, xpDelta)
+	}
+	return prog, nil
 }
 
 // domain.Streak-freeze tuning.

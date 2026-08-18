@@ -12,12 +12,13 @@ import (
 
 	leveldomain "github.com/chawais/deenquest/backend/internal/level/domain"
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
+	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
 	progressdomain "github.com/chawais/deenquest/backend/internal/progress/domain"
 )
 
 // XPAwarder is the slice of progressapp.Service the coach needs to grant XP for
 type XPAwarder interface {
-	Award(ctx context.Context, userID string, xpDelta, barakahDelta int) (*progressdomain.Progress, error)
+	AwardFrom(ctx context.Context, userID string, xpDelta, barakahDelta int, source progressapp.ActivitySource) (*progressdomain.Progress, error)
 }
 
 var (
@@ -295,7 +296,7 @@ func (s *Service) CompletePractice(ctx context.Context, userID, insightID string
 
 	xp := 0
 	if s.progress != nil {
-		if _, err := s.progress.Award(ctx, userID, domain.PracticeXP, 0); err != nil {
+		if _, err := s.progress.AwardFrom(ctx, userID, domain.PracticeXP, 0, progressapp.SourceCoach); err != nil {
 			logger.Warn("coach: awarding practice XP failed", zap.Error(err))
 		} else {
 			xp = domain.PracticeXP

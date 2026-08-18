@@ -127,7 +127,10 @@ func (s *Service) CompleteDailyTask(ctx context.Context, userID, taskID string) 
 	}
 
 	g, gctx := errgroup.WithContext(ctx)
-	g.Go(func() error { _, err := s.progress.Award(gctx, userID, task.RewardXP, 0); return err })
+	g.Go(func() error {
+		_, err := s.progress.AwardFrom(gctx, userID, task.RewardXP, 0, progressapp.SourceTask)
+		return err
+	})
 	g.Go(func() error { _, err := s.progress.BumpStreak(gctx, userID); return err })
 	return g.Wait()
 }

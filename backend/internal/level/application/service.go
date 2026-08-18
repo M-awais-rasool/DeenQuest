@@ -263,7 +263,10 @@ func (s *Service) CompleteLevel(ctx context.Context, userID string, levelID int,
 		completedErr  error
 	)
 	g, gctx := errgroup.WithContext(ctx)
-	g.Go(func() (err error) { updatedProg, err = s.progress.Award(gctx, userID, xp, 5); return })
+	g.Go(func() (err error) {
+		updatedProg, err = s.progress.AwardFrom(gctx, userID, xp, 5, progressapp.SourceLesson)
+		return
+	})
 	g.Go(func() (err error) { updatedStreak, err = s.progress.BumpStreak(gctx, userID); return })
 	g.Go(func() error { completed, completedErr = s.CompletedLevelCount(gctx, userID); return nil })
 	if err := g.Wait(); err != nil {

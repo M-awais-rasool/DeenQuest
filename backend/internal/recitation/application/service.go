@@ -348,6 +348,6 @@ func (s *Service) callWhisper(
 }
 
 func (s *Service) awardXP(ctx context.Context, userID string, xp int) error {
-	_, err := s.progress.Award(ctx, userID, xp, 0)
+	_, err := s.progress.AwardFrom(ctx, userID, xp, 0, progressapp.SourceRecitation)
 	return err
 }

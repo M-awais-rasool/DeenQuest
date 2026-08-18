@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
+	challengeapp "github.com/chawais/deenquest/backend/internal/challenge/application"
+	challengehttp "github.com/chawais/deenquest/backend/internal/challenge/interfaces/http"
 	coachapp "github.com/chawais/deenquest/backend/internal/coach/application"
 	coachhttp "github.com/chawais/deenquest/backend/internal/coach/interfaces/http"
 	contenthttp "github.com/chawais/deenquest/backend/internal/content/interfaces/http"
@@ -46,6 +48,9 @@ func TestLearningRoutesRegister(t *testing.T) {
 
 	hifzSvc := hifzapp.NewService(nil, nil, recSvc, progressSvc)
 	hifzhttp.RegisterRoutes(authed, hifzhttp.NewHandler(hifzSvc))
+
+	challengeSvc := challengeapp.NewService(nil, nil, progressSvc)
+	challengehttp.RegisterRoutes(authed, challengehttp.NewHandler(challengeSvc))
 
 	userhttp.RegisterAdminRoutes(admin, userhttp.NewAdminHandler(userapp.NewService(nil)))
 	levelhttp.RegisterAdminRoutes(admin, levelhttp.NewAdminHandler(levelSvc))
@@ -113,6 +118,16 @@ func TestLearningRoutesRegister(t *testing.T) {
 		"GET /api/v1/admin/hifz/settings",
 		"PUT /api/v1/admin/hifz/settings",
 		"GET /api/v1/admin/hifz/challenges",
+
+		"GET /api/v1/challenges",
+		"POST /api/v1/challenges/duels",
+		// Static "join" must coexist with the /:id wildcard — registering it
+		// after /:id is how gin panics on a route conflict.
+		"POST /api/v1/challenges/duels/join",
+		"DELETE /api/v1/challenges/duels/:id",
+		"POST /api/v1/challenges/groups",
+		"POST /api/v1/challenges/groups/join",
+		"POST /api/v1/challenges/encouragements",
 	}
 
 	got := make(map[string]bool)

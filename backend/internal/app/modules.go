@@ -9,6 +9,9 @@ import (
 	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
 	authapp "github.com/chawais/deenquest/backend/internal/auth/application"
 	authhttp "github.com/chawais/deenquest/backend/internal/auth/interfaces/http"
+	challengeapp "github.com/chawais/deenquest/backend/internal/challenge/application"
+	challengeinfra "github.com/chawais/deenquest/backend/internal/challenge/infrastructure"
+	challengehttp "github.com/chawais/deenquest/backend/internal/challenge/interfaces/http"
 	coachapp "github.com/chawais/deenquest/backend/internal/coach/application"
 	coachinfra "github.com/chawais/deenquest/backend/internal/coach/infrastructure"
 	coachhttp "github.com/chawais/deenquest/backend/internal/coach/interfaces/http"
@@ -72,6 +75,11 @@ type Modules struct {
 	CoachService      *coachapp.Service
 	CoachHandler      *coachhttp.Handler
 	CoachAdminHandler *coachhttp.AdminHandler // /admin/learning/*
+
+	// challenge — weekly quests, 1v1 duels, and shared group challenges. Scored
+	// by observing every XP award through the progress activity listener.
+	ChallengeService *challengeapp.Service
+	ChallengeHandler *challengehttp.Handler
 
 	// quran — surah reading and audio (external AlQuran API + Redis cache).
 	QuranHandler *quranhttp.Handler
@@ -153,6 +161,13 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	hifzService := hifzapp.NewService(hifzRepo, quranService, recitationService, progressService)
 	hifzAdminService := hifzapp.NewAdminService(hifzRepo, quranService, hifzService)
 
+	challengeRepo, err := challengeinfra.NewMongoRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("init challenge repository: %w", err)
+	}
+	challengeService := challengeapp.NewService(challengeRepo, challengeProfiles{users: userService}, progressService)
+	progressService.SetActivityListener(challengeService)
+
 	var coachService *coachapp.Service
 	var coachHandler *coachhttp.Handler
 	var coachAdminHandler *coachhttp.AdminHandler
@@ -202,6 +217,9 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		CoachService:      coachService,
 		CoachHandler:      coachHandler,
 		CoachAdminHandler: coachAdminHandler,
+
+		ChallengeService: challengeService,
+		ChallengeHandler: challengehttp.NewHandler(challengeService),
 
 		QuranHandler: quranhttp.NewHandler(quranService),
 

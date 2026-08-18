@@ -38,6 +38,12 @@ func seedStartupData(cfg *config.Config, m *Modules) error {
 		logger.Info("Rewards seeded successfully")
 	}
 
+	if err := m.ChallengeService.Seed(ctx); err != nil {
+		logger.Warn("failed to seed challenge quests (will retry on next startup)", zap.Error(err))
+	} else {
+		logger.Info("Challenge quests seeded successfully")
+	}
+
 	if n, err := m.HifzAdminService.Seed(ctx); err != nil {
 		logger.Warn("failed to seed hifz plans (will retry on next startup)", zap.Error(err))
 	} else {
