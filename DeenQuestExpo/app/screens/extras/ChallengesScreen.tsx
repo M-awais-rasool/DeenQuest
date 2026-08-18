@@ -1,80 +1,166 @@
-import React from "react";
-import { ScrollView, Share, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import React, { useCallback, useState } from "react";
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { ChevronLeft, Trophy } from "lucide-react-native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
+import { Loader } from "../../components/Loader";
 import { AnimatedPressable } from "../../components/ui";
-import { ChevronLeft } from "lucide-react-native";
+import {
+  CodeEntrySheet,
+  CreateGroupSheet,
+  DuelCard,
+  GroupChallengeCard,
+  QuestList,
+} from "../../components/challenge";
 import { theme } from "../../theme/themes";
 import { dq } from "../../theme/designTokens";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "../../navigators/navigationTypes";
+import {
+  useCancelDuelMutation,
+  useCreateDuelMutation,
+  useCreateGroupChallengeMutation,
+  useGetChallengesQuery,
+  useJoinDuelMutation,
+  useJoinGroupChallengeMutation,
+  useSendEncouragementMutation,
+  type CreateGroupChallengeRequest,
+  type Duel,
+} from "../../store/services/api";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Challenges">;
+type CodeSheet = "duel" | "group" | null;
 
-const PURPLE = "#A78BFA";
-const PURPLE_LIGHT = "#C4B2FF";
-const PURPLE_DARK = "#241A45";
-
-// Mock challenge data (H3 mock) — friends/duels backend comes later.
-const DUEL = {
-  you: { initial: "A", xp: 340 },
-  rival: { name: "Yusuf", initial: "Y", xp: 315 },
-  endsIn: "2d 6h",
-};
-
-const KHATM = {
-  title: "Family Khatm Challenge",
-  subtitle: "Finish Juz 30 together · 5 members",
-  pct: 71,
-  members: [
-    { initial: "A", colors: ["#2CC9B5", "#EFB65A"] as [string, string], fg: "#06302B" },
-    { initial: "M", colors: ["#F79A59", "#F27FB2"] as [string, string], fg: "#3A1024" },
-    { initial: "H", colors: ["#6EC1E8", "#A78BFA"] as [string, string], fg: "#0E2A3A" },
-  ],
-  extra: 2,
-};
-
-const QUESTS = [
-  {
-    glyph: "⚡",
-    tileBg: "#3A2F16",
-    tileFg: dq.gold,
-    title: "Earn 200 XP with a friend",
-    current: 156,
-    target: 200,
-    barColor: dq.gold,
-    labelColor: dq.gold,
-  },
-  {
-    glyph: "♥",
-    tileBg: "#3A2030",
-    tileFg: "#F8A9CC",
-    title: "Send 3 encouragements",
-    current: 1,
-    target: 3,
-    barColor: "#F27FB2",
-    labelColor: "#F8A9CC",
-  },
-];
+function errorMessage(err: unknown, fallback: string): string {
+  const data = (err as { data?: { error?: string; message?: string } })?.data;
+  return data?.error || data?.message || fallback;
+}
 
 export function ChallengesScreen({ navigation }: Props) {
-  const youPct = Math.round(
-    (DUEL.you.xp / Math.max(DUEL.you.xp + DUEL.rival.xp, 1)) * 100,
-  );
-  const lead = DUEL.you.xp - DUEL.rival.xp;
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetChallengesQuery();
 
-  const invite = async () => {
+  const [createDuel, { isLoading: creatingDuel }] = useCreateDuelMutation();
+  const [joinDuel, { isLoading: joiningDuel }] = useJoinDuelMutation();
+  const [cancelDuel, { isLoading: cancellingDuel }] = useCancelDuelMutation();
+  const [createGroup, { isLoading: creatingGroup }] =
+    useCreateGroupChallengeMutation();
+  const [joinGroup, { isLoading: joiningGroup }] = useJoinGroupChallengeMutation();
+  const [encourage, { isLoading: encouraging }] = useSendEncouragementMutation();
+
+  const [codeSheet, setCodeSheet] = useState<CodeSheet>(null);
+  const [groupSheetOpen, setGroupSheetOpen] = useState(false);
+
+  const overview = data?.data;
+  const duel = overview?.duel ?? null;
+  const group = overview?.group ?? null;
+  const quests = overview?.quests ?? [];
+  const results = overview?.results ?? [];
+
+  const shareCode = useCallback(async (code: string, what: string) => {
     try {
       await Share.share({
-        message:
-          "Join me on DeenQuest — let's keep each other's streaks alive! 🔥",
+        message: `Join my ${what} on DeenQuest! Open the app, tap Challenges, and enter code ${code} 🔥`,
       });
-    } catch {}
+    } catch {
+      // The user dismissed the share sheet — nothing to report.
+    }
+  }, []);
+
+  const handleStartDuel = async () => {
+    try {
+      const res = await createDuel().unwrap();
+      const code = res.data?.invite_code;
+      if (code) await shareCode(code, "duel");
+    } catch (err) {
+      Alert.alert("Could not start duel", errorMessage(err, "Please try again."));
+    }
+  };
+
+  const handleJoinCode = async (code: string) => {
+    const target = codeSheet;
+    try {
+      if (target === "duel") {
+        await joinDuel(code).unwrap();
+      } else {
+        await joinGroup(code).unwrap();
+      }
+      setCodeSheet(null);
+    } catch (err) {
+      Alert.alert(
+        "Could not join",
+        errorMessage(err, "Check the code and try again."),
+      );
+    }
+  };
+
+  const handleCancelDuel = (duelId: string) => {
+    Alert.alert("Cancel this duel?", "Your invite code will stop working.", [
+      { text: "Keep it", style: "cancel" },
+      {
+        text: "Cancel duel",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await cancelDuel(duelId).unwrap();
+          } catch (err) {
+            Alert.alert("Failed", errorMessage(err, "Please try again."));
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleCreateGroup = async (req: CreateGroupChallengeRequest) => {
+    try {
+      const res = await createGroup(req).unwrap();
+      setGroupSheetOpen(false);
+      const code = res.data?.join_code;
+      if (code) await shareCode(code, "group challenge");
+    } catch (err) {
+      Alert.alert(
+        "Could not create challenge",
+        errorMessage(err, "Please try again."),
+      );
+    }
+  };
+
+  const handleEncourage = async (userId: string) => {
+    try {
+      await encourage(userId).unwrap();
+      Alert.alert("Sent", "Your encouragement is on its way. Jazak Allahu khayran!");
+    } catch (err) {
+      Alert.alert(
+        "Not sent",
+        errorMessage(err, "You may have already encouraged them today."),
+      );
+    }
+  };
+
+  // The header invite button shares whichever code the user actually has.
+  const inviteCode = duel?.invite_code ?? group?.join_code ?? null;
+  const handleHeaderInvite = () => {
+    if (inviteCode) {
+      shareCode(inviteCode, duel?.invite_code ? "duel" : "group challenge");
+      return;
+    }
+    setCodeSheet("duel");
   };
 
   return (
     <ScreenWrapper innerStyle={{ flex: 1 }}>
-      {/* header */}
       <View style={s.header}>
         <AnimatedPressable style={s.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={18} color={theme.colors.text} strokeWidth={2.5} />
@@ -83,159 +169,114 @@ export function ChallengesScreen({ navigation }: Props) {
           <Text style={s.headerTitle}>Challenges</Text>
           <Text style={s.headerSub}>Grow together, win together</Text>
         </View>
-        <AnimatedPressable style={s.inviteChip} onPress={invite}>
+        <AnimatedPressable style={s.inviteChip} onPress={handleHeaderInvite}>
           <Text style={s.invitePlus}>+</Text>
-          <Text style={s.inviteText}>INVITE</Text>
+          <Text style={s.inviteText}>{inviteCode ? "INVITE" : "JOIN"}</Text>
         </AnimatedPressable>
       </View>
 
-      <ScrollView
-        contentContainerStyle={s.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* weekly duel */}
-        <LinearGradient
-          colors={[PURPLE_DARK, "#16272B"]}
-          locations={[0, 0.7]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={s.duelCard}
-        >
-          <View style={s.duelTop}>
-            <View style={s.duelBadge}>
-              <Text style={s.duelBadgeText}>WEEKLY DUEL</Text>
-            </View>
-            <Text style={s.duelEnds}>ends in {DUEL.endsIn}</Text>
-          </View>
-
-          <View style={s.duelRow}>
-            <View style={s.duelSide}>
-              <LinearGradient
-                colors={["#2CC9B5", "#EFB65A"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[s.duelAvatar, s.duelAvatarYou]}
-              >
-                <Text style={[s.duelAvatarText, { color: "#06302B" }]}>
-                  {DUEL.you.initial}
-                </Text>
-              </LinearGradient>
-              <Text style={s.duelName}>You</Text>
-              <Text style={[s.duelXp, { color: "#5EE0CE" }]}>
-                {DUEL.you.xp}
-                <Text style={s.duelXpUnit}> XP</Text>
-              </Text>
-            </View>
-
-            <View style={s.duelVs}>
-              <Text style={s.duelVsText}>VS</Text>
-              <View style={s.duelVsLine} />
-            </View>
-
-            <View style={s.duelSide}>
-              <LinearGradient
-                colors={["#6EC1E8", "#A78BFA"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={s.duelAvatar}
-              >
-                <Text style={[s.duelAvatarText, { color: "#0E2A3A" }]}>
-                  {DUEL.rival.initial}
-                </Text>
-              </LinearGradient>
-              <Text style={s.duelName}>{DUEL.rival.name}</Text>
-              <Text style={[s.duelXp, { color: PURPLE_LIGHT }]}>
-                {DUEL.rival.xp}
-                <Text style={s.duelXpUnit}> XP</Text>
-              </Text>
-            </View>
-          </View>
-
-          <View style={s.duelTrack}>
-            <LinearGradient
-              colors={["#2CC9B5", "#5EE0CE"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ width: `${youPct}%` }}
-            />
-            <View style={{ flex: 1, backgroundColor: "#3B2F6B" }} />
-          </View>
-          <Text style={s.duelLead}>
-            {lead >= 0
-              ? `You lead by ${lead} XP — one lesson keeps you ahead!`
-              : `${DUEL.rival.name} leads by ${-lead} XP — one lesson takes it back!`}
+      {isLoading ? (
+        <Loader />
+      ) : isError ? (
+        <View style={s.errorWrap}>
+          <Text style={s.errorTitle}>Couldn't load your challenges</Text>
+          <Text style={s.errorBody}>
+            Check your connection and try again.
           </Text>
-        </LinearGradient>
+          <AnimatedPressable style={s.retryBtn} onPress={() => refetch()}>
+            <Text style={s.retryText}>RETRY</Text>
+          </AnimatedPressable>
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching && !isLoading}
+              onRefresh={refetch}
+              tintColor={dq.green}
+            />
+          }
+        >
+          <DuelCard
+            duel={duel}
+            busy={creatingDuel || cancellingDuel}
+            onStart={handleStartDuel}
+            onEnterCode={() => setCodeSheet("duel")}
+            onShareCode={(code) => shareCode(code, "duel")}
+            onCancel={handleCancelDuel}
+            onEncourage={handleEncourage}
+            encouraging={encouraging}
+          />
 
-        {/* family khatm */}
-        <View style={s.khatmCard}>
-          <View style={s.khatmTop}>
-            <View style={s.khatmIcon}>
-              <Text style={s.khatmGlyph}>☾</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.khatmTitle}>{KHATM.title}</Text>
-              <Text style={s.khatmSub}>{KHATM.subtitle}</Text>
+          {results.length > 0 && <RecentResults results={results} />}
+
+          <GroupChallengeCard
+            group={group}
+            onCreate={() => setGroupSheetOpen(true)}
+            onJoin={() => setCodeSheet("group")}
+            onShareCode={(code) => shareCode(code, "group challenge")}
+          />
+
+          <View>
+            <Text style={s.sectionTitle}>This week's quests</Text>
+            <View style={{ marginTop: 12 }}>
+              <QuestList quests={quests} />
             </View>
           </View>
-          <View style={s.khatmBottom}>
-            <View style={s.khatmAvatars}>
-              {KHATM.members.map((m, i) => (
-                <LinearGradient
-                  key={i}
-                  colors={m.colors}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[s.khatmAvatar, i > 0 && { marginLeft: -9 }]}
-                >
-                  <Text style={[s.khatmAvatarText, { color: m.fg }]}>
-                    {m.initial}
-                  </Text>
-                </LinearGradient>
-              ))}
-              <View style={[s.khatmAvatar, s.khatmExtra, { marginLeft: -9 }]}>
-                <Text style={s.khatmExtraText}>+{KHATM.extra}</Text>
-              </View>
-            </View>
-            <View style={s.khatmTrack}>
-              <View style={[s.khatmFill, { width: `${KHATM.pct}%` }]} />
-            </View>
-            <Text style={s.khatmPct}>{KHATM.pct}%</Text>
-          </View>
-        </View>
+        </ScrollView>
+      )}
 
-        {/* quests */}
-        <Text style={s.questsTitle}>This week's quests</Text>
-        <View style={s.questList}>
-          {QUESTS.map((quest) => (
-            <View key={quest.title} style={s.questCard}>
-              <View style={[s.questTile, { backgroundColor: quest.tileBg }]}>
-                <Text style={[s.questGlyph, { color: quest.tileFg }]}>
-                  {quest.glyph}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.questTitle}>{quest.title}</Text>
-                <View style={s.questTrack}>
-                  <View
-                    style={[
-                      s.questFill,
-                      {
-                        width: `${Math.round((quest.current / quest.target) * 100)}%`,
-                        backgroundColor: quest.barColor,
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-              <Text style={[s.questCount, { color: quest.labelColor }]}>
-                {quest.current}/{quest.target}
-              </Text>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+      <CodeEntrySheet
+        visible={codeSheet !== null}
+        title={codeSheet === "group" ? "Join a group challenge" : "Join a duel"}
+        subtitle={
+          codeSheet === "group"
+            ? "Enter the code a friend or family member shared with you."
+            : "Enter the duel code your friend shared with you."
+        }
+        busy={joiningDuel || joiningGroup}
+        onClose={() => setCodeSheet(null)}
+        onSubmit={handleJoinCode}
+      />
+
+      <CreateGroupSheet
+        visible={groupSheetOpen}
+        busy={creatingGroup}
+        onClose={() => setGroupSheetOpen(false)}
+        onSubmit={handleCreateGroup}
+      />
     </ScreenWrapper>
+  );
+}
+
+/** A compact strip of the user's most recently settled duels. */
+function RecentResults({ results }: { results: Duel[] }) {
+  return (
+    <View style={s.resultsCard}>
+      <Text style={s.resultsTitle}>Recent duels</Text>
+      {results.map((result) => {
+        const won = result.outcome === "won";
+        const draw = result.outcome === "draw";
+        const color = won ? dq.gold : draw ? dq.muted : dq.faint;
+        return (
+          <View key={result.id} style={s.resultRow}>
+            <Trophy size={15} color={color} strokeWidth={2.2} />
+            <Text style={s.resultText} numberOfLines={1}>
+              {draw
+                ? `Drew with ${result.rival?.display_name ?? "your rival"}`
+                : won
+                  ? `Beat ${result.rival?.display_name ?? "your rival"}`
+                  : `Lost to ${result.rival?.display_name ?? "your rival"}`}
+            </Text>
+            <Text style={[s.resultScore, { color }]}>
+              {result.you.score}–{result.rival?.score ?? 0}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
   );
 }
 
@@ -274,186 +315,72 @@ const s = StyleSheet.create({
     paddingVertical: 9,
     paddingHorizontal: 14,
   },
-  invitePlus: { fontSize: 15, fontFamily: "Nunito_900Black", color: "#5EE0CE" },
-  inviteText: { fontSize: 12, fontFamily: "Nunito_900Black", color: "#5EE0CE" },
+  invitePlus: { fontSize: 15, fontFamily: "Nunito_900Black", color: dq.greenBright },
+  inviteText: { fontSize: 12, fontFamily: "Nunito_900Black", color: dq.greenBright },
 
   scroll: {
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 40,
+    gap: 16,
   },
-
-  // duel
-  duelCard: {
-    borderWidth: 1.5,
-    borderColor: PURPLE,
-    borderRadius: 24,
-    padding: 18,
-  },
-  duelTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  duelBadge: {
-    backgroundColor: PURPLE,
-    borderRadius: 9,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  duelBadgeText: {
-    fontSize: 10.5,
-    fontFamily: "Nunito_900Black",
-    color: PURPLE_DARK,
-    letterSpacing: 1,
-  },
-  duelEnds: {
-    fontSize: 11.5,
-    fontFamily: "Nunito_800ExtraBold",
-    color: PURPLE_LIGHT,
-  },
-  duelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    marginTop: 16,
-  },
-  duelSide: { flex: 1, alignItems: "center", gap: 6 },
-  duelAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  duelAvatarYou: {
-    borderWidth: 2.5,
-    borderColor: "#5EE0CE",
-  },
-  duelAvatarText: { fontSize: 22, fontFamily: "Nunito_900Black" },
-  duelName: { fontSize: 12, fontFamily: "Nunito_800ExtraBold", color: dq.text },
-  duelXp: { fontSize: 20, lineHeight: 22, fontFamily: "Nunito_900Black" },
-  duelXpUnit: { fontSize: 11, color: dq.muted },
-  duelVs: { alignItems: "center", gap: 4 },
-  duelVsText: { fontSize: 15, fontFamily: "Nunito_900Black", color: PURPLE_LIGHT },
-  duelVsLine: { width: 1.5, height: 38, backgroundColor: "#3B2F6B" },
-  duelTrack: {
-    flexDirection: "row",
-    height: 11,
-    borderRadius: 6,
-    backgroundColor: dq.screen,
-    overflow: "hidden",
-    marginTop: 14,
-  },
-  duelLead: {
-    fontSize: 11.5,
-    fontFamily: "Nunito_700Bold",
-    color: PURPLE_LIGHT,
-    textAlign: "center",
-    marginTop: 10,
-  },
-
-  // khatm
-  khatmCard: {
-    backgroundColor: dq.card,
-    borderWidth: 1,
-    borderColor: dq.cardBorder,
-    borderRadius: 22,
-    padding: 17,
-    marginTop: 16,
-  },
-  khatmTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  khatmIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: dq.greenTint,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  khatmGlyph: { fontSize: 18, color: dq.green },
-  khatmTitle: { fontSize: 14.5, fontFamily: "Nunito_900Black", color: dq.text },
-  khatmSub: {
-    fontSize: 12,
-    fontFamily: "Nunito_600SemiBold",
-    color: dq.muted,
-    marginTop: 1,
-  },
-  khatmBottom: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 14,
-  },
-  khatmAvatars: { flexDirection: "row", alignItems: "center" },
-  khatmAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: dq.card,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  khatmAvatarText: { fontSize: 12, fontFamily: "Nunito_900Black" },
-  khatmExtra: { backgroundColor: "#1E3238" },
-  khatmExtraText: { fontSize: 10, fontFamily: "Nunito_800ExtraBold", color: dq.muted },
-  khatmTrack: {
-    flex: 1,
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: dq.screen,
-    overflow: "hidden",
-  },
-  khatmFill: {
-    height: "100%",
-    borderRadius: 5,
-    backgroundColor: dq.green,
-  },
-  khatmPct: { fontSize: 12.5, fontFamily: "Nunito_900Black", color: "#5EE0CE" },
-
-  // quests
-  questsTitle: {
+  sectionTitle: {
     fontSize: 15,
     fontFamily: "Nunito_900Black",
     color: dq.text,
-    marginTop: 20,
     paddingHorizontal: 4,
   },
-  questList: { gap: 10, marginTop: 12 },
-  questCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+
+  // recent results
+  resultsCard: {
     backgroundColor: dq.card,
     borderWidth: 1,
     borderColor: dq.cardBorder,
     borderRadius: 18,
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 15,
+    gap: 8,
   },
-  questTile: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
+  resultsTitle: {
+    fontSize: 11,
+    fontFamily: "Nunito_900Black",
+    color: dq.faint,
+    letterSpacing: 1,
+  },
+  resultRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  resultText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: "Nunito_700Bold",
+    color: dq.muted,
+  },
+  resultScore: { fontSize: 12.5, fontFamily: "Nunito_900Black" },
+
+  // error state
+  errorWrap: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 40,
+    gap: 8,
   },
-  questGlyph: { fontSize: 16 },
-  questTitle: { fontSize: 13.5, fontFamily: "Nunito_800ExtraBold", color: dq.text },
-  questTrack: {
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: dq.screen,
-    overflow: "hidden",
+  errorTitle: { fontSize: 16, fontFamily: "Nunito_900Black", color: dq.text },
+  errorBody: {
+    fontSize: 13,
+    fontFamily: "Nunito_600SemiBold",
+    color: dq.muted,
+    textAlign: "center",
+  },
+  retryBtn: {
+    backgroundColor: dq.greenTint,
+    borderWidth: 1.5,
+    borderColor: dq.green,
+    borderRadius: 14,
+    paddingVertical: 11,
+    paddingHorizontal: 26,
     marginTop: 8,
   },
-  questFill: { height: "100%", borderRadius: 4 },
-  questCount: { fontSize: 11.5, fontFamily: "Nunito_900Black" },
+  retryText: { fontSize: 12.5, fontFamily: "Nunito_900Black", color: dq.greenBright },
 });
 
 export default ChallengesScreen;
