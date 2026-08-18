@@ -8,6 +8,7 @@ import (
 
 	"github.com/chawais/deenquest/backend/internal/coach/domain"
 
+	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
 	progressdomain "github.com/chawais/deenquest/backend/internal/progress/domain"
 )
 
@@ -185,16 +186,18 @@ func (f *fakeRepo) PurgeUser(_ context.Context, userID string) error {
 }
 
 type fakeAwarder struct {
-	mu    sync.Mutex
-	calls int
-	xp    int
+	mu     sync.Mutex
+	calls  int
+	xp     int
+	source progressapp.ActivitySource
 }
 
-func (f *fakeAwarder) Award(_ context.Context, _ string, xpDelta, _ int) (*progressdomain.Progress, error) {
+func (f *fakeAwarder) AwardFrom(_ context.Context, _ string, xpDelta, _ int, source progressapp.ActivitySource) (*progressdomain.Progress, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.calls++
 	f.xp += xpDelta
+	f.source = source
 	return &progressdomain.Progress{}, nil
 }
 
