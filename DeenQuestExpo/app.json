@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "DeenQuestExpo",
+    "name": "Deen Quest",
     "slug": "deenquestexpo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -28,46 +28,6 @@
       ],
       "expo-font",
       "expo-asset",
-      [
-        "@g9k/expo-dynamic-app-icon",
-        {
-          "onfire": {
-            "ios": "./assets/logo/logo-1.png",
-            "android": {
-              "foregroundImage": "./assets/logo/logo-1.png",
-              "backgroundColor": "#000000"
-            }
-          },
-          "worried": {
-            "ios": "./assets/logo/logo-2.png",
-            "android": {
-              "foregroundImage": "./assets/logo/logo-2.png",
-              "backgroundColor": "#000000"
-            }
-          },
-          "fading": {
-            "ios": "./assets/logo/logo-3.png",
-            "android": {
-              "foregroundImage": "./assets/logo/logo-3.png",
-              "backgroundColor": "#000000"
-            }
-          },
-          "sleeping": {
-            "ios": "./assets/logo/logo-4.png",
-            "android": {
-              "foregroundImage": "./assets/logo/logo-4.png",
-              "backgroundColor": "#000000"
-            }
-          },
-          "celebrating": {
-            "ios": "./assets/logo/logo-5.png",
-            "android": {
-              "foregroundImage": "./assets/logo/logo-5.png",
-              "backgroundColor": "#000000"
-            }
-          }
-        }
-      ],
       [
         "expo-splash-screen",
         {

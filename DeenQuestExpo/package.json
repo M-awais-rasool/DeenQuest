@@ -1,5 +1,5 @@
 {
-  "name": "deenquestexpo",
+  "name": "deenquest",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,6 @@
   "dependencies": {
     "@expo-google-fonts/amiri": "^0.4.1",
     "@expo-google-fonts/nunito": "^0.4.2",
-    "@g9k/expo-dynamic-app-icon": "^2.0.8",
     "@react-native-async-storage/async-storage": "^3.0.2",
     "@react-native/new-app-screen": "^0.80.3",
     "@react-navigation/bottom-tabs": "^7.15.9",

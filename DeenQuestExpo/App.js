@@ -19,7 +19,6 @@ import {
 import { Provider } from "react-redux";
 import * as SplashScreen from "expo-splash-screen";
 import { NotificationBootstrap } from "./app/components/NotificationBootstrap";
-import { AppIconController } from "./app/components/AppIconController";
 import { AppSplash } from "./app/components/AppSplash";
 import { AppNavigator } from "./app/navigators/AppNavigator";
 import { store } from "./app/store";
@@ -65,7 +64,6 @@ function App() {
           <>
             <AppNavigator />
             <NotificationBootstrap />
-            <AppIconController />
           </>
         )}
         {!splashDone && (
