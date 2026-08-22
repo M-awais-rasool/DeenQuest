@@ -1,5 +1,6 @@
-import React, { memo, useCallback, useEffect, useRef } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   Easing,
   StyleSheet,
@@ -7,8 +8,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Svg, {
   Circle,
   Defs,
@@ -19,13 +18,22 @@ import Svg, {
   Rect,
   Stop,
 } from "react-native-svg";
-import type { AppStackParamList } from "../../navigators/navigationTypes";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
-import { SocialAuthButton, TactilePressable } from "../../components/ui";
-import { TactileButton } from "../../components/TactileButton";
+import { SocialAuthButton } from "../../components/ui";
 import { theme } from "../../theme/themes";
+import { useAppDispatch } from "../../store/hooks";
+import { signIn } from "../../store/authActions";
+import { useSignInWithProviderMutation } from "../../store/services/api";
+import { getDeviceId } from "../../store/storage/authStorage";
+import {
+  isAppleSignInAvailable,
+  SignInCancelledError,
+  signInWithApple,
+  signInWithGoogle,
+  type ProviderCredential,
+  type SocialProviderId,
+} from "../../services/socialAuth";
 
-/** Gold rounded-square app icon with the mosque mark (A2 mock). */
 function BrandLogo({ size = 110 }: { size?: number }) {
   return (
     <View style={s.logoShadow}>
@@ -94,7 +102,6 @@ function AmbientGlows() {
   );
 }
 
-type Nav = NativeStackNavigationProp<AppStackParamList>;
 
 const FadeSlide = memo(function FadeSlide({
   delay,
@@ -143,25 +150,71 @@ function OrnamentRow() {
 }
 
 export function WelcomeScreen() {
-  const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
+  const [signInWithProvider] = useSignInWithProviderMutation();
 
-  const handleGoogle = useCallback(() => {
-    // TODO: wire native Google OAuth (expo-auth-session) once the backend
-    // exposes a social token exchange endpoint.
+  const [pending, setPending] = useState<SocialProviderId | null>(null);
+
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  useEffect(() => {
+    let active = true;
+    isAppleSignInAvailable().then((available) => {
+      if (active) setAppleAvailable(available);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const handleApple = useCallback(() => {
-    // TODO: wire Sign in with Apple (expo-apple-authentication).
-  }, []);
+  const authenticate = useCallback(
+    async (
+      provider: SocialProviderId,
+      start: () => Promise<ProviderCredential>,
+    ) => {
+      if (pending) return;
+      setPending(provider);
 
-  const handleSignup = useCallback(
-    () => navigation.navigate("Signup"),
-    [navigation],
+      try {
+        const credential = await start();
+        const deviceId = await getDeviceId();
+
+        const response = await signInWithProvider({
+          provider: credential.provider,
+          id_token: credential.idToken,
+          nonce: credential.nonce || undefined,
+          device_id: deviceId,
+          display_name: credential.displayName || undefined,
+        }).unwrap();
+
+        if (!response.data) {
+          throw new Error("The server did not return a session.");
+        }
+
+        dispatch(signIn(response.data));
+      } catch (error) {
+        if (error instanceof SignInCancelledError) return;
+
+        const message =
+          (error as { data?: { error?: string } })?.data?.error ??
+          (error as Error)?.message ??
+          "Something went wrong. Please try again.";
+        Alert.alert("Could not sign in", message);
+      } finally {
+        setPending(null);
+      }
+    },
+    [dispatch, pending, signInWithProvider],
   );
-  const handleLogin = useCallback(
-    () => navigation.navigate("Login"),
-    [navigation],
+
+  const handleGoogle = useCallback(
+    () => authenticate("google", signInWithGoogle),
+    [authenticate],
+  );
+
+  const handleApple = useCallback(
+    () => authenticate("apple", signInWithApple),
+    [authenticate],
   );
 
   return (
@@ -197,36 +250,32 @@ export function WelcomeScreen() {
             { paddingBottom: Math.max(insets.bottom, 16) + 8 },
           ]}
         >
-          <TactileButton
-            title="GET STARTED"
-            onPress={handleSignup}
-            size="lg"
-          />
-          <TactilePressable
-            onPress={handleLogin}
-            edgeColor={theme.colors.shadowSurface}
-            radius={18}
-            haptic="light"
-            style={s.loginBtnWrap}
-            faceStyle={s.loginBtn}
-          >
-            <Text style={s.loginText}>I ALREADY HAVE AN ACCOUNT</Text>
-          </TactilePressable>
-
-          <View style={s.dividerRow}>
-            <View style={s.divider} />
-            <Text style={s.dividerText}>or continue with</Text>
-            <View style={s.divider} />
-          </View>
+          <Text style={s.signInPrompt}>Sign in to continue</Text>
 
           <View style={s.socialRow}>
             <View style={s.socialItem}>
-              <SocialAuthButton provider="google" onPress={handleGoogle} />
+              <SocialAuthButton
+                provider="google"
+                onPress={handleGoogle}
+                loading={pending === "google"}
+                disabled={pending !== null}
+              />
             </View>
-            <View style={s.socialItem}>
-              <SocialAuthButton provider="apple" onPress={handleApple} />
-            </View>
+            {appleAvailable && (
+              <View style={s.socialItem}>
+                <SocialAuthButton
+                  provider="apple"
+                  onPress={handleApple}
+                  loading={pending === "apple"}
+                  disabled={pending !== null}
+                />
+              </View>
+            )}
           </View>
+
+          <Text style={s.legal}>
+            By continuing you agree to our Terms of Service and Privacy Policy.
+          </Text>
         </FadeSlide>
       </View>
     </ScreenWrapper>
@@ -310,37 +359,20 @@ const s = StyleSheet.create({
     paddingHorizontal: 26,
     gap: 12,
   },
-  loginBtnWrap: {},
-  loginBtn: {
-    borderWidth: 2,
-    borderColor: theme.colors.outline,
-    borderRadius: 18,
-    paddingVertical: 15,
-    alignItems: "center",
-    backgroundColor: theme.colors.background,
-  },
-  loginText: {
-    color: theme.colors.textMuted,
-    fontSize: 15,
-    fontFamily: "Nunito_900Black",
-    letterSpacing: 0.6,
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 8,
-    marginBottom: 2,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.colors.outline,
-  },
-  dividerText: {
-    color: "#5F7E7C",
-    fontSize: 12,
+  signInPrompt: {
+    fontSize: 14,
     fontFamily: "Nunito_700Bold",
+    color: theme.colors.textMuted,
+    textAlign: "center",
+    marginBottom: 14,
+  },
+  legal: {
+    fontSize: 11.5,
+    lineHeight: 17,
+    fontFamily: "Nunito_600SemiBold",
+    color: theme.colors.textMuted,
+    textAlign: "center",
+    paddingHorizontal: 12,
   },
   socialRow: {
     flexDirection: "row",

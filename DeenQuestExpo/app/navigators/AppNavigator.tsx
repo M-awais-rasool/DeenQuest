@@ -11,7 +11,6 @@ import type { LinkingOptions } from "@react-navigation/native";
 
 import { DemoNavigator } from "./DemoNavigator";
 import type { AppStackParamList, NavigationProps } from "./navigationTypes";
-import { LoginScreen } from "../screens/auth/LoginScreen";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import type { RootState } from "../store/store";
 import type { MainState } from "../store/slices/mainSlice";
@@ -28,11 +27,10 @@ import { MiniGamePlayerScreen } from "../screens/level/MiniGamePlayerScreen";
 import { CertificatesScreen } from "../screens/reward/CertificatesScreen";
 import { SettingsScreen } from "../screens/profile/SettingsScreen";
 import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
-import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
+import { DevicesScreen } from "../screens/profile/DevicesScreen";
 import { PublicProfileScreen } from "../screens/profile/PublicProfileScreen";
 import { LeaderboardScreen } from "../screens/leaderboard/LeaderboardScreen";
 import OnboardingScreen from "../screens/auth/OnboardingScreen";
-import { SignupScreen } from "../screens/auth/SignupScreen";
 import { WelcomeScreen } from "../screens/auth/WelcomeScreen";
 import { SurahDetailScreen } from "../screens/quran/SurahDetailScreen";
 import { CoachInsightsScreen } from "../screens/coach/CoachInsightsScreen";
@@ -93,20 +91,24 @@ const AppStack = () => {
           return;
         }
         setHasCompletedOnboarding(onboardingComplete);
-        if (authState.token && authState.isAuthenticated) {
+        if (authState.refreshToken && authState.isAuthenticated) {
           dispatch(
-            restoreAuth({ token: authState.token, user: authState.user }),
+            restoreAuth({
+              token: authState.token,
+              refreshToken: authState.refreshToken,
+              user: authState.user,
+            }),
           );
           return;
         }
 
-        dispatch(restoreAuth({ token: null, user: null }));
+        dispatch(restoreAuth({ token: null, refreshToken: null, user: null }));
       } catch (error) {
         if (!isMounted) {
           return;
         }
         setHasCompletedOnboarding(false);
-        dispatch(restoreAuth({ token: null, user: null }));
+        dispatch(restoreAuth({ token: null, refreshToken: null, user: null }));
       }
     };
 
@@ -157,10 +159,7 @@ const AppStack = () => {
           <Stack.Screen name="SurahDetail" component={SurahDetailScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-          <Stack.Screen
-            name="ChangePassword"
-            component={ChangePasswordScreen}
-          />
+          <Stack.Screen name="Devices" component={DevicesScreen} />
           <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
           <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
           <Stack.Screen name="CoachInsights" component={CoachInsightsScreen} />
@@ -205,8 +204,6 @@ const AppStack = () => {
         <>
           <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Signup" component={SignupScreen} />
         </>
       )}
     </Stack.Navigator>

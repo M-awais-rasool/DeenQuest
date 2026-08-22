@@ -5,6 +5,7 @@ import {
   persistAccessToken,
   persistAuthUser,
   persistIsAuthenticated,
+  persistRefreshToken,
 } from "../storage/authStorage";
 
 export interface MainState {
@@ -12,6 +13,7 @@ export interface MainState {
   isLoading: boolean;
   user: AuthUser | null;
   accessToken: string | null;
+  refreshToken: string | null;
   error: string | null;
   /** Rewards granted by the last level completion — cleared after the celebration overlay is shown. */
   pendingRewardUnlocks: NewlyGrantedReward[];
@@ -22,6 +24,7 @@ const initialState: MainState = {
   isLoading: true,
   user: null,
   accessToken: null,
+  refreshToken: null,
   error: null,
   pendingRewardUnlocks: [],
 };
@@ -45,6 +48,10 @@ const mainSlice = createSlice({
       state.accessToken = action.payload;
       persistAccessToken(action.payload);
     },
+    setRefreshToken: (state, action: PayloadAction<string | null>) => {
+      state.refreshToken = action.payload;
+      persistRefreshToken(action.payload);
+    },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
@@ -52,21 +59,28 @@ const mainSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.accessToken = null;
+      state.refreshToken = null;
       state.error = null;
       state.pendingRewardUnlocks = [];
       clearPersistedAuth();
     },
     restoreAuth: (
       state,
-      action: PayloadAction<{ token: string | null; user: AuthUser | null }>,
+      action: PayloadAction<{
+        token: string | null;
+        refreshToken: string | null;
+        user: AuthUser | null;
+      }>,
     ) => {
-      if (action.payload.token) {
+      if (action.payload.token || action.payload.refreshToken) {
         state.isAuthenticated = true;
         state.accessToken = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
         state.user = action.payload.user;
       } else {
         state.isAuthenticated = false;
         state.accessToken = null;
+        state.refreshToken = null;
         state.user = null;
         clearPersistedAuth();
       }
@@ -89,6 +103,7 @@ export const {
   setIsLoading,
   setUser,
   setAccessToken,
+  setRefreshToken,
   setError,
   logout,
   restoreAuth,

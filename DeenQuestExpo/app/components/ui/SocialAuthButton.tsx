@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import { Apple } from "lucide-react-native";
 import { TactilePressable } from "./TactilePressable";
 import { theme } from "../../theme/themes";
@@ -33,17 +33,20 @@ export function SocialAuthButton({
   provider,
   onPress,
   disabled = false,
+  loading = false,
 }: {
   provider: SocialProvider;
   onPress: () => void;
   disabled?: boolean;
+  /** Swaps the label for a spinner, so progress shows on the button pressed. */
+  loading?: boolean;
 }) {
   const palette = PALETTE[provider];
 
   return (
     <TactilePressable
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || loading}
       edgeColor={palette.edge}
       radius={theme.borderRadius.md}
       haptic="medium"
@@ -68,7 +71,11 @@ export function SocialAuthButton({
           <Apple size={22} color={palette.fg} fill={palette.fg} />
         )}
       </View>
-      <Text style={[s.label, { color: palette.fg }]}>{LABEL[provider]}</Text>
+      {loading ? (
+        <ActivityIndicator size="small" color={palette.fg} />
+      ) : (
+        <Text style={[s.label, { color: palette.fg }]}>{LABEL[provider]}</Text>
+      )}
       {/* Mirror of the icon slot keeps the label optically centred */}
       <View style={s.iconSlot} />
     </TactilePressable>

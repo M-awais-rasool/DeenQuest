@@ -138,12 +138,12 @@ export function SettingsScreen({ navigation }: Props) {
           </AnimatedPressable>
           <AnimatedPressable
             style={styles.row}
-            onPress={() => navigation.navigate("ChangePassword")}
+            onPress={() => navigation.navigate("Devices")}
           >
             <IconTile bg="#2A2440">
               <Lock color="#A78BFA" size={15} strokeWidth={2.2} />
             </IconTile>
-            <Text style={styles.rowLabel}>Change Password</Text>
+            <Text style={styles.rowLabel}>Devices</Text>
             <Text style={styles.chevron}>›</Text>
           </AnimatedPressable>
         </View>

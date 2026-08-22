@@ -21,8 +21,6 @@ export type AppStackParamList = {
   Welcome: undefined;
   OnboardingScreen: undefined;
   PersonalizedOnboarding: { email?: string; password?: string };
-  Login: undefined;
-  Signup: undefined;
   Demo: NavigatorScreenParams<DemoTabParamList>;
   DailyTaskDetail: { task: DailyTask };
   LevelDetail: { levelId: number; courseType?: CourseType };
@@ -40,7 +38,7 @@ export type AppStackParamList = {
   SurahDetail: { surahId: number | string };
   Settings: undefined;
   EditProfile: undefined;
-  ChangePassword: undefined;
+  Devices: undefined;
   PublicProfile: { userId: string };
   Leaderboard: undefined;
   CoachInsights: undefined;

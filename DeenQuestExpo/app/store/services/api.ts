@@ -1,10 +1,20 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import {
+  createApi,
+  fetchBaseQuery,
+  type BaseQueryFn,
+  type FetchArgs,
+  type FetchBaseQueryError,
+} from "@reduxjs/toolkit/query/react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { STORAGE_KEYS } from "../storage/authStorage";
+import {
+  getDeviceId,
+  readRefreshToken,
+  STORAGE_KEYS,
+} from "../storage/authStorage";
 import type { AyahTimingInput } from "../../types/quranSync";
 import type { CoachState } from "../../services/coach";
 
-export const API_BASE_URL = "http://192.168.18.14:8080";
+export const API_BASE_URL = "http://192.168.18.12:8080";
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({
@@ -24,17 +34,91 @@ const baseQueryWithAuth = fetchBaseQuery({
   },
 });
 
+let refreshInFlight: Promise<string | null> | null = null;
+
+async function refreshSession(
+  api: Parameters<BaseQueryFn>[1],
+): Promise<string | null> {
+  const refreshToken = await readRefreshToken();
+  if (!refreshToken) return null;
+
+  const deviceId = await getDeviceId();
+
+  const result = await baseQueryWithAuth(
+    {
+      url: "/api/v1/auth/refresh",
+      method: "POST",
+      body: { refresh_token: refreshToken, device_id: deviceId },
+    },
+    api,
+    {},
+  );
+
+  const session = (result.data as APIResponse<AuthResponse> | undefined)?.data;
+  if (!session?.access_token) return null;
+
+  const { applySession } = require("../authActions") as {
+    applySession: (s: AuthResponse) => (dispatch: unknown) => void;
+  };
+  api.dispatch(applySession(session) as never);
+
+  return session.access_token;
+}
+
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  let result = await baseQueryWithAuth(args, api, extraOptions);
+
+  if (result.error?.status !== 401) return result;
+
+  const url = typeof args === "string" ? args : args.url;
+  if (url.startsWith("/api/v1/auth/")) return result;
+
+  if (!refreshInFlight) {
+    refreshInFlight = refreshSession(api).finally(() => {
+      refreshInFlight = null;
+    });
+  }
+
+  const newToken = await refreshInFlight;
+  if (!newToken) {
+    const { signOut } = require("../authActions") as {
+      signOut: () => (dispatch: unknown) => void;
+    };
+    api.dispatch(signOut() as never);
+    return result;
+  }
+
+  return baseQueryWithAuth(args, api, extraOptions);
+};
+
 // Auth DTOs
-export interface SignupRequest {
-  email: string;
-  password: string;
-  role?: string;
+export type AuthProvider = "google" | "apple";
+
+export interface OAuthSignInRequest {
+  provider: AuthProvider;
+  id_token: string;
+  nonce?: string;
+  device_id?: string;
+  /** Apple hands over the name only on the first authorization, ever. */
   display_name?: string;
 }
 
-export interface LoginRequest {
-  email: string;
-  password: string;
+export interface RefreshRequest {
+  refresh_token: string;
+  device_id?: string;
+}
+
+export interface AuthSession {
+  id: string;
+  device_id?: string;
+  user_agent?: string;
+  created_at: string;
+  expires_at: string;
+  current: boolean;
 }
 
 export interface AuthUser {
@@ -46,6 +130,8 @@ export interface AuthUser {
   bio: string;
   title: string;
   is_verified: boolean;
+  /** Which providers this account can sign in with, e.g. ["google"]. */
+  providers?: AuthProvider[];
 }
 
 export interface UpdateProfileRequest {
@@ -54,11 +140,6 @@ export interface UpdateProfileRequest {
   avatar_url?: string;
   bio?: string;
   title?: string;
-}
-
-export interface ChangePasswordRequest {
-  current_password: string;
-  new_password: string;
 }
 
 export interface PublicProfileData {
@@ -79,6 +160,9 @@ export interface PublicProgressData {
 export interface AuthResponse {
   user: AuthUser;
   access_token: string;
+  refresh_token: string;
+  /** Access token lifetime in seconds. */
+  expires_in: number;
 }
 
 export interface APIResponse<T> {
@@ -785,7 +869,7 @@ export interface CreateGroupChallengeRequest {
 
 export const API = createApi({
   reducerPath: "API",
-  baseQuery: baseQueryWithAuth,
+  baseQuery: baseQueryWithReauth,
   tagTypes: [
     "User",
     "Auth",
@@ -802,19 +886,35 @@ export const API = createApi({
     "Challenges",
   ],
   endpoints: (builder) => ({
-    signup: builder.mutation<APIResponse<null>, SignupRequest>({
-      query: (credentials) => ({
-        url: "/api/v1/auth/signup",
+    signInWithProvider: builder.mutation<
+      APIResponse<AuthResponse>,
+      OAuthSignInRequest
+    >({
+      query: ({ provider, ...body }) => ({
+        url: `/api/v1/auth/oauth/${provider}`,
         method: "POST",
-        body: credentials,
+        body,
       }),
       invalidatesTags: ["Auth"],
     }),
-    login: builder.mutation<APIResponse<AuthResponse>, LoginRequest>({
-      query: (credentials) => ({
-        url: "/api/v1/auth/login",
-        method: "POST",
-        body: credentials,
+    getAuthProviders: builder.query<APIResponse<{ providers: AuthProvider[] }>, void>({
+      query: () => ({
+        url: "/api/v1/auth/providers",
+        method: "GET",
+      }),
+    }),
+    getSessions: builder.query<APIResponse<AuthSession[]>, string | void>({
+      query: (currentRefreshToken) => ({
+        url: "/api/v1/auth/sessions",
+        method: "GET",
+        params: currentRefreshToken ? { current: currentRefreshToken } : undefined,
+      }),
+      providesTags: ["Auth"],
+    }),
+    revokeSession: builder.mutation<APIResponse<null>, string>({
+      query: (sessionId) => ({
+        url: `/api/v1/auth/sessions/${sessionId}`,
+        method: "DELETE",
       }),
       invalidatesTags: ["Auth"],
     }),
@@ -847,13 +947,6 @@ export const API = createApi({
         body: data,
       }),
       invalidatesTags: ["User"],
-    }),
-    changePassword: builder.mutation<APIResponse<null>, ChangePasswordRequest>({
-      query: (data) => ({
-        url: "/api/v1/users/me/password",
-        method: "PUT",
-        body: data,
-      }),
     }),
     deleteAccount: builder.mutation<APIResponse<null>, void>({
       query: () => ({
@@ -1217,13 +1310,14 @@ export const API = createApi({
 
 // Export hooks
 export const {
-  useSignupMutation,
-  useLoginMutation,
+  useSignInWithProviderMutation,
+  useGetAuthProvidersQuery,
+  useGetSessionsQuery,
+  useRevokeSessionMutation,
   useGetProfileQuery,
   useGetPublicProfileQuery,
   useGetPublicProgressQuery,
   useUpdateProfileMutation,
-  useChangePasswordMutation,
   useDeleteAccountMutation,
   useRegisterNotificationTokenMutation,
   useGetDailyTasksQuery,

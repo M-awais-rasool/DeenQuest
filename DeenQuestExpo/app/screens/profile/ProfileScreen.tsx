@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { StyleSheet, View, Text, ScrollView, Share, Pressable } from "react-native";
+import { StyleSheet, View, Text, ScrollView, Share, Pressable, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Flame, Share2, Settings, Check } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
@@ -58,6 +58,7 @@ export function ProfileScreen({ navigation }: Props) {
   const displayName =
     profile?.display_name || profile?.email?.split("@")[0] || "Explorer";
   const initial = displayName.charAt(0).toUpperCase();
+  const avatarUrl = profile?.avatar_url;
   const totalXP = progress?.xp ?? 0;
   const level = progress?.level ?? 1;
   const currentStreak = progress?.current_streak ?? 0;
@@ -102,13 +103,19 @@ export function ProfileScreen({ navigation }: Props) {
 
         {/* identity */}
         <View style={styles.identityCard}>
+          {/* The gradient doubles as the ring around a real picture and as the
+              fallback tile when there is none. */}
           <LinearGradient
             colors={[dq.green, dq.gold]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.avatar}
           >
-            <Text style={styles.avatarText}>{initial}</Text>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{initial}</Text>
+            )}
           </LinearGradient>
           <View style={styles.identityBody}>
             <Text style={styles.name} numberOfLines={1}>
@@ -268,6 +275,13 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
+  },
+  // Inset so the gradient reads as a ring rather than being covered entirely.
+  avatarImage: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: dq.card,
   },
   avatarText: { fontSize: 26, fontFamily: "Nunito_900Black", color: dq.onGreen },
   identityBody: { flex: 1, minWidth: 0 },
