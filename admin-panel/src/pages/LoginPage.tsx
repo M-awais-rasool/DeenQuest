@@ -1,34 +1,30 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import {
-  EnvelopeIcon,
-  LockClosedIcon,
-  ArrowRightIcon,
-} from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import { Logo, AmbientGlow } from "../components/Layout";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await login(email, password);
-      toast.success("Welcome back!");
-      navigate("/");
-    } catch {
-      toast.error("Invalid credentials or insufficient permissions");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleCredential = useCallback(
+    async (idToken: string) => {
+      setLoading(true);
+      try {
+        await loginWithGoogle(idToken);
+        toast.success("Welcome back!");
+        navigate("/");
+      } catch {
+        toast.error("That account does not have admin access");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loginWithGoogle, navigate],
+  );
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
@@ -52,57 +48,21 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="dq-card space-y-5 p-8">
-          <div>
-            <label className="dq-label">Email</label>
-            <div className="relative">
-              <EnvelopeIcon
-                className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-fg-dimmer"
-                strokeWidth={2.2}
-              />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="dq-input pl-11"
-                placeholder="admin@deenquest.app"
-                required
-              />
+        <div className="dq-card space-y-6 p-8">
+          {loading ? (
+            <div className="flex items-center justify-center gap-3 py-3 text-sm font-semibold text-fg-dimmer">
+              <span className="dq-spinner h-4 w-4" />
+              Signing in…
             </div>
-          </div>
+          ) : (
+            <GoogleSignInButton onCredential={handleCredential} />
+          )}
 
-          <div>
-            <label className="dq-label">Password</label>
-            <div className="relative">
-              <LockClosedIcon
-                className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-fg-dimmer"
-                strokeWidth={2.2}
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="dq-input pl-11"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-          </div>
-
-          <button type="submit" disabled={loading} className="dq-btn w-full">
-            {loading ? (
-              <>
-                <span className="dq-spinner h-4 w-4" />
-                Signing in…
-              </>
-            ) : (
-              <>
-                Sign In
-                <ArrowRightIcon className="h-4 w-4" strokeWidth={2.6} />
-              </>
-            )}
-          </button>
-        </form>
+          <p className="text-center text-xs font-semibold leading-relaxed text-fg-faintest">
+            Only accounts on the admin allowlist can open this panel. Ask an
+            existing admin to add your address to <code>ADMIN_EMAILS</code>.
+          </p>
+        </div>
 
         <p className="mt-6 text-center text-xs font-semibold text-fg-faintest">
           DeenQuest · Content Management
