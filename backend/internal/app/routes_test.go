@@ -23,8 +23,6 @@ import (
 	recitationhttp "github.com/chawais/deenquest/backend/internal/recitation/interfaces/http"
 	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
 	rewardhttp "github.com/chawais/deenquest/backend/internal/reward/interfaces/http"
-	userapp "github.com/chawais/deenquest/backend/internal/user/application"
-	userhttp "github.com/chawais/deenquest/backend/internal/user/interfaces/http"
 )
 
 func TestLearningRoutesRegister(t *testing.T) {
@@ -52,7 +50,6 @@ func TestLearningRoutesRegister(t *testing.T) {
 	challengeSvc := challengeapp.NewService(nil, nil, progressSvc)
 	challengehttp.RegisterRoutes(authed, challengehttp.NewHandler(challengeSvc))
 
-	userhttp.RegisterAdminRoutes(admin, userhttp.NewAdminHandler(userapp.NewService(nil)))
 	levelhttp.RegisterAdminRoutes(admin, levelhttp.NewAdminHandler(levelSvc))
 	dailytaskhttp.RegisterAdminRoutes(admin, dailytaskhttp.NewAdminHandler(taskSvc))
 	rewardhttp.RegisterAdminRoutes(admin, rewardhttp.NewAdminHandler(rewardSvc))
@@ -74,8 +71,6 @@ func TestLearningRoutesRegister(t *testing.T) {
 		"POST /api/v1/levels/:id/complete",
 		"GET /api/v1/rewards",
 		"POST /api/v1/recitation/check",
-		"GET /api/v1/admin/users",
-		"PUT /api/v1/admin/users/:id/app-icon",
 		"GET /api/v1/admin/registry",
 		"GET /api/v1/admin/analytics",
 		"GET /api/v1/admin/levels",

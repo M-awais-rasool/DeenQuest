@@ -64,7 +64,6 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 		coachhttp.RegisterRoutes(authed, m.CoachHandler)
 	}
 
-	userhttp.RegisterAdminRoutes(admin, m.UserAdminHandler)
 	levelhttp.RegisterAdminRoutes(admin, m.LevelAdminHandler)
 	dailytaskhttp.RegisterAdminRoutes(admin, m.TaskAdminHandler)
 	rewardhttp.RegisterAdminRoutes(admin, m.RewardAdminHandler)

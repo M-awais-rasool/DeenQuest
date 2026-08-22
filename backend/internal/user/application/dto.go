@@ -23,21 +23,8 @@ type UserProfileResponse struct {
 	Bio          string `json:"bio"`
 	Title        string `json:"title"`
 	IsVerified   bool   `json:"is_verified"`
-	IconOverride string `json:"icon_override"`
 	CreatedAt    string `json:"created_at"`
 	UpdatedAt    string `json:"updated_at"`
-}
-
-type AdminUserRow struct {
-	ID           string `json:"id"`
-	Email        string `json:"email"`
-	DisplayName  string `json:"display_name"`
-	Role         string `json:"role"`
-	IconOverride string `json:"icon_override"`
-}
-
-type SetAppIconRequest struct {
-	Icon string `json:"icon"`
 }
 
 type PublicUserResponse struct {

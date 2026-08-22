@@ -16,7 +16,6 @@ var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrProfileEmailExists = errors.New("email already in use")
 	ErrWrongPassword      = errors.New("current password is incorrect")
-	ErrInvalidIcon        = errors.New("invalid app-icon value")
 )
 
 type Service struct {
@@ -125,49 +124,6 @@ func (s *Service) GetPublicProfile(ctx context.Context, userID string) (*PublicU
 	}, nil
 }
 
-func (s *Service) ListUsers(ctx context.Context, search string, limit int) ([]AdminUserRow, error) {
-	if limit <= 0 {
-		limit = 20
-	}
-	if limit > 100 {
-		limit = 100
-	}
-	users, err := s.users.ListUsers(ctx, search, limit)
-	if err != nil {
-		return nil, fmt.Errorf("list users: %w", err)
-	}
-	rows := make([]AdminUserRow, 0, len(users))
-	for i := range users {
-		u := &users[i]
-		rows = append(rows, AdminUserRow{
-			ID:           u.ID,
-			Email:        u.Email,
-			DisplayName:  u.DisplayName,
-			Role:         u.Role,
-			IconOverride: u.IconOverride,
-		})
-	}
-	return rows, nil
-}
-
-func (s *Service) SetAppIcon(ctx context.Context, userID, icon string) error {
-	normalized, ok := domain.NormalizeIconOverride(icon)
-	if !ok {
-		return ErrInvalidIcon
-	}
-	u, err := s.users.GetByID(ctx, userID)
-	if err != nil {
-		return fmt.Errorf("get user: %w", err)
-	}
-	if u == nil {
-		return ErrUserNotFound
-	}
-	if err := s.users.SetIconOverride(ctx, userID, normalized); err != nil {
-		return fmt.Errorf("set app icon: %w", err)
-	}
-	return nil
-}
-
 func (s *Service) DeleteAccount(ctx context.Context, userID string) error {
 	u, err := s.users.GetByID(ctx, userID)
 	if err != nil {
@@ -192,7 +148,6 @@ func toProfile(u *domain.User) *UserProfileResponse {
 		Bio:          u.Bio,
 		Title:        u.Title,
 		IsVerified:   u.IsVerified,
-		IconOverride: u.IconOverride,
 		CreatedAt:    u.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:    u.UpdatedAt.Format(time.RFC3339),
 	}

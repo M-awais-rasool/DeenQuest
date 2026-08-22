@@ -54,7 +54,6 @@ type Modules struct {
 	AuthService      *authapp.Service
 	AuthHandler      *authhttp.Handler
 	UserHandler      *userhttp.Handler
-	UserAdminHandler *userhttp.AdminHandler // /admin/users (App Icons page)
 
 	// learning — the gamification currency plus the features that write to it.
 	ProgressHandler    *progresshttp.Handler   // XP, streaks, leaderboard
@@ -197,7 +196,6 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		AuthService:      authService,
 		AuthHandler:      authhttp.NewHandler(authService),
 		UserHandler:      userhttp.NewHandler(userService),
-		UserAdminHandler: userhttp.NewAdminHandler(userService),
 
 		ProgressHandler:    progresshttp.NewHandler(progressService),
 		ProgressService:    progressService,
