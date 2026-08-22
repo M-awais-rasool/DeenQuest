@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="DeenQuestExpo/assets/logo.png" alt="DeenQuest Logo" width="110" />
+  <img src="DeenQuestExpo/assets/logo/logo.png" alt="Deen Quest Logo" width="110" />
 </p>
 
 <h1 align="center">DeenQuest</h1>

@@ -13,7 +13,6 @@ import {
   ChevronDoubleLeftIcon,
   MagnifyingGlassIcon,
   CpuChipIcon,
-  SparklesIcon,
   BookOpenIcon,
   AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
@@ -28,7 +27,6 @@ const navGroups: {
     items: [
       { label: "Dashboard", path: "/", icon: HomeIcon },
       { label: "Learning Agent", path: "/learning-agent", icon: CpuChipIcon },
-      { label: "App Icons", path: "/app-icons", icon: SparklesIcon },
     ],
   },
   {

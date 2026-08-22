@@ -11,7 +11,6 @@ import EventsPage from "./pages/EventsPage";
 import AuditLogPage from "./pages/AuditLogPage";
 import SettingsPage from "./pages/SettingsPage";
 import LearningAgentPage from "./pages/LearningAgentPage";
-import AppIconsPage from "./pages/AppIconsPage";
 import HifzPlansPage from "./pages/HifzPlansPage";
 import HifzSettingsPage from "./pages/HifzSettingsPage";
 
@@ -71,7 +70,6 @@ export default function App() {
                 <Route path="/hifz/plans" element={<HifzPlansPage />} />
                 <Route path="/hifz/settings" element={<HifzSettingsPage />} />
                 <Route path="/learning-agent" element={<LearningAgentPage />} />
-                <Route path="/app-icons" element={<AppIconsPage />} />
                 <Route path="/themes" element={<ThemesPage />} />
                 <Route path="/rewards" element={<RewardsPage />} />
                 <Route path="/events" element={<EventsPage />} />
