@@ -39,7 +39,7 @@ export default function App() {
       <Route
         path="/*"
         element={
-          // <ProtectedRoute>
+          <ProtectedRoute>
             <Layout>
               <Routes>
                 <Route path="/" element={<DashboardPage />} />
@@ -78,7 +78,7 @@ export default function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
-          // </ProtectedRoute>
+          </ProtectedRoute>
         }
       />
     </Routes>
