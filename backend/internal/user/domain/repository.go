@@ -11,4 +11,6 @@ type Repository interface {
 	Update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id string) error
 	EmailExists(ctx context.Context, email string, excludeID string) (bool, error)
+	GetByIdentity(ctx context.Context, provider, subject string) (*User, error)
+	LinkIdentity(ctx context.Context, userID string, identity LinkedIdentity) error
 }

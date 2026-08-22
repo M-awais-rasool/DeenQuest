@@ -18,9 +18,18 @@ type MongoRepository struct {
 
 func NewMongoRepository(db *mongo.Database) (*MongoRepository, error) {
 	repo := &MongoRepository{collection: db.Collection("users")}
-	_, err := repo.collection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
-		Keys:    bson.D{{Key: "email", Value: 1}},
-		Options: options.Index().SetUnique(true),
+	_, err := repo.collection.Indexes().CreateMany(context.Background(), []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "email", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys: bson.D{
+				{Key: "identities.provider", Value: 1},
+				{Key: "identities.subject", Value: 1},
+			},
+			Options: options.Index().SetUnique(true).SetSparse(true),
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -67,15 +76,14 @@ func (r *MongoRepository) Update(ctx context.Context, user *domain.User) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	_, err := r.collection.UpdateByID(ctx, user.ID, bson.M{"$set": bson.M{
-		"email":         user.Email,
-		"password_hash": user.PasswordHash,
-		"role":          user.Role,
-		"display_name":  user.DisplayName,
-		"avatar_url":    user.AvatarURL,
-		"bio":           user.Bio,
-		"title":         user.Title,
-		"is_verified":   user.IsVerified,
-		"updated_at":    user.UpdatedAt,
+		"email":        user.Email,
+		"role":         user.Role,
+		"display_name": user.DisplayName,
+		"avatar_url":   user.AvatarURL,
+		"bio":          user.Bio,
+		"title":        user.Title,
+		"is_verified":  user.IsVerified,
+		"updated_at":   user.UpdatedAt,
 	}})
 	return err
 }
@@ -99,4 +107,41 @@ func (r *MongoRepository) EmailExists(ctx context.Context, email string, exclude
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (r *MongoRepository) GetByIdentity(ctx context.Context, provider, subject string) (*domain.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	var u domain.User
+	err := r.collection.FindOne(ctx, bson.M{
+		"identities": bson.M{"$elemMatch": bson.M{"provider": provider, "subject": subject}},
+	}).Decode(&u)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *MongoRepository) LinkIdentity(ctx context.Context, userID string, identity domain.LinkedIdentity) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{
+			"_id": userID,
+			"identities": bson.M{"$not": bson.M{"$elemMatch": bson.M{
+				"provider": identity.Provider,
+				"subject":  identity.Subject,
+			}}},
+		},
+		bson.M{
+			"$push": bson.M{"identities": identity},
+			"$set":  bson.M{"updated_at": time.Now().UTC()},
+		},
+	)
+	return err
 }

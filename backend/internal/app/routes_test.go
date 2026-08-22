@@ -2,8 +2,13 @@ package app
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
+
+	authapp "github.com/chawais/deenquest/backend/internal/auth/application"
+	authhttp "github.com/chawais/deenquest/backend/internal/auth/interfaces/http"
+	"github.com/chawais/deenquest/backend/internal/platform/jwt"
 
 	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
 	challengeapp "github.com/chawais/deenquest/backend/internal/challenge/application"
@@ -123,6 +128,39 @@ func TestLearningRoutesRegister(t *testing.T) {
 		"POST /api/v1/challenges/groups",
 		"POST /api/v1/challenges/groups/join",
 		"POST /api/v1/challenges/encouragements",
+	}
+
+	got := make(map[string]bool)
+	for _, ri := range r.Routes() {
+		got[ri.Method+" "+ri.Path] = true
+	}
+
+	for _, w := range want {
+		if !got[w] {
+			t.Errorf("route not registered: %s", w)
+		}
+	}
+}
+
+// The auth routes mix static segments with wildcards under one /auth prefix,
+// and are split across the public and authenticated groups. Registering them
+// together is what would surface a gin route conflict as a panic.
+func TestAuthRoutesRegister(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	v1 := r.Group("/api/v1")
+	authed := v1.Group("")
+
+	authSvc := authapp.NewService(nil, nil, jwt.NewJWTManager("test", time.Minute), nil, authapp.Options{})
+	authhttp.RegisterRoutes(v1, authed, authhttp.NewHandler(authSvc))
+
+	want := []string{
+		"GET /api/v1/auth/providers",
+		"POST /api/v1/auth/oauth/:provider",
+		"POST /api/v1/auth/refresh",
+		"POST /api/v1/auth/logout",
+		"GET /api/v1/auth/sessions",
+		"DELETE /api/v1/auth/sessions/:id",
 	}
 
 	got := make(map[string]bool)

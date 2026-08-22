@@ -4,10 +4,10 @@ import "github.com/chawais/deenquest/backend/internal/challenge/domain"
 
 // Overview is everything the Challenges screen renders in one round-trip.
 type Overview struct {
-	Duel   *DuelView   `json:"duel"`
-	Group  *GroupView  `json:"group"`
-	Quests []QuestView `json:"quests"`
-	Results []DuelView `json:"results"`
+	Duel    *DuelView   `json:"duel"`
+	Group   *GroupView  `json:"group"`
+	Quests  []QuestView `json:"quests"`
+	Results []DuelView  `json:"results"`
 }
 
 // Participant is the public face of a user inside a challenge.
@@ -25,12 +25,12 @@ type DuelView struct {
 	Status     domain.DuelStatus `json:"status"`
 	InviteCode string            `json:"invite_code,omitempty"`
 	You        Participant       `json:"you"`
-	Rival     *Participant `json:"rival"`
-	StartsAt  string       `json:"starts_at"`
-	EndsAt    string       `json:"ends_at"`
-	EndsInSec int64        `json:"ends_in_sec"`
-	Outcome  string `json:"outcome,omitempty"`
-	RewardXP int    `json:"reward_xp"`
+	Rival      *Participant      `json:"rival"`
+	StartsAt   string            `json:"starts_at"`
+	EndsAt     string            `json:"ends_at"`
+	EndsInSec  int64             `json:"ends_in_sec"`
+	Outcome    string            `json:"outcome,omitempty"`
+	RewardXP   int               `json:"reward_xp"`
 }
 
 // GroupView is a shared group challenge with its member roster.

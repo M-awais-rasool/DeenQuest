@@ -6,16 +6,16 @@ import (
 )
 
 var (
-	ErrDuelNotFound    = errors.New("challenge: duel not found")
-	ErrGroupNotFound   = errors.New("challenge: group challenge not found")
-	ErrCodeTaken       = errors.New("challenge: invite code already in use")
-	ErrAlreadyJoined   = errors.New("challenge: already a participant")
-	ErrGroupFull       = errors.New("challenge: group challenge is full")
-	ErrDuelUnavailable = errors.New("challenge: duel is no longer open to join")
-	ErrSelfJoin        = errors.New("challenge: cannot join your own challenge")
-	ErrActiveDuel      = errors.New("challenge: you already have an open duel")
+	ErrDuelNotFound           = errors.New("challenge: duel not found")
+	ErrGroupNotFound          = errors.New("challenge: group challenge not found")
+	ErrCodeTaken              = errors.New("challenge: invite code already in use")
+	ErrAlreadyJoined          = errors.New("challenge: already a participant")
+	ErrGroupFull              = errors.New("challenge: group challenge is full")
+	ErrDuelUnavailable        = errors.New("challenge: duel is no longer open to join")
+	ErrSelfJoin               = errors.New("challenge: cannot join your own challenge")
+	ErrActiveDuel             = errors.New("challenge: you already have an open duel")
 	ErrDuplicateEncouragement = errors.New("challenge: already encouraged this person today")
-	ErrNotAParticipant = errors.New("challenge: that person is not in one of your challenges")
+	ErrNotAParticipant        = errors.New("challenge: that person is not in one of your challenges")
 )
 
 type Repository interface {

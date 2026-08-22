@@ -423,21 +423,21 @@ type QueueItem struct {
 }
 
 type QueueView struct {
-	Key    domain.Queue       `json:"key"`
-	Status domain.QueueStatus `json:"status"`
-	Items  []QueueItem        `json:"items"`
-	TotalPortions int `json:"total_portions"`
-	ReviewedToday    int        `json:"reviewed_today"`
-	EstimatedMinutes int        `json:"estimated_minutes"`
-	NextReviewAt     *time.Time `json:"next_review_at,omitempty"`
+	Key              domain.Queue       `json:"key"`
+	Status           domain.QueueStatus `json:"status"`
+	Items            []QueueItem        `json:"items"`
+	TotalPortions    int                `json:"total_portions"`
+	ReviewedToday    int                `json:"reviewed_today"`
+	EstimatedMinutes int                `json:"estimated_minutes"`
+	NextReviewAt     *time.Time         `json:"next_review_at,omitempty"`
 }
 
 type TodayPlan struct {
-	Enrolled  bool   `json:"enrolled"`
-	PlanID    string `json:"plan_id,omitempty"`
-	PlanTitle string `json:"plan_title,omitempty"`
-	ReciterID string `json:"reciter_id,omitempty"`
-	Queues []QueueView `json:"queues"`
+	Enrolled  bool        `json:"enrolled"`
+	PlanID    string      `json:"plan_id,omitempty"`
+	PlanTitle string      `json:"plan_title,omitempty"`
+	ReciterID string      `json:"reciter_id,omitempty"`
+	Queues    []QueueView `json:"queues"`
 
 	EstimatedMinutes int  `json:"estimated_minutes"`
 	AllDone          bool `json:"all_done"`

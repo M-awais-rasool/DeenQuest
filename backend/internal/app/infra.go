@@ -68,7 +68,7 @@ func connectInfra(cfg *config.Config) (*Infra, error) {
 		Redis:  redisClient,
 		Gemini: gemini.New(cfg.GeminiAPIKey, cfg.GeminiModel),
 		Expo:   push.NewExpoClient(cfg.ExpoPushURL, cfg.ExpoPushAccessToken),
-		JWT:    jwt.NewJWTManager(cfg.JWTSecret, cfg.JWTAccessExpiry, cfg.JWTRefreshExpiry),
+		JWT:    jwt.NewJWTManager(cfg.JWTSecret, cfg.JWTAccessExpiry),
 	}, nil
 }
 

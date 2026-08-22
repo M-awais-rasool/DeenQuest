@@ -49,7 +49,7 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	admin := v1.Group("/admin")
 	admin.Use(middleware.JWTAuth(infra.JWT), middleware.AdminOnly(cfg.AdminEmailList()))
 
-	authhttp.RegisterRoutes(v1, m.AuthHandler)
+	authhttp.RegisterRoutes(v1, authed, m.AuthHandler)
 	userhttp.RegisterRoutes(v1, authed, m.UserHandler)
 
 	// learning features (formerly the single "progress" module)

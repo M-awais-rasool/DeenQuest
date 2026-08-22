@@ -13,6 +13,8 @@ var (
 	ErrExpiredToken = errors.New("token has expired")
 )
 
+const defaultAccessTTL = 15 * time.Minute
+
 type TokenClaims struct {
 	UserID string `json:"user_id"`
 	Email  string `json:"email"`
@@ -20,55 +22,37 @@ type TokenClaims struct {
 	jwt.RegisteredClaims
 }
 
-type TokenPair struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
 type JWTManager struct {
 	secretKey []byte
+	accessTTL time.Duration
 }
 
-func NewJWTManager(secret string, _, _ time.Duration) *JWTManager {
-	return &JWTManager{
-		secretKey: []byte(secret),
+func NewJWTManager(secret string, accessTTL time.Duration) *JWTManager {
+	if accessTTL <= 0 {
+		accessTTL = defaultAccessTTL
 	}
+	return &JWTManager{secretKey: []byte(secret), accessTTL: accessTTL}
+}
+
+func (m *JWTManager) AccessTTL() time.Duration {
+	return m.accessTTL
 }
 
 func (m *JWTManager) GenerateAccessToken(userID, email, role string) (string, error) {
+	now := time.Now()
 	claims := &TokenClaims{
 		UserID: userID,
 		Email:  email,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt: jwt.NewNumericDate(time.Now()),
-			ID:       uuid.New().String(),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(m.accessTTL)),
+			ID:        uuid.NewString(),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(m.secretKey)
-}
-
-func (m *JWTManager) GenerateRefreshToken(userID string) (string, error) {
-	return m.GenerateAccessToken(userID, "", "")
-}
-
-func (m *JWTManager) GenerateTokenPair(userID, email, role string) (*TokenPair, error) {
-	accessToken, err := m.GenerateAccessToken(userID, email, role)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, err := m.GenerateRefreshToken(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
 }
 
 func (m *JWTManager) ValidateToken(tokenString string) (*TokenClaims, error) {

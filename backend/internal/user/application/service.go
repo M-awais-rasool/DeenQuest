@@ -8,14 +8,11 @@ import (
 	"time"
 
 	"github.com/chawais/deenquest/backend/internal/user/domain"
-
-	"github.com/chawais/deenquest/backend/internal/platform/bcrypt"
 )
 
 var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrProfileEmailExists = errors.New("email already in use")
-	ErrWrongPassword      = errors.New("current password is incorrect")
 )
 
 type Service struct {
@@ -81,32 +78,6 @@ func (s *Service) UpdateProfile(ctx context.Context, userID string, req *UpdateU
 	return toProfile(u), nil
 }
 
-func (s *Service) ChangePassword(ctx context.Context, userID string, req *ChangePasswordRequest) error {
-	u, err := s.users.GetByID(ctx, userID)
-	if err != nil {
-		return fmt.Errorf("get user: %w", err)
-	}
-	if u == nil {
-		return ErrUserNotFound
-	}
-
-	if !bcrypt.CheckPassword(req.CurrentPassword, u.PasswordHash) {
-		return ErrWrongPassword
-	}
-
-	hashed, err := bcrypt.HashPassword(req.NewPassword)
-	if err != nil {
-		return fmt.Errorf("hash password: %w", err)
-	}
-
-	u.PasswordHash = hashed
-	u.UpdatedAt = time.Now().UTC()
-	if err := s.users.Update(ctx, u); err != nil {
-		return fmt.Errorf("update password: %w", err)
-	}
-	return nil
-}
-
 func (s *Service) GetPublicProfile(ctx context.Context, userID string) (*PublicUserResponse, error) {
 	u, err := s.users.GetByID(ctx, userID)
 	if err != nil {
@@ -140,15 +111,15 @@ func (s *Service) DeleteAccount(ctx context.Context, userID string) error {
 
 func toProfile(u *domain.User) *UserProfileResponse {
 	return &UserProfileResponse{
-		ID:           u.ID,
-		Email:        u.Email,
-		Role:         u.Role,
-		DisplayName:  u.DisplayName,
-		AvatarURL:    u.AvatarURL,
-		Bio:          u.Bio,
-		Title:        u.Title,
-		IsVerified:   u.IsVerified,
-		CreatedAt:    u.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:    u.UpdatedAt.Format(time.RFC3339),
+		ID:          u.ID,
+		Email:       u.Email,
+		Role:        u.Role,
+		DisplayName: u.DisplayName,
+		AvatarURL:   u.AvatarURL,
+		Bio:         u.Bio,
+		Title:       u.Title,
+		IsVerified:  u.IsVerified,
+		CreatedAt:   u.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:   u.UpdatedAt.Format(time.RFC3339),
 	}
 }

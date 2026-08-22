@@ -56,8 +56,8 @@ type QuestTemplate struct {
 	Metric   Metric `bson:"metric" json:"metric"`
 	Target   int    `bson:"target" json:"target"`
 	RewardXP int    `bson:"reward_xp" json:"reward_xp"`
-	Glyph  string `bson:"glyph" json:"glyph"`
-	Accent string `bson:"accent" json:"accent"` // gold | pink | teal | violet | blue
+	Glyph    string `bson:"glyph" json:"glyph"`
+	Accent   string `bson:"accent" json:"accent"` // gold | pink | teal | violet | blue
 }
 
 type UserQuest struct {
@@ -99,8 +99,8 @@ func NewUserQuest(id, userID, weekKey string, t QuestTemplate, now time.Time) Us
 type DuelStatus string
 
 const (
-	DuelPending DuelStatus = "pending"
-	DuelActive  DuelStatus = "active"
+	DuelPending   DuelStatus = "pending"
+	DuelActive    DuelStatus = "active"
 	DuelCompleted DuelStatus = "completed"
 	DuelCancelled DuelStatus = "cancelled"
 )

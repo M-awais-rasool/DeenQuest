@@ -8,6 +8,8 @@ import (
 	analyticsinfra "github.com/chawais/deenquest/backend/internal/analytics/infrastructure"
 	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
 	authapp "github.com/chawais/deenquest/backend/internal/auth/application"
+	authdomain "github.com/chawais/deenquest/backend/internal/auth/domain"
+	authinfra "github.com/chawais/deenquest/backend/internal/auth/infrastructure"
 	authhttp "github.com/chawais/deenquest/backend/internal/auth/interfaces/http"
 	challengeapp "github.com/chawais/deenquest/backend/internal/challenge/application"
 	challengeinfra "github.com/chawais/deenquest/backend/internal/challenge/infrastructure"
@@ -51,9 +53,9 @@ import (
 
 type Modules struct {
 	// auth & user — accounts, login, profiles.
-	AuthService      *authapp.Service
-	AuthHandler      *authhttp.Handler
-	UserHandler      *userhttp.Handler
+	AuthService *authapp.Service
+	AuthHandler *authhttp.Handler
+	UserHandler *userhttp.Handler
 
 	// learning — the gamification currency plus the features that write to it.
 	ProgressHandler    *progresshttp.Handler   // XP, streaks, leaderboard
@@ -130,9 +132,16 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		return nil, fmt.Errorf("init notification token repository: %w", err)
 	}
 	jobRepo := notifinfra.NewJobLogRepository(db)
+	refreshRepo, err := authinfra.NewMongoRefreshTokenRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("init refresh token repository: %w", err)
+	}
 
 	// --- services (built in dependency order: progress/reward are leaves) ---
-	authService := authapp.NewService(userRepo, infra.JWT)
+	authService := authapp.NewService(userRepo, refreshRepo, infra.JWT, buildVerifiers(cfg), authapp.Options{
+		RefreshTTL:  cfg.RefreshTokenExpiry,
+		AdminEmails: cfg.AdminEmailList(),
+	})
 	userService := userapp.NewService(userRepo)
 
 	progressService := progressapp.NewService(progressRepo)
@@ -193,9 +202,9 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	}
 
 	return &Modules{
-		AuthService:      authService,
-		AuthHandler:      authhttp.NewHandler(authService),
-		UserHandler:      userhttp.NewHandler(userService),
+		AuthService: authService,
+		AuthHandler: authhttp.NewHandler(authService),
+		UserHandler: userhttp.NewHandler(userService),
 
 		ProgressHandler:    progresshttp.NewHandler(progressService),
 		ProgressService:    progressService,
@@ -231,4 +240,32 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		JobLogs:             jobRepo,
 		SmartNotifications:  smartNotifications,
 	}, nil
+}
+
+func buildVerifiers(cfg *config.Config) map[string]authdomain.Verifier {
+	verifiers := make(map[string]authdomain.Verifier, 2)
+
+	if ids := cfg.GoogleClientIDs(); len(ids) > 0 {
+		v, err := authinfra.NewGoogleVerifier(ids...)
+		if err != nil {
+			logger.Warn("Google sign-in disabled", zap.Error(err))
+		} else {
+			verifiers[authdomain.ProviderGoogle] = v
+			logger.Info("Google sign-in enabled", zap.Int("client_ids", len(ids)))
+		}
+	} else {
+		logger.Warn("Google sign-in disabled: no GOOGLE_*_CLIENT_ID configured")
+	}
+
+	if ids := cfg.AppleClientIDList(); len(ids) > 0 {
+		v, err := authinfra.NewAppleVerifier(ids...)
+		if err != nil {
+			logger.Warn("Apple sign-in disabled", zap.Error(err))
+		} else {
+			verifiers[authdomain.ProviderApple] = v
+			logger.Info("Apple sign-in enabled", zap.Int("client_ids", len(ids)))
+		}
+	}
+
+	return verifiers
 }

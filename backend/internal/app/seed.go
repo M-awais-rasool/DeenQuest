@@ -13,13 +13,8 @@ import (
 func seedStartupData(cfg *config.Config, m *Modules) error {
 	ctx := context.Background()
 
-	if status, err := m.AuthService.SeedAdmin(ctx, cfg.AdminSeedEmail, cfg.AdminSeedPassword, cfg.AdminSeedName); err != nil {
-		logger.Warn("failed to seed admin user", zap.Error(err))
-	} else {
-		logger.Info("Admin user ready",
-			zap.String("email", cfg.AdminSeedEmail),
-			zap.String("status", status))
-	}
+	logger.Info("Admin allowlist loaded",
+		zap.Strings("emails", cfg.AdminEmailList()))
 
 	if err := m.TaskService.Seed(ctx); err != nil {
 		return fmt.Errorf("seed daily tasks: %w", err)

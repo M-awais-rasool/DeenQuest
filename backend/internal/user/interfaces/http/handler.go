@@ -71,42 +71,6 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	response.OK(c, "Profile updated successfully", result)
 }
 
-func (h *Handler) ChangePassword(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "domain.User not authenticated")
-		return
-	}
-
-	var req application.ChangePasswordRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request body")
-		return
-	}
-
-	if err := validator.Validate(&req); err != nil {
-		validationErrors := validator.FormatValidationErrors(err)
-		c.JSON(400, gin.H{"success": false, "errors": validationErrors})
-		return
-	}
-
-	err := h.userService.ChangePassword(c.Request.Context(), userID.(string), &req)
-	if err != nil {
-		if errors.Is(err, application.ErrWrongPassword) {
-			response.BadRequest(c, "Current password is incorrect")
-			return
-		}
-		if errors.Is(err, application.ErrUserNotFound) {
-			response.NotFound(c, "domain.User not found")
-			return
-		}
-		response.InternalError(c, "Failed to change password")
-		return
-	}
-
-	response.OK(c, "Password changed successfully", nil)
-}
-
 func (h *Handler) GetPublicProfile(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {

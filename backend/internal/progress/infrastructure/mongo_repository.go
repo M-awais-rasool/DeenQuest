@@ -14,8 +14,8 @@ import (
 )
 
 type MongoRepository struct {
-	progress *mongo.Collection
-	streaks  *mongo.Collection
+	progress       *mongo.Collection
+	streaks        *mongo.Collection
 	userDailyTasks *mongo.Collection
 }
 

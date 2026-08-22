@@ -26,9 +26,13 @@ type Config struct {
 
 	KafkaBrokers string
 
-	JWTSecret        string
-	JWTAccessExpiry  time.Duration
-	JWTRefreshExpiry time.Duration
+	JWTSecret             string
+	JWTAccessExpiry       time.Duration
+	RefreshTokenExpiry    time.Duration
+	GoogleWebClientID     string
+	GoogleIOSClientID     string
+	GoogleAndroidClientID string
+	AppleClientIDs        string
 
 	WhisperURL string
 
@@ -54,15 +58,10 @@ type Config struct {
 	CORSAllowedOrigins string
 
 	// AdminEmails is a comma-separated allowlist of user emails permitted to
-	// access the /admin endpoints. Empty = open (dev convenience).
+	// access the /admin endpoints, and the only path to the ADMIN role: whoever
+	// signs in with a listed address through any provider is granted it, and
+	// losing the listing drops it again. Empty = open (dev convenience).
 	AdminEmails string
-
-	// Admin seed account — created on startup if it does not exist, so there is
-	// always a way to log into the admin panel. The seeded email is also added
-	// to the admin allowlist automatically.
-	AdminSeedEmail    string
-	AdminSeedPassword string
-	AdminSeedName     string
 }
 
 func Load() (*Config, error) {
@@ -97,9 +96,11 @@ func Load() (*Config, error) {
 		CoachLLMEnabled:     getBool("COACH_LLM_ENABLED", false),
 		CORSAllowedOrigins:  getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
 		AdminEmails:         getEnv("ADMIN_EMAILS", ""),
-		AdminSeedEmail:      getEnv("ADMIN_SEED_EMAIL", "admin@deenquest.app"),
-		AdminSeedPassword:   getEnv("ADMIN_SEED_PASSWORD", "Admin@12345"),
-		AdminSeedName:       getEnv("ADMIN_SEED_NAME", "Admin"),
+
+		GoogleWebClientID:     getEnv("GOOGLE_WEB_CLIENT_ID", ""),
+		GoogleIOSClientID:     getEnv("GOOGLE_IOS_CLIENT_ID", ""),
+		GoogleAndroidClientID: getEnv("GOOGLE_ANDROID_CLIENT_ID", ""),
+		AppleClientIDs:        getEnv("APPLE_CLIENT_IDS", ""),
 	}
 
 	var err error
@@ -108,9 +109,9 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("invalid JWT_ACCESS_EXPIRY: %w", err)
 	}
 
-	cfg.JWTRefreshExpiry, err = time.ParseDuration(getEnv("JWT_REFRESH_EXPIRY", "168h"))
+	cfg.RefreshTokenExpiry, err = time.ParseDuration(getEnv("REFRESH_TOKEN_EXPIRY", "1440h"))
 	if err != nil {
-		return nil, fmt.Errorf("invalid JWT_REFRESH_EXPIRY: %w", err)
+		return nil, fmt.Errorf("invalid REFRESH_TOKEN_EXPIRY: %w", err)
 	}
 
 	return cfg, nil
@@ -132,12 +133,10 @@ func (c *Config) GetKafkaBrokerList() []string {
 	return out
 }
 
-// AdminEmailList returns the configured admin emails plus the seeded admin
-// email, lower-cased, trimmed and de-duplicated. The seed email is always
-// included so the seeded account can reach the /admin endpoints out of the box.
+// AdminEmailList returns the configured admin emails, lower-cased, trimmed and
+// de-duplicated.
 func (c *Config) AdminEmailList() []string {
 	parts := strings.Split(c.AdminEmails, ",")
-	parts = append(parts, c.AdminSeedEmail)
 	seen := make(map[string]struct{}, len(parts))
 	emails := make([]string, 0, len(parts))
 	for _, p := range parts {
@@ -152,6 +151,24 @@ func (c *Config) AdminEmailList() []string {
 		emails = append(emails, v)
 	}
 	return emails
+}
+
+func (c *Config) GoogleClientIDs() []string {
+	return nonEmpty(c.GoogleWebClientID, c.GoogleIOSClientID, c.GoogleAndroidClientID)
+}
+
+func (c *Config) AppleClientIDList() []string {
+	return nonEmpty(strings.Split(c.AppleClientIDs, ",")...)
+}
+
+func nonEmpty(values ...string) []string {
+	out := make([]string, 0, len(values))
+	for _, v := range values {
+		if t := strings.TrimSpace(v); t != "" {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 func (c *Config) AllowedOrigins() []string {
