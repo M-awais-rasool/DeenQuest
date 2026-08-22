@@ -4,8 +4,24 @@
     {
       "name": "admin-panel",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "admin-panel"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "admin-panel"
+      ],
       "port": 5173
+    },
+    {
+      "name": "landing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "LandingPage"
+      ],
+      "port": 3000
     }
   ]
 }
