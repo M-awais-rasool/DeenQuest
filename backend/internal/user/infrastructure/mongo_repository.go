@@ -95,20 +95,6 @@ func (r *MongoRepository) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (r *MongoRepository) EmailExists(ctx context.Context, email string, excludeID string) (bool, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	filter := bson.M{"email": email}
-	if excludeID != "" {
-		filter["_id"] = bson.M{"$ne": excludeID}
-	}
-	count, err := r.collection.CountDocuments(ctx, filter)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
 func (r *MongoRepository) GetByIdentity(ctx context.Context, provider, subject string) (*domain.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

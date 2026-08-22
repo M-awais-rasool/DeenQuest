@@ -135,7 +135,6 @@ export interface AuthUser {
 }
 
 export interface UpdateProfileRequest {
-  email?: string;
   display_name?: string;
   avatar_url?: string;
   bio?: string;

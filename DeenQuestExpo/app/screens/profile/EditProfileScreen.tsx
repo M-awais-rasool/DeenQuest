@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { AnimatedPressable } from "../../components/ui";
-import { ArrowLeft } from "lucide-react-native";
+import { ArrowLeft, Lock } from "lucide-react-native";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Loader } from "../../components/Loader";
 import { TactileButton } from "../../components/TactileButton";
@@ -28,16 +28,16 @@ export function EditProfileScreen({ navigation }: Props) {
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
 
   const profile = profileData?.data;
+  const providerLabel =
+    profile?.providers?.[0] === "apple" ? "Apple" : "Google";
 
   const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
   const [title, setTitle] = useState("");
 
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name || "");
-      setEmail(profile.email || "");
       setBio(profile.bio || "");
       setTitle(profile.title || "");
     }
@@ -48,7 +48,6 @@ export function EditProfileScreen({ navigation }: Props) {
 
     if (displayName !== (profile?.display_name || ""))
       updates.display_name = displayName.trim();
-    if (email !== (profile?.email || "")) updates.email = email.trim();
     if (bio !== (profile?.bio || "")) updates.bio = bio.trim();
     if (title !== (profile?.title || "")) updates.title = title.trim();
 
@@ -108,15 +107,16 @@ export function EditProfileScreen({ navigation }: Props) {
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>EMAIL</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter your email"
-            placeholderTextColor={theme.colors.textMuted}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          <View style={[styles.input, styles.readOnlyField]}>
+            <Text style={styles.readOnlyText} numberOfLines={1}>
+              {profile?.email || "—"}
+            </Text>
+            <Lock color={theme.colors.textMuted} size={16} strokeWidth={2.2} />
+          </View>
+          <Text style={styles.fieldHint}>
+            Managed by {providerLabel} — sign in with a different account to
+            change it.
+          </Text>
         </View>
 
         <View style={styles.fieldGroup}>
@@ -215,6 +215,25 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     borderWidth: 2,
     borderColor: theme.colors.surfaceHigh,
+  },
+  readOnlyField: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    backgroundColor: theme.colors.surfaceLow,
+    borderColor: theme.colors.surfaceHigh,
+  },
+  readOnlyText: {
+    flex: 1,
+    fontSize: 15,
+    color: theme.colors.textMuted,
+  },
+  fieldHint: {
+    marginTop: theme.spacing.xs,
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: "Nunito_600SemiBold",
+    color: theme.colors.textMuted,
   },
   textArea: {
     minHeight: 100,

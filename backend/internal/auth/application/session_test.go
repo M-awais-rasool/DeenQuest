@@ -114,10 +114,6 @@ func (f *fakeUserRepo) Delete(_ context.Context, id string) error {
 	delete(f.byID, id)
 	return nil
 }
-func (f *fakeUserRepo) EmailExists(_ context.Context, email, _ string) (bool, error) {
-	_, ok := f.byEmail[email]
-	return ok, nil
-}
 func (f *fakeUserRepo) GetByIdentity(_ context.Context, provider, subject string) (*userdomain.User, error) {
 	return f.byIdentity[identityKey(provider, subject)], nil
 }

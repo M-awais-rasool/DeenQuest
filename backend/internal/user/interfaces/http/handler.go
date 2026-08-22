@@ -60,10 +60,6 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 
 	result, err := h.userService.UpdateProfile(c.Request.Context(), userID.(string), &req)
 	if err != nil {
-		if errors.Is(err, application.ErrProfileEmailExists) {
-			response.BadRequest(c, "Email already in use")
-			return
-		}
 		response.InternalError(c, "Failed to update profile")
 		return
 	}

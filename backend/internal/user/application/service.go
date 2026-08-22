@@ -4,15 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/chawais/deenquest/backend/internal/user/domain"
 )
 
 var (
-	ErrUserNotFound       = errors.New("user not found")
-	ErrProfileEmailExists = errors.New("email already in use")
+	ErrUserNotFound = errors.New("user not found")
 )
 
 type Service struct {
@@ -43,18 +41,6 @@ func (s *Service) UpdateProfile(ctx context.Context, userID string, req *UpdateU
 		return nil, ErrUserNotFound
 	}
 
-	if req.Email != "" {
-		email := strings.ToLower(req.Email)
-		exists, err := s.users.EmailExists(ctx, email, userID)
-		if err != nil {
-			return nil, fmt.Errorf("check email uniqueness: %w", err)
-		}
-		if exists {
-			return nil, ErrProfileEmailExists
-		}
-		u.Email = email
-	}
-
 	if req.DisplayName != "" {
 		u.DisplayName = req.DisplayName
 	}
@@ -66,9 +52,6 @@ func (s *Service) UpdateProfile(ctx context.Context, userID string, req *UpdateU
 	}
 	if req.Title != "" {
 		u.Title = req.Title
-	}
-	if req.Role != "" {
-		u.Role = req.Role
 	}
 
 	u.UpdatedAt = time.Now().UTC()
