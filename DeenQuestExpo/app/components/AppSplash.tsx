@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   Animated,
   Easing,
@@ -7,31 +7,14 @@ import {
   Text,
   View,
   type DimensionValue,
-  type ImageSourcePropType,
   type LayoutChangeEvent,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import { dq } from "../theme/designTokens";
-import {
-  getCurrentAppIconMood,
-  LAST_MOOD_KEY,
-  normalizeOverride,
-  type Mood,
-} from "../services/appIcon";
 
-// Noor artwork per mood, so the splash mirrors the current dynamic app icon.
-// Static requires (Metro resolves them at build time). "happy" is logo.png.
-const MOOD_IMAGES: Record<Mood, ImageSourcePropType> = {
-  happy: require("../../assets/logo/logo.png"),
-  onfire: require("../../assets/logo/logo-1.png"),
-  worried: require("../../assets/logo/logo-2.png"),
-  fading: require("../../assets/logo/logo-3.png"),
-  sleeping: require("../../assets/logo/logo-4.png"),
-  celebrating: require("../../assets/logo/logo-5.png"),
-};
+const LOGO = require("../../assets/logo/logo.png");
 
 const TRACK_W = 196;
 const PROGRESS_MS = 1700;
@@ -108,19 +91,6 @@ export function AppSplash({
   const logo = useRef(new Animated.Value(0)).current; // logo fade+scale in
   const content = useRef(new Animated.Value(0)).current; // wordmark/tagline in
   const progress = useRef(new Animated.Value(0)).current; // loading bar fill
-
-  // Which Noor to show: the current device icon's mood, falling back to the
-  // last persisted mood when the native icon module isn't available yet.
-  const [mood, setMood] = useState<Mood>(() => getCurrentAppIconMood() ?? "happy");
-  useEffect(() => {
-    if (getCurrentAppIconMood() != null) return;
-    AsyncStorage.getItem(LAST_MOOD_KEY)
-      .then((v) => {
-        const m = normalizeOverride(v);
-        if (m) setMood(m);
-      })
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     Animated.parallel([
@@ -206,7 +176,7 @@ export function AppSplash({
             ],
           }}
         >
-          <Image source={MOOD_IMAGES[mood]} style={styles.logo} resizeMode="contain" />
+          <Image source={LOGO} style={styles.logo} resizeMode="contain" />
         </Animated.View>
 
         <Animated.View

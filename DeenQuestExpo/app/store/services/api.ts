@@ -46,8 +46,6 @@ export interface AuthUser {
   bio: string;
   title: string;
   is_verified: boolean;
-  /** Admin-pinned dynamic app-icon mood; "" or absent means auto. */
-  icon_override?: string;
 }
 
 export interface UpdateProfileRequest {
@@ -176,7 +174,7 @@ export interface UserProgress {
   freezes?: number;
   /** 7 booleans: index 0 = 6 days ago, index 6 = today */
   weekly_completions: boolean[];
-  /** RFC3339 timestamp of the most recent completion, or "" if never. Drives the dynamic app icon. */
+  /** RFC3339 timestamp of the most recent completion, or "" if never. */
   last_completed_at?: string;
 }
 
