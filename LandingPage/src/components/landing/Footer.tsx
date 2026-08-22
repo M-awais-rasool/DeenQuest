@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { handleAnchorClick } from "@/lib/smoothScroll";
 
@@ -12,8 +13,9 @@ export function Footer() {
         <span className="text-[12.5px] font-semibold text-faint">Learn · Play · Grow</span>
         <div className="ml-auto flex gap-[22px]">
           <a href="#journey" onClick={handleAnchorClick} className="text-[12.5px] font-bold text-faint transition-colors hover:text-body">About</a>
-          <a href="#coach" onClick={handleAnchorClick} className="text-[12.5px] font-bold text-faint transition-colors hover:text-body">Privacy</a>
-          <a href="#quran" onClick={handleAnchorClick} className="text-[12.5px] font-bold text-faint transition-colors hover:text-body">Contact</a>
+          <Link to="/privacy" className="text-[12.5px] font-bold text-faint transition-colors hover:text-body">Privacy</Link>
+          <Link to="/terms" className="text-[12.5px] font-bold text-faint transition-colors hover:text-body">Terms</Link>
+          <a href="mailto:support@deenquest.online" className="text-[12.5px] font-bold text-faint transition-colors hover:text-body">Contact</a>
         </div>
       </div>
     </div>
