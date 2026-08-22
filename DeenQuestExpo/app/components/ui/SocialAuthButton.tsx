@@ -61,7 +61,7 @@ export function SocialAuthButton({
       accessibilityLabel={LABEL[provider]}
     >
       <View style={s.iconSlot}>
-        {provider === "google" ? (
+        {loading ? null : provider === "google" ? (
           <Image
             source={require("../../../assets/icons/google.png")}
             style={s.googleIcon}
