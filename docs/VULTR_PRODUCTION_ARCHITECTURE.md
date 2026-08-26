@@ -1082,8 +1082,8 @@ curl -fsS -m 10 --retry 3 "https://hc-ping.com/${HC_UUID}"
 Four properties of that script matter more than the script:
 
 1. **`age -r` uses the public key.** The private key is not on the box. **A fully compromised production server cannot decrypt a single historical backup.**
-2. **The R2 API token is write-and-list only — no delete.** Retention is enforced by an R2 lifecycle rule, not by the box. **A compromised production server cannot destroy your backups either.** That's ransomware resistance for free.
-3. **Two providers, neither of them Vultr.** A Vultr account suspension or region incident doesn't touch your data.
+2. **The immutable copy lives on Backblaze B2 with Object Lock.** R2's API token scopes are coarse — its `Object Read & Write` includes delete — so an R2-only setup does *not* stop a compromised host from erasing its own backup history. B2 supports Object Lock at the bucket level, which does: locked objects cannot be deleted before their retention expires, by anyone, with any credential. Treat R2 as the convenient copy and B2 as the one that survives a compromise.
+3. **Two providers, neither of them Vultr.** A Vultr account suspension or region incident doesn't touch your data — and the two copies have different failure modes, one convenient and one immutable.
 4. **The Healthchecks ping is the last line.** If the dump fails, the upload fails, or the box is dead, the ping doesn't arrive and you are told. Backups that fail silently for six weeks are the classic way this goes wrong.
 
 `mongodump` reads from a live replica set without locking. At this data size — tens of megabytes gzipped — an hourly full dump is trivially cheap, and GFS retention (24 hourly, 7 daily, 4 weekly, 6 monthly) stays comfortably inside R2's free 10 GB for a long time. Revisit when a compressed dump passes ~500 MB; at that point move to oplog-based incrementals, which the replica set already makes possible.

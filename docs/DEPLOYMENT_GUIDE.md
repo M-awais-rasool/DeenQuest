@@ -170,9 +170,11 @@ Do this **once**. Budget half a day. Every step ends with a check — do not mov
 
 ### Step 1 — Free accounts
 
+> **Doing this for the first time?** [`ACCOUNT_SETUP.md`](ACCOUNT_SETUP.md) walks through every account one by one — what to click, which value to copy, and exactly which variable it becomes. This section is the short version.
+
 Sign up for: **Cloudflare** (move your domain's nameservers here), **Tailscale**, **Grafana Cloud**, **UptimeRobot**, **Healthchecks.io**, **Backblaze B2**.
 
-In Cloudflare, create an **R2 bucket** `deenquest-backups`, and an API token with **write and list permissions only — no delete**. Retention is handled by a lifecycle rule instead, so that a compromised server cannot destroy your backup history.
+In Cloudflare, create an **R2 bucket** `deenquest-backups` and an API token scoped to it, plus a lifecycle rule to expire old objects. Note that R2's token scopes are coarse — `Object Read & Write` includes delete — so R2 alone does not protect backup history from a compromised server. Create the Backblaze **`deenquest-backups-dr` bucket with Object Lock enabled** for that; Object Lock can only be turned on at bucket creation.
 
 ✅ *Check:* `dig NS deenquest.app` returns Cloudflare nameservers.
 

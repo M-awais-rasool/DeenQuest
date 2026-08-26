@@ -5,8 +5,10 @@
 # Four properties matter more than the script:
 #   1. age encrypts with the PUBLIC key. The private key is not on this box, so
 #      a fully compromised host cannot decrypt a single historical backup.
-#   2. The object-storage tokens are write+list only. Retention is enforced by a
-#      lifecycle rule, so a compromised host cannot delete backups either.
+#   2. The B2 bucket has Object Lock enabled, so that copy cannot be deleted
+#      before its retention expires — by anyone, with any credential. R2's token
+#      scopes are coarse (Object Read & Write includes delete), so R2 is the
+#      convenient copy and B2 is the one that survives a compromised host.
 #   3. Two providers. A Vultr account suspension does not touch the data.
 #   4. The Healthchecks ping is the dead-man's switch. Silent backup failure is
 #      how data loss actually happens.

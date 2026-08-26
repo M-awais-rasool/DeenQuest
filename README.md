@@ -296,6 +296,7 @@ Backend docs:
 Project-wide (`docs/`):
 
 - `docs/VULTR_PRODUCTION_ARCHITECTURE.md` — Production infrastructure design: topology, security, CI/CD, backups, DR
+- `docs/ACCOUNT_SETUP.md` — Every account and key you need before the first deploy, step by step
 - `docs/DEPLOYMENT_GUIDE.md` — How to set production up and deploy to it, file by file
 - `docs/AI_FEATURES.md` — AI feature overview
 - `deploy/README.md` — Command reference once the system is already set up
