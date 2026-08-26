@@ -293,9 +293,12 @@ Backend docs:
 - `backend/docs/PROJECT_ANALYSIS.md` — Comprehensive project analysis
 - `backend/docs/learning-agent.md` — Learning Agent: how it works, step by step (plain English)
 
-Project-wide:
+Project-wide (`docs/`):
 
-- `ROADMAP.md` — Future features, improvements & new agents to build
+- `docs/VULTR_PRODUCTION_ARCHITECTURE.md` — Production infrastructure design: topology, security, CI/CD, backups, DR
+- `docs/DEPLOYMENT_GUIDE.md` — How to set production up and deploy to it, file by file
+- `docs/AI_FEATURES.md` — AI feature overview
+- `deploy/README.md` — Command reference once the system is already set up
 
 ## Learning Agent
 
@@ -365,8 +368,6 @@ includes a Daily Review screen, streak freeze, offline mode, localization + RTL,
 and new agents — an Engagement Agent, a Pronunciation/Tajweed Coach, a Reflection
 Companion, a Parent/Teacher Agent, and a (scholar-reviewed) Q&A Knowledge Agent.
 
-See **[ROADMAP.md](ROADMAP.md)** for the full list of features, new agents, and
-how each one benefits learners.
 
 ## Contributing
 
