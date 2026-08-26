@@ -7,8 +7,13 @@ import {
   setRefreshToken,
 } from "./tokenStore";
 
+// Empty base URL keeps the dev-server proxy in vite.config.ts working; a
+// deployed build sets VITE_API_BASE_URL because the panel is served from
+// Cloudflare Pages, a different origin from the API.
+const API_ORIGIN = import.meta.env.VITE_API_BASE_URL ?? "";
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: `${API_ORIGIN}/api`,
   headers: { "Content-Type": "application/json" },
 });
 
