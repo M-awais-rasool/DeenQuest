@@ -1,0 +1,349 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "namaz",
+  "section": 3,
+  "section_title": "Sujood & Sitting",
+  "levels": [
+    {
+      "id": 109,
+      "title": "Sujood",
+      "theme": "Sujood & Sitting",
+      "goal": "Prostrate with the correct posture and words",
+      "xp_reward": 80,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "The Closest Moment",
+          "description": "Going into sujood",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              {
+                "pose": "salah_sujood",
+                "title": "Go into Sujood",
+                "detail": "Forehead, nose, both palms, knees and toes touch the ground",
+                "dua_arabic": "سُبْحَانَ رَبِّيَ الْأَعْلَى",
+                "dua_translation": "Glory be to my Lord, the Most High"
+              }
+            ]
+          }
+        },
+        {
+          "type": "hadith",
+          "title": "Closest to Your Lord",
+          "description": "The virtue of prostration",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "The closest a servant comes to his Lord is when he is in sujood, so increase your supplication then.",
+            "reference": "Sahih Muslim"
+          }
+        },
+        {
+          "type": "dua",
+          "title": "Glory to the Most High",
+          "description": "The tasbih of sujood",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "سُبْحَانَ رَبِّيَ الْأَعْلَى",
+            "meaning": "Glory be to my Lord, the Most High",
+            "context": "Say it three times in every sujood"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Ultimate Humility",
+          "description": "What sujood really is",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Sujood is the position of ultimate humility before Allah",
+              "This is the best time to make personal dua, even in your own words",
+              "Seven body parts touch the ground: forehead+nose, two hands, two knees, toes"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Sujood facts",
+        "data": {
+          "questions": [
+            {
+              "question": "How many body parts touch the ground in sujood?",
+              "options": ["Five", "Seven", "Three"],
+              "correct": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 110,
+      "title": "Completing Rakat One",
+      "theme": "Sujood & Sitting",
+      "goal": "Finish the first rakat and rise for the second",
+      "xp_reward": 80,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "Sit, Prostrate, Rise",
+          "description": "The rest of your first rakat",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              {
+                "pose": "salah_jalsa",
+                "title": "Sit up (Jalsa)",
+                "detail": "Sit briefly between the two prostrations",
+                "dua_arabic": "رَبِّ اغْفِرْ لِي",
+                "dua_translation": "My Lord, forgive me"
+              },
+              {
+                "pose": "salah_sujood",
+                "title": "Second Sujood",
+                "detail": "Go down into sujood again, saying the same tasbih"
+              },
+              {
+                "pose": "salah_qiyam",
+                "title": "Stand for Rakat Two",
+                "detail": "Rise back to standing to begin the second rakat"
+              }
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "The Rhythm of a Rakat",
+          "description": "Putting the pieces together",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "One rakat = qiyam, ruku, two sujood with a sit in between",
+              "After the second sujood, you either stand again or sit for Tashahhud",
+              "Every rakat follows this same rhythm"
+            ]
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "Match the Position",
+          "description": "When does each posture happen?",
+          "screen_type": "ACTION",
+          "component": "MatchPairsComponent",
+          "data": {
+            "instruction": "Match each position to when it happens",
+            "pairs": [
+              { "left": "القِيَام", "right": "Standing, reciting" },
+              { "left": "الرُّكُوع", "right": "Bowing" },
+              { "left": "السُّجُود", "right": "Prostrating" },
+              { "left": "الجَلْسَة", "right": "Sitting between sujood" }
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Your Favorite Moment",
+          "description": "A moment of reflection",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "Which part of the rakat feels most peaceful to you?",
+            "options": [
+              "Standing in qiyam",
+              "Bowing in ruku",
+              "Prostrating in sujood",
+              "Sitting in jalsa"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "memory_cards",
+        "description": "Flip and match each posture",
+        "data": {
+          "pairs": [
+            { "left": "القِيَام", "right": "Standing" },
+            { "left": "الرُّكُوع", "right": "Bowing" },
+            { "left": "السُّجُود", "right": "Prostrating" }
+          ]
+        }
+      }
+    },
+    {
+      "id": 111,
+      "title": "Qa'dah & Tashahhud",
+      "theme": "Sujood & Sitting",
+      "goal": "Sit for Tashahhud and recite the testimony of faith",
+      "xp_reward": 85,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "Sit for Tashahhud",
+          "description": "The seated posture of testimony",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              {
+                "pose": "salah_tashahhud",
+                "title": "Sit for Tashahhud",
+                "detail": "Left foot flat, right foot upright, index finger raised in testimony"
+              }
+            ]
+          }
+        },
+        {
+          "type": "dua",
+          "title": "At-Tahiyyat",
+          "description": "The greetings for Allah",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "التَّحِيَّاتُ لِلّٰهِ وَالصَّلَوَاتُ وَالطَّيِّبَاتُ، السَّلَامُ عَلَيْكَ أَيُّهَا النَّبِيُّ وَرَحْمَةُ اللّٰهِ وَبَرَكَاتُهُ، السَّلَامُ عَلَيْنَا وَعَلَى عِبَادِ اللّٰهِ الصَّالِحِينَ",
+            "meaning": "All greetings, prayers, and good deeds are for Allah. Peace be upon you, O Prophet, and the mercy of Allah and His blessings. Peace be upon us and upon the righteous servants of Allah.",
+            "context": "Recited sitting, after every two rakat"
+          }
+        },
+        {
+          "type": "dua",
+          "title": "The Testimony of Faith",
+          "description": "Completing the Tashahhud",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللّٰهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ",
+            "meaning": "I bear witness that there is no god but Allah, and I bear witness that Muhammad is His servant and messenger",
+            "context": "The testimony of faith, completing the Tashahhud"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "A Moment of Testimony",
+          "description": "Sitting with presence",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Tashahhud is recited every time you sit during salah",
+              "Raise your index finger when you say 'لَا إِلَٰهَ إِلَّا اللّٰه'",
+              "Take your time — this is a moment of direct testimony"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "listen_choose",
+        "description": "Hear the testimony of faith",
+        "data": {
+          "questions": [
+            {
+              "audio": "أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللّٰه",
+              "options": ["أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللّٰه", "التَّحِيَّاتُ لِلّٰه", "سُبْحَانَ رَبِّيَ الْأَعْلَى"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 112,
+      "title": "Durood & Salam",
+      "theme": "Sujood & Sitting",
+      "goal": "Send blessings on the Prophet and close your salah",
+      "xp_reward": 90,
+      "unlock_reward": "treasure:full_rakat",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "dua",
+          "title": "Durood Ibrahim",
+          "description": "Sending blessings on the Prophet ﷺ",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ كَمَا صَلَّيْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ إِنَّكَ حَمِيدٌ مَجِيدٌ",
+            "meaning": "O Allah, send blessings upon Muhammad and the family of Muhammad, as You sent blessings upon Ibrahim and his family. You are indeed praiseworthy and glorious.",
+            "context": "Recited after Tashahhud, in the final sitting"
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "Turn and Close",
+          "description": "The Salam that ends your salah",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              {
+                "pose": "salah_salam_right",
+                "title": "Turn right — Salam",
+                "detail": "Turn your head to the right",
+                "dua_arabic": "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللّٰه",
+                "dua_translation": "Peace and mercy of Allah be upon you"
+              },
+              {
+                "pose": "salah_salam_left",
+                "title": "Turn left — Salam",
+                "detail": "Turn your head to the left, saying the same words"
+              }
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Ending in Peace",
+          "description": "What the Salam means",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Salam ends your salah — you're now free to speak",
+              "Turn far enough that others can see your cheek",
+              "This closes your conversation with Allah, in peace"
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "After Salam",
+          "description": "How the moment feels",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "How do you feel after completing salah?",
+            "options": ["Calm and light", "Grateful", "Focused for the day ahead"]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "What ends your prayer?",
+        "data": {
+          "questions": [
+            {
+              "question": "What ends your prayer?",
+              "options": ["Salam", "Sujood", "Takbir"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

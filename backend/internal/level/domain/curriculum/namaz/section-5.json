@@ -1,0 +1,312 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "namaz",
+  "section": 5,
+  "section_title": "Getting It Right",
+  "levels": [
+    {
+      "id": 117,
+      "title": "Common Mistakes",
+      "theme": "Getting It Right",
+      "goal": "Spot and avoid the most common salah mistakes",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "manners",
+          "title": "Watch Out For These",
+          "description": "The mistakes that matter most",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Rushing through ruku and sujood without settling — pause and be still",
+              "Not straightening your back fully in ruku",
+              "Looking around instead of keeping focus on your sujood spot",
+              "Missing the correct order of the pillars"
+            ]
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "Correct or a Mistake?",
+          "description": "Sort common salah habits",
+          "screen_type": "ACTION",
+          "component": "SortBucketsComponent",
+          "data": {
+            "instruction": "Sort each action: correct or a common mistake?",
+            "buckets": ["صَحِيح", "خَطَأ شَائِع"],
+            "items": [
+              { "text": "الطُّمَأْنِينَة فِي الرُّكُوع", "bucket": 0 },
+              { "text": "العَجَلَة فِي السُّجُود", "bucket": 1 },
+              { "text": "اسْتِوَاء الظَّهْر فِي الرُّكُوع", "bucket": 0 },
+              { "text": "النَّظَر إِلَى حَوْلَك", "bucket": 1 }
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "One Thing to Improve",
+          "description": "Choosing your next focus",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "What's one thing you want to be more mindful of in your next prayer?",
+            "options": [
+              "Slowing down",
+              "Focusing my mind",
+              "Getting the words right",
+              "Being consistent with timing"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Tuma'ninah check",
+        "data": {
+          "questions": [
+            {
+              "question": "What is 'Tuma'ninah' (طُمَأْنِينَة)?",
+              "options": [
+                "Being still and settled in each position",
+                "Praying as fast as possible",
+                "Skipping a pillar"
+              ],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 118,
+      "title": "Sujood Sahw",
+      "theme": "Getting It Right",
+      "goal": "Know what to do when you make a mistake in salah",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "hadith",
+          "title": "A Built-In Safety Net",
+          "description": "What to do when you lose count",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "If any of you is unsure how many rakat he has prayed, he should act on what he believes is correct, then perform two prostrations of forgetfulness before ending the prayer.",
+            "reference": "Sahih al-Bukhari & Sahih Muslim"
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "Two Extra Prostrations",
+          "description": "Sujood Sahw, in brief",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "data": {
+            "steps": [
+              {
+                "pose": "salah_sujood",
+                "title": "Sujood Sahw",
+                "detail": "Two extra prostrations, made if you forget a step or are unsure of your rakat count",
+                "dua_arabic": "سُبْحَانَ رَبِّيَ الْأَعْلَى",
+                "dua_translation": "Glory be to my Lord, the Most High"
+              }
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Mistakes Are Normal",
+          "description": "No need to stress",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Sujood Sahw is a built-in safety net — mistakes in salah are normal",
+              "It's usually done just before the final Salam",
+              "Don't stress over small forgetfulness — Allah is Most Forgiving"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Sujood Sahw check",
+        "data": {
+          "questions": [
+            {
+              "question": "When might you perform Sujood Sahw?",
+              "options": [
+                "If you forget a step or lose count of your rakat",
+                "If you enjoy the prayer",
+                "If it's Friday"
+              ],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 119,
+      "title": "Adhkar After Salah",
+      "theme": "Getting It Right",
+      "goal": "Learn the remembrance said right after salah",
+      "xp_reward": 80,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "dua",
+          "title": "Seeking Forgiveness",
+          "description": "Said three times right after Salam",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "أَسْتَغْفِرُ اللّٰه",
+            "meaning": "I seek forgiveness from Allah",
+            "context": "Said three times immediately after Salam"
+          }
+        },
+        {
+          "type": "dua",
+          "title": "The Source of Peace",
+          "description": "Continuing your after-salah remembrance",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ",
+            "meaning": "O Allah, You are Peace, and from You comes peace. Blessed are You, Owner of majesty and honor.",
+            "context": "Recited right after the istighfar"
+          }
+        },
+        {
+          "type": "pronunciation",
+          "title": "The 33x Tasbih",
+          "description": "Glorify, praise, and magnify",
+          "screen_type": "ACTION",
+          "component": "PronunciationComponent",
+          "data": {
+            "items": [
+              { "arabic": "سُبْحَانَ اللّٰه" },
+              { "arabic": "الْحَمْدُ لِلّٰه" },
+              { "arabic": "اللّٰهُ أَكْبَر" }
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "A Few Minutes More",
+          "description": "Why after-salah dhikr matters",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Say سُبْحَانَ اللّٰه, الْحَمْدُ لِلّٰه, and اللّٰهُ أَكْبَر 33 times each after salah",
+              "These adhkar are a source of immense reward",
+              "Even a few minutes of dhikr after salah keeps your heart connected"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "listen_choose",
+        "description": "Hear the istighfar",
+        "data": {
+          "questions": [
+            {
+              "audio": "أَسْتَغْفِرُ اللّٰه",
+              "options": ["أَسْتَغْفِرُ اللّٰه", "سُبْحَانَ اللّٰه", "الْحَمْدُ لِلّٰه"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 120,
+      "title": "Khushu",
+      "theme": "Getting It Right",
+      "goal": "Bring presence of heart into your salah",
+      "xp_reward": 85,
+      "unlock_reward": "treasure:khushu",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "hadith",
+          "title": "Successful Believers",
+          "description": "Why presence of heart matters",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "Successful indeed are the believers — those who offer their prayers with khushu (full concentration and humility).",
+            "reference": "Surah Al-Mu'minun, 23:1-2"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Presence of Heart",
+          "description": "Small habits, big difference",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Khushu means presence of heart — praying as if you can see Allah",
+              "Understand the meaning of what you recite",
+              "Remove distractions before you begin — phone away, mind calm"
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Staying Present",
+          "description": "What helps you focus?",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "What helps you feel more present during salah?",
+            "options": [
+              "Reading the meaning beforehand",
+              "Praying in a quiet space",
+              "Remembering this is a conversation with Allah",
+              "Slowing down each movement"
+            ]
+          }
+        },
+        {
+          "type": "dua",
+          "title": "A Dua for Consistency",
+          "description": "Asking for help in worship",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ",
+            "meaning": "O Allah, help me remember You, thank You, and worship You well",
+            "context": "A beautiful dua for consistency and presence in worship"
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Khushu check",
+        "data": {
+          "questions": [
+            {
+              "question": "What does 'Khushu' mean?",
+              "options": [
+                "Presence of heart and humility in prayer",
+                "Praying very fast",
+                "Praying only on Friday"
+              ],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

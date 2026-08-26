@@ -1,0 +1,325 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "namaz",
+  "section": 4,
+  "section_title": "Putting It Together",
+  "levels": [
+    {
+      "id": 113,
+      "title": "Rakat Counts",
+      "theme": "Putting It Together",
+      "goal": "Know how many rakat each of the five prayers has",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "manners",
+          "title": "The Five Prayers",
+          "description": "Fard rakat, at a glance",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Fajr: 2 rakat Fard",
+              "Zuhr: 4 rakat Fard",
+              "Asr: 4 rakat Fard",
+              "Maghrib: 3 rakat Fard",
+              "Isha: 4 rakat Fard"
+            ]
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "Match Prayer to Count",
+          "description": "Test your memory",
+          "screen_type": "ACTION",
+          "component": "MatchPairsComponent",
+          "data": {
+            "instruction": "Match each prayer to its Fard rakat count",
+            "pairs": [
+              { "left": "الفَجْر", "right": "2 Rakat" },
+              { "left": "الظُّهْر", "right": "4 Rakat" },
+              { "left": "العَصْر", "right": "4 Rakat" },
+              { "left": "المَغْرِب", "right": "3 Rakat" },
+              { "left": "العِشَاء", "right": "4 Rakat" }
+            ]
+          }
+        },
+        {
+          "type": "hadith",
+          "title": "First to Be Judged",
+          "description": "The importance of salah",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "The first thing a servant will be held accountable for on the Day of Judgment is his prayer.",
+            "reference": "Sunan an-Nasa'i"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Your Five Prayers",
+          "description": "Which is easiest, which is hardest?",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "Which prayer time do you find easiest to keep? Which is hardest?",
+            "options": ["Fajr", "Zuhr", "Asr", "Maghrib", "Isha"]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Rakat count check",
+        "data": {
+          "questions": [
+            {
+              "question": "How many Fard rakat does Maghrib have?",
+              "options": ["2", "3", "4"],
+              "correct": 1
+            },
+            {
+              "question": "Which prayer has the most Fard rakat?",
+              "options": ["Fajr", "Maghrib", "Zuhr"],
+              "correct": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 114,
+      "title": "Praying Fajr (2 Rakat)",
+      "theme": "Putting It Together",
+      "goal": "Walk through a complete 2-rakat prayer",
+      "xp_reward": 80,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "The Full Fajr Walkthrough",
+          "description": "Every step, start to finish",
+          "screen_type": "CHECKLIST",
+          "component": "PrayerChecklistComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              "Make your niyyah — Fajr, 2 rakat, Fard",
+              "Say Takbir — اللّٰهُ أَكْبَر, then Sana",
+              "Recite Al-Fatiha, then a short surah",
+              "Ruku, then rise saying سَمِعَ اللّٰهُ لِمَنْ حَمِدَهُ",
+              "Two sujood, with a sit in between",
+              "Stand for the second rakat",
+              "Recite Al-Fatiha and a surah again",
+              "Ruku, rise, two sujood",
+              "Sit for Tashahhud, Durood, and dua",
+              "Turn right and left — السَّلَامُ عَلَيْكُم"
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "The Best Start to Your Day",
+          "description": "Why Fajr matters",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Fajr is prayed before sunrise — its reward is immense",
+              "Both rakat are recited aloud if praying alone or leading others",
+              "This is a great habit to build your whole salah routine around"
+            ]
+          }
+        },
+        {
+          "type": "hadith",
+          "title": "Under His Protection",
+          "description": "The reward of Fajr",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "Whoever prays Fajr is under the protection of Allah.",
+            "reference": "Sahih Muslim"
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Fajr structure check",
+        "data": {
+          "questions": [
+            {
+              "question": "How many times do you sit for Tashahhud in a 2-rakat prayer?",
+              "options": ["Once", "Twice", "Never"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 115,
+      "title": "Praying Maghrib (3 Rakat)",
+      "theme": "Putting It Together",
+      "goal": "Walk through a complete 3-rakat prayer",
+      "xp_reward": 85,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "The Full Maghrib Walkthrough",
+          "description": "Two aloud, one silent",
+          "screen_type": "CHECKLIST",
+          "component": "PrayerChecklistComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              "Make niyyah — Maghrib, 3 rakat, Fard",
+              "Rakat 1 & 2 — Al-Fatiha + a surah, said aloud",
+              "Sit for the first Tashahhud after rakat 2",
+              "Stand for rakat 3 — say اللّٰهُ أَكْبَر",
+              "Rakat 3 — Al-Fatiha only, said silently",
+              "Sit for the final Tashahhud, Durood, and dua",
+              "Finish with Salam, right then left"
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "The Odd One Out",
+          "description": "What's different about the third rakat",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Maghrib is the first prayer with an extra, silent rakat",
+              "Only rakat 1 and 2 are recited aloud",
+              "The 'odd' rakat never includes a second surah"
+            ]
+          }
+        },
+        {
+          "type": "quiz",
+          "title": "Maghrib Check",
+          "description": "True or false",
+          "screen_type": "QUIZ",
+          "component": "TrueFalseComponent",
+          "data": {
+            "rounds": [
+              {
+                "prompt": "In Maghrib, you sit for Tashahhud twice",
+                "arabic": "التَّشَهُّد",
+                "answer": true
+              },
+              {
+                "prompt": "The third rakat of Maghrib includes a short surah after Al-Fatiha",
+                "arabic": "سُورَة",
+                "answer": false
+              }
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Maghrib rakat check",
+        "data": {
+          "questions": [
+            {
+              "question": "How many rakat is Maghrib?",
+              "options": ["2", "3", "4"],
+              "correct": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 116,
+      "title": "Praying Zuhr, Asr & Isha (4 Rakat)",
+      "theme": "Putting It Together",
+      "goal": "Walk through a complete 4-rakat prayer",
+      "xp_reward": 90,
+      "unlock_reward": "treasure:five_prayers",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "The Full 4-Rakat Walkthrough",
+          "description": "Two with a surah, two silent",
+          "screen_type": "CHECKLIST",
+          "component": "PrayerChecklistComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              "Make niyyah — 4 rakat, Fard",
+              "Rakat 1 & 2 — Al-Fatiha + a surah",
+              "Sit for the first Tashahhud after rakat 2",
+              "Stand for rakat 3 — silent, Al-Fatiha only",
+              "Stand for rakat 4 — silent, Al-Fatiha only",
+              "Sit for the final Tashahhud, Durood, and dua",
+              "Finish with Salam, right then left"
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Aloud or Silent?",
+          "description": "How each prayer is recited",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Zuhr and Asr are prayed silently in every rakat",
+              "Isha's first two rakat are recited aloud, the last two are silent",
+              "The pattern is always: 2 rakat with a surah, then the rest with Al-Fatiha alone"
+            ]
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "Aloud or Silent?",
+          "description": "Match each prayer to how it's recited",
+          "screen_type": "ACTION",
+          "component": "MatchPairsComponent",
+          "data": {
+            "instruction": "Match each prayer to how it's recited",
+            "pairs": [
+              { "left": "الظُّهْر", "right": "Silent (sirri)" },
+              { "left": "العَصْر", "right": "Silent (sirri)" },
+              { "left": "العِشَاء", "right": "First 2 rakat aloud" }
+            ]
+          }
+        },
+        {
+          "type": "revision",
+          "title": "Five Daily Prayers",
+          "description": "A milestone worth celebrating",
+          "screen_type": "ACTION",
+          "component": "CertificateComponent",
+          "data": {
+            "title": "Five Daily Prayers",
+            "message": "MashaAllah! You now know the structure of every Fard prayer — from Fajr's two rakat to Isha's four. You're ready to build real confidence, rakat by rakat.",
+            "next_phase": "Next: getting the details right"
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "4-rakat prayer check",
+        "data": {
+          "questions": [
+            {
+              "question": "How many rakat are Zuhr, Asr and Isha each?",
+              "options": ["2", "3", "4"],
+              "correct": 2
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

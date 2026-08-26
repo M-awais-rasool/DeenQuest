@@ -1,0 +1,356 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "namaz",
+  "section": 2,
+  "section_title": "Standing Before Allah",
+  "levels": [
+    {
+      "id": 105,
+      "title": "Takbir & Qiyam",
+      "theme": "Standing Before Allah",
+      "goal": "Enter salah with the Takbir and stand in Qiyam",
+      "xp_reward": 70,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "Enter Your Prayer",
+          "description": "The opening Takbir and standing posture",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              {
+                "pose": "salah_takbir",
+                "title": "Say the Takbir",
+                "detail": "Raise your hands and say",
+                "dua_arabic": "اللّٰهُ أَكْبَر",
+                "dua_translation": "Allah is the Greatest"
+              },
+              {
+                "pose": "salah_qiyam",
+                "title": "Stand in Qiyam",
+                "detail": "Fold your hands over your chest, eyes toward the place of sujood"
+              }
+            ]
+          }
+        },
+        {
+          "type": "hadith",
+          "title": "The Key to Prayer",
+          "description": "What opens and closes every salah",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "The key to prayer is purification, its beginning is the Takbir, and its end is the Salam.",
+            "reference": "Sunan Abi Dawud"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "This Moment",
+          "description": "What Takbir and Qiyam really mean",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Takbir marks the moment you enter salah — nothing else matters now",
+              "Qiyam is standing calmly, with humility (khushu)",
+              "Your gaze rests softly at the point of sujood"
+            ]
+          }
+        },
+        {
+          "type": "quiz",
+          "title": "Opening Check",
+          "description": "True or false",
+          "screen_type": "QUIZ",
+          "component": "TrueFalseComponent",
+          "data": {
+            "rounds": [
+              {
+                "prompt": "This phrase opens every salah",
+                "arabic": "اللّٰهُ أَكْبَر",
+                "answer": true
+              },
+              {
+                "prompt": "You say this while sitting",
+                "arabic": "اللّٰهُ أَكْبَر",
+                "answer": false
+              }
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "listen_choose",
+        "description": "Hear the Takbir and pick it out",
+        "data": {
+          "questions": [
+            {
+              "audio": "اللّٰهُ أَكْبَر",
+              "options": ["اللّٰهُ أَكْبَر", "سُبْحَانَ اللّٰه", "الْحَمْدُ لِلّٰه"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 106,
+      "title": "Al-Fatiha in Salah",
+      "theme": "Standing Before Allah",
+      "goal": "Recite Al-Fatiha in the context of every rakat",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "The Opening",
+          "description": "Recited standing, at the start of every rakat",
+          "screen_type": "QURAN_READER",
+          "component": "QuranReaderComponent",
+          "skill_tags": ["الفَاتِحَة"],
+          "data": {
+            "surah": "Al-Fatiha · 1",
+            "text": "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ",
+            "meaning": "In the name of Allah, the Most Gracious, the Most Merciful"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "The Mother of the Book",
+          "description": "Why Al-Fatiha is central to salah",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Al-Fatiha is recited in every single rakat, without exception",
+              "It is called 'the Mother of the Book' (أُمُّ الْكِتَاب)",
+              "Say Ameen (آمِين) quietly after finishing it"
+            ]
+          }
+        },
+        {
+          "type": "dua",
+          "title": "Ameen",
+          "description": "Your response after Al-Fatiha",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "آمِين",
+            "meaning": "O Allah, accept",
+            "context": "Say quietly after completing Al-Fatiha"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "The Straight Path",
+          "description": "Reflecting on what you ask for",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "Al-Fatiha asks Allah to guide us to the straight path. What does that path mean to you?",
+            "options": [
+              "Following the Quran and Sunnah",
+              "Being kind and honest",
+              "Staying steady in worship"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Al-Fatiha facts",
+        "data": {
+          "questions": [
+            {
+              "question": "How many times is Al-Fatiha recited in a 2-rakat prayer?",
+              "options": ["Once", "Twice", "Never"],
+              "correct": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 107,
+      "title": "Sana, Ta'awwudh & a Surah",
+      "theme": "Standing Before Allah",
+      "goal": "Learn the opening praise and the short surah after Al-Fatiha",
+      "xp_reward": 80,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "dua",
+          "title": "Sana — Opening Praise",
+          "description": "Said silently right after the Takbir",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "سُبْحَانَكَ اللّٰهُمَّ وَبِحَمْدِكَ، وَتَبَارَكَ اسْمُكَ، وَتَعَالَى جَدُّكَ، وَلَا إِلَٰهَ غَيْرُكَ",
+            "meaning": "Glory be to You, O Allah, and praise. Blessed is Your name, and exalted is Your majesty. There is no god but You.",
+            "context": "Said silently, in the first rakat only"
+          }
+        },
+        {
+          "type": "pronunciation",
+          "title": "Seeking Refuge",
+          "description": "The words before every recitation",
+          "screen_type": "ACTION",
+          "component": "PronunciationComponent",
+          "data": {
+            "items": [
+              { "arabic": "أَعُوذُ بِاللّٰهِ مِنَ الشَّيْطَانِ الرَّجِيمِ" },
+              { "arabic": "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ" }
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "A Short Surah",
+          "description": "What comes after Al-Fatiha",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "After Al-Fatiha in the first two rakat, recite a short surah",
+              "Surahs like Al-Ikhlas or An-Nas are perfect for beginners",
+              "Recite clearly, even if softly, whenever you recite a surah"
+            ]
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "A Beginner's Surah",
+          "description": "Al-Ikhlas — one you already know",
+          "screen_type": "QURAN_READER",
+          "component": "QuranReaderComponent",
+          "skill_tags": ["الإِخْلَاص"],
+          "data": {
+            "surah": "Al-Ikhlas · 1",
+            "text": "قُلْ هُوَ اللّٰهُ أَحَدٌ",
+            "meaning": "Say: He is Allah, the One"
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "tap_match",
+        "description": "Match each phrase to its purpose",
+        "data": {
+          "pairs": [
+            { "left": "سُبْحَانَكَ اللّٰهُمَّ", "right": "Sana — opening praise" },
+            { "left": "أَعُوذُ بِاللّٰهِ", "right": "Ta'awwudh — seeking refuge" },
+            { "left": "بِسْمِ اللّٰهِ", "right": "Basmalah" }
+          ]
+        }
+      }
+    },
+    {
+      "id": 108,
+      "title": "Ruku & Rising",
+      "theme": "Standing Before Allah",
+      "goal": "Bow in ruku and rise with the right words",
+      "xp_reward": 85,
+      "unlock_reward": "treasure:standing_before_allah",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "Bow and Rise",
+          "description": "Ruku, and standing back up",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "skill_tags": ["صَلَاة"],
+          "data": {
+            "steps": [
+              {
+                "pose": "salah_ruku",
+                "title": "Go into Ruku",
+                "detail": "Bow with your back flat, hands resting on your knees",
+                "dua_arabic": "سُبْحَانَ رَبِّيَ الْعَظِيمِ",
+                "dua_translation": "Glory be to my Lord, the Most Great"
+              },
+              {
+                "pose": "salah_qawmah",
+                "title": "Rise from Ruku",
+                "detail": "Stand up straight again",
+                "dua_arabic": "سَمِعَ اللّٰهُ لِمَنْ حَمِدَهُ",
+                "dua_translation": "Allah hears whoever praises Him"
+              }
+            ]
+          }
+        },
+        {
+          "type": "dua",
+          "title": "Standing Straight Again",
+          "description": "The words once you're fully upright",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "رَبَّنَا وَلَكَ الْحَمْدُ",
+            "meaning": "Our Lord, all praise is for You",
+            "context": "Said once you're standing straight again after ruku"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "A Level Back",
+          "description": "Getting the posture right",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Say the tasbih of ruku three times: سُبْحَانَ رَبِّيَ الْعَظِيمِ",
+              "Keep your back level, like a tabletop",
+              "Rise fully before moving to sujood"
+            ]
+          }
+        },
+        {
+          "type": "quiz",
+          "title": "Ruku or Rising?",
+          "description": "True or false",
+          "screen_type": "QUIZ",
+          "component": "TrueFalseComponent",
+          "data": {
+            "rounds": [
+              {
+                "prompt": "This is said while bowing in ruku",
+                "arabic": "سُبْحَانَ رَبِّيَ الْعَظِيمِ",
+                "answer": true
+              },
+              {
+                "prompt": "This is said while standing back up",
+                "arabic": "سَمِعَ اللّٰهُ لِمَنْ حَمِدَهُ",
+                "answer": true
+              },
+              {
+                "prompt": "This is said in sujood, not ruku",
+                "arabic": "رَبَّنَا وَلَكَ الْحَمْدُ",
+                "answer": false
+              }
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "listen_choose",
+        "description": "Hear the tasbih of ruku",
+        "data": {
+          "questions": [
+            {
+              "audio": "سُبْحَانَ رَبِّيَ الْعَظِيمِ",
+              "options": ["سُبْحَانَ رَبِّيَ الْعَظِيمِ", "سُبْحَانَ رَبِّيَ الْأَعْلَى", "اللّٰهُ أَكْبَر"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

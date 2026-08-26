@@ -1,0 +1,312 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "namaz",
+  "section": 6,
+  "section_title": "Namaz Graduate",
+  "levels": [
+    {
+      "id": 121,
+      "title": "The Full Journey (Revision)",
+      "theme": "Namaz Graduate",
+      "goal": "Revise every phrase and posture of salah",
+      "xp_reward": 80,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "revision",
+          "title": "Lightning Recall",
+          "description": "Beat the clock",
+          "screen_type": "QUIZ",
+          "component": "LightningRoundComponent",
+          "data": {
+            "seconds": 7,
+            "questions": [
+              {
+                "question": "Tap what you say to open salah",
+                "options": ["اللّٰهُ أَكْبَر", "سُبْحَانَ اللّٰه", "آمِين"],
+                "correct": 0
+              },
+              {
+                "question": "Tap what's said in ruku",
+                "options": ["سُبْحَانَ رَبِّيَ الْأَعْلَى", "سُبْحَانَ رَبِّيَ الْعَظِيمِ", "رَبَّنَا وَلَكَ الْحَمْد"],
+                "correct": 1
+              },
+              {
+                "question": "Tap what's said in sujood",
+                "options": ["سُبْحَانَ رَبِّيَ الْعَظِيمِ", "سُبْحَانَ رَبِّيَ الْأَعْلَى", "اللّٰهُ أَكْبَر"],
+                "correct": 1
+              },
+              {
+                "question": "Tap what closes salah",
+                "options": ["السَّلَامُ عَلَيْكُم", "بِسْمِ اللّٰه", "آمِين"],
+                "correct": 0
+              }
+            ]
+          }
+        },
+        {
+          "type": "revision",
+          "title": "Salah Facts",
+          "description": "True or false",
+          "screen_type": "QUIZ",
+          "component": "TrueFalseComponent",
+          "data": {
+            "rounds": [
+              {
+                "prompt": "You recite Al-Fatiha in every rakat",
+                "arabic": "الفَاتِحَة",
+                "answer": true
+              },
+              {
+                "prompt": "Tashahhud is only said once, ever",
+                "arabic": "التَّشَهُّد",
+                "answer": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "revision",
+          "title": "Looking Back",
+          "description": "What surprised you most?",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "Looking back, what part of learning salah surprised you the most?",
+            "options": [
+              "How many duas there are",
+              "How much detail each posture has",
+              "How calming it feels once you know it"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Final recall check",
+        "data": {
+          "questions": [
+            {
+              "question": "Which pillar of Islam is salah?",
+              "options": ["The first", "The second", "The fifth"],
+              "correct": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 122,
+      "title": "Build Your Salah",
+      "theme": "Namaz Graduate",
+      "goal": "Put every pillar and phrase in its place",
+      "xp_reward": 85,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "Order the Pillars",
+          "description": "Arrange the rhythm of one rakat",
+          "screen_type": "ACTION",
+          "component": "AyahBuilderComponent",
+          "data": {
+            "instruction": "Arrange the pillars of one rakat, in order",
+            "parts": ["القِيَام", "الرُّكُوع", "السُّجُود", "الجَلْسَة"],
+            "distractors": ["السَّلَام"],
+            "meaning": "Standing, bowing, prostrating, sitting — the rhythm of every rakat"
+          }
+        },
+        {
+          "type": "revision",
+          "title": "Match the Moment",
+          "description": "Every phrase in its place",
+          "screen_type": "ACTION",
+          "component": "MatchPairsComponent",
+          "data": {
+            "instruction": "Match each phrase to its moment in salah",
+            "pairs": [
+              { "left": "اللّٰهُ أَكْبَر", "right": "Opening Takbir" },
+              { "left": "سُبْحَانَ رَبِّيَ الْعَظِيمِ", "right": "In Ruku" },
+              { "left": "سُبْحَانَ رَبِّيَ الْأَعْلَى", "right": "In Sujood" },
+              { "left": "السَّلَامُ عَلَيْكُم", "right": "Closing Salam" }
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "You Know It Now",
+          "description": "From knowledge to practice",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "You now know every pillar, posture, and phrase of salah",
+              "Practice makes it feel natural — pray it slowly at first",
+              "Consistency matters more than perfection"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "drag_drop",
+        "description": "Build the order of a rakat",
+        "data": {
+          "rounds": [
+            {
+              "parts": ["القِيَام", "الرُّكُوع", "السُّجُود"],
+              "word": "القِيَام الرُّكُوع السُّجُود",
+              "meaning": "Standing, bowing, prostrating"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 123,
+      "title": "A Grand Dua",
+      "theme": "Namaz Graduate",
+      "goal": "Carry a beautiful dua beyond your salah",
+      "xp_reward": 90,
+      "unlock_reward": "",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "dua",
+          "title": "The Best of Both Worlds",
+          "description": "A dua from the Quran itself",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّار",
+            "meaning": "Our Lord, give us good in this world and good in the hereafter, and protect us from the punishment of the Fire",
+            "context": "A beautiful dua to make after your salah, from the Quran"
+          }
+        },
+        {
+          "type": "hadith",
+          "title": "Increase Your Supplication",
+          "description": "The best moment to ask",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "The closest that a servant can be to his Lord is when he is prostrating, so make abundant supplication.",
+            "reference": "Sahih Muslim"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Your Own Dua",
+          "description": "What will you ask for?",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "What's one dua you want to make consistently after every salah?",
+            "options": ["For guidance", "For my family", "For forgiveness", "For ease in my affairs"]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "listen_choose",
+        "description": "Hear the grand dua",
+        "data": {
+          "questions": [
+            {
+              "audio": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً",
+              "options": ["رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً", "رَبِّ زِدْنِي عِلْمًا", "سُبْحَانَ رَبِّيَ الْعَظِيمِ"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 124,
+      "title": "Certificate Ceremony",
+      "theme": "Namaz Graduate",
+      "goal": "Receive your Namaz Graduate certificate",
+      "xp_reward": 100,
+      "unlock_reward": "title:namaz_graduate",
+      "difficulty": "medium",
+      "lessons": [
+        {
+          "type": "revision",
+          "title": "One Last Beautiful Reading",
+          "description": "The believers who pray with khushu",
+          "screen_type": "QURAN_READER",
+          "component": "QuranReaderComponent",
+          "data": {
+            "surah": "Al-Mu'minun · 1-2",
+            "text": "قَدْ أَفْلَحَ الْمُؤْمِنُونَ ۝ الَّذِينَ هُمْ فِي صَلَاتِهِمْ خَاشِعُونَ",
+            "meaning": "Successful indeed are the believers — those who offer their prayers with humble submissiveness"
+          }
+        },
+        {
+          "type": "revision",
+          "title": "The Graduate's Challenge",
+          "description": "Final lightning recall",
+          "screen_type": "QUIZ",
+          "component": "LightningRoundComponent",
+          "data": {
+            "seconds": 7,
+            "questions": [
+              {
+                "question": "Tap the phrase said standing back up from ruku",
+                "options": ["سَمِعَ اللّٰهُ لِمَنْ حَمِدَهُ", "سُبْحَانَ رَبِّيَ الْعَظِيمِ", "التَّشَهُّد"],
+                "correct": 0
+              },
+              {
+                "question": "Tap the closing testimony of wudu",
+                "options": ["أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللّٰه", "بِسْمِ اللّٰه", "آمِين"],
+                "correct": 0
+              },
+              {
+                "question": "Tap the durood",
+                "options": ["اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ", "رَبَّنَا وَلَكَ الْحَمْد", "اللّٰهُ أَكْبَر"],
+                "correct": 0
+              }
+            ]
+          }
+        },
+        {
+          "type": "dua",
+          "title": "The Dua of Ibrahim",
+          "description": "Asking for steadfastness in salah",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِنْ ذُرِّيَّتِي",
+            "meaning": "My Lord, make me an establisher of prayer, and [many] from my descendants",
+            "context": "The dua of Prophet Ibrahim (عليه السلام), asking for steadfastness in salah"
+          }
+        },
+        {
+          "type": "revision",
+          "title": "Certificate Ceremony",
+          "description": "You did it — Namaz Graduate!",
+          "screen_type": "ACTION",
+          "component": "CertificateComponent",
+          "data": {
+            "title": "Namaz Graduate",
+            "message": "MashaAllah! From your first drop of wudu water to your final Salam — you've learned the complete journey of salah: purification, posture, and prayer. May every rakat you pray be accepted.",
+            "next_phase": "Keep building your streak — pray, and keep learning"
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "The graduate's final quiz",
+        "data": {
+          "questions": [
+            {
+              "question": "What is the reward of learning to pray with sincerity?",
+              "options": ["Closeness to Allah", "Nothing", "Only worldly gain"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

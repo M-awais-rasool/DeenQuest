@@ -1,0 +1,372 @@
+{
+  "schema": "deenquest.content.chunk/v1",
+  "course": "namaz",
+  "section": 1,
+  "section_title": "Purity & Preparation",
+  "levels": [
+    {
+      "id": 101,
+      "title": "Why We Pray",
+      "theme": "Purity & Preparation",
+      "goal": "Understand niyyah and why salah matters",
+      "xp_reward": 60,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        {
+          "type": "hadith",
+          "title": "Actions Are by Intentions",
+          "description": "The very first thing to understand about salah",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "Actions are judged by intentions, and every person will have what they intended.",
+            "reference": "Sahih al-Bukhari & Sahih Muslim"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Why We Pray",
+          "description": "Salah's place in a Muslim's life",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Salah is the second pillar of Islam",
+              "It connects you directly with Allah, five times a day",
+              "Every prophet before us prayed — it is the greatest act of worship"
+            ]
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Your Own Niyyah",
+          "description": "A quiet moment before you begin",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "What do you hope prayer will bring into your life?",
+            "options": [
+              "Peace of heart",
+              "Closeness to Allah",
+              "Daily discipline",
+              "Guidance in decisions"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "Check what you've learned about niyyah",
+        "data": {
+          "questions": [
+            {
+              "question": "What must you do before starting salah?",
+              "options": ["Make niyyah (intention)", "Eat a meal", "Call a friend"],
+              "correct": 0
+            },
+            {
+              "question": "Which pillar of Islam is salah?",
+              "options": ["The first", "The second", "The fourth"],
+              "correct": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 102,
+      "title": "Wudu: The First Half",
+      "theme": "Purity & Preparation",
+      "goal": "Learn the first steps of wudu — hands to face",
+      "xp_reward": 70,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        {
+          "type": "manners",
+          "title": "Before You Begin",
+          "description": "Getting ready for wudu",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Wudu is required before every salah",
+              "Say بِسْمِ اللّٰه before you begin",
+              "Wash each part with clean water, right side first"
+            ]
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "Hands, Mouth, Nose, Face",
+          "description": "The first four steps of wudu",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "skill_tags": ["وُضُوء"],
+          "data": {
+            "steps": [
+              {
+                "pose": "wudu_wash_hands",
+                "title": "Wash your hands",
+                "detail": "Three times, up to the wrists, between the fingers"
+              },
+              {
+                "pose": "wudu_rinse_mouth",
+                "title": "Rinse your mouth",
+                "detail": "Three times — swish the water and spit it out"
+              },
+              {
+                "pose": "wudu_rinse_nose",
+                "title": "Clean your nose",
+                "detail": "Sniff water in gently, then blow out — three times"
+              },
+              {
+                "pose": "wudu_wash_face",
+                "title": "Wash your face",
+                "detail": "Three times, hairline to chin, ear to ear",
+                "dua_arabic": "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ",
+                "dua_translation": "In the name of Allah, the Most Gracious, the Most Merciful"
+              }
+            ]
+          }
+        },
+        {
+          "type": "hadith",
+          "title": "The Virtue of Wudu",
+          "description": "What proper wudu washes away",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "When a Muslim performs wudu properly, his sins fall away from his body, even from under his fingernails.",
+            "reference": "Sahih Muslim"
+          }
+        },
+        {
+          "type": "dua",
+          "title": "Starting With His Name",
+          "description": "The words that open your wudu",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "بِسْمِ اللّٰهِ",
+            "meaning": "In the name of Allah",
+            "context": "Say this as you begin washing"
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "First-half wudu facts",
+        "data": {
+          "questions": [
+            {
+              "question": "What do you say before starting wudu?",
+              "options": ["بِسْمِ اللّٰهِ", "اللّٰهُ أَكْبَر", "آمِين"],
+              "correct": 0
+            },
+            {
+              "question": "How many times do you wash your face?",
+              "options": ["Once", "Twice", "Three times"],
+              "correct": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 103,
+      "title": "Wudu: The Second Half",
+      "theme": "Purity & Preparation",
+      "goal": "Complete wudu — arms to feet, and the closing dua",
+      "xp_reward": 75,
+      "unlock_reward": "",
+      "difficulty": "easy",
+      "lessons": [
+        {
+          "type": "qaida",
+          "title": "Arms, Head, Ears, Feet",
+          "description": "The final four steps of wudu",
+          "screen_type": "CHECKLIST",
+          "component": "PostureStepComponent",
+          "skill_tags": ["وُضُوء"],
+          "data": {
+            "steps": [
+              {
+                "pose": "wudu_wash_arms",
+                "title": "Wash your arms",
+                "detail": "Right then left, three times, up to and including the elbows"
+              },
+              {
+                "pose": "wudu_wipe_head",
+                "title": "Wipe your head",
+                "detail": "Once, with wet hands, from front to back"
+              },
+              {
+                "pose": "wudu_wipe_ears",
+                "title": "Wipe your ears",
+                "detail": "Once — inside with your index fingers, outside with your thumbs"
+              },
+              {
+                "pose": "wudu_wash_feet",
+                "title": "Wash your feet",
+                "detail": "Right then left, three times, up to and including the ankles"
+              }
+            ]
+          }
+        },
+        {
+          "type": "dua",
+          "title": "The Closing Testimony",
+          "description": "Look up and say this after wudu",
+          "screen_type": "HADITH_CARD",
+          "component": "DuaCardComponent",
+          "data": {
+            "arabic": "أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ",
+            "meaning": "I bear witness that there is no god but Allah alone, without partner, and that Muhammad is His servant and messenger",
+            "context": "Say this after finishing wudu, looking up"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Order Matters",
+          "description": "Keeping wudu in the right sequence",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Always wash in order: hands, mouth, nose, face, arms, head, ears, feet",
+              "Doing wudu in the correct order is part of the Sunnah",
+              "Take your time — there's no rush in worship"
+            ]
+          }
+        },
+        {
+          "type": "quiz",
+          "title": "Second-Half Check",
+          "description": "True or false — test your order",
+          "screen_type": "QUIZ",
+          "component": "TrueFalseComponent",
+          "data": {
+            "rounds": [
+              {
+                "prompt": "You wipe your head before washing your feet",
+                "arabic": "مَسْحُ الرَّأْس",
+                "answer": true
+              },
+              {
+                "prompt": "This is the closing testimony, said after wudu",
+                "arabic": "أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللّٰه",
+                "answer": true
+              },
+              {
+                "prompt": "You say بِسْمِ اللّٰه after finishing, not before starting",
+                "arabic": "بِسْمِ اللّٰهِ",
+                "answer": false
+              }
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "tap_match",
+        "description": "Match each action to its Arabic name",
+        "data": {
+          "pairs": [
+            { "left": "مَسْحُ الرَّأْس", "right": "Wipe the head" },
+            { "left": "غَسْلُ القَدَمَيْن", "right": "Wash the feet" },
+            { "left": "مَسْحُ الأُذُنَيْن", "right": "Wipe the ears" }
+          ]
+        }
+      }
+    },
+    {
+      "id": 104,
+      "title": "What Breaks Wudu & Facing Qibla",
+      "theme": "Purity & Preparation",
+      "goal": "Know what invalidates wudu and how to prepare to pray",
+      "xp_reward": 80,
+      "unlock_reward": "treasure:wudu_master",
+      "difficulty": "easy",
+      "lessons": [
+        {
+          "type": "manners",
+          "title": "Ready to Pray",
+          "description": "Facing the Qibla, staying clean",
+          "screen_type": "TIPS",
+          "component": "TipsComponent",
+          "data": {
+            "tips": [
+              "Face the Qibla — the direction of the Ka'bah in Makkah",
+              "Make sure your body, clothes, and place of prayer are clean",
+              "Cover yourself properly before you begin"
+            ]
+          }
+        },
+        {
+          "type": "qaida",
+          "title": "Breaks It or Doesn't?",
+          "description": "Sort what invalidates your wudu",
+          "screen_type": "ACTION",
+          "component": "SortBucketsComponent",
+          "skill_tags": ["وُضُوء"],
+          "data": {
+            "instruction": "Sort each item: does it break wudu?",
+            "hint": "Think about what removes purity, not what you simply say or do.",
+            "buckets": ["يَنْقُضُ الوُضُوء", "لَا يَنْقُضُ"],
+            "items": [
+              { "text": "خُرُوجُ الرِّيح", "bucket": 0 },
+              { "text": "النَّوْمُ العَمِيق", "bucket": 0 },
+              { "text": "الْكَلَام", "bucket": 1 },
+              { "text": "ذِكْرُ اللّٰه", "bucket": 1 }
+            ]
+          }
+        },
+        {
+          "type": "hadith",
+          "title": "Half of Faith",
+          "description": "Why cleanliness matters so much",
+          "screen_type": "HADITH_CARD",
+          "component": "HadithComponent",
+          "data": {
+            "hadith": "Cleanliness is half of faith.",
+            "reference": "Sahih Muslim"
+          }
+        },
+        {
+          "type": "manners",
+          "title": "Staying Ready",
+          "description": "Building the habit of purity",
+          "screen_type": "REFLECTION",
+          "component": "ReflectionComponent",
+          "data": {
+            "question": "How will you make sure you always have wudu before salah?",
+            "options": [
+              "I'll check before every prayer time",
+              "I'll keep water nearby",
+              "I'll ask if I'm unsure"
+            ]
+          }
+        }
+      ],
+      "mini_game": {
+        "type": "mcq",
+        "description": "What breaks wudu?",
+        "data": {
+          "questions": [
+            {
+              "question": "Which of these breaks your wudu?",
+              "options": ["Passing gas", "Talking to a friend", "Reading a book"],
+              "correct": 0
+            },
+            {
+              "question": "What should you check before praying?",
+              "options": ["Facing the Qibla", "The weather", "Your phone"],
+              "correct": 0
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
