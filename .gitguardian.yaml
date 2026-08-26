@@ -1,0 +1,13 @@
+# Template and fixture files contain placeholder credentials by design — a
+# secrets template that hides the shape of a connection string is useless.
+# Real secrets are SOPS/age-encrypted (see .sops.yaml); nothing in these paths
+# is ever a live credential.
+version: 2
+
+secret:
+  ignored-paths:
+    - "**/*.example"
+    - "**/*.env.example"
+    - "deploy/secrets/prod.env.example"
+    - "deploy/terraform/example.tfvars"
+    - "**/*_test.go"
