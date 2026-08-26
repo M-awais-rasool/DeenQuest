@@ -1,0 +1,171 @@
+#cloud-config
+# First boot for deenquest-prod.
+#
+# Ends with a host that has no listening port on its public interface, reachable
+# only over Tailscale, ready for deploy.sh. Everything here is idempotent enough
+# to re-run on a rebuild — which is the point: the DR runbook depends on it.
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - ufw
+  - auditd
+  - fail2ban
+  - unattended-upgrades
+  - age
+  - jq
+
+users:
+  # Human operator. Full sudo, reachable only over the tailnet.
+  - name: ops
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - ${ops_ssh_key}
+
+  # CI. No sudo, no shell — the forced command below is all this key can do.
+  - name: deploy
+    groups: [docker]
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - 'command="/usr/local/bin/deploy.sh",no-pty,no-agent-forwarding,no-port-forwarding,no-X11-forwarding,no-user-rc ${deploy_ssh_key}'
+
+write_files:
+  # SSH answers only on the Tailscale interface. Nothing on the public one.
+  - path: /etc/ssh/sshd_config.d/99-deenquest.conf
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      ChallengeResponseAuthentication no
+      PubkeyAuthentication yes
+      AllowUsers ops deploy
+      AllowTcpForwarding no
+      X11Forwarding no
+      MaxAuthTries 3
+      LoginGraceTime 20
+      ClientAliveInterval 300
+      ClientAliveCountMax 2
+
+  - path: /etc/docker/daemon.json
+    content: |
+      {
+        "live-restore": true,
+        "userland-proxy": false,
+        "no-new-privileges": true,
+        "log-driver": "json-file",
+        "log-opts": { "max-size": "10m", "max-file": "3" }
+      }
+
+  # Disk exhaustion is a likelier outage on a single box than any attack.
+  - path: /etc/cron.weekly/docker-prune
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      docker system prune -af --filter until=168h >/dev/null 2>&1
+
+  - path: /etc/audit/rules.d/deenquest.rules
+    content: |
+      -w /etc/deenquest/ -p rwa -k deenquest_secrets
+      -w /usr/local/bin/deploy.sh -p rwa -k deenquest_deploy
+      -w /srv/deenquest/ -p wa -k deenquest_stack
+      -a always,exit -F arch=b64 -S execve -F euid=0 -k root_exec
+
+  - path: /etc/apt/apt.conf.d/51unattended-upgrades-deenquest
+    content: |
+      Unattended-Upgrade::Automatic-Reboot "true";
+      Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+
+  - path: /etc/sysctl.d/99-deenquest.conf
+    content: |
+      # The 4 GB ceiling is this design's binding constraint. Swap exists for the
+      # 20-40s blue/green overlap, not as general headroom — so keep the kernel
+      # reluctant to use it, and alert when it stays occupied.
+      vm.swappiness = 10
+      net.ipv4.tcp_syncookies = 1
+      net.ipv4.conf.all.rp_filter = 1
+      net.ipv4.conf.all.accept_redirects = 0
+      net.ipv6.conf.all.accept_redirects = 0
+      net.ipv4.conf.all.accept_source_route = 0
+      kernel.kptr_restrict = 2
+
+runcmd:
+  # ── Docker ──────────────────────────────────────────────────────────────────
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update -qq
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  # ── swap: for the deploy overlap, not for headroom ──────────────────────────
+  - fallocate -l 2G /swapfile
+  - chmod 600 /swapfile
+  - mkswap /swapfile
+  - swapon /swapfile
+  - echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+  # ── Tailscale: the only way in ──────────────────────────────────────────────
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - tailscale up --authkey='${tailscale_auth_key}' --hostname=deenquest-prod --ssh=false --accept-routes=false
+
+  # Bind sshd to the tailnet address only, once Tailscale has one.
+  - |
+    for _ in $(seq 1 30); do
+      TS_IP=$(tailscale ip -4 2>/dev/null | head -1)
+      [ -n "$TS_IP" ] && break
+      sleep 2
+    done
+    if [ -n "$TS_IP" ]; then
+      echo "ListenAddress $TS_IP" >> /etc/ssh/sshd_config.d/99-deenquest.conf
+    else
+      logger -t deenquest-init "WARNING: no Tailscale IP; sshd left on all interfaces"
+    fi
+  - systemctl restart ssh || systemctl restart sshd
+
+  # ── host firewall: second layer behind the empty Vultr accept-list ──────────
+  - ufw --force reset
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow in on tailscale0 to any port 22 proto tcp
+  - ufw --force enable
+
+  # ── cosign, for host-side image verification ────────────────────────────────
+  - curl -fsSL -o /usr/local/bin/cosign https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
+  - chmod 0755 /usr/local/bin/cosign
+
+  # ── sops + rclone, for secrets and backups ──────────────────────────────────
+  - curl -fsSL -o /usr/local/bin/sops https://github.com/getsops/sops/releases/latest/download/sops-v3.9.1.linux.amd64
+  - chmod 0755 /usr/local/bin/sops
+  - curl -fsSL https://rclone.org/install.sh | bash
+
+  # ── layout ──────────────────────────────────────────────────────────────────
+  - install -d -m 0755 /srv/deenquest
+  - install -d -m 0700 /etc/deenquest
+  - install -d -m 0755 /var/lib/deenquest
+  - echo blue > /var/lib/deenquest/colour
+  - chown -R ops:ops /srv/deenquest /var/lib/deenquest
+
+  - systemctl enable --now auditd fail2ban unattended-upgrades docker
+
+  # ── the invariant, asserted ─────────────────────────────────────────────────
+  # Anything listening on a routable interface at this point is a bug.
+  - |
+    logger -t deenquest-init "listeners on non-loopback interfaces:"
+    ss -tlnp | grep -v '127.0.0.1\|\[::1\]' | logger -t deenquest-init
+
+final_message: |
+  deenquest-prod is up after $UPTIME seconds.
+
+  Remaining manual steps (they need secrets that must not pass through cloud-init):
+    1. Copy the age private key to /etc/deenquest/age.key (chmod 0400, root)
+    2. Install deploy.sh, smoke.sh, backup.sh into /usr/local/bin
+    3. git clone the repo to /srv/deenquest
+    4. Create the Cloudflare Tunnel and put its token in the encrypted env file
+    5. Initialise MongoDB: rs.initiate(), then deploy/mongo/init-users.js
+    6. Confirm from outside that nothing answers:  nmap -Pn -p- <public-ip>

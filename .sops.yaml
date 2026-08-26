@@ -1,0 +1,13 @@
+# SOPS encrypts values and leaves keys readable, so an encrypted env file stays
+# reviewable in a diff — you can see *that* JWT_SECRET changed without seeing
+# what it changed to.
+#
+# The age private key lives in exactly two places: /etc/deenquest/age.key on the
+# production host, and the break-glass envelope in a password manager. It is not
+# in GitHub Actions — CI ships a blob it cannot read, and the host decrypts it.
+#
+#   age-keygen -o age.key          # public key goes below
+#   sops deploy/secrets/prod.enc.env
+creation_rules:
+  - path_regex: deploy/secrets/prod\.enc\.env$
+    age: REPLACE_WITH_AGE_PUBLIC_KEY_age1...

@@ -1,0 +1,125 @@
+name: Release
+
+# The production gate.
+#
+# GitHub Free private repos have no Environment protection rules, so the gate is
+# built from three independent conditions instead — all of which must hold:
+#
+#   1. A GPG-signed tag, signed by a key committed to this repo.
+#   2. A typed confirmation that must match the tag exactly. Not a click.
+#   3. Host-side cosign verification in deploy.sh, which this workflow cannot
+#      influence — so even a fully compromised pipeline cannot ship an unsigned
+#      image.
+#
+# When you move to GitHub Team, replace 1 and 2 with a protected Environment and
+# required reviewers. Condition 3 stays either way.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Signed tag to deploy (e.g. v1.4.0)"
+        required: true
+      confirm:
+        description: "Retype the tag exactly to confirm the production deploy"
+        required: true
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/deenquest-api
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirmation must match the tag
+        run: |
+          if [ "${{ inputs.tag }}" != "${{ inputs.confirm }}" ]; then
+            echo "::error::Confirmation '${{ inputs.confirm }}' does not match tag '${{ inputs.tag }}'."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Tag must be signed by an allowlisted key
+        run: |
+          gpg --import .github/allowed-signers.asc
+          git config gpg.program gpg
+          if ! git verify-tag "${{ inputs.tag }}"; then
+            echo "::error::Tag ${{ inputs.tag }} is not signed by an allowlisted key."
+            exit 1
+          fi
+
+      - name: Tag must point at a commit on master
+        run: |
+          git fetch origin master
+          if ! git merge-base --is-ancestor "${{ inputs.tag }}" origin/master; then
+            echo "::error::${{ inputs.tag }} is not an ancestor of master — it bypassed review."
+            exit 1
+          fi
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve the image digest for this commit
+        id: image
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          SHA=$(git rev-parse "${TAG}^{commit}")
+          REF="${REGISTRY}/${IMAGE_NAME}:sha-${SHA}"
+          DIGEST=$(docker buildx imagetools inspect "$REF" --format '{{.Manifest.Digest}}')
+          if [ -z "$DIGEST" ]; then
+            echo "::error::No published image for $SHA. Did the Build workflow succeed on this commit?"
+            exit 1
+          fi
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "Deploying $REF ($DIGEST)"
+
+      # An ephemeral, tagged node that exists only for this job. The tailnet ACL
+      # limits tag:ci to TCP 22 on the production host and nothing else — it
+      # cannot reach MongoDB, Redis, or anything else on the tailnet.
+      - name: Join the tailnet
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Deploy
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          install -m 600 /dev/null key
+          echo "$DEPLOY_SSH_KEY" > key
+          # The forced command on the host ignores whatever we ask for and runs
+          # deploy.sh with these arguments. This key cannot get a shell.
+          ssh -i key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
+            deploy@deenquest-prod "${{ inputs.tag }} $DIGEST"
+
+      - name: Record the release
+        if: always()
+        run: |
+          {
+            echo "### Production deploy: ${{ inputs.tag }}"
+            echo
+            echo "- Digest: \`${{ steps.image.outputs.digest }}\`"
+            echo "- Actor: @${{ github.actor }}"
+            echo "- Result: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,184 @@
+# DeenQuest production stack — one host, zero published ports.
+#
+# Nothing here binds to the host. Traffic arrives only through the Cloudflare
+# Tunnel, which dials out. `docker compose ps` should never show a port mapping;
+# if it does, something regressed.
+#
+#   API_DIGEST  the image digest to run, supplied by deploy.sh
+#   env_file    /run/deenquest/prod.env — tmpfs, written by sops at deploy time
+
+x-hardening: &hardening
+  restart: unless-stopped
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: ["ALL"]
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-api: &api
+  <<: *hardening
+  image: ghcr.io/${GHCR_OWNER:-m-awais-rasool}/deenquest-api@${API_DIGEST}
+  env_file: [/run/deenquest/prod.env]
+  read_only: true
+  tmpfs:
+    - /tmp:size=64m,noexec,nosuid,nodev
+  mem_limit: 384m
+  cpus: 1.0
+  networks: [app, data]
+  healthcheck:
+    test: ["CMD", "/app/healthcheck", "--ready"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+    start_period: 30s
+
+services:
+  cloudflared:
+    <<: *hardening
+    image: cloudflare/cloudflared:2024.10.0
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:?CF_TUNNEL_TOKEN is required}
+      TUNNEL_METRICS: 0.0.0.0:2000
+    mem_limit: 64m
+    cpus: 0.2
+    networks: [edge]
+
+  caddy:
+    <<: *hardening
+    image: caddy:2.8-alpine
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/active.conf:/etc/caddy/active.conf:ro
+    mem_limit: 96m
+    cpus: 0.2
+    networks: [edge, app]
+
+  api-blue:
+    <<: *api
+    container_name: deenquest-api-blue
+    profiles: ["blue"]
+
+  api-green:
+    <<: *api
+    container_name: deenquest-api-green
+    profiles: ["green"]
+
+  mongo:
+    <<: *hardening
+    image: mongo:7.0
+    # Single node, but a replica set: that is what gives an oplog (recovery
+    # window), change streams, and transactions. Retrofitting it later means
+    # downtime; doing it now costs one rs.initiate().
+    command: >
+      mongod --replSet rs0 --auth --bind_ip_all
+             --wiredTigerCacheSizeGB 0.5
+             --tlsMode requireTLS
+             --tlsCertificateKeyFile /etc/mongo/tls/server.pem
+             --tlsCAFile /etc/mongo/tls/ca.pem
+             --tlsAllowConnectionsWithoutCertificates
+             --keyFile /etc/mongo/tls/keyfile
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:?}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?}
+      # Read once by init-users.js at first-time setup. mongosh exposes them as
+      # process.env, which keeps the passwords out of shell history and out of
+      # the `ps` output of anyone else on the box.
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?}
+      MONGO_BACKUP_PASSWORD: ${MONGO_BACKUP_PASSWORD:?}
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo/tls:/etc/mongo/tls:ro
+      - ./mongo/init-users.js:/etc/mongo/init-users.js:ro
+    mem_limit: 1024m
+    cpus: 0.8
+    networks: [data]
+
+  redis:
+    <<: *hardening
+    image: redis:7.4-alpine
+    # Cache and rate-limit counters only. Persistence off on purpose: nothing
+    # here is worth surviving a restart, and the disk I/O is not free on a
+    # single shared box.
+    command: >
+      redis-server
+        --requirepass ${REDIS_PASSWORD:?}
+        --maxmemory 128mb
+        --maxmemory-policy allkeys-lru
+        --save ""
+        --appendonly no
+        --rename-command FLUSHALL ""
+        --rename-command FLUSHDB ""
+        --rename-command CONFIG ""
+        --rename-command KEYS ""
+        --rename-command DEBUG ""
+    mem_limit: 192m
+    cpus: 0.2
+    networks: [data]
+
+  whisper:
+    <<: *hardening
+    build:
+      context: ../backend/whisper-service
+    image: deenquest-whisper:local
+    environment:
+      WHISPER_MODEL: /models/quran-base-ct2
+      WHISPER_DEVICE: cpu
+      WHISPER_COMPUTE: int8
+      WHISPER_MAX_CONCURRENT: "1"
+      OMP_NUM_THREADS: "2"
+      MAX_AUDIO_MB: "10"
+      REQUIRE_INTERNAL_AUTH: "true"
+      INTERNAL_TOKEN: ${WHISPER_INTERNAL_TOKEN:?}
+    volumes:
+      - whisper_models:/models:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,noexec,nosuid,nodev
+    mem_limit: 1152m
+    cpus: 1.5
+    networks: [data]
+
+  alloy:
+    <<: *hardening
+    image: grafana/alloy:v1.4.2
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - /etc/alloy/config.alloy
+    environment:
+      GRAFANA_PROM_URL: ${GRAFANA_PROM_URL:?}
+      GRAFANA_PROM_USER: ${GRAFANA_PROM_USER:?}
+      GRAFANA_LOKI_URL: ${GRAFANA_LOKI_URL:?}
+      GRAFANA_LOKI_USER: ${GRAFANA_LOKI_USER:?}
+      GRAFANA_CLOUD_TOKEN: ${GRAFANA_CLOUD_TOKEN:?}
+    # Deliberately NO docker.sock mount. A read-only bind of the socket still
+    # grants full Docker API access, which is effectively host root — in a
+    # container that also has internet egress. Host metrics come from /proc and
+    # /sys via Alloy's built-in unix exporter, and container logs are tailed
+    # from the json-file driver's files instead.
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    mem_limit: 192m
+    cpus: 0.3
+    networks: [app, data]
+
+networks:
+  edge: {}
+  app: {}
+  # No route to the internet and no route in. If the whisper service — an
+  # unauthenticated FastAPI app parsing untrusted audio — is ever exploited,
+  # the attacker lands somewhere with no outbound network at all.
+  data:
+    internal: true
+
+volumes:
+  mongo_data: {}
+  whisper_models: {}
