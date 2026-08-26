@@ -5,7 +5,7 @@ import { LearningPathContent } from "../../components/level/path";
 export function LearnPathScreen() {
   return (
     <ScreenWrapper innerStyle={s.inner}>
-      <LearningPathContent courseType="qaida" courseTitle="Noorani Qaida" />
+      <LearningPathContent />
     </ScreenWrapper>
   );
 }

@@ -1,5 +1,7 @@
 import type { LevelWithStatus, CourseType } from "../../../store/services/api";
+import type { SectionColors } from "../map/constants";
 import { colorsForSection } from "./palette";
+import { courseEntry } from "./courseCatalog";
 import type { PathSection, PathLocation, SectionStatus } from "./types";
 
 export const LEVELS_PER_SECTION = 4;
@@ -32,6 +34,32 @@ const CURATED_META: Partial<Record<CourseType, SectionMeta[]>> = {
       subtitle: "Al-Fatiha, short surahs & the duas of your day",
     },
   ],
+  namaz: [
+    {
+      title: "Purity & Preparation",
+      subtitle: "Wudu, step by step, and getting ready to pray",
+    },
+    {
+      title: "Standing Before Allah",
+      subtitle: "Takbir, Qiyam, Al-Fatiha & ruku",
+    },
+    {
+      title: "Sujood & Sitting",
+      subtitle: "Prostration, Tashahhud, Durood & Salam",
+    },
+    {
+      title: "Putting It Together",
+      subtitle: "Full walkthroughs of every daily prayer",
+    },
+    {
+      title: "Getting It Right",
+      subtitle: "Common mistakes, Sujood Sahw & khushu",
+    },
+    {
+      title: "Namaz Graduate",
+      subtitle: "Revise everything and earn your certificate",
+    },
+  ],
 };
 
 function metaFor(
@@ -60,6 +88,7 @@ function statusFor(levels: LevelWithStatus[]): SectionStatus {
 export function buildSections(
   levels: LevelWithStatus[],
   courseType: CourseType,
+  palette: SectionColors[] = courseEntry(courseType).palette,
   size: number = LEVELS_PER_SECTION,
 ): PathSection[] {
   const sections: PathSection[] = [];
@@ -75,7 +104,7 @@ export function buildSections(
       number: index + 1,
       title: meta.title,
       subtitle: meta.subtitle,
-      colors: colorsForSection(index),
+      colors: colorsForSection(index, palette),
       startIndex: start,
       status: statusFor(chunk),
       total: chunk.length,

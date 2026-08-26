@@ -135,6 +135,7 @@ export function StreakPopup({
       transparent
       animationType="none"
       statusBarTranslucent
+      navigationBarTranslucent
       onRequestClose={onClose}
     >
       <View style={s.overlay}>

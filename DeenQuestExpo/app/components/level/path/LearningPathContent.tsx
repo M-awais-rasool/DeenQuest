@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { View, Text, StyleSheet, SectionList } from "react-native";
+import { View, Text, StyleSheet, SectionList, Modal } from "react-native";
 import type { SectionListRenderItem } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,6 +16,10 @@ import {
   useGetProgressQuery,
 } from "../../../store/services/api";
 import type { CourseType, LevelWithStatus } from "../../../store/services/api";
+import {
+  loadSelectedCourse,
+  saveSelectedCourse,
+} from "../../../store/storage/pathStorage";
 import type { AppStackParamList } from "../../../navigators/navigationTypes";
 import { theme } from "../../../theme/themes";
 import { Loader } from "../../Loader";
@@ -24,6 +28,9 @@ import { LevelNode } from "../map";
 import { PathTopBar } from "./PathTopBar";
 import { ActiveSectionBanner } from "./ActiveSectionBanner";
 import { SectionDivider } from "./SectionDivider";
+import { CourseSelectorSheet } from "./CourseSelectorSheet";
+import { CourseSwitchTransition } from "./CourseSwitchTransition";
+import { courseEntry } from "./courseCatalog";
 import { StreakPopup, type StreakOrigin } from "./StreakPopup";
 import { buildSections, findActiveLocation } from "./sections";
 import type { PathSection } from "./types";
@@ -33,17 +40,12 @@ const APPEAR_STAGGER_CAP = 8;
 /** A node/header must be at least this % visible to count as "at the top". */
 const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
 
-interface LearningPathContentProps {
-  courseType?: CourseType;
-  courseTitle?: string;
-}
-
-export function LearningPathContent({
-  courseType = "qaida",
-  courseTitle = "Noorani Qaida",
-}: LearningPathContentProps) {
+export function LearningPathContent() {
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+
+  const [courseType, setCourseType] = useState<CourseType>(loadSelectedCourse);
+  const course = courseEntry(courseType);
 
   const { data: levelsRes, isLoading } = useGetLevelsQuery({ courseType });
   const { data: progressRes } = useGetProgressQuery();
@@ -54,6 +56,10 @@ export function LearningPathContent({
   // Streak popup state (origin = the chip it grows from).
   const [streakOpen, setStreakOpen] = useState(false);
   const [streakOrigin, setStreakOrigin] = useState<StreakOrigin | null>(null);
+  const [coursesOpen, setCoursesOpen] = useState(false);
+  const [sheetPresent, setSheetPresent] = useState(false);
+  const [coursesOrigin, setCoursesOrigin] = useState<StreakOrigin | null>(null);
+  const [pendingCourse, setPendingCourse] = useState<CourseType | null>(null);
 
   const levels: LevelWithStatus[] = useMemo(
     () => levelsRes?.data ?? [],
@@ -61,8 +67,8 @@ export function LearningPathContent({
   );
 
   const sections = useMemo(
-    () => buildSections(levels, courseType),
-    [levels, courseType],
+    () => buildSections(levels, courseType, course.palette),
+    [levels, courseType, course.palette],
   );
 
   const xp = progressRes?.data?.xp ?? 0;
@@ -77,6 +83,33 @@ export function LearningPathContent({
     setStreakOpen(true);
   }, []);
 
+  const handleCoursesPress = useCallback((origin: StreakOrigin) => {
+    setCoursesOrigin(origin);
+    setSheetPresent(true);
+    setCoursesOpen(true);
+  }, []);
+
+  const handleSelectCourse = useCallback((next: CourseType) => {
+    setCoursesOpen(false);
+    setPendingCourse(next);
+  }, []);
+
+  const handleCovered = useCallback(() => {
+    if (!pendingCourse) return;
+    setSelectedLevelId(null);
+    setActiveSectionIndex(0);
+    setCourseType(pendingCourse);
+    saveSelectedCourse(pendingCourse);
+  }, [pendingCourse]);
+
+  const handleSwitchFinished = useCallback(() => {
+    setPendingCourse(null);
+  }, []);
+
+  const handleSheetClosed = useCallback(() => {
+    setSheetPresent(false);
+  }, []);
+
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ section?: { index?: number } }> }) => {
       const topIndex = viewableItems[0]?.section?.index;
@@ -86,6 +119,10 @@ export function LearningPathContent({
 
   const listRef = useRef<SectionList<LevelWithStatus, PathSection>>(null);
   const didAutoScroll = useRef(false);
+
+  useEffect(() => {
+    didAutoScroll.current = false;
+  }, [courseType]);
 
   useEffect(() => {
     if (didAutoScroll.current || sections.length === 0) return;
@@ -119,9 +156,12 @@ export function LearningPathContent({
   const handleStart = useCallback(
     (level: LevelWithStatus) => {
       setSelectedLevelId(null);
-      navigation.navigate("LevelDetail", { levelId: level.id, courseType });
+      navigation.navigate("LevelDetail", {
+        levelId: level.id,
+        courseType: level.course_type,
+      });
     },
-    [courseType, navigation],
+    [navigation],
   );
 
   const renderItem: SectionListRenderItem<LevelWithStatus, PathSection> =
@@ -154,17 +194,23 @@ export function LearningPathContent({
     [],
   );
 
-  if (isLoading) return <Loader fullScreen />;
-
   const activeSection = sections[activeSectionIndex] ?? sections[0];
+  const switching = pendingCourse !== null;
+  const switchDataReady =
+    switching && courseType === pendingCourse && !isLoading;
+
+  if (isLoading && !switching) return <Loader fullScreen />;
 
   return (
     <View style={s.container}>
       <PathTopBar
-        title={courseTitle}
+        title={course.title}
         streak={streak}
         xp={xp}
+        courseIcon={course.Icon}
+        courseAccent={course.palette[0].accent}
         onStreakPress={handleStreakPress}
+        onCoursesPress={handleCoursesPress}
       />
 
       {activeSection && <ActiveSectionBanner section={activeSection} />}
@@ -196,6 +242,40 @@ export function LearningPathContent({
         weekly={weekly}
         origin={streakOrigin}
       />
+
+      <Modal
+        visible={sheetPresent || pendingCourse !== null}
+        transparent
+        animationType="none"
+        statusBarTranslucent
+        navigationBarTranslucent
+        onRequestClose={() => setCoursesOpen(false)}
+      >
+        <View style={s.modalHost}>
+          {sheetPresent && (
+            <CourseSelectorSheet
+              visible={coursesOpen}
+              onClose={() => setCoursesOpen(false)}
+              onClosed={handleSheetClosed}
+              activeCourse={courseType}
+              onSelectCourse={handleSelectCourse}
+              origin={coursesOrigin}
+            />
+          )}
+
+          {pendingCourse && (
+            <CourseSwitchTransition
+              active
+              toIcon={courseEntry(pendingCourse).Icon}
+              toTitle={courseEntry(pendingCourse).title}
+              toPalette={courseEntry(pendingCourse).palette}
+              dataReady={switchDataReady}
+              onCovered={handleCovered}
+              onFinished={handleSwitchFinished}
+            />
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -224,6 +304,9 @@ const s = StyleSheet.create({
   },
   content: {
     paddingBottom: 48,
+  },
+  modalHost: {
+    flex: 1,
   },
   sectionGap: {
     height: 16,

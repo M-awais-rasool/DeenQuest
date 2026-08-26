@@ -9,6 +9,7 @@ import { LetterFormsComponent } from "./LetterFormsComponent";
 import { QuranReaderComponent } from "./QuranReaderComponent";
 import { ReflectionComponent } from "./ReflectionComponent";
 import { PrayerChecklistComponent } from "./PrayerChecklistComponent";
+import { PostureStepComponent } from "./PostureStepComponent";
 import { CertificateComponent } from "./CertificateComponent";
 import { MCQComponent } from "./MCQComponent";
 import { FillBlankComponent } from "./FillBlankComponent";
@@ -34,6 +35,7 @@ export const LESSON_COMPONENT_MAP: Record<string, LessonComponent> = {
   QuranReaderComponent,
   ReflectionComponent,
   PrayerChecklistComponent,
+  PostureStepComponent,
   CertificateComponent,
   // New interactive task types
   MCQComponent,

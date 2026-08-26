@@ -1,16 +1,6 @@
 import type { SectionColors } from "../map/constants";
 
-/**
- * Each consecutive section of the learning path is painted with the next
- * color identity in this palette (wrapping when it runs out). Giving every
- * section its own hue is what makes the journey read as distinct "chapters"
- * the way Duolingo's units do, while the node primitives stay generic.
- *
- * Index 0 is the original green so the very first section keeps the look
- * users already know.
- */
-export const SECTION_PALETTE: SectionColors[] = [
-  // Teal — the new-brand primary; the first section keeps the brand look.
+export const QAIDA_PALETTE: SectionColors[] = [
   {
     accent: "#2CC9B5",
     light: "#2CC9B5",
@@ -18,15 +8,6 @@ export const SECTION_PALETTE: SectionColors[] = [
     dark: "#1B9484",
     deep: "#06302B",
     glow: "rgba(44, 201, 181, 0.15)",
-  },
-  // Violet
-  {
-    accent: "#A78BFA",
-    light: "#A78BFA",
-    base: "#A78BFA",
-    dark: "#7B5BD6",
-    deep: "#241A45",
-    glow: "rgba(167, 139, 250, 0.15)",
   },
   // Sky
   {
@@ -37,25 +18,25 @@ export const SECTION_PALETTE: SectionColors[] = [
     deep: "#0E2A3A",
     glow: "rgba(110, 193, 232, 0.15)",
   },
-  // Gold
+  // Violet
   {
-    accent: "#EFB65A",
-    light: "#EFB65A",
-    base: "#EFB65A",
-    dark: "#C98F35",
-    deep: "#3A2A08",
-    glow: "rgba(239, 182, 90, 0.15)",
+    accent: "#A78BFA",
+    light: "#A78BFA",
+    base: "#A78BFA",
+    dark: "#7B5BD6",
+    deep: "#241A45",
+    glow: "rgba(167, 139, 250, 0.15)",
   },
-  // Rose
+  // Cornflower
   {
-    accent: "#F27FB2",
-    light: "#F27FB2",
-    base: "#F27FB2",
-    dark: "#C25E8E",
-    deep: "#3A1024",
-    glow: "rgba(242, 127, 178, 0.15)",
+    accent: "#5B8DEF",
+    light: "#5B8DEF",
+    base: "#5B8DEF",
+    dark: "#3A67C4",
+    deep: "#101E42",
+    glow: "rgba(91, 141, 239, 0.15)",
   },
-  // Deep teal
+  // Mint
   {
     accent: "#5EE0CE",
     light: "#5EE0CE",
@@ -64,9 +45,78 @@ export const SECTION_PALETTE: SectionColors[] = [
     deep: "#06302B",
     glow: "rgba(94, 224, 206, 0.15)",
   },
+  // Periwinkle
+  {
+    accent: "#8C9EFF",
+    light: "#8C9EFF",
+    base: "#8C9EFF",
+    dark: "#6474D6",
+    deep: "#1A1F45",
+    glow: "rgba(140, 158, 255, 0.15)",
+  },
 ];
 
-/** Color identity for the Nth section (wraps around the palette). */
-export function colorsForSection(index: number): SectionColors {
-  return SECTION_PALETTE[index % SECTION_PALETTE.length];
+export const NAMAZ_PALETTE: SectionColors[] = [
+  {
+    accent: "#EFB65A",
+    light: "#EFB65A",
+    base: "#EFB65A",
+    dark: "#C98F35",
+    deep: "#3A2A08",
+    glow: "rgba(239, 182, 90, 0.15)",
+  },
+  // Saffron
+  {
+    accent: "#F0913F",
+    light: "#F0913F",
+    base: "#F0913F",
+    dark: "#C56D22",
+    deep: "#3A2205",
+    glow: "rgba(240, 145, 63, 0.15)",
+  },
+  // Terracotta
+  {
+    accent: "#E2705A",
+    light: "#E2705A",
+    base: "#E2705A",
+    dark: "#B84E3A",
+    deep: "#3A1409",
+    glow: "rgba(226, 112, 90, 0.15)",
+  },
+  // Clay rose
+  {
+    accent: "#D46A80",
+    light: "#D46A80",
+    base: "#D46A80",
+    dark: "#AC4A5F",
+    deep: "#3A0F1A",
+    glow: "rgba(212, 106, 128, 0.15)",
+  },
+  // Warm plum
+  {
+    accent: "#B87BA8",
+    light: "#B87BA8",
+    base: "#B87BA8",
+    dark: "#925A84",
+    deep: "#2E1329",
+    glow: "rgba(184, 123, 168, 0.15)",
+  },
+  // Deep amber
+  {
+    accent: "#C68A3C",
+    light: "#C68A3C",
+    base: "#C68A3C",
+    dark: "#9E6A24",
+    deep: "#33210A",
+    glow: "rgba(198, 138, 60, 0.15)",
+  },
+];
+
+export const SECTION_PALETTE = QAIDA_PALETTE;
+
+export function colorsForSection(
+  index: number,
+  palette: SectionColors[] = SECTION_PALETTE,
+): SectionColors {
+  return palette[index % palette.length];
 }

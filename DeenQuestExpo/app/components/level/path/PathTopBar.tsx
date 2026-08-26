@@ -1,6 +1,6 @@
 import React, { memo, useRef } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Flame, Zap } from "lucide-react-native";
+import { Flame, Zap, ChevronDown, type LucideIcon } from "lucide-react-native";
 import { theme } from "../../../theme/themes";
 import type { StreakOrigin } from "./StreakPopup";
 
@@ -8,22 +8,32 @@ interface PathTopBarProps {
   title: string;
   streak: number;
   xp: number;
-  /** Fired when the streak chip is tapped, with its window-space center. */
+  courseIcon: LucideIcon;
+  courseAccent: string;
   onStreakPress?: (origin: StreakOrigin) => void;
+  /** Fired when the courses chip is tapped, with its window-space center. */
+  onCoursesPress?: (origin: StreakOrigin) => void;
 }
 
 export const PathTopBar = memo(function PathTopBar({
   title,
   streak,
   xp,
+  courseIcon: CourseIcon,
+  courseAccent,
   onStreakPress,
+  onCoursesPress,
 }: PathTopBarProps) {
   const streakRef = useRef<View>(null);
+  const coursesRef = useRef<View>(null);
 
-  const handleStreakPress = () => {
-    if (!onStreakPress) return;
-    streakRef.current?.measureInWindow((x, y, w, h) => {
-      onStreakPress({ x: x + w / 2, y: y + h / 2 });
+  const measureThen = (
+    ref: React.RefObject<View | null>,
+    cb?: (origin: StreakOrigin) => void,
+  ) => {
+    if (!cb) return;
+    ref.current?.measureInWindow((x, y, w, h) => {
+      cb({ x: x + w / 2, y: y + h / 2 });
     });
   };
 
@@ -39,8 +49,24 @@ export const PathTopBar = memo(function PathTopBar({
 
         <View style={s.stats}>
           <Pressable
+            ref={coursesRef}
+            onPress={() => measureThen(coursesRef, onCoursesPress)}
+            style={({ pressed }) => [
+              s.stat,
+              s.coursesChip,
+              { borderColor: courseAccent },
+              pressed && s.statPressed,
+            ]}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel="Switch course"
+          >
+            <CourseIcon size={15} color={courseAccent} strokeWidth={2.6} />
+            <ChevronDown size={13} color={courseAccent} strokeWidth={3} />
+          </Pressable>
+          <Pressable
             ref={streakRef}
-            onPress={handleStreakPress}
+            onPress={() => measureThen(streakRef, onStreakPress)}
             style={({ pressed }) => [s.stat, s.streakChip, pressed && s.statPressed]}
             hitSlop={6}
           >
@@ -109,7 +135,7 @@ const s = StyleSheet.create({
   },
   stats: {
     flexDirection: "row",
-    gap: 8,
+    gap: 7,
   },
   stat: {
     flexDirection: "row",
@@ -121,6 +147,11 @@ const s = StyleSheet.create({
     borderRadius: 15,
     borderWidth: 1,
     borderColor: theme.colors.outline,
+  },
+  coursesChip: {
+    gap: 2,
+    paddingHorizontal: 10,
+    borderWidth: 1.5,
   },
   streakChip: {
     backgroundColor: "#3A2F16",
