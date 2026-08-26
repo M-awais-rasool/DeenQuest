@@ -27,15 +27,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	qaida, practice := 0, 0
+	qaida, namaz, practice := 0, 0, 0
 	for _, l := range levels {
 		switch l.CourseType {
 		case leveldomain.CourseQaida:
 			qaida++
+		case leveldomain.CourseNamaz:
+			namaz++
 		case leveldomain.CoursePractice:
 			practice++
 		}
 	}
-	fmt.Printf("content lint: clean ✓ (%d chunks · %d qaida levels · %d practice drills · seed v%d)\n",
-		len(chunks), qaida, practice, leveldomain.SeedDataVersion)
+	fmt.Printf("content lint: clean ✓ (%d chunks · %d qaida levels · %d namaz levels · %d practice drills · seed v%d)\n",
+		len(chunks), qaida, namaz, practice, leveldomain.SeedDataVersion)
 }

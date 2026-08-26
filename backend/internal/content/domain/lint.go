@@ -32,6 +32,11 @@ const (
 	practiceIDFloor   = 900
 	certificateEvery  = 4
 	componentCertName = "CertificateComponent"
+
+	namazIDFloor    = 100
+	namazLevelCount = 24 // IDs 101..124
+	minLessonsNamaz = 3
+	maxLessonsNamaz = 6
 )
 
 var knownComponents = map[string]bool{
@@ -44,6 +49,7 @@ var knownComponents = map[string]bool{
 	"QuranReaderComponent":     true,
 	"ReflectionComponent":      true,
 	"PrayerChecklistComponent": true,
+	"PostureStepComponent":     true,
 	"CertificateComponent":     true,
 	"MCQComponent":             true,
 	"FillBlankComponent":       true,
@@ -77,6 +83,7 @@ func LintLevels(levels []leveldomain.Level) []LintIssue {
 
 	seenIDs := map[int]bool{}
 	qaidaIDs := map[int]bool{}
+	namazIDs := map[int]bool{}
 
 	for _, lvl := range levels {
 		id := lvl.ID
@@ -102,6 +109,14 @@ func LintLevels(levels []leveldomain.Level) []LintIssue {
 			}
 			if len(lvl.Lessons) == 0 {
 				add(id, "level", "practice level has no lessons")
+			}
+		case leveldomain.CourseNamaz:
+			namazIDs[id] = true
+			if id <= namazIDFloor || id > namazIDFloor+namazLevelCount {
+				add(id, "level", "namaz level ID must be %d..%d", namazIDFloor+1, namazIDFloor+namazLevelCount)
+			}
+			if n := len(lvl.Lessons); n < minLessonsNamaz || n > maxLessonsNamaz {
+				add(id, "level", "namaz level must have %d–%d lessons, has %d", minLessonsNamaz, maxLessonsNamaz, n)
 			}
 		default:
 			add(id, "level", "unknown course type %q", lvl.CourseType)
@@ -170,6 +185,30 @@ func LintLevels(levels []leveldomain.Level) []LintIssue {
 			}
 			if !hasCert {
 				issues = append(issues, LintIssue{LevelID: lvl.ID, Where: "curriculum", Msg: "checkpoint level must end with a CertificateComponent"})
+			}
+		}
+	}
+
+	if len(namazIDs) > 0 {
+		for want := namazIDFloor + 1; want <= namazIDFloor+namazLevelCount; want++ {
+			if !namazIDs[want] {
+				issues = append(issues, LintIssue{LevelID: want, Where: "curriculum", Msg: "missing namaz level"})
+			}
+		}
+		lastNamazID := namazIDFloor + namazLevelCount
+		for _, lvl := range levels {
+			if lvl.CourseType != leveldomain.CourseNamaz || lvl.ID != lastNamazID {
+				continue
+			}
+			hasCert := false
+			for _, lesson := range lvl.Lessons {
+				if lesson.Component == componentCertName {
+					hasCert = true
+					break
+				}
+			}
+			if !hasCert {
+				issues = append(issues, LintIssue{LevelID: lvl.ID, Where: "curriculum", Msg: "final namaz level must end with a CertificateComponent"})
 			}
 		}
 	}
@@ -303,6 +342,17 @@ func lintLessonData(id int, where string, lesson leveldomain.Lesson) []LintIssue
 	case "PrayerChecklistComponent":
 		if len(strList(data, "steps")) == 0 {
 			add("no steps")
+		}
+	case "PostureStepComponent":
+		steps, _ := data["steps"].([]any)
+		if len(steps) == 0 {
+			add("no steps")
+		}
+		for _, s := range steps {
+			step, _ := s.(map[string]any)
+			if step == nil || str(step, "pose") == "" || str(step, "title") == "" {
+				add("step missing pose or title")
+			}
 		}
 	case "DuaCardComponent":
 		if !containsArabic(str(data, "arabic")) {

@@ -97,3 +97,49 @@ func TestCurriculumShape(t *testing.T) {
 		}
 	}
 }
+
+const (
+	namazIDFloor    = 100
+	namazLevelCount = 24
+)
+
+func TestNamazCurriculumShape(t *testing.T) {
+	levels := SeedLevels()
+
+	byID := map[int]Level{}
+	namaz := 0
+	for _, l := range levels {
+		byID[l.ID] = l
+		if l.CourseType == CourseNamaz {
+			namaz++
+		}
+	}
+
+	if namaz != namazLevelCount {
+		t.Errorf("namaz levels = %d, want %d", namaz, namazLevelCount)
+	}
+
+	for id := namazIDFloor + 1; id <= namazIDFloor+namazLevelCount; id++ {
+		lvl, ok := byID[id]
+		if !ok {
+			t.Errorf("namaz level %d missing", id)
+			continue
+		}
+		if lvl.CourseType != CourseNamaz {
+			t.Errorf("level %d: course_type = %q, want %q", id, lvl.CourseType, CourseNamaz)
+		}
+	}
+
+	lastID := namazIDFloor + namazLevelCount
+	if lvl, ok := byID[lastID]; ok {
+		hasCert := false
+		for _, lesson := range lvl.Lessons {
+			if lesson.Component == "CertificateComponent" {
+				hasCert = true
+			}
+		}
+		if !hasCert {
+			t.Errorf("level %d: final namaz level has no CertificateComponent", lastID)
+		}
+	}
+}

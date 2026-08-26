@@ -11,6 +11,7 @@ type CourseType string
 const (
 	CourseQaida    CourseType = "qaida"
 	CoursePractice CourseType = "practice"
+	CourseNamaz    CourseType = "namaz"
 )
 
 type ScreenType string

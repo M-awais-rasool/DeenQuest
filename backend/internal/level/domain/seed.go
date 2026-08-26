@@ -12,7 +12,7 @@ import (
 const SeedDataVersion = 4
 const ContentChunkSchema = "deenquest.content.chunk/v1"
 
-//go:embed curriculum/qaida curriculum/practice
+//go:embed curriculum/qaida curriculum/namaz curriculum/practice
 var contentFS embed.FS
 
 type ContentChunk struct {
@@ -35,7 +35,7 @@ var (
 
 func loadContent() ([]Level, []ContentChunk, error) {
 	loadOnce.Do(func() {
-		dirs := []string{"curriculum/qaida", "curriculum/practice"}
+		dirs := []string{"curriculum/qaida", "curriculum/namaz", "curriculum/practice"}
 		var chunks []ContentChunk
 
 		for _, dir := range dirs {

@@ -94,8 +94,13 @@ func (s *Service) GetLevels(ctx context.Context, userID string, courseType domai
 		ulMap[ul.LevelID] = ul
 	}
 
-	// Determine the highest completed course level to unlock the next step in this course only.
-	highestCompletedCourseLevel := 0
+	minCourseLevel := 0
+	for i, l := range levels {
+		if i == 0 || l.CourseLevel < minCourseLevel {
+			minCourseLevel = l.CourseLevel
+		}
+	}
+	highestCompletedCourseLevel := minCourseLevel - 1
 	for _, l := range levels {
 		if ul, ok := ulMap[l.ID]; ok && ul.Completed && l.CourseLevel > highestCompletedCourseLevel {
 			highestCompletedCourseLevel = l.CourseLevel

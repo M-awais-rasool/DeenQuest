@@ -8,6 +8,8 @@ func CourseTypeFromString(raw string) (CourseType, bool) {
 		return CourseQaida, true
 	case CoursePractice:
 		return CoursePractice, true
+	case CourseNamaz:
+		return CourseNamaz, true
 	default:
 		return "", false
 	}

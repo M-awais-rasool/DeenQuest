@@ -265,6 +265,19 @@ func lessonComponentSchemas() []ContentSchema {
 			Example: map[string]any{"steps": []string{"Make the intention in your heart", "Say بِسْمِ اللَّه", "Wash both hands 3 times"}},
 		},
 		{
+			Kind: "lesson_component", Name: "PostureStepComponent", Label: "Posture Steps",
+			Description: "An ordered list of physical steps (wudu/salah postures) with a line-art illustration per step. Learner taps through; optional Arabic phrase per step is tap-to-hear.",
+			Icon:        "🕌", LessonTypes: []string{"qaida", "revision"}, ScreenType: "CHECKLIST",
+			Fields: []SchemaField{
+				field("steps", "Steps", FieldJSON, true,
+					`Array of {"pose","title","detail?","dua_arabic?","dua_translation?"}. "pose" must match a known pose id in the app's pose library (see PoseIllustration.tsx) — ask engineering for the current list before authoring.`),
+			},
+			Example: map[string]any{"steps": []map[string]any{
+				{"pose": "wudu_wash_face", "title": "Wash your face", "detail": "Three times, hairline to chin, ear to ear"},
+				{"pose": "salah_ruku", "title": "Ruku — Bowing", "detail": "Back flat, hands on knees", "dua_arabic": "سُبْحَانَ رَبِّيَ الْعَظِيمِ", "dua_translation": "Glory be to my Lord, the Most Great"},
+			}},
+		},
+		{
 			Kind: "lesson_component", Name: "CertificateComponent", Label: "Certificate",
 			Description: "Graduation certificate shown at the end of a section.",
 			Icon:        "🏆", LessonTypes: []string{"revision"}, ScreenType: "ACTION",
@@ -440,6 +453,7 @@ func registryEnums() map[string][]EnumOption {
 		},
 		"courses": {
 			{Value: "qaida", Label: "Qaida"},
+			{Value: "namaz", Label: "Namaz"},
 		},
 		"reward_icons": {
 			{Value: "trophy", Label: "Trophy"},
