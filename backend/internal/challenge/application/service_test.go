@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -50,6 +51,19 @@ func (m *memRepo) ListUserQuests(_ context.Context, userID, weekKey string) ([]d
 			out = append(out, *q)
 		}
 	}
+	// Mirror the Mongo repository's sort. Ranging over a map does not order
+	// anything, and Go randomises that order per iteration — a fake that skips
+	// this reorders the board on every read and makes any board-stability
+	// assertion flaky rather than wrong.
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Position != out[j].Position {
+			return out[i].Position < out[j].Position
+		}
+		if !out[i].CreatedAt.Equal(out[j].CreatedAt) {
+			return out[i].CreatedAt.Before(out[j].CreatedAt)
+		}
+		return out[i].ID < out[j].ID
+	})
 	return out, nil
 }
 
@@ -240,6 +254,48 @@ func TestGetOverviewDrawsAStableWeeklyBoard(t *testing.T) {
 	for i := range first.Quests {
 		if first.Quests[i].ID != second.Quests[i].ID {
 			t.Errorf("board changed between visits: %s vs %s", first.Quests[i].ID, second.Quests[i].ID)
+		}
+	}
+}
+
+// The board a learner sees on their first visit must be the board they see on
+// every visit after it. PickWeeklyQuests is deterministic per user and week,
+// but that order used to be lost in storage: every quest in a draw shares one
+// CreatedAt, so the repository's sort fell through to _id — a random UUID — and
+// the board reshuffled the moment it was read back. Position is what carries
+// the draw order across the round trip; delete it and this test fails.
+func TestWeeklyBoardKeepsItsDrawOrderAcrossReads(t *testing.T) {
+	repo := newMemRepo()
+	svc, _ := newTestService(repo)
+	ctx := context.Background()
+
+	drawn, err := svc.GetOverview(ctx, "alice")
+	if err != nil {
+		t.Fatalf("GetOverview: %v", err)
+	}
+
+	for i, q := range drawn.Quests {
+		stored, ok := repo.quests[q.ID]
+		if !ok {
+			t.Fatalf("quest %s was returned but never stored", q.ID)
+		}
+		if stored.Position != i {
+			t.Errorf("quest at slot %d stored with Position %d", i, stored.Position)
+		}
+	}
+
+	// Read it back several times: a map-ordering regression shows up as an
+	// occasional mismatch, not a consistent one, so once would prove little.
+	for visit := 2; visit <= 6; visit++ {
+		again, err := svc.GetOverview(ctx, "alice")
+		if err != nil {
+			t.Fatalf("GetOverview visit %d: %v", visit, err)
+		}
+		for i := range drawn.Quests {
+			if again.Quests[i].ID != drawn.Quests[i].ID {
+				t.Fatalf("visit %d reordered the board at slot %d: %s, want %s",
+					visit, i, again.Quests[i].ID, drawn.Quests[i].ID)
+			}
 		}
 	}
 }

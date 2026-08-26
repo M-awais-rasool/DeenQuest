@@ -75,10 +75,20 @@ type UserQuest struct {
 	Completed  bool      `bson:"completed" json:"completed"`
 	RewardPaid bool      `bson:"reward_paid" json:"reward_paid"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+
+	// Position is the quest's slot in the week's draw.
+	//
+	// PickWeeklyQuests is deliberately deterministic per user and week, but that
+	// order was previously lost the moment the board was stored: every quest in
+	// a draw shares one CreatedAt, so the repository's sort fell through to _id
+	// — a random UUID. The board a learner saw on their first visit was then
+	// reshuffled on every visit after it. Persisting the draw index is what
+	// makes the order survive the round trip.
+	Position int `bson:"position" json:"position"`
 }
 
 // NewUserQuest instantiates a template for a user's week.
-func NewUserQuest(id, userID, weekKey string, t QuestTemplate, now time.Time) UserQuest {
+func NewUserQuest(id, userID, weekKey string, t QuestTemplate, now time.Time, position int) UserQuest {
 	return UserQuest{
 		ID:         id,
 		UserID:     userID,
@@ -91,6 +101,7 @@ func NewUserQuest(id, userID, weekKey string, t QuestTemplate, now time.Time) Us
 		Glyph:      t.Glyph,
 		Accent:     t.Accent,
 		CreatedAt:  now,
+		Position:   position,
 	}
 }
 
