@@ -7,7 +7,11 @@ import (
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 )
 
+var version = "dev"
+
 func main() {
+	log.Printf("DeenQuest API %s starting", version)
+
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)

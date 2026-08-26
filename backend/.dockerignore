@@ -1,0 +1,28 @@
+# Keep the build context small and, more importantly, keep secrets out of it.
+# Anything listed here cannot end up in an image layer by accident.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*-firebase-adminsdk-*.json
+
+build/
+tmp/
+uploads/
+
+# The Whisper service is built from its own Dockerfile with its own context;
+# the model alone is 358 MB and has no business in the API image.
+whisper-service/
+
+docs/
+README.md
+Makefile
+docker-compose.yml
+
+.git/
+.gitignore
+**/node_modules/
+**/__pycache__/
+*.pyc
+.DS_Store
