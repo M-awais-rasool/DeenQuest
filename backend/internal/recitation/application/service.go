@@ -39,24 +39,26 @@ type LevelSource interface {
 }
 
 type Service struct {
-	repo       domain.Repository
-	levels     LevelSource
-	progress   *progressapp.Service
-	whisperURL string // e.g. "http://whisper-service:8001"
-	httpClient *http.Client
-	coach      RecitationCoach
+	repo         domain.Repository
+	levels       LevelSource
+	progress     *progressapp.Service
+	whisperURL   string // e.g. "http://whisper-service:8001"
+	whisperToken string // shared secret; the whisper service has no other auth
+	httpClient   *http.Client
+	coach        RecitationCoach
 
 	coachMu    sync.Mutex
 	coachCache map[string]string
 }
 
-func NewService(repo domain.Repository, whisperURL string, levels LevelSource, progressSvc *progressapp.Service) *Service {
+func NewService(repo domain.Repository, whisperURL, whisperToken string, levels LevelSource, progressSvc *progressapp.Service) *Service {
 	return &Service{
-		repo:       repo,
-		levels:     levels,
-		progress:   progressSvc,
-		whisperURL: whisperURL,
-		httpClient: &http.Client{Timeout: 60 * time.Second},
+		repo:         repo,
+		levels:       levels,
+		progress:     progressSvc,
+		whisperURL:   whisperURL,
+		whisperToken: whisperToken,
+		httpClient:   &http.Client{Timeout: 60 * time.Second},
 	}
 }
 
@@ -328,6 +330,9 @@ func (s *Service) callWhisper(
 		return nil, fmt.Errorf("build request: %w", err)
 	}
 	req.Header.Set("Content-Type", mw.FormDataContentType())
+	if s.whisperToken != "" {
+		req.Header.Set("X-Internal-Token", s.whisperToken)
+	}
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
