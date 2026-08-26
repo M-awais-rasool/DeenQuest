@@ -67,6 +67,9 @@ jobs:
 
       - name: Scan the published image
         uses: aquasecurity/trivy-action@v0.33.1
+        # Report-only, and the action downloads its binary from GitHub at run
+        # time, which rate-limits. A flaky installer must not fail a publish.
+        continue-on-error: true
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}
           severity: HIGH,CRITICAL

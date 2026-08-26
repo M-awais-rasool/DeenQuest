@@ -82,14 +82,12 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
 
-      - name: Filesystem scan
-        uses: aquasecurity/trivy-action@v0.33.1
-        with:
-          scan-type: fs
-          scan-ref: backend
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          ignore-unfixed: true
+      # No trivy filesystem scan here. On a Go source tree it largely duplicates
+      # govulncheck above — which is the better signal, because it reports only
+      # vulnerabilities this code actually reaches — while gitleaks covers
+      # secrets. Trivy earns its place against the built container image, where
+      # it sees base-image packages nothing else looks at; that scan lives in
+      # build.yml.
 
   frontend:
     name: Frontend typecheck
