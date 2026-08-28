@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,7 +17,11 @@ import (
 /* ─────────────────────────── fakes ─────────────────────────── */
 
 type memRepo struct {
-	templates      []domain.QuestTemplate
+	templates []domain.QuestTemplate
+	// The activity queue drives this repository from several worker goroutines,
+	// so the fake has to be as safe to share as the Mongo one it stands in for.
+	mu sync.Mutex
+
 	quests         map[string]*domain.UserQuest
 	duels          map[string]*domain.Duel
 	groups         map[string]*domain.GroupChallenge
@@ -36,15 +41,18 @@ func newMemRepo() *memRepo {
 }
 
 func (m *memRepo) SeedQuestTemplates(_ context.Context, t []domain.QuestTemplate) error {
+	defer m.lock()()
 	m.templates = t
 	return nil
 }
 
 func (m *memRepo) ListQuestTemplates(context.Context) ([]domain.QuestTemplate, error) {
+	defer m.lock()()
 	return m.templates, nil
 }
 
 func (m *memRepo) ListUserQuests(_ context.Context, userID, weekKey string) ([]domain.UserQuest, error) {
+	defer m.lock()()
 	var out []domain.UserQuest
 	for _, q := range m.quests {
 		if q.UserID == userID && q.WeekKey == weekKey {
@@ -68,6 +76,7 @@ func (m *memRepo) ListUserQuests(_ context.Context, userID, weekKey string) ([]d
 }
 
 func (m *memRepo) InsertUserQuests(_ context.Context, quests []domain.UserQuest) error {
+	defer m.lock()()
 	for i := range quests {
 		q := quests[i]
 		m.quests[q.ID] = &q
@@ -76,6 +85,7 @@ func (m *memRepo) InsertUserQuests(_ context.Context, quests []domain.UserQuest)
 }
 
 func (m *memRepo) SaveUserQuest(_ context.Context, q *domain.UserQuest) error {
+	defer m.lock()()
 	if m.failSaveQuest != nil {
 		return m.failSaveQuest
 	}
@@ -84,7 +94,24 @@ func (m *memRepo) SaveUserQuest(_ context.Context, q *domain.UserQuest) error {
 	return nil
 }
 
+func (m *memRepo) SaveUserQuests(ctx context.Context, quests []*domain.UserQuest) error {
+	for _, q := range quests {
+		if err := m.SaveUserQuest(ctx, q); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// lock is the guard every other method takes. SaveUserQuests deliberately does
+// not: it delegates to SaveUserQuest, which locks per quest.
+func (m *memRepo) lock() func() {
+	m.mu.Lock()
+	return m.mu.Unlock
+}
+
 func (m *memRepo) CreateDuel(_ context.Context, d *domain.Duel) error {
+	defer m.lock()()
 	for _, existing := range m.duels {
 		if existing.InviteCode == d.InviteCode {
 			return domain.ErrCodeTaken
@@ -96,6 +123,7 @@ func (m *memRepo) CreateDuel(_ context.Context, d *domain.Duel) error {
 }
 
 func (m *memRepo) SaveDuel(_ context.Context, d *domain.Duel) error {
+	defer m.lock()()
 	if _, ok := m.duels[d.ID]; !ok {
 		return domain.ErrDuelNotFound
 	}
@@ -105,6 +133,7 @@ func (m *memRepo) SaveDuel(_ context.Context, d *domain.Duel) error {
 }
 
 func (m *memRepo) GetDuelByCode(_ context.Context, code string) (*domain.Duel, error) {
+	defer m.lock()()
 	for _, d := range m.duels {
 		if d.InviteCode == code {
 			c := *d
@@ -115,6 +144,7 @@ func (m *memRepo) GetDuelByCode(_ context.Context, code string) (*domain.Duel, e
 }
 
 func (m *memRepo) ListOpenDuelsForUser(_ context.Context, userID string) ([]domain.Duel, error) {
+	defer m.lock()()
 	var out []domain.Duel
 	for _, d := range m.duels {
 		if (d.ChallengerID == userID || d.OpponentID == userID) &&
@@ -126,6 +156,7 @@ func (m *memRepo) ListOpenDuelsForUser(_ context.Context, userID string) ([]doma
 }
 
 func (m *memRepo) ListRecentDuelsForUser(_ context.Context, userID string, limit int) ([]domain.Duel, error) {
+	defer m.lock()()
 	var out []domain.Duel
 	for _, d := range m.duels {
 		if (d.ChallengerID == userID || d.OpponentID == userID) && d.Status == domain.DuelCompleted {
@@ -139,6 +170,7 @@ func (m *memRepo) ListRecentDuelsForUser(_ context.Context, userID string, limit
 }
 
 func (m *memRepo) CreateGroup(_ context.Context, g *domain.GroupChallenge) error {
+	defer m.lock()()
 	for _, existing := range m.groups {
 		if existing.JoinCode == g.JoinCode {
 			return domain.ErrCodeTaken
@@ -150,6 +182,7 @@ func (m *memRepo) CreateGroup(_ context.Context, g *domain.GroupChallenge) error
 }
 
 func (m *memRepo) SaveGroup(_ context.Context, g *domain.GroupChallenge) error {
+	defer m.lock()()
 	if _, ok := m.groups[g.ID]; !ok {
 		return domain.ErrGroupNotFound
 	}
@@ -159,6 +192,7 @@ func (m *memRepo) SaveGroup(_ context.Context, g *domain.GroupChallenge) error {
 }
 
 func (m *memRepo) GetGroupByCode(_ context.Context, code string) (*domain.GroupChallenge, error) {
+	defer m.lock()()
 	for _, g := range m.groups {
 		if g.JoinCode == code {
 			c := *g
@@ -169,6 +203,7 @@ func (m *memRepo) GetGroupByCode(_ context.Context, code string) (*domain.GroupC
 }
 
 func (m *memRepo) ListGroupsForUser(_ context.Context, userID string) ([]domain.GroupChallenge, error) {
+	defer m.lock()()
 	var out []domain.GroupChallenge
 	for _, g := range m.groups {
 		if g.HasMember(userID) {
@@ -179,6 +214,7 @@ func (m *memRepo) ListGroupsForUser(_ context.Context, userID string) ([]domain.
 }
 
 func (m *memRepo) RecordEncouragement(_ context.Context, e domain.Encouragement) error {
+	defer m.lock()()
 	key := e.UserID + "|" + e.TargetID + "|" + e.Date
 	if m.encouragements[key] {
 		return domain.ErrDuplicateEncouragement

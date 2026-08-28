@@ -30,7 +30,7 @@ help:
 	@echo "  make whisper-dev       - Whisper with uvicorn --reload"
 	@echo ""
 	@echo "Docker Compose (infrastructure):"
-	@echo "  make compose-up        - Start Kafka + Redis"
+	@echo "  make compose-up        - Start MongoDB + Redis"
 	@echo "  make compose-down      - Stop all Docker services"
 	@echo "  make compose-build     - Rebuild Docker images"
 	@echo "  make compose-logs      - Tail compose logs"

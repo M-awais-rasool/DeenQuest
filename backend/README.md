@@ -9,7 +9,7 @@ then open [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 > **Everything that belongs to a feature lives in that feature's folder.**
 
 Want to understand notifications? Open `internal/notification/` — its data
-types, business logic, MongoDB code, Kafka consumer, HTTP handlers, and routes
+types, business logic, MongoDB code, HTTP handlers, and routes
 are all there. No jumping between four layer folders.
 
 ## Layout
@@ -22,7 +22,7 @@ backend/
 │   ├── app.go             #    App lifecycle: New() + Run() + graceful shutdown
 │   ├── infra.go           #    connects MongoDB, Redis, Gemini, Expo, JWT
 │   ├── modules.go         #    builds every module + cross-module wiring
-│   ├── workers.go         #    ALL background workers (Kafka consumer, crons)
+│   ├── workers.go         #    ALL background workers (crons)
 │   ├── http.go            #    middleware + mounts every module's routes
 │   └── seed.go            #    startup data seeding
 │
@@ -35,7 +35,7 @@ backend/
 │       └── smart/         #    rules engine: daily-task reminders, streak savers
 │
 └── internal/platform/     # 🧰 SHARED TOOLBOX (reusable, feature-agnostic)
-    ├── config/  logger/  cache/    (Redis)  kafka/  gemini/  ollama/
+    ├── config/  logger/  cache/    (Redis)  gemini/  ollama/
     ├── push/    (Expo)   jwt/      bcrypt/
     └── middleware/  response/  validator/
 ```
@@ -70,7 +70,6 @@ HTTP request → app/http.go middleware → module routes.go → handler.go
 All started in `app/workers.go` (read it top to bottom to see everything that
 runs outside a request):
 
-1. **notification.send Kafka consumer** — delivers pushes via Expo, logs to the job log
 2. **Job-log heartbeat** — daily ticker
 3. **Smart notification cron** — every minute, evaluates `notification/smart`
    rules (daily-task reminders, streak savers) against all users
@@ -78,14 +77,13 @@ runs outside a request):
 ## Run it
 
 ```bash
-go run ./cmd/api            # needs MongoDB; Kafka/Redis/Gemini are optional
+go run ./cmd/api            # needs MongoDB; Redis/Gemini are optional
 make build                  # binary at build/deenquest-api
 go test ./...
 ```
 
-Optional integrations degrade gracefully: no Redis → no rate limit/cache; no
-Kafka → the notification consumer just logs read errors; no `GEMINI_API_KEY` →
-the recitation coach falls back to deterministic tips.
+Optional integrations degrade gracefully: no Redis → no rate limit or cache; no
+`GEMINI_API_KEY` → the recitation coach falls back to deterministic tips.
 
 ## Adding a new feature (checklist)
 

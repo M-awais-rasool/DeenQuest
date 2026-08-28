@@ -46,11 +46,6 @@ type Message struct {
 	Data  map[string]interface{} `json:"data,omitempty"`
 }
 
-type Job struct {
-	User    UserInfo `json:"user"`
-	Message Message  `json:"message"`
-}
-
 type TokenResponse struct {
 	User          UserInfo `json:"user"`
 	ExpoPushToken string   `json:"expo_push_token"`

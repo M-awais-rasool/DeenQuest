@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,14 +20,40 @@ end
 return current
 `)
 
-func RateLimit(redisClient *cache.RedisClient, limit int, window time.Duration) gin.HandlerFunc {
+func RateLimitByIP(redisClient *cache.RedisClient, limit int, window time.Duration, prefix string) gin.HandlerFunc {
+	return rateLimit(redisClient, limit, window, prefix, func(c *gin.Context) string {
+		return "ip:" + c.ClientIP()
+	})
+}
+
+func RateLimitByUser(redisClient *cache.RedisClient, limit int, window time.Duration, prefix string) gin.HandlerFunc {
+	return rateLimit(redisClient, limit, window, prefix, func(c *gin.Context) string {
+		if userID, ok := c.Get("user_id"); ok {
+			if id, ok := userID.(string); ok && id != "" {
+				return "user:" + id
+			}
+		}
+		return "ip:" + c.ClientIP()
+	})
+}
+
+func rateLimit(
+	redisClient *cache.RedisClient,
+	limit int,
+	window time.Duration,
+	prefix string,
+	subject func(*gin.Context) string,
+) gin.HandlerFunc {
 	windowMS := window.Milliseconds()
+	retryAfter := strconv.Itoa(int(window.Seconds()))
+
 	return func(c *gin.Context) {
+		// Bound the limiter so a slow/unreachable Redis can never stall the request.
 		// Bound the limiter so a slow/unreachable Redis can never stall the request.
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
 
-		key := "rate_limit:" + c.ClientIP()
+		key := "rate_limit:" + prefix + ":" + subject(c)
 		count, err := rateLimitScript.Run(ctx, redisClient.Client, []string{key}, windowMS).Int64()
 		if err != nil {
 			// Fail open: never reject traffic because the limiter backend is degraded.
@@ -35,6 +62,7 @@ func RateLimit(redisClient *cache.RedisClient, limit int, window time.Duration) 
 		}
 
 		if count > int64(limit) {
+			c.Header("Retry-After", retryAfter)
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 				"success": false,
 				"error":   "Rate limit exceeded. Try again later.",

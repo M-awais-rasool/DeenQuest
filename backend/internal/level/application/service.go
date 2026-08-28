@@ -10,6 +10,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/chawais/deenquest/backend/internal/level/domain"
+	"github.com/chawais/deenquest/backend/internal/platform/cache"
 	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
 	progressdomain "github.com/chawais/deenquest/backend/internal/progress/domain"
 	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
@@ -23,10 +24,20 @@ var (
 
 const treasureEvery = 4
 
+// The level map changes only when the user finishes something, and that path
+// invalidates the entry directly. The TTL is a backstop.
+const levelsTTL = time.Minute
+
 type Service struct {
 	repo     domain.Repository
 	progress *progressapp.Service
 	reward   *rewardapp.Service
+	cache    *cache.UserCache
+}
+
+// SetCache attaches the read cache. Nil means every read goes to MongoDB.
+func (s *Service) SetCache(c *cache.UserCache) {
+	s.cache = c
 }
 
 func NewService(repo domain.Repository, progressSvc *progressapp.Service, rewardSvc *rewardapp.Service) *Service {
@@ -79,6 +90,13 @@ func levelIDs(levels []domain.Level) []int {
 
 // GetLevels returns course levels annotated with the user's progress status.
 func (s *Service) GetLevels(ctx context.Context, userID string, courseType domain.CourseType) ([]domain.LevelWithStatus, error) {
+	cacheName := "levels:" + string(courseType)
+
+	var cached []domain.LevelWithStatus
+	if s.cache.Get(ctx, userID, cacheName, &cached) {
+		return cached, nil
+	}
+
 	levels, err := s.repo.ListLevelsByCourse(ctx, courseType)
 	if err != nil {
 		return nil, fmt.Errorf("list levels: %w", err)
@@ -128,6 +146,7 @@ func (s *Service) GetLevels(ctx context.Context, userID string, courseType domai
 		results = append(results, lws)
 	}
 
+	s.cache.Set(ctx, userID, cacheName, results, levelsTTL)
 	return results, nil
 }
 
@@ -200,6 +219,7 @@ func (s *Service) CompleteLessonInLevel(ctx context.Context, userID string, leve
 	if err := s.repo.UpsertUserLevel(ctx, ul); err != nil {
 		return nil, err
 	}
+	s.cache.Invalidate(ctx, userID)
 
 	return ul, nil
 }
@@ -259,6 +279,7 @@ func (s *Service) CompleteLevel(ctx context.Context, userID string, levelID int,
 	if err := s.repo.UpsertUserLevel(ctx, ul); err != nil {
 		return nil, err
 	}
+	s.cache.Invalidate(ctx, userID)
 
 	xp := lvl.XPReward
 	var (

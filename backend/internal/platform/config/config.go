@@ -13,6 +13,8 @@ import (
 type Config struct {
 	AppEnv string
 
+	AccessLogSampleEvery int
+
 	Host string
 	Port string
 
@@ -23,10 +25,6 @@ type Config struct {
 	RedisPort     string
 	RedisPassword string
 	RedisDB       int
-
-	KafkaBrokers string
-
-	KafkaEnabled bool
 
 	JWTSecret             string
 	JWTAccessExpiry       time.Duration
@@ -76,32 +74,31 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		AppEnv:              getEnv("APP_ENV", "development"),
-		Host:                getEnv("SERVER_HOST", "0.0.0.0"),
-		Port:                getEnv("SERVER_PORT", "8080"),
-		MongoURI:            getEnv("MONGO_URI", "mongodb://localhost:27017"),
-		MongoDB:             getEnv("MONGO_DB", "deenquest"),
-		RedisHost:           getEnv("REDIS_HOST", "localhost"),
-		RedisPort:           getEnv("REDIS_PORT", "6379"),
-		RedisPassword:       getEnv("REDIS_PASSWORD", ""),
-		RedisDB:             getInt("REDIS_DB", 0),
-		KafkaBrokers:        getEnv("KAFKA_BROKERS", "localhost:9092"),
-		KafkaEnabled:        getBool("KAFKA_ENABLED", false),
-		JWTSecret:           getEnv("JWT_SECRET", "change-me-in-production"),
-		WhisperURL:          getEnv("WHISPER_URL", "http://localhost:8001"),
-		AlQuranBaseURL:      getEnv("ALQURAN_BASE_URL", "https://api.alquran.cloud/v1"),
-		QuranAudioCDNURL:    getEnv("QURAN_AUDIO_CDN_URL", "https://cdn.islamic.network"),
-		QuranAudioEdition:   getEnv("QURAN_AUDIO_EDITION", "ar.alafasy"),
-		QuranAudioBitrate:   getInt("QURAN_AUDIO_BITRATE", 128),
-		ExpoPushURL:         getEnv("EXPO_PUSH_URL", "https://exp.host/--/api/v2/push/send"),
-		ExpoPushAccessToken: getEnv("EXPO_PUSH_ACCESS_TOKEN", ""),
-		OllamaURL:           getEnv("OLLAMA_URL", "http://127.0.0.1:11434"),
-		GeminiAPIKey:        getEnv("GEMINI_API_KEY", ""),
-		GeminiModel:         getEnv("GEMINI_MODEL", ""),
-		CoachEnabled:        getBool("COACH_ENABLED", true),
-		CoachLLMEnabled:     getBool("COACH_LLM_ENABLED", false),
-		CORSAllowedOrigins:  getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
-		AdminEmails:         getEnv("ADMIN_EMAILS", ""),
+		AppEnv:               getEnv("APP_ENV", "development"),
+		AccessLogSampleEvery: getInt("ACCESS_LOG_SAMPLE_EVERY", 0),
+		Host:                 getEnv("SERVER_HOST", "0.0.0.0"),
+		Port:                 getEnv("SERVER_PORT", "8080"),
+		MongoURI:             getEnv("MONGO_URI", "mongodb://localhost:27017"),
+		MongoDB:              getEnv("MONGO_DB", "deenquest"),
+		RedisHost:            getEnv("REDIS_HOST", "localhost"),
+		RedisPort:            getEnv("REDIS_PORT", "6379"),
+		RedisPassword:        getEnv("REDIS_PASSWORD", ""),
+		RedisDB:              getInt("REDIS_DB", 0),
+		JWTSecret:            getEnv("JWT_SECRET", "change-me-in-production"),
+		WhisperURL:           getEnv("WHISPER_URL", "http://localhost:8001"),
+		AlQuranBaseURL:       getEnv("ALQURAN_BASE_URL", "https://api.alquran.cloud/v1"),
+		QuranAudioCDNURL:     getEnv("QURAN_AUDIO_CDN_URL", "https://cdn.islamic.network"),
+		QuranAudioEdition:    getEnv("QURAN_AUDIO_EDITION", "ar.alafasy"),
+		QuranAudioBitrate:    getInt("QURAN_AUDIO_BITRATE", 128),
+		ExpoPushURL:          getEnv("EXPO_PUSH_URL", "https://exp.host/--/api/v2/push/send"),
+		ExpoPushAccessToken:  getEnv("EXPO_PUSH_ACCESS_TOKEN", ""),
+		OllamaURL:            getEnv("OLLAMA_URL", "http://127.0.0.1:11434"),
+		GeminiAPIKey:         getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:          getEnv("GEMINI_MODEL", ""),
+		CoachEnabled:         getBool("COACH_ENABLED", true),
+		CoachLLMEnabled:      getBool("COACH_LLM_ENABLED", false),
+		CORSAllowedOrigins:   getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
+		AdminEmails:          getEnv("ADMIN_EMAILS", ""),
 
 		GoogleWebClientID:     getEnv("GOOGLE_WEB_CLIENT_ID", ""),
 		GoogleIOSClientID:     getEnv("GOOGLE_IOS_CLIENT_ID", ""),
@@ -121,6 +118,17 @@ func Load() (*Config, error) {
 	cfg.RefreshTokenExpiry, err = time.ParseDuration(getEnv("REFRESH_TOKEN_EXPIRY", "1440h"))
 	if err != nil {
 		return nil, fmt.Errorf("invalid REFRESH_TOKEN_EXPIRY: %w", err)
+	}
+
+	// Unset means "pick the sane default for this environment": sample hard in
+	// production, log everything locally where the volume is trivial and a
+	// missing line costs debugging time.
+	if cfg.AccessLogSampleEvery <= 0 {
+		if cfg.IsProduction() {
+			cfg.AccessLogSampleEvery = 100
+		} else {
+			cfg.AccessLogSampleEvery = 1
+		}
 	}
 
 	if cfg.IsProduction() {
@@ -194,18 +202,6 @@ func (c *Config) TrustedProxyList() []string {
 
 func (c *Config) GetRedisAddr() string {
 	return c.RedisHost + ":" + c.RedisPort
-}
-
-func (c *Config) GetKafkaBrokerList() []string {
-	parts := strings.Split(c.KafkaBrokers, ",")
-	out := make([]string, 0, len(parts))
-	for _, p := range parts {
-		v := strings.TrimSpace(p)
-		if v != "" {
-			out = append(out, v)
-		}
-	}
-	return out
 }
 
 // AdminEmailList returns the configured admin emails, lower-cased, trimmed and

@@ -25,6 +25,7 @@ func NewMongoTokenRepository(db *mongo.Database) (*MongoTokenRepository, error) 
 			Options: options.Index().SetUnique(true),
 		},
 		{Keys: bson.D{{Key: "user_id", Value: 1}, {Key: "enabled", Value: 1}}},
+		{Keys: bson.D{{Key: "enabled", Value: 1}, {Key: "_id", Value: 1}}},
 	}
 	_, err := repo.collection.Indexes().CreateMany(context.Background(), indexes)
 	if err != nil {

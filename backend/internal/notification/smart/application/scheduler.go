@@ -23,7 +23,7 @@ func NewScheduler(service *Service) *Scheduler {
 }
 
 func (s *Scheduler) Start(ctx context.Context) error {
-	_, err := s.cron.AddFunc("*/1 * * * *", func() {
+	_, err := s.cron.AddFunc("*/5 * * * *", func() {
 		execCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
@@ -41,7 +41,7 @@ func (s *Scheduler) Start(ctx context.Context) error {
 	}
 
 	s.cron.Start()
-	logger.Info("intelligent notification scheduler started (every 10 minutes)")
+	logger.Info("intelligent notification scheduler started (every 5 minutes)")
 
 	<-ctx.Done()
 

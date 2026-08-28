@@ -206,6 +206,31 @@ func (r *MongoRepository) SaveUserQuest(ctx context.Context, quest *domain.UserQ
 	return err
 }
 
+func (r *MongoRepository) SaveUserQuests(ctx context.Context, quests []*domain.UserQuest) error {
+	if len(quests) == 0 {
+		return nil
+	}
+	if len(quests) == 1 {
+		return r.SaveUserQuest(ctx, quests[0])
+	}
+
+	timeoutCtx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	models := make([]mongo.WriteModel, 0, len(quests))
+	for _, q := range quests {
+		models = append(models, mongo.NewReplaceOneModel().
+			SetFilter(bson.M{"_id": q.ID}).
+			SetReplacement(q).
+			SetUpsert(true))
+	}
+
+	// Unordered: these quests are independent, so one failing write should not
+	// discard the rest of the batch.
+	_, err := r.userQuests.BulkWrite(timeoutCtx, models, options.BulkWrite().SetOrdered(false))
+	return err
+}
+
 /* ─────────────────────────── duels ─────────────────────────── */
 
 func (r *MongoRepository) CreateDuel(ctx context.Context, duel *domain.Duel) error {

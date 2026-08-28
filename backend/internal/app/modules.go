@@ -32,6 +32,7 @@ import (
 	notifhttp "github.com/chawais/deenquest/backend/internal/notification/interfaces/http"
 	smartapp "github.com/chawais/deenquest/backend/internal/notification/smart/application"
 	smartinfra "github.com/chawais/deenquest/backend/internal/notification/smart/infrastructure"
+	"github.com/chawais/deenquest/backend/internal/platform/cache"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 	"github.com/chawais/deenquest/backend/internal/platform/logger"
 	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
@@ -79,8 +80,9 @@ type Modules struct {
 
 	// challenge — weekly quests, 1v1 duels, and shared group challenges. Scored
 	// by observing every XP award through the progress activity listener.
-	ChallengeService *challengeapp.Service
-	ChallengeHandler *challengehttp.Handler
+	ChallengeService  *challengeapp.Service
+	ChallengeActivity *challengeapp.ActivityQueue
+	ChallengeHandler  *challengehttp.Handler
 
 	// quran — surah reading and audio (external AlQuran API + Redis cache).
 	QuranHandler *quranhttp.Handler
@@ -144,10 +146,18 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	})
 	userService := userapp.NewService(userRepo)
 
+	// One cache shared by every read model. Keys are namespaced per user and
+	// per name, and a write to any of them invalidates the whole user, so the
+	// modules never have to know about each other's keys.
+	userCache := cache.NewUserCache(infra.Redis)
+
 	progressService := progressapp.NewService(progressRepo)
+	progressService.SetCache(userCache)
 	rewardService := rewardapp.NewService(rewardRepo)
 	levelService := levelapp.NewService(levelRepo, progressService, rewardService)
+	levelService.SetCache(userCache)
 	taskService := dailytaskapp.NewService(taskRepo, progressService)
+	taskService.SetCache(userCache)
 	recitationService := recitationapp.NewService(recitationRepo, cfg.WhisperURL, cfg.WhisperInternalToken, levelService, progressService)
 	logger.Info("Recitation service initialized", zap.String("whisper_url", cfg.WhisperURL))
 
@@ -174,7 +184,12 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		return nil, fmt.Errorf("init challenge repository: %w", err)
 	}
 	challengeService := challengeapp.NewService(challengeRepo, challengeProfiles{users: userService}, progressService)
-	progressService.SetActivityListener(challengeService)
+
+	// The progress service notifies the queue, not the challenge service: the
+	// scoring fan-out is ten to twenty writes and none of it is on the critical
+	// path of the response the user is waiting for.
+	challengeActivity := challengeapp.NewActivityQueue(challengeService)
+	progressService.SetActivityListener(challengeActivity)
 
 	var coachService *coachapp.Service
 	var coachHandler *coachhttp.Handler
@@ -225,8 +240,9 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		CoachHandler:      coachHandler,
 		CoachAdminHandler: coachAdminHandler,
 
-		ChallengeService: challengeService,
-		ChallengeHandler: challengehttp.NewHandler(challengeService),
+		ChallengeService:  challengeService,
+		ChallengeActivity: challengeActivity,
+		ChallengeHandler:  challengehttp.NewHandler(challengeService),
 
 		QuranHandler: quranhttp.NewHandler(quranService),
 

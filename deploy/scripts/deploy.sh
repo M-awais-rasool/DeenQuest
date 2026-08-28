@@ -130,7 +130,5 @@ echo "$IDLE" > "$STATE_DIR/colour"
 log "deployed tag=$TAG digest=$DIGEST colour=$IDLE previous=$CURRENT result=ok"
 
 # ── 5. keep the old colour warm for a fast rollback ───────────────────────────
-# Most bad deploys announce themselves within a minute or two. For that window,
-# recovery is one file write.
-( sleep 300; $COMPOSE --profile "$CURRENT" stop "api-$CURRENT" >/dev/null 2>&1 || true ) &
+( sleep 60; $COMPOSE --profile "$CURRENT" stop "api-$CURRENT" >/dev/null 2>&1 || true ) &
 disown
