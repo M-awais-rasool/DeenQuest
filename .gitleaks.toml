@@ -1,0 +1,27 @@
+# Secret-scanning config for gitleaks, which runs in the Security job and
+# blocks the merge on any finding.
+#
+# The default rules stay on. This file only records the one class of match that
+# is safe by construction.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = """
+age recipient (public) keys.
+
+An age keypair splits into a public key that starts with `age1` and a private
+key that starts with `AGE-SECRET-KEY-1`. The public half is what you encrypt
+*to*: it is meant to be committed — it lives in .sops.yaml — and publishing it
+grants nobody anything. Its length and character set give it enough entropy to
+trip the generic-api-key rule anyway, which it did on the age-keygen sample
+output in docs/ACCOUNT_SETUP.md.
+
+Only the `age1` prefix is allowlisted. A real private key carries the
+AGE-SECRET-KEY-1 prefix, matches none of this, and is still caught.
+"""
+regexTarget = "line"
+regexes = [
+  '''age1[0-9a-z]{58}''',
+]
