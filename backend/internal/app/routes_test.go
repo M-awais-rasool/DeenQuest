@@ -41,7 +41,7 @@ func TestLearningRoutesRegister(t *testing.T) {
 	rewardSvc := rewardapp.NewService(nil)
 	levelSvc := levelapp.NewService(nil, progressSvc, rewardSvc)
 	taskSvc := dailytaskapp.NewService(nil, progressSvc)
-	recSvc := recitationapp.NewService(nil, "", levelSvc, progressSvc)
+	recSvc := recitationapp.NewService(nil, "", "", levelSvc, progressSvc)
 
 	progresshttp.RegisterRoutes(v1, authed, progresshttp.NewHandler(progressSvc))
 	levelhttp.RegisterRoutes(authed, levelhttp.NewHandler(levelSvc))

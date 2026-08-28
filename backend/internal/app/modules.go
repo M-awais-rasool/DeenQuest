@@ -148,7 +148,7 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	rewardService := rewardapp.NewService(rewardRepo)
 	levelService := levelapp.NewService(levelRepo, progressService, rewardService)
 	taskService := dailytaskapp.NewService(taskRepo, progressService)
-	recitationService := recitationapp.NewService(recitationRepo, cfg.WhisperURL, levelService, progressService)
+	recitationService := recitationapp.NewService(recitationRepo, cfg.WhisperURL, cfg.WhisperInternalToken, levelService, progressService)
 	logger.Info("Recitation service initialized", zap.String("whisper_url", cfg.WhisperURL))
 
 	// reward evaluation needs level + progress metrics; wire the adapter that

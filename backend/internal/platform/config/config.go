@@ -26,6 +26,8 @@ type Config struct {
 
 	KafkaBrokers string
 
+	KafkaEnabled bool
+
 	JWTSecret             string
 	JWTAccessExpiry       time.Duration
 	RefreshTokenExpiry    time.Duration
@@ -35,6 +37,9 @@ type Config struct {
 	AppleClientIDs        string
 
 	WhisperURL string
+
+	WhisperInternalToken string
+	TrustedProxies       string
 
 	AlQuranBaseURL    string
 	QuranAudioCDNURL  string
@@ -81,6 +86,7 @@ func Load() (*Config, error) {
 		RedisPassword:       getEnv("REDIS_PASSWORD", ""),
 		RedisDB:             getInt("REDIS_DB", 0),
 		KafkaBrokers:        getEnv("KAFKA_BROKERS", "localhost:9092"),
+		KafkaEnabled:        getBool("KAFKA_ENABLED", false),
 		JWTSecret:           getEnv("JWT_SECRET", "change-me-in-production"),
 		WhisperURL:          getEnv("WHISPER_URL", "http://localhost:8001"),
 		AlQuranBaseURL:      getEnv("ALQURAN_BASE_URL", "https://api.alquran.cloud/v1"),
@@ -101,6 +107,9 @@ func Load() (*Config, error) {
 		GoogleIOSClientID:     getEnv("GOOGLE_IOS_CLIENT_ID", ""),
 		GoogleAndroidClientID: getEnv("GOOGLE_ANDROID_CLIENT_ID", ""),
 		AppleClientIDs:        getEnv("APPLE_CLIENT_IDS", ""),
+
+		WhisperInternalToken: getEnv("WHISPER_INTERNAL_TOKEN", ""),
+		TrustedProxies:       getEnv("TRUSTED_PROXIES", ""),
 	}
 
 	var err error
@@ -114,7 +123,73 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("invalid REFRESH_TOKEN_EXPIRY: %w", err)
 	}
 
+	if cfg.IsProduction() {
+		if err := cfg.validateProduction(); err != nil {
+			return nil, err
+		}
+	}
+
 	return cfg, nil
+}
+
+func (c *Config) IsProduction() bool { return c.AppEnv == "production" }
+
+func (c *Config) validateProduction() error {
+	var problems []string
+
+	switch {
+	case c.JWTSecret == "", c.JWTSecret == "change-me-in-production":
+		problems = append(problems, "JWT_SECRET is unset or still the placeholder — generate one with: openssl rand -base64 48")
+	case len(c.JWTSecret) < 32:
+		problems = append(problems, "JWT_SECRET must be at least 32 characters")
+	}
+
+	if len(c.AdminEmailList()) == 0 {
+		problems = append(problems, "ADMIN_EMAILS is empty — an empty allowlist grants the ADMIN role to every signed-in user")
+	}
+
+	origins := c.AllowedOrigins()
+	if len(origins) == 0 {
+		problems = append(problems, "CORS_ALLOWED_ORIGINS is empty")
+	}
+	for _, o := range origins {
+		if o == "*" || strings.Contains(o, "localhost") || strings.Contains(o, "127.0.0.1") {
+			problems = append(problems, "CORS_ALLOWED_ORIGINS must not contain a wildcard or a local address: "+o)
+		}
+	}
+
+	if !strings.Contains(c.MongoURI, "@") {
+		problems = append(problems, "MONGO_URI has no credentials — production MongoDB must require authentication")
+	}
+
+	if len(c.GoogleClientIDs()) == 0 && len(c.AppleClientIDList()) == 0 {
+		problems = append(problems, "no OAuth client IDs configured — nobody would be able to sign in")
+	}
+
+	if c.WhisperInternalToken == "" {
+		problems = append(problems, "WHISPER_INTERNAL_TOKEN is empty — the whisper service has no other authentication")
+	}
+
+	if c.TrustedProxies == "" {
+		problems = append(problems, "TRUSTED_PROXIES is empty — set it to the reverse proxy's CIDR so client IPs cannot be forged")
+	}
+
+	if len(problems) == 0 {
+		return nil
+	}
+	return fmt.Errorf("refusing to start with an unsafe production config:\n  - %s",
+		strings.Join(problems, "\n  - "))
+}
+
+func (c *Config) TrustedProxyList() []string {
+	parts := strings.Split(c.TrustedProxies, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if v := strings.TrimSpace(p); v != "" {
+			out = append(out, v)
+		}
+	}
+	return out
 }
 
 func (c *Config) GetRedisAddr() string {

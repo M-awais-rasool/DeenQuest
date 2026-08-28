@@ -111,8 +111,8 @@ func (s *Service) ensureWeeklyQuests(ctx context.Context, userID string, now tim
 
 	picked := domain.PickWeeklyQuests(catalog, userID, weekKey, domain.WeeklyQuestCount)
 	fresh := make([]domain.UserQuest, 0, len(picked))
-	for _, t := range picked {
-		fresh = append(fresh, domain.NewUserQuest(uuid.NewString(), userID, weekKey, t, now))
+	for i, t := range picked {
+		fresh = append(fresh, domain.NewUserQuest(uuid.NewString(), userID, weekKey, t, now, i))
 	}
 	if err := s.repo.InsertUserQuests(ctx, fresh); err != nil {
 		return nil, err

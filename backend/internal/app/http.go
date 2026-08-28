@@ -1,9 +1,12 @@
 package app
 
 import (
+	"context"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
 	authhttp "github.com/chawais/deenquest/backend/internal/auth/interfaces/http"
@@ -15,6 +18,7 @@ import (
 	levelhttp "github.com/chawais/deenquest/backend/internal/level/interfaces/http"
 	notifhttp "github.com/chawais/deenquest/backend/internal/notification/interfaces/http"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
+	"github.com/chawais/deenquest/backend/internal/platform/logger"
 	"github.com/chawais/deenquest/backend/internal/platform/middleware"
 	progresshttp "github.com/chawais/deenquest/backend/internal/progress/interfaces/http"
 	quranhttp "github.com/chawais/deenquest/backend/internal/quran/interfaces/http"
@@ -24,11 +28,20 @@ import (
 )
 
 func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
-	if cfg.AppEnv == "production" {
+	if cfg.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	r := gin.New()
+
+	if err := r.SetTrustedProxies(cfg.TrustedProxyList()); err != nil {
+		logger.Warn("invalid TRUSTED_PROXIES, falling back to trusting no proxy", zap.Error(err))
+		_ = r.SetTrustedProxies(nil)
+	}
+	if cfg.IsProduction() {
+		r.TrustedPlatform = gin.PlatformCloudflare
+	}
+
 	r.Use(middleware.Recovery())
 	r.Use(middleware.RequestLogger())
 	r.Use(middleware.CORS(cfg.AllowedOrigins()))
@@ -38,7 +51,30 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	}
 
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok", "service": "deenquest-api"})
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "deenquest-api"})
+	})
+
+	r.GET("/health/ready", func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+		defer cancel()
+
+		checks := gin.H{"mongo": "ok", "redis": "ok"}
+		status := http.StatusOK
+		state := "ready"
+
+		if err := infra.Mongo.Ping(ctx, nil); err != nil {
+			checks["mongo"] = err.Error()
+			status = http.StatusServiceUnavailable
+			state = "not ready"
+		}
+
+		if infra.Redis == nil {
+			checks["redis"] = "unavailable — caching and rate limiting are off"
+		} else if err := infra.Redis.Client.Ping(ctx).Err(); err != nil {
+			checks["redis"] = err.Error()
+		}
+
+		c.JSON(status, gin.H{"status": state, "checks": checks})
 	})
 
 	v1 := r.Group("/api/v1")

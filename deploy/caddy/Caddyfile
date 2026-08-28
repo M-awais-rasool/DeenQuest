@@ -1,0 +1,31 @@
+# Internal reverse proxy. TLS is terminated by Cloudflare, so this speaks plain
+# HTTP on a private Docker network and never faces the internet.
+{
+	admin off
+	auto_https off
+	servers {
+		# Caddy is the only thing cloudflared talks to, and cloudflared is the
+		# only thing that talks to Caddy.
+		trusted_proxies static 172.16.0.0/12
+	}
+}
+
+:80 {
+	# The blue/green switch. deploy.sh rewrites this one file and reloads.
+	import /etc/caddy/active.conf
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options    "nosniff"
+		X-Frame-Options           "DENY"
+		Referrer-Policy           "strict-origin-when-cross-origin"
+		Permissions-Policy        "geolocation=(), microphone=(), camera=()"
+		-Server
+	}
+
+	# Keep health probes out of the access log; they are every 10 seconds.
+	log {
+		output stdout
+		format json
+	}
+}

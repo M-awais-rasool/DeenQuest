@@ -1,0 +1,9 @@
+# The model is 358 MB and is mounted at runtime, not baked in. Without this the
+# build context alone is bigger than the finished image.
+models/
+.venv/
+.venv-convert/
+convert_model.py
+requirements-convert.txt
+__pycache__/
+*.pyc

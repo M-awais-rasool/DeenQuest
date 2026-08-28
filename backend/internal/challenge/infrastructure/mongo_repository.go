@@ -162,7 +162,10 @@ func (r *MongoRepository) ListUserQuests(ctx context.Context, userID, weekKey st
 	defer cancel()
 	cur, err := r.userQuests.Find(timeoutCtx,
 		bson.M{"user_id": userID, "week_key": weekKey},
-		options.Find().SetSort(bson.D{{Key: "created_at", Value: 1}, {Key: "_id", Value: 1}}),
+		// Position first, so the board keeps the order it was drawn in. The
+		// remaining keys only break ties for documents written before position
+		// existed, where it decodes as 0.
+		options.Find().SetSort(bson.D{{Key: "position", Value: 1}, {Key: "created_at", Value: 1}, {Key: "_id", Value: 1}}),
 	)
 	if err != nil {
 		return nil, err

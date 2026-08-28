@@ -62,7 +62,16 @@ func (a *App) Run() error {
 	defer a.infra.Close()
 
 	addr := fmt.Sprintf("%s:%s", a.cfg.Host, a.cfg.Port)
-	srv := &http.Server{Addr: addr, Handler: a.router}
+
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           a.router,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       90 * time.Second,
+		MaxHeaderBytes:    1 << 20,
+	}
 
 	serverErr := make(chan error, 1)
 	go func() {

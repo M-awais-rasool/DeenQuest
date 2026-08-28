@@ -13,6 +13,8 @@ POST /transcribe  — accepts multipart audio file, returns JSON transcript
 GET  /health      — liveness probe
 """
 
+import asyncio
+import hmac
 import logging
 import os
 import tempfile
@@ -21,7 +23,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from faster_whisper import WhisperModel
@@ -40,6 +42,18 @@ CPU_THREADS = int(os.getenv("WHISPER_CPU_THREADS", "0"))
 MAX_AUDIO_MB = int(os.getenv("MAX_AUDIO_MB", "10"))
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
+# Shared secret the API sends on every call. This service has no other
+# authentication and transcription is the most expensive thing the box does, so
+# in production it is required — an empty value here is refused at startup.
+INTERNAL_TOKEN = os.getenv("INTERNAL_TOKEN", "")
+REQUIRE_TOKEN = os.getenv("REQUIRE_INTERNAL_AUTH", "false").lower() in ("1", "true", "yes", "on")
+
+# Transcription is CPU-bound and the production box has 2 shared vCPUs. FastAPI's
+# threadpool would happily run ~40 of these at once and starve the API of CPU,
+# so requests queue instead.
+MAX_CONCURRENT = int(os.getenv("WHISPER_MAX_CONCURRENT", "1"))
+_transcribe_slot = asyncio.Semaphore(MAX_CONCURRENT)
+
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
     format="%(asctime)s %(levelname)s [whisper-svc] %(message)s",
@@ -56,6 +70,14 @@ _model: Optional[WhisperModel] = None
 async def lifespan(app: FastAPI):
     """Load model once on startup; free on shutdown."""
     global _model
+
+    # Refuse to come up authenticated-in-name-only: if the operator asked for
+    # the token check, a missing token is a misconfiguration, not a default.
+    if REQUIRE_TOKEN and not INTERNAL_TOKEN:
+        raise RuntimeError(
+            "REQUIRE_INTERNAL_AUTH is on but INTERNAL_TOKEN is empty — "
+            "the service would accept every caller."
+        )
 
     # Only a local path can be "missing" in a way worth stopping for. A bare
     # size name ("small") or a Hub id ("tarteel-ai/whisper-base-ar-quran") is
@@ -191,13 +213,25 @@ async def health():
     return {"status": "ok", "model": Path(WHISPER_MODEL).name, "device": DEVICE}
 
 
+def _check_internal_token(supplied: str) -> None:
+    """Reject anything that is not the API. Constant-time, so a wrong token
+    leaks nothing about how wrong it was."""
+    if not REQUIRE_TOKEN:
+        return
+    if not INTERNAL_TOKEN or not hmac.compare_digest(supplied or "", INTERNAL_TOKEN):
+        raise HTTPException(status_code=401, detail="unauthorized")
+
+
 @app.post("/transcribe")
 async def transcribe(
     audio: UploadFile = File(...),
     initial_prompt: str = Form(""),
+    x_internal_token: str = Header(default=""),
 ):
     """
     Transcribe an Arabic audio file.
+
+    Requires the X-Internal-Token header when REQUIRE_INTERNAL_AUTH is on.
 
     Form fields:
       audio          — audio file upload (m4a / mp3 / wav / ogg / aac / webm)
@@ -213,6 +247,7 @@ async def transcribe(
           "duration_ms": 1234
         }
     """
+    _check_internal_token(x_internal_token)
     _validate_audio_file(audio)
 
     # Read and size-check
@@ -236,9 +271,10 @@ async def transcribe(
         tmp_path = tmp.name
 
     try:
-        result = await run_in_threadpool(
-            _transcribe_file, tmp_path, audio.filename or "unknown", initial_prompt
-        )
+        async with _transcribe_slot:
+            result = await run_in_threadpool(
+                _transcribe_file, tmp_path, audio.filename or "unknown", initial_prompt
+            )
         return JSONResponse(content=result)
     except Exception as exc:
         log.exception("Transcription failed for %s: %s", audio.filename, exc)

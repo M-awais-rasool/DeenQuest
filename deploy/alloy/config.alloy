@@ -1,0 +1,120 @@
+// Grafana Alloy — metrics and logs to Grafana Cloud's free tier.
+//
+// The cardinality allowlist below is not an optimisation. node_exporter alone
+// emits thousands of series and will exhaust a free-tier allowance within a
+// day, and a monitoring system that gets throttled mid-incident is worse than
+// none. Start restrictive; add a metric when an incident proves you needed it.
+
+// ── host metrics ─────────────────────────────────────────────────────────────
+prometheus.exporter.unix "host" {
+  rootfs_path = "/host/root"
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+
+  set_collectors = ["cpu", "meminfo", "filesystem", "loadavg", "diskstats", "netdev"]
+
+  filesystem {
+    mount_points_exclude = "^/(dev|proc|sys|var/lib/docker/.+|run)($|/)"
+  }
+}
+
+discovery.relabel "host" {
+  targets = prometheus.exporter.unix.host.targets
+  rule {
+    target_label = "instance"
+    replacement  = "deenquest-prod"
+  }
+}
+
+prometheus.scrape "host" {
+  targets    = discovery.relabel.host.output
+  forward_to = [prometheus.relabel.allowlist.receiver]
+  scrape_interval = "30s"
+}
+
+// ── the API's own metrics ────────────────────────────────────────────────────
+// Both colours are scraped; only one serves traffic, and seeing the idle one
+// come up healthy during a deploy is useful.
+prometheus.scrape "api" {
+  targets = [
+    { __address__ = "api-blue:8080",  __metrics_path__ = "/metrics", colour = "blue"  },
+    { __address__ = "api-green:8080", __metrics_path__ = "/metrics", colour = "green" },
+  ]
+  forward_to = [prometheus.relabel.allowlist.receiver]
+  scrape_interval = "30s"
+}
+
+// ── the cardinality gate ─────────────────────────────────────────────────────
+prometheus.relabel "allowlist" {
+  forward_to = [prometheus.remote_write.grafana.receiver]
+
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|" +
+            "go_(goroutines|threads|memstats_alloc_bytes|memstats_sys_bytes)|" +
+            "process_(cpu_seconds_total|resident_memory_bytes|open_fds)|" +
+            "http_(request_duration_seconds.*|requests_total)|" +
+            "node_(cpu_seconds_total|load1|load5)|" +
+            "node_memory_(MemTotal|MemAvailable|SwapTotal|SwapFree)_bytes|" +
+            "node_filesystem_(avail|size)_bytes|" +
+            "node_disk_(read|written)_bytes_total|" +
+            "node_network_(receive|transmit)_bytes_total"
+    action = "keep"
+  }
+}
+
+prometheus.remote_write "grafana" {
+  endpoint {
+    url = sys.env("GRAFANA_PROM_URL")
+    basic_auth {
+      username = sys.env("GRAFANA_PROM_USER")
+      password = sys.env("GRAFANA_CLOUD_TOKEN")
+    }
+  }
+}
+
+// ── logs ─────────────────────────────────────────────────────────────────────
+// Container logs come from the json-file driver's files rather than the Docker
+// socket: a read-only socket bind still grants full Docker API access, which is
+// effectively host root, in a container that also has internet egress.
+local.file_match "containers" {
+  path_targets = [{ __path__ = "/var/lib/docker/containers/*/*-json.log", job = "docker" }]
+}
+
+loki.source.file "containers" {
+  targets    = local.file_match.containers.targets
+  forward_to = [loki.process.docker.receiver]
+}
+
+loki.process "docker" {
+  stage.json {
+    expressions = { output = "log", stream = "stream", timestamp = "time" }
+  }
+  stage.timestamp {
+    source = "timestamp"
+    format = "RFC3339Nano"
+  }
+  stage.output { source = "output" }
+  forward_to = [loki.write.grafana.receiver]
+}
+
+// Operator access, so the audit trail survives the box being destroyed.
+local.file_match "auth" {
+  path_targets = [{ __path__ = "/var/log/auth.log", job = "auth" }]
+}
+
+loki.source.file "auth" {
+  targets    = local.file_match.auth.targets
+  forward_to = [loki.write.grafana.receiver]
+}
+
+loki.write "grafana" {
+  endpoint {
+    url = sys.env("GRAFANA_LOKI_URL")
+    basic_auth {
+      username = sys.env("GRAFANA_LOKI_USER")
+      password = sys.env("GRAFANA_CLOUD_TOKEN")
+    }
+  }
+  external_labels = { host = "deenquest-prod", env = "production" }
+}

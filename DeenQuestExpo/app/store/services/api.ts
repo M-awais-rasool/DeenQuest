@@ -13,8 +13,9 @@ import {
 } from "../storage/authStorage";
 import type { AyahTimingInput } from "../../types/quranSync";
 import type { CoachState } from "../../services/coach";
+import { API_BASE_URL } from "../../config/apiConfig";
 
-export const API_BASE_URL = "http://192.168.18.12:8080";
+export { API_BASE_URL };
 
 // Base query with auth handling
 const baseQueryWithAuth = fetchBaseQuery({

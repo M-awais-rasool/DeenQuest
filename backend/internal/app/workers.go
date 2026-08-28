@@ -19,12 +19,16 @@ func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modu
 	var closers []io.Closer
 
 	// 1. notification.send topic → Expo push delivery (with job logging).
-	jobConsumer := notifinfra.NewJobConsumer(m.JobLogs, m.NotificationService)
-	sendConsumer := kafka.NewConsumer(brokers, "notification.send", "worker-notification-send-group")
-	closers = append(closers, sendConsumer)
-	go func() {
-		_ = sendConsumer.Consume(ctx, jobConsumer.Wrap("notification.send", jobConsumer.HandleNotificationSend))
-	}()
+	if cfg.KafkaEnabled {
+		jobConsumer := notifinfra.NewJobConsumer(m.JobLogs, m.NotificationService)
+		sendConsumer := kafka.NewConsumer(brokers, "notification.send", "worker-notification-send-group")
+		closers = append(closers, sendConsumer)
+		go func() {
+			_ = sendConsumer.Consume(ctx, jobConsumer.Wrap("notification.send", jobConsumer.HandleNotificationSend))
+		}()
+	} else {
+		logger.Info("Kafka disabled (KAFKA_ENABLED=false); notification.send consumer not started")
+	}
 
 	// 2. Daily job-log heartbeat.
 	go notifinfra.NewJobScheduler(m.JobLogs).Start(ctx)
