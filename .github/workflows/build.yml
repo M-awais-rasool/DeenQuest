@@ -14,7 +14,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/deenquest-api
 
 jobs:
   build:
@@ -24,6 +23,16 @@ jobs:
       digest: ${{ steps.push.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
+
+      # An OCI reference has to be lowercase, and the owner login is not:
+      # "M-awais-rasool". metadata-action lowercases its own tag output, which
+      # is why the push succeeded while cosign and trivy — which read
+      # IMAGE_NAME directly — were handed a reference they could not parse.
+      # Resolve it once here so every later step shares one spelling.
+      - name: Resolve the image name
+        run: echo "IMAGE_NAME=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')/deenquest-api" >> "$GITHUB_ENV"
+        env:
+          OWNER: ${{ github.repository_owner }}
 
       - uses: docker/setup-buildx-action@v3
 
