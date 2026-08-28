@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -64,20 +63,6 @@ func (s *Service) SendToUser(ctx context.Context, user domain.UserInfo, msg doma
 		Body:  msg.Body,
 		Data:  msg.Data,
 	})
-}
-
-func (s *Service) SendFromJob(ctx context.Context, payload interface{}) (*push.Ticket, error) {
-	raw, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("marshal notification job: %w", err)
-	}
-
-	var job domain.Job
-	if err := json.Unmarshal(raw, &job); err != nil {
-		return nil, fmt.Errorf("decode notification job: %w", err)
-	}
-
-	return s.SendToUser(ctx, job.User, job.Message)
 }
 
 func (s *Service) SendTestNotificationToAll(

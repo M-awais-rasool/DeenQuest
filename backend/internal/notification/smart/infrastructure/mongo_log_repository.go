@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MongoLogRepository struct {
@@ -41,22 +40,55 @@ func (r *MongoLogRepository) SaveLog(ctx context.Context, log *domain.Notificati
 	return err
 }
 
-func (r *MongoLogRepository) GetLastNotificationTime(ctx context.Context, userID string, notifType domain.NotificationType) (*time.Time, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}})
-	var log domain.NotificationLog
-	err := r.collection.FindOne(ctx, bson.M{
-		"user_id":           userID,
-		"notification_type": string(notifType),
-		"status":            "sent",
-	}, opts).Decode(&log)
-	if err == mongo.ErrNoDocuments {
+func (r *MongoLogRepository) GetLastNotificationTimes(ctx context.Context, userIDs []string) ([]domain.LastNotification, error) {
+	if len(userIDs) == 0 {
 		return nil, nil
 	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	cur, err := r.collection.Aggregate(ctx, mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{
+			"user_id": bson.M{"$in": userIDs},
+			"status":  "sent",
+		}}},
+		{{Key: "$sort", Value: bson.D{
+			{Key: "user_id", Value: 1},
+			{Key: "notification_type", Value: 1},
+			{Key: "created_at", Value: -1},
+		}}},
+		{{Key: "$group", Value: bson.M{
+			"_id": bson.M{
+				"user_id": "$user_id",
+				"type":    "$notification_type",
+			},
+			"sent_at": bson.M{"$first": "$created_at"},
+		}}},
+	})
 	if err != nil {
 		return nil, err
 	}
-	return &log.CreatedAt, nil
+	defer cur.Close(ctx)
+
+	var rows []struct {
+		ID struct {
+			UserID string `bson:"user_id"`
+			Type   string `bson:"type"`
+		} `bson:"_id"`
+		SentAt time.Time `bson:"sent_at"`
+	}
+	if err := cur.All(ctx, &rows); err != nil {
+		return nil, err
+	}
+
+	out := make([]domain.LastNotification, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, domain.LastNotification{
+			UserID: row.ID.UserID,
+			Type:   domain.NotificationType(row.ID.Type),
+			SentAt: row.SentAt,
+		})
+	}
+	return out, nil
 }

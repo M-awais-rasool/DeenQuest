@@ -29,6 +29,27 @@ type TimeWindow struct {
 	EndHour   int
 }
 
+type HourSet [24]bool
+
+func (h HourSet) Contains(hour int) bool {
+	if hour < 0 || hour > 23 {
+		return false
+	}
+	return h[hour]
+}
+
+func ActiveHours(rules []NotificationRule) HourSet {
+	var set HourSet
+	for _, r := range rules {
+		for hour := r.TimeWindow.StartHour; hour < r.TimeWindow.EndHour; hour++ {
+			if hour >= 0 && hour < 24 {
+				set[hour] = true
+			}
+		}
+	}
+	return set
+}
+
 type NotificationRule struct {
 	Type         NotificationType
 	Cooldown     time.Duration

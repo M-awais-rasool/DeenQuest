@@ -15,7 +15,6 @@
   <img src="https://img.shields.io/badge/Gin-Framework-008ECF" alt="Gin" />
   <img src="https://img.shields.io/badge/MongoDB-7-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
   <img src="https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white" alt="Redis" />
-  <img src="https://img.shields.io/badge/Kafka-Event_Driven-231F20?logo=apachekafka&logoColor=white" alt="Kafka" />
   <img src="https://img.shields.io/badge/Gemini-AI_Layer-8E75B2?logo=googlegemini&logoColor=white" alt="Gemini" />
   <img src="https://img.shields.io/badge/Vite-Admin_Panel-646CFF?logo=vite&logoColor=white" alt="Vite" />
 </p>
@@ -103,36 +102,31 @@ backend/
 │   │   ├── notification/                    #   UserToken, Message, TokenRepository interface
 │   │   ├── intelligent/                     #   NotificationRule, NotificationLog, LogRepository interface
 │   │   └── learning/                        #   LearnerState, SkillStat, Recommendation, BehaviorEvent
-│   ├── application/                         # Application Layer (use cases, application services)
-│   │   ├── auth/                            #   AuthService (signup, login)
-│   │   ├── user/                            #   UserService (profile, password)
-│   │   ├── progress/                        #   CoreService, RecitationService, ArabicMatcher
-│   │   ├── notification/                    #   NotificationService (token registration, push)
-│   │   ├── intelligent/                     #   Intelligent notification rules, scheduler, user fetcher
-│   │   ├── learning/                        #   Learning Agent: publisher, StateUpdater, Recommender, sweep, AI
-│   │   └── worker/                          #   Kafka consumer, daily reset scheduler
-│   ├── interfaces/                          # Interface Layer (HTTP handlers, DTOs, routing)
-│   │   └── http/
-│   │       ├── handler/                     #   Auth, User, Core, Recitation, Notification handlers
-│   │       ├── dto/                         #   Request/response DTOs
-│   │       └── router.go                    #   Unified route registration
-│   └── infrastructure/                      # Infrastructure Layer (external concerns)
+│   ├── app/                                 # Wiring: config, infra, modules, router, workers
+│   ├── <feature>/                           # One folder per feature, each with the same 4 layers:
+│   │   ├── domain/                          #   Entities, rules, repository interfaces
+│   │   ├── application/                     #   Use cases / services
+│   │   ├── infrastructure/                  #   MongoDB repositories, external clients
+│   │   └── interfaces/http/                 #   Handlers, DTOs, route registration
+│   │
+│   │   Features: analytics · auth · challenge · coach · content · dailytask
+│   │             hifz · level · notification · progress · quran · recitation
+│   │             reward · user
+│   │
+│   └── platform/                            # Shared, feature-agnostic infrastructure
 │       ├── config/                          #   Environment configuration
 │       ├── logger/                          #   Structured logging (zap)
-│       ├── persistence/                     #   MongoDB repository implementations
-│       ├── jwt/                             #   JWT token management
-│       ├── bcrypt/                          #   Password hashing
 │       ├── cache/                           #   Redis client
+│       ├── jwt/                             #   JWT token management
 │       ├── middleware/                       #   Auth, CORS, logging, rate limiting, recovery
 │       ├── push/                            #   Expo push notification client
-│       ├── queue/                           #   Kafka producer/consumer
 │       ├── validator/                       #   Request validation
 │       ├── response/                        #   Standardized API responses
 │       ├── ollama/                          #   Ollama LLM client
-│       └── gemini/                          #   Gemini client (Learning Agent AI layer)
+│       └── gemini/                          #   Gemini client
 ├── whisper-service/                         # Python speech-to-text microservice (FastAPI)
 ├── docs/                                    # API docs, workflows, project analysis
-├── docker-compose.yml                       # Kafka + Redis infrastructure
+├── docker-compose.yml                       # MongoDB + Redis (local development)
 ├── Makefile                                 # Build, run, test, lint commands
 └── go.mod
 ```
@@ -143,8 +137,7 @@ flowchart LR
   A[Admin Panel\nReact + Vite] --> API
 
   API --> DB[(MongoDB)]
-  API --> K[(Kafka)]
-  API --> R[(Redis\nRate Limiting)]
+  API --> R[(Redis\nCache + Rate Limiting)]
   API --> W[Whisper Service\nPython/FastAPI]
   API --> P[Expo Push API]
 ```
@@ -155,7 +148,7 @@ flowchart LR
 |---|---|
 | Mobile | React Native, Expo, TypeScript, Redux Toolkit (RTK Query), AsyncStorage, Expo Notifications |
 | Admin | React 18, TypeScript, Vite, Tailwind CSS, Axios, Chart.js |
-| Backend | Go 1.24, Gin, JWT, MongoDB driver, Kafka, Redis, Cron |
+| Backend | Go 1.25, Gin, JWT, MongoDB driver, Redis, Cron |
 | AI (optional) | Google Gemini (Learning Agent feedback/motivation), Whisper (recitation), Ollama client |
 | Infra | Docker, Docker Compose |
 
@@ -166,7 +159,6 @@ flowchart LR
 - Levels, lessons, and progression rewards.
 - Leaderboard ranking by level and XP.
 - Role-aware admin panel for content management.
-- Event-driven processing with Kafka.
 - **Adaptive Learning Agent** — listens to behavior events, maintains a per-user
   learning state (weak/strong areas, learning speed, engagement, dropout risk),
   and recommends the next best action (revision via spaced repetition or new
@@ -219,7 +211,7 @@ cd backend
 cp .env.example .env
 # Edit .env with your MongoDB URI and other settings
 
-# Start infrastructure (Kafka + Redis)
+# Start infrastructure (MongoDB + Redis)
 make compose-up
 
 # Run the API server
@@ -236,7 +228,7 @@ make run            # Run with go run
 make test           # Run tests
 make lint           # Format + vet + test
 make compose-logs   # Tail infrastructure logs
-make compose-down   # Stop Kafka + Redis
+make compose-down   # Stop MongoDB + Redis
 ```
 
 ### 2) Mobile App (Expo)
@@ -274,8 +266,9 @@ Important keys:
 
 - `SERVER_HOST`, `SERVER_PORT` — API server bind address
 - `MONGO_URI`, `MONGO_DB` — MongoDB connection
-- `REDIS_HOST`, `REDIS_PORT` — Redis for rate limiting
-- `KAFKA_BROKERS` — Kafka for async event processing
+- `REDIS_HOST`, `REDIS_PORT` — Redis for caching and rate limiting
+- `ACCESS_LOG_SAMPLE_EVERY` — log 1 in N successful requests (production default 100;
+  failures are always logged)
 - `JWT_SECRET`, `JWT_ACCESS_EXPIRY`, `JWT_REFRESH_EXPIRY` — JWT configuration
 - `WHISPER_URL` — Python whisper service URL
 - `EXPO_PUSH_URL`, `EXPO_PUSH_ACCESS_TOKEN` — Push notifications
@@ -287,7 +280,6 @@ Important keys:
 Backend docs:
 
 - `backend/docs/api.md` — API endpoint reference
-- `backend/docs/kafka-explained.md` — Kafka event architecture
 - `backend/docs/daily-task-assignment.md` — Daily task assignment algorithm
 - `backend/docs/WORKFLOW.md` — Intelligent notification system workflow
 - `backend/docs/PROJECT_ANALYSIS.md` — Comprehensive project analysis

@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/chawais/deenquest/backend/internal/notification/smart/domain"
@@ -18,11 +19,17 @@ type PushSender interface {
 	SendToUser(ctx context.Context, user notifdomain.UserInfo, msg notifdomain.Message) (*push.Ticket, error)
 }
 
-// UserFetcher is the port for reading batches of user context; the smart
-// infrastructure adapter implements it.
 type UserFetcher interface {
-	FetchAllUsers(ctx context.Context, limit, offset int) ([]domain.UserContext, error)
+	FetchUserPage(
+		ctx context.Context,
+		afterID string,
+		limit int,
+		activeHours domain.HourSet,
+		now time.Time,
+	) ([]domain.UserContext, string, error)
 }
+
+const maxPagesPerRun = 1000
 
 type Service struct {
 	userFetcher UserFetcher
@@ -31,6 +38,9 @@ type Service struct {
 	rules       []domain.NotificationRule
 	batchSize   int
 	maxRetries  int
+
+	locMu     sync.RWMutex
+	locations map[string]*time.Location
 }
 
 func NewService(
@@ -45,6 +55,7 @@ func NewService(
 		rules:       domain.BuildRules(),
 		batchSize:   100,
 		maxRetries:  3,
+		locations:   make(map[string]*time.Location),
 	}
 }
 
@@ -68,79 +79,33 @@ func (s *Service) ProcessAllNotifications(ctx context.Context) (*ProcessingStats
 		stats.Notifications = append(stats.Notifications, NotificationTypeStats{Type: rule.Type})
 	}
 
-	for offset := 0; ; offset += s.batchSize {
-		users, err := s.userFetcher.FetchAllUsers(ctx, s.batchSize, offset)
+	activeHours := domain.ActiveHours(s.rules)
+	now := time.Now()
+	cursor := ""
+	pages := 0
+
+	for {
+		users, next, err := s.userFetcher.FetchUserPage(ctx, cursor, s.batchSize, activeHours, now)
 		if err != nil {
 			return nil, fmt.Errorf("fetch users: %w", err)
 		}
+		pages++
 
-		if len(users) == 0 {
+		if len(users) > 0 {
+			if err := s.processPage(ctx, users, now, stats); err != nil {
+				return nil, err
+			}
+		}
+
+		if next == "" {
 			break
 		}
+		cursor = next
 
-		now := time.Now()
-
-		for _, user := range users {
-			stats.TotalUsers++
-
-			loc := time.UTC
-			if user.Timezone != "" {
-				if parsed, err := time.LoadLocation(user.Timezone); err == nil {
-					loc = parsed
-				}
-			}
-			localNow := now.In(loc)
-
-			for i, rule := range s.rules {
-				hour := localNow.Hour()
-				if hour < rule.TimeWindow.StartHour || hour >= rule.TimeWindow.EndHour {
-					stats.Notifications[i].Skipped++
-					continue
-				}
-
-				onCooldown, err := s.isOnCooldown(ctx, user.UserID, rule.Type)
-				if err != nil {
-					logger.Warn("failed to check cooldown",
-						zap.String("user_id", user.UserID),
-						zap.String("type", string(rule.Type)),
-						zap.Error(err))
-					continue
-				}
-				if onCooldown {
-					stats.Notifications[i].Skipped++
-					continue
-				}
-
-				if !rule.Evaluate(&user, now) {
-					stats.Notifications[i].Skipped++
-					continue
-				}
-
-				title := rule.BuildTitle(&user)
-				message := rule.BuildMessage(&user)
-				data := map[string]interface{}{
-					"type": string(rule.Type),
-				}
-				if rule.BuildData != nil {
-					for k, v := range rule.BuildData(&user) {
-						data[k] = v
-					}
-				}
-
-				err = s.sendWithRetry(ctx, user, rule.Type, title, message, data)
-				if err != nil {
-					stats.Notifications[i].Failed++
-					logger.Error("failed to send notification after retries",
-						zap.String("user_id", user.UserID),
-						zap.String("type", string(rule.Type)),
-						zap.Error(err))
-				} else {
-					stats.Notifications[i].Sent++
-				}
-			}
-		}
-
-		if len(users) < s.batchSize {
+		if pages >= maxPagesPerRun {
+			logger.Warn("notification scan hit the page ceiling; users beyond it were not evaluated this tick",
+				zap.Int("pages", pages),
+				zap.Int("users_processed", stats.TotalUsers))
 			break
 		}
 	}
@@ -154,29 +119,115 @@ func (s *Service) ProcessAllNotifications(ctx context.Context) (*ProcessingStats
 	}
 
 	logger.Info("intelligent notification processing complete",
-		zap.Int("total_users", stats.TotalUsers))
+		zap.Int("total_users", stats.TotalUsers),
+		zap.Int("pages", pages))
 
 	return stats, nil
 }
 
-func (s *Service) isOnCooldown(ctx context.Context, userID string, notifType domain.NotificationType) (bool, error) {
-	lastNotified, err := s.logRepo.GetLastNotificationTime(ctx, userID, notifType)
-	if err != nil {
-		return false, err
-	}
-	if lastNotified == nil {
-		return false, nil
+func (s *Service) processPage(
+	ctx context.Context,
+	users []domain.UserContext,
+	now time.Time,
+	stats *ProcessingStats,
+) error {
+	userIDs := make([]string, 0, len(users))
+	for i := range users {
+		userIDs = append(userIDs, users[i].UserID)
 	}
 
-	var cooldown time.Duration
-	for _, rule := range s.rules {
-		if rule.Type == notifType {
-			cooldown = rule.Cooldown
-			break
+	cooldowns, err := s.loadCooldowns(ctx, userIDs)
+	if err != nil {
+		return fmt.Errorf("load cooldowns: %w", err)
+	}
+
+	for _, user := range users {
+		stats.TotalUsers++
+		localNow := now.In(s.location(user.Timezone))
+
+		for i, rule := range s.rules {
+			hour := localNow.Hour()
+			if hour < rule.TimeWindow.StartHour || hour >= rule.TimeWindow.EndHour {
+				stats.Notifications[i].Skipped++
+				continue
+			}
+
+			if sentAt, ok := cooldowns[cooldownKey{user.UserID, rule.Type}]; ok {
+				if now.Sub(sentAt) < rule.Cooldown {
+					stats.Notifications[i].Skipped++
+					continue
+				}
+			}
+
+			if !rule.Evaluate(&user, now) {
+				stats.Notifications[i].Skipped++
+				continue
+			}
+
+			title := rule.BuildTitle(&user)
+			message := rule.BuildMessage(&user)
+			data := map[string]interface{}{
+				"type": string(rule.Type),
+			}
+			if rule.BuildData != nil {
+				for k, v := range rule.BuildData(&user) {
+					data[k] = v
+				}
+			}
+
+			if err := s.sendWithRetry(ctx, user, rule.Type, title, message, data); err != nil {
+				stats.Notifications[i].Failed++
+				logger.Error("failed to send notification after retries",
+					zap.String("user_id", user.UserID),
+					zap.String("type", string(rule.Type)),
+					zap.Error(err))
+			} else {
+				stats.Notifications[i].Sent++
+			}
 		}
 	}
 
-	return time.Since(*lastNotified) < cooldown, nil
+	return nil
+}
+
+type cooldownKey struct {
+	userID string
+	typ    domain.NotificationType
+}
+
+func (s *Service) loadCooldowns(ctx context.Context, userIDs []string) (map[cooldownKey]time.Time, error) {
+	rows, err := s.logRepo.GetLastNotificationTimes(ctx, userIDs)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[cooldownKey]time.Time, len(rows))
+	for _, row := range rows {
+		out[cooldownKey{row.UserID, row.Type}] = row.SentAt
+	}
+	return out, nil
+}
+
+func (s *Service) location(name string) *time.Location {
+	if name == "" {
+		return time.UTC
+	}
+
+	s.locMu.RLock()
+	loc, ok := s.locations[name]
+	s.locMu.RUnlock()
+	if ok {
+		return loc
+	}
+
+	loc, err := time.LoadLocation(name)
+	if err != nil || loc == nil {
+		loc = time.UTC
+	}
+
+	s.locMu.Lock()
+	s.locations[name] = loc
+	s.locMu.Unlock()
+	return loc
 }
 
 func (s *Service) sendWithRetry(ctx context.Context, user domain.UserContext, notifType domain.NotificationType, title, message string, data map[string]interface{}) error {

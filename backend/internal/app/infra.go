@@ -41,8 +41,8 @@ func connectInfra(cfg *config.Config) (*Infra, error) {
 
 	mongoOpts := options.Client().
 		ApplyURI(cfg.MongoURI).
-		SetMinPoolSize(10).
-		SetMaxPoolSize(100).
+		SetMinPoolSize(5).
+		SetMaxPoolSize(25).
 		SetMaxConnIdleTime(5 * time.Minute).
 		SetConnectTimeout(5 * time.Second).
 		SetServerSelectionTimeout(5 * time.Second).

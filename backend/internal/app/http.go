@@ -43,11 +43,15 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	}
 
 	r.Use(middleware.Recovery())
-	r.Use(middleware.RequestLogger())
+	r.Use(middleware.RequestLogger(cfg.AccessLogSampleEvery))
 	r.Use(middleware.CORS(cfg.AllowedOrigins()))
-	r.Use(middleware.Gzip())
+
+	if !cfg.IsProduction() {
+		r.Use(middleware.Gzip())
+	}
+
 	if infra.Redis != nil {
-		r.Use(middleware.RateLimit(infra.Redis, 100, time.Minute))
+		r.Use(middleware.RateLimitByIP(infra.Redis, 1000, time.Minute, "global"))
 	}
 
 	r.GET("/health", func(c *gin.Context) {
@@ -81,11 +85,18 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 
 	authed := v1.Group("")
 	authed.Use(middleware.JWTAuth(infra.JWT))
+	if infra.Redis != nil {
+		authed.Use(middleware.RateLimitByUser(infra.Redis, 300, time.Minute, "api"))
+	}
 
 	admin := v1.Group("/admin")
 	admin.Use(middleware.JWTAuth(infra.JWT), middleware.AdminOnly(cfg.AdminEmailList()))
 
-	authhttp.RegisterRoutes(v1, authed, m.AuthHandler)
+	authPublic := v1.Group("")
+	if infra.Redis != nil {
+		authPublic.Use(middleware.RateLimitByIP(infra.Redis, 20, time.Minute, "auth"))
+	}
+	authhttp.RegisterRoutes(authPublic, authed, m.AuthHandler)
 	userhttp.RegisterRoutes(v1, authed, m.UserHandler)
 
 	// learning features (formerly the single "progress" module)
@@ -93,7 +104,11 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	levelhttp.RegisterRoutes(authed, m.LevelHandler)
 	dailytaskhttp.RegisterRoutes(authed, m.TaskHandler)
 	rewardhttp.RegisterRoutes(authed, m.RewardHandler)
-	recitationhttp.RegisterRoutes(authed, m.RecitationHandler)
+	recite := authed.Group("")
+	if infra.Redis != nil {
+		recite.Use(middleware.RateLimitByUser(infra.Redis, 10, time.Minute, "recite"))
+	}
+	recitationhttp.RegisterRoutes(recite, m.RecitationHandler)
 	hifzhttp.RegisterRoutes(authed, m.HifzHandler)
 	challengehttp.RegisterRoutes(authed, m.ChallengeHandler)
 	if m.CoachHandler != nil {

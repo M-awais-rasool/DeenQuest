@@ -21,6 +21,8 @@ x-api: &api
   <<: *hardening
   image: ghcr.io/${GHCR_OWNER:-m-awais-rasool}/deenquest-api@${API_DIGEST}
   env_file: [/run/deenquest/prod.env]
+  environment:
+    GOMAXPROCS: "1"
   read_only: true
   tmpfs:
     - /tmp:size=64m,noexec,nosuid,nodev
@@ -52,7 +54,7 @@ services:
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/active.conf:/etc/caddy/active.conf:ro
-    mem_limit: 96m
+    mem_limit: 64m
     cpus: 0.2
     networks: [edge, app]
 
@@ -74,7 +76,7 @@ services:
     # downtime; doing it now costs one rs.initiate().
     command: >
       mongod --replSet rs0 --auth --bind_ip_all
-             --wiredTigerCacheSizeGB 0.5
+             --wiredTigerCacheSizeGB 0.75
              --tlsMode requireTLS
              --tlsCertificateKeyFile /etc/mongo/tls/server.pem
              --tlsCAFile /etc/mongo/tls/ca.pem
@@ -92,8 +94,8 @@ services:
       - mongo_data:/data/db
       - ./mongo/tls:/etc/mongo/tls:ro
       - ./mongo/init-users.js:/etc/mongo/init-users.js:ro
-    mem_limit: 1024m
-    cpus: 0.8
+    mem_limit: 1152m
+    cpus: 1.2
     networks: [data]
 
   redis:
