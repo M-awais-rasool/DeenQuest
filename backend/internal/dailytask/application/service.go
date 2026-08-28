@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/chawais/deenquest/backend/internal/dailytask/domain"
+	"github.com/chawais/deenquest/backend/internal/platform/cache"
 
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
@@ -15,13 +16,24 @@ import (
 	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
 )
 
+// The task list turns over at UTC midnight, and the cache key carries the date
+// so the rollover cannot serve yesterday's list. Completing a task invalidates
+// the entry outright.
+const dailyTasksTTL = time.Minute
+
 type Service struct {
 	repo     domain.Repository
 	progress *progressapp.Service
+	cache    *cache.UserCache
 }
 
 func NewService(repo domain.Repository, progressSvc *progressapp.Service) *Service {
 	return &Service{repo: repo, progress: progressSvc}
+}
+
+// SetCache attaches the read cache. Nil means every read goes to MongoDB.
+func (s *Service) SetCache(c *cache.UserCache) {
+	s.cache = c
 }
 
 // Seed inserts/updates the master task templates into the database.
@@ -31,6 +43,12 @@ func (s *Service) Seed(ctx context.Context) error {
 
 func (s *Service) GetDailyTasks(ctx context.Context, userID string) ([]domain.DailyTaskWithStatus, error) {
 	today := time.Now().UTC().Format("2006-01-02")
+	cacheName := "tasks:" + today
+
+	var cachedTasks []domain.DailyTaskWithStatus
+	if s.cache.Get(ctx, userID, cacheName, &cachedTasks) {
+		return cachedTasks, nil
+	}
 
 	var (
 		assignments []domain.UserDailyTask
@@ -104,6 +122,7 @@ func (s *Service) GetDailyTasks(ctx context.Context, userID string) ([]domain.Da
 		})
 	}
 
+	s.cache.Set(ctx, userID, cacheName, results, dailyTasksTTL)
 	return results, nil
 }
 
@@ -117,6 +136,7 @@ func (s *Service) CompleteDailyTask(ctx context.Context, userID, taskID string) 
 		}
 		return fmt.Errorf("complete daily task: %w", err)
 	}
+	s.cache.Invalidate(ctx, userID)
 
 	task, err := s.repo.GetDailyTaskByID(ctx, taskID)
 	if err != nil {

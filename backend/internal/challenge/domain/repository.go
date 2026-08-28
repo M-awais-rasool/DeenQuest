@@ -27,6 +27,11 @@ type Repository interface {
 	ListUserQuests(ctx context.Context, userID, weekKey string) ([]UserQuest, error)
 	InsertUserQuests(ctx context.Context, quests []UserQuest) error
 	SaveUserQuest(ctx context.Context, quest *UserQuest) error
+	// SaveUserQuests persists several quests in one round trip. Scoring an
+	// activity typically advances more than one quest at a time, and doing that
+	// as N separate writes was the bulk of the database work behind a single
+	// lesson completion.
+	SaveUserQuests(ctx context.Context, quests []*UserQuest) error
 
 	// duels
 	CreateDuel(ctx context.Context, duel *Duel) error

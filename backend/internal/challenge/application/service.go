@@ -377,6 +377,11 @@ func (s *Service) JoinGroup(ctx context.Context, userID, rawCode string) (*Group
 }
 
 /* ────────────────────── activity fan-out ────────────────────── */
+// OnActivity scores an activity synchronously.
+//
+// Production does not call this directly — ActivityQueue is what the progress
+// service is wired to, so the fan-out happens off the request path. This stays
+// as the synchronous seam the queue drives and the tests exercise.
 func (s *Service) OnActivity(ctx context.Context, userID string, source progressapp.ActivitySource, xp int) {
 	if source == progressapp.SourceChallenge || userID == "" {
 		return
@@ -462,11 +467,18 @@ func (s *Service) applyDeltas(ctx context.Context, userID string, deltas domain.
 	return errors.Join(errs...)
 }
 
+// scoreQuests advances every quest one activity touches, then persists them
+// together. One lesson usually moves two or three quests, and writing each one
+// separately made a single completion several round trips deep.
 func (s *Service) scoreQuests(ctx context.Context, userID string, deltas domain.Deltas, now time.Time) error {
 	quests, err := s.ensureWeeklyQuests(ctx, userID, now)
 	if err != nil {
 		return err
 	}
+
+	dirty := make([]*domain.UserQuest, 0, len(quests))
+	unpaid := make([]*domain.UserQuest, 0, 2)
+
 	for i := range quests {
 		q := &quests[i]
 		amount := deltas[q.Metric]
@@ -478,26 +490,38 @@ func (s *Service) scoreQuests(ctx context.Context, userID string, deltas domain.
 			q.Progress = q.Target
 			q.Completed = true
 		}
-		if err := s.repo.SaveUserQuest(ctx, q); err != nil {
-			return err
-		}
+		dirty = append(dirty, q)
 		if q.Completed && !q.RewardPaid {
-			if err := s.payQuest(ctx, q); err != nil {
+			unpaid = append(unpaid, q)
+		}
+	}
+
+	if err := s.repo.SaveUserQuests(ctx, dirty); err != nil {
+		return err
+	}
+
+	// Progress is durable before any reward is paid. If awarding XP fails
+	// halfway, RewardPaid stays false and the next activity retries the payout
+	// instead of double-counting the progress that earned it.
+	return s.payQuests(ctx, unpaid)
+}
+
+func (s *Service) payQuests(ctx context.Context, quests []*domain.UserQuest) error {
+	if len(quests) == 0 {
+		return nil
+	}
+
+	paid := make([]*domain.UserQuest, 0, len(quests))
+	for _, q := range quests {
+		if s.xp != nil && q.RewardXP > 0 {
+			if _, err := s.xp.AwardFrom(ctx, q.UserID, q.RewardXP, 0, progressapp.SourceChallenge); err != nil {
 				return err
 			}
 		}
+		q.RewardPaid = true
+		paid = append(paid, q)
 	}
-	return nil
-}
-
-func (s *Service) payQuest(ctx context.Context, q *domain.UserQuest) error {
-	if s.xp != nil && q.RewardXP > 0 {
-		if _, err := s.xp.AwardFrom(ctx, q.UserID, q.RewardXP, 0, progressapp.SourceChallenge); err != nil {
-			return err
-		}
-	}
-	q.RewardPaid = true
-	return s.repo.SaveUserQuest(ctx, q)
+	return s.repo.SaveUserQuests(ctx, paid)
 }
 
 func (s *Service) scoreDuels(ctx context.Context, userID string, xp int, now time.Time) error {

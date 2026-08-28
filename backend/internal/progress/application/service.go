@@ -2,17 +2,35 @@ package application
 
 import (
 	"context"
+	"strconv"
 	"time"
 
+	"github.com/chawais/deenquest/backend/internal/platform/cache"
 	"github.com/chawais/deenquest/backend/internal/progress/domain"
 
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 )
 
+// Read models are cached for a minute. Anything a user does to change them
+// invalidates their entry immediately, so the TTL only bounds staleness for
+// changes made outside this process — which, on a single API container, is
+// nothing. It exists as a backstop, not as the correctness mechanism.
+const (
+	progressTTL    = time.Minute
+	leaderboardTTL = time.Minute
+)
+
 type Service struct {
 	repo     domain.Repository
 	listener ActivityListener
+	cache    *cache.UserCache
+}
+
+// SetCache attaches the read cache. A nil cache leaves every read going to
+// MongoDB, which is how the app behaves when Redis is unavailable.
+func (s *Service) SetCache(c *cache.UserCache) {
+	s.cache = c
 }
 
 func NewService(repo domain.Repository) *Service {
@@ -21,6 +39,11 @@ func NewService(repo domain.Repository) *Service {
 
 // GetUserProgress returns XP, streak, and the last 7 days completion status.
 func (s *Service) GetUserProgress(ctx context.Context, userID string) (*ProgressResponse, error) {
+	var cached ProgressResponse
+	if s.cache.Get(ctx, userID, "progress", &cached) {
+		return &cached, nil
+	}
+
 	now := time.Now().UTC()
 	dates := make([]string, 7)
 	for i := 0; i < 7; i++ {
@@ -57,7 +80,7 @@ func (s *Service) GetUserProgress(ctx context.Context, userID string) (*Progress
 		lastCompleted = streak.LastCompletedAt.UTC().Format(time.RFC3339)
 	}
 
-	return &ProgressResponse{
+	resp := &ProgressResponse{
 		XP:                prog.TotalXP,
 		Level:             prog.Level,
 		BarakahScore:      prog.BarakahScore,
@@ -66,7 +89,9 @@ func (s *Service) GetUserProgress(ctx context.Context, userID string) (*Progress
 		Freezes:           streak.Freezes,
 		WeeklyCompletions: weekly,
 		LastCompletedAt:   lastCompleted,
-	}, nil
+	}
+	s.cache.Set(ctx, userID, "progress", resp, progressTTL)
+	return resp, nil
 }
 
 // GetPublicProgress returns the subset of progress data that is safe to show publicly.
@@ -98,7 +123,17 @@ func (s *Service) GetPublicProgress(ctx context.Context, userID string) (*Public
 	}, nil
 }
 
+// GetLeaderboard is the same answer for everyone who asks, so it is cached
+// once rather than per user. Ten thousand people opening the same board used to
+// be ten thousand identical sorts in MongoDB; it is now at most one per minute.
 func (s *Service) GetLeaderboard(ctx context.Context, limit int) ([]LeaderboardEntry, error) {
+	cacheKey := "leaderboard:" + strconv.Itoa(limit)
+
+	var cached []LeaderboardEntry
+	if s.cache.GetShared(ctx, cacheKey, &cached) {
+		return cached, nil
+	}
+
 	rows, err := s.repo.ListLeaderboardProgress(ctx, limit)
 	if err != nil {
 		return nil, err
@@ -118,6 +153,7 @@ func (s *Service) GetLeaderboard(ctx context.Context, limit int) ([]LeaderboardE
 		})
 	}
 
+	s.cache.SetShared(ctx, cacheKey, result, leaderboardTTL)
 	return result, nil
 }
 
@@ -130,6 +166,7 @@ func (s *Service) AwardFrom(ctx context.Context, userID string, xpDelta, barakah
 	if err != nil {
 		return nil, err
 	}
+	s.cache.Invalidate(ctx, userID)
 	if s.listener != nil {
 		s.listener.OnActivity(ctx, userID, source, xpDelta)
 	}
@@ -210,5 +247,6 @@ func (s *Service) BumpStreak(ctx context.Context, userID string) (*domain.Streak
 	if err := s.repo.UpsertStreak(ctx, &next); err != nil {
 		return nil, err
 	}
+	s.cache.Invalidate(ctx, userID)
 	return &next, nil
 }
