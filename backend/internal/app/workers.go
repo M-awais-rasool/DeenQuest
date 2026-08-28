@@ -28,6 +28,16 @@ func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modu
 		}
 	}()
 
+	// Nightly analytics rollup. The TTL indexes delete behind it, so it has to
+	// keep running for the dashboard's lifetime figures to stay whole.
+	if m.AnalyticsRoller != nil {
+		go func() {
+			if err := m.AnalyticsRoller.Start(ctx); err != nil {
+				logger.Error("analytics roller error", zap.Error(err))
+			}
+		}()
+	}
+
 	if m.CoachService != nil {
 		coachSweeper := coachapp.NewSweeper(m.CoachService)
 		go func() {

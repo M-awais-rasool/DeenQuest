@@ -41,6 +41,19 @@ func New(cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
+	// Order matters: the backfill inside this counts the days the TTL indexes
+	// are about to make deletable. See prepareDataLifecycle.
+	lifecycleCtx, cancelLifecycle := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancelLifecycle()
+	err = prepareDataLifecycle(lifecycleCtx,
+		modules.AnalyticsRoller.Backfill,
+		func(ctx context.Context) error { return applyRetention(ctx, infra.DB) },
+	)
+	if err != nil {
+		infra.Close()
+		return nil, err
+	}
+
 	return &App{
 		cfg:     cfg,
 		infra:   infra,

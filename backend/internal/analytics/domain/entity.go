@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type AnalyticsTimePoint struct {
 	Date             string `json:"date"` // YYYY-MM-DD
@@ -30,6 +33,33 @@ type AdminAnalytics struct {
 	TopLevels          []AnalyticsLabelCount `json:"top_levels"`
 }
 
+// DailySnapshot is one finished UTC day, counted once and kept.
+//
+// The dashboard used to derive every number by scanning the raw collections,
+// which meant its cost grew with the whole history of the app. It also meant
+// the raw rows could never be expired: deleting them would silently shrink
+// lifetime totals. Rolling each day up into a single small document breaks
+// both problems at once — the dashboard reads a few hundred documents a year
+// instead of millions, and the rows it summarises become disposable.
+type DailySnapshot struct {
+	Date               string    `bson:"_id"`
+	TaskCompletions    int       `bson:"task_completions"`
+	LevelCompletions   int       `bson:"level_completions"`
+	RecitationAttempts int       `bson:"recitation_attempts"`
+	ActiveUsers        int       `bson:"active_users"`
+	ComputedAt         time.Time `bson:"computed_at"`
+}
+
 type Repository interface {
 	GetAdminAnalytics(ctx context.Context) (*AdminAnalytics, error)
+
+	// RollUpDay counts one UTC day from the raw collections and stores it.
+	// It is idempotent: running it again for the same day overwrites the row,
+	// so a retry or an overlapping backfill cannot double-count.
+	RollUpDay(ctx context.Context, date string) error
+
+	// BackfillMissingDays rolls up every day that still has raw rows but no
+	// snapshot. It is what makes turning the TTL indexes on safe, and it lets
+	// a night the scheduler missed heal itself on the next start.
+	BackfillMissingDays(ctx context.Context) (int, error)
 }
