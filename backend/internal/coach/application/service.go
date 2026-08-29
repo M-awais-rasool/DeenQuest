@@ -16,7 +16,6 @@ import (
 	progressdomain "github.com/chawais/deenquest/backend/internal/progress/domain"
 )
 
-// XPAwarder is the slice of progressapp.Service the coach needs to grant XP for
 type XPAwarder interface {
 	AwardFrom(ctx context.Context, userID string, xpDelta, barakahDelta int, source progressapp.ActivitySource) (*progressdomain.Progress, error)
 }
@@ -26,8 +25,6 @@ var (
 	ErrNoPractice      = errors.New("coach: insight has no practice drill")
 )
 
-// Service orchestrates the coach: ingest → skill model → rules → insights →
-// practice. Every step is deterministic; the Phraser only decorates copy.
 type Service struct {
 	repo     domain.Repository
 	progress XPAwarder
@@ -309,9 +306,6 @@ func (s *Service) Practice(ctx context.Context, userID, insightID string) (*leve
 }
 
 func (s *Service) CompletePractice(ctx context.Context, userID, insightID string) (int, error) {
-	// Held across the read, the mark, the clear and the re-evaluation. The
-	// no-double-XP guard below reads a status that a concurrent evaluation
-	// could otherwise flip back to active underneath it.
 	defer s.locks.lock(userID)()
 
 	ins, err := s.repo.GetInsight(ctx, userID, insightID)

@@ -15,11 +15,6 @@ import (
 
 const dayLayout = "2006-01-02"
 
-// RollUpDay counts one finished UTC day and writes it as a single document.
-//
-// Everything here reads the raw collections, so it must run while those rows
-// still exist — which is the reason the TTL indexes are only created after
-// BackfillMissingDays has been given its chance at startup.
 func (r *MongoRepository) RollUpDay(ctx context.Context, date string) error {
 	day, err := time.Parse(dayLayout, date)
 	if err != nil {
@@ -30,8 +25,6 @@ func (r *MongoRepository) RollUpDay(ctx context.Context, date string) error {
 
 	snap := domain.DailySnapshot{Date: date, ComputedAt: time.Now().UTC()}
 
-	// Tasks carry the day as a YYYY-MM-DD string rather than a timestamp, so
-	// they match on equality while everything else matches on a range.
 	n, err := r.userDailyTasks.CountDocuments(ctx, bson.M{"date": date, "completed": true})
 	if err != nil {
 		return fmt.Errorf("count task completions for %s: %w", date, err)
@@ -55,8 +48,6 @@ func (r *MongoRepository) RollUpDay(ctx context.Context, date string) error {
 	}
 	snap.RecitationAttempts = int(n)
 
-	// Active = touched a daily task that day. Distinct is bounded by the user
-	// count, not by the row count, so it stays affordable.
 	ids, err := r.userDailyTasks.Distinct(ctx, "user_id", bson.M{"date": date})
 	if err != nil {
 		return fmt.Errorf("count active users for %s: %w", date, err)
@@ -71,12 +62,6 @@ func (r *MongoRepository) RollUpDay(ctx context.Context, date string) error {
 	return nil
 }
 
-// BackfillMissingDays rolls up every finished day that raw data still covers
-// but no snapshot describes.
-//
-// Today is deliberately skipped: it is not over, and the dashboard reads it
-// live. The work is bounded by the number of distinct days present, not by the
-// number of rows, so on a healthy deployment this finds nothing to do.
 func (r *MongoRepository) BackfillMissingDays(ctx context.Context) (int, error) {
 	rawDays, err := r.distinctRawDays(ctx)
 	if err != nil {
@@ -103,17 +88,12 @@ func (r *MongoRepository) BackfillMissingDays(ctx context.Context) (int, error) 
 
 	for _, day := range missing {
 		if err := r.RollUpDay(ctx, day); err != nil {
-			// Return what was achieved: a partial backfill is still progress,
-			// and the next start picks up where this one stopped.
 			return len(missing), err
 		}
 	}
 	return len(missing), nil
 }
 
-// distinctRawDays is the union of days visible in the two collections that
-// carry a day of their own. Recitation attempts are not consulted: they never
-// appear on a day that has neither a task nor a level completion.
 func (r *MongoRepository) distinctRawDays(ctx context.Context) ([]string, error) {
 	seen := map[string]struct{}{}
 
@@ -196,12 +176,6 @@ func (r *MongoRepository) snapshotsSince(ctx context.Context, from string) ([]do
 	return out, nil
 }
 
-// lifetimeTotals sums every snapshot ever written.
-//
-// This is the number the raw-collection counts used to produce, and the reason
-// it can no longer be taken from those collections: they now expire. A year of
-// snapshots is 365 documents, so summing all of them stays cheaper than one
-// count over a single day of raw rows.
 type lifetimeTotals struct {
 	TaskCompletions    int64
 	LevelCompletions   int64

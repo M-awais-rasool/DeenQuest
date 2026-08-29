@@ -24,8 +24,6 @@ var (
 
 const treasureEvery = 4
 
-// The level map changes only when the user finishes something, and that path
-// invalidates the entry directly. The TTL is a backstop.
 const levelsTTL = time.Minute
 
 type Service struct {

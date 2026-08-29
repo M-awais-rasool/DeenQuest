@@ -16,9 +16,6 @@ import (
 	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
 )
 
-// The task list turns over at UTC midnight, and the cache key carries the date
-// so the rollover cannot serve yesterday's list. Completing a task invalidates
-// the entry outright.
 const dailyTasksTTL = time.Minute
 
 type Service struct {

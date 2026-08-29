@@ -2,7 +2,6 @@ package domain
 
 import "time"
 
-// Telemetry event types — the contract with the Expo client (§3.3 of the plan).
 const (
 	EventLessonStarted    = "lesson_started"
 	EventQuestionAnswered = "question_answered"
@@ -13,14 +12,10 @@ const (
 	EventCoachCTATapped   = "coach_cta_tapped"
 )
 
-// MaxBatchEvents bounds one ingest call; the client flushes at 20 events, so
-// this only guards against pathological payloads.
 const MaxBatchEvents = 200
 
-// MaxEventAge — events older than this are silently dropped on ingest.
 const MaxEventAge = 7 * 24 * time.Hour
 
-// TelemetryEvent is one client-side learning event. `ts` is epoch millis.
 type TelemetryEvent struct {
 	Type        string   `json:"type" bson:"type"`
 	TS          int64    `json:"ts" bson:"ts"`
@@ -35,10 +30,8 @@ type TelemetryEvent struct {
 	LatencyMS   int      `json:"latency_ms,omitempty" bson:"latency_ms,omitempty"`
 }
 
-// Time returns the event timestamp as time.Time.
 func (e TelemetryEvent) Time() time.Time { return time.UnixMilli(e.TS) }
 
-// StoredEvent is a telemetry event persisted for Phase-2 replay and analytics.
 type StoredEvent struct {
 	ID        string         `bson:"_id"`
 	UserID    string         `bson:"user_id"`
@@ -46,7 +39,6 @@ type StoredEvent struct {
 	CreatedAt time.Time      `bson:"created_at"`
 }
 
-// SkillStat is the per-skill-tag aggregate inside UserSkillState.
 type SkillStat struct {
 	Attempts     int       `bson:"attempts" json:"attempts"`
 	Correct      int       `bson:"correct" json:"correct"`
@@ -55,19 +47,12 @@ type SkillStat struct {
 	AvgLatencyMS float64   `bson:"avg_latency_ms" json:"avg_latency_ms"`
 }
 
-// DayStat aggregates one calendar day (UTC, "2006-01-02" keys) for the weekly
-// accuracy chart and the "lessons analyzed" counter.
 type DayStat struct {
 	Attempts int `bson:"attempts" json:"attempts"`
 	Correct  int `bson:"correct" json:"correct"`
 	Lessons  int `bson:"lessons" json:"lessons"`
 }
 
-// UserSkillState is the one-doc-per-user deterministic skill model.
-//
-// Confusions is keyed "expected→chosen" then by day ("2006-01-02"), giving a
-// true 7-day rolling window with a single document read; old day buckets are
-// pruned on every write.
 type UserSkillState struct {
 	UserID         string                    `bson:"_id" json:"user_id"`
 	Skills         map[string]*SkillStat     `bson:"skills" json:"skills"`
