@@ -33,10 +33,17 @@ type Service struct {
 	progress XPAwarder
 	phraser  *Phraser
 	now      func() time.Time // injectable clock for tests
+	locks    *userLocks
 }
 
 func NewService(repo domain.Repository, awarder XPAwarder, phraser *Phraser) *Service {
-	return &Service{repo: repo, progress: awarder, phraser: phraser, now: time.Now}
+	return &Service{
+		repo:     repo,
+		progress: awarder,
+		phraser:  phraser,
+		now:      time.Now,
+		locks:    newUserLocks(),
+	}
 }
 
 // --- ingest ----------------------------------------------------------------
@@ -103,26 +110,56 @@ func (s *Service) Ingest(ctx context.Context, userID, idempotencyKey string, eve
 		return 0, err
 	}
 
-	// Fire-and-forget rule evaluation: pure functions over the doc we already
-	// hold, so the ingest response never waits on insight writes.
-	go func(st domain.UserSkillState) {
+	// Fire-and-forget rule evaluation, so the ingest response never waits on
+	// insight writes.
+	//
+	// It deliberately re-reads the state instead of closing over the copy we
+	// already hold. That copy is a snapshot of this instant, and this goroutine
+	// runs at an unknown later one: if a practice completes in between, the
+	// snapshot still contains the confusion counters that practice cleared, and
+	// writing insights from it resurrects the insight the completion had just
+	// finished. CompletePractice refuses to pay twice by checking exactly that
+	// status, so a resurrected insight could be claimed for XP again.
+	//
+	// Re-reading costs one query on a goroutine nobody is waiting for, and
+	// whatever it reads is a state that was actually committed.
+	go func(userID string, at time.Time) {
 		bg, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		if err := s.reconcileInsights(bg, &st, now); err != nil {
-			logger.Error("coach: rule evaluation failed", zap.String("user_id", st.UserID), zap.Error(err))
+		if err := s.evaluateUserAt(bg, userID, at); err != nil {
+			logger.Error("coach: rule evaluation failed", zap.String("user_id", userID), zap.Error(err))
 		}
-	}(*state)
+	}(userID, now)
 
 	return len(accepted), nil
 }
 
 // EvaluateUser re-runs the rules for one user synchronously (tests, sweep).
 func (s *Service) EvaluateUser(ctx context.Context, userID string) error {
+	return s.evaluateUserAt(ctx, userID, s.now())
+}
+
+// evaluateUserAt reads the user's current state and reconciles their insights
+// against it, as of the given instant.
+//
+// The instant is a parameter rather than a call to s.now() so that the
+// background evaluation in Ingest can carry the timestamp of the events it was
+// triggered by. That keeps the evaluation anchored to when the data happened,
+// and keeps the goroutine from reading a clock the caller may still be holding.
+func (s *Service) evaluateUserAt(ctx context.Context, userID string, at time.Time) error {
+	defer s.locks.lock(userID)()
+	return s.reconcileUser(ctx, userID, at)
+}
+
+// reconcileUser is evaluateUserAt without the lock, for callers that already
+// hold it. Everything it touches belongs to one user, so the lock is the only
+// thing keeping two of these from interleaving.
+func (s *Service) reconcileUser(ctx context.Context, userID string, at time.Time) error {
 	state, err := s.repo.GetSkillState(ctx, userID)
 	if err != nil || state == nil {
 		return err
 	}
-	return s.reconcileInsights(ctx, state, s.now())
+	return s.reconcileInsights(ctx, state, at)
 }
 
 func (s *Service) reconcileInsights(ctx context.Context, state *domain.UserSkillState, now time.Time) error {
@@ -272,6 +309,11 @@ func (s *Service) Practice(ctx context.Context, userID, insightID string) (*leve
 }
 
 func (s *Service) CompletePractice(ctx context.Context, userID, insightID string) (int, error) {
+	// Held across the read, the mark, the clear and the re-evaluation. The
+	// no-double-XP guard below reads a status that a concurrent evaluation
+	// could otherwise flip back to active underneath it.
+	defer s.locks.lock(userID)()
+
 	ins, err := s.repo.GetInsight(ctx, userID, insightID)
 	if err != nil {
 		return 0, err
@@ -289,7 +331,7 @@ func (s *Service) CompletePractice(ctx context.Context, userID, insightID string
 	if ins.Rule == domain.RuleConfusionPair && len(ins.Skills) == 2 {
 		if err := s.repo.ClearConfusionPair(ctx, userID, ins.Skills[0], ins.Skills[1]); err != nil {
 			logger.Warn("coach: clearing confusion counters failed", zap.Error(err))
-		} else if err := s.EvaluateUser(ctx, userID); err != nil {
+		} else if err := s.reconcileUser(ctx, userID, s.now()); err != nil {
 			logger.Warn("coach: post-practice re-evaluation failed", zap.Error(err))
 		}
 	}
