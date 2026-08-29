@@ -1,9 +1,3 @@
-// Command contentlint validates the embedded curriculum chunks
-// (internal/level/curriculum/**). It is the CI gate for content changes:
-//
-//	make content-lint
-//
-// Exit code 0 = clean; 1 = issues found (printed one per line).
 package main
 
 import (

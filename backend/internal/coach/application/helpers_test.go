@@ -6,9 +6,6 @@ import (
 	"github.com/chawais/deenquest/backend/internal/coach/domain"
 )
 
-// Test helpers shared by the application-layer tests. They mirror the ones in
-// the domain test package (the two packages cannot share a _test.go file).
-
 var testNow = time.Date(2026, 7, 18, 12, 0, 0, 0, time.UTC)
 
 func boolPtr(b bool) *bool { return &b }

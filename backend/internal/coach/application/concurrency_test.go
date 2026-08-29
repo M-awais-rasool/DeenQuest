@@ -8,16 +8,6 @@ import (
 	"github.com/chawais/deenquest/backend/internal/coach/domain"
 )
 
-// A background evaluation racing a completion must not resurrect the insight
-// the completion just finished.
-//
-// This is the shape that made TestPracticeFlowAwardsXPOnce fail about one run
-// in five: Ingest evaluates in the background, CompletePractice marks an
-// insight done and re-evaluates, and if the two interleave the finished
-// insight comes back as active. CompletePractice refuses to pay twice by
-// reading that status, so a resurrected insight is claimable XP.
-//
-// Driving it directly rather than hoping the scheduler cooperates.
 func TestConcurrentEvaluationCannotReviveACompletedInsight(t *testing.T) {
 	for attempt := 0; attempt < 50; attempt++ {
 		repo := newFakeRepo()

@@ -14,33 +14,11 @@ import (
 	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
 )
 
-// ActivityQueue moves challenge scoring off the request path.
-//
-// Awarding XP used to fan out inline: weekly quests were loaded and written,
-// open duels scored, group challenges contributed to — ten to twenty round
-// trips before the user's "lesson complete" response could be written. None of
-// that is anything the user is waiting to see; the XP and the streak are.
-//
-// This is also the piece Kafka was nominally for. It does not need Kafka: a
-// single API container with in-process channels gives the same guarantees for a
-// fraction of the memory, and when durability is eventually wanted, Redis
-// Streams are already running on the box.
-//
-// Jobs are sharded by user rather than sharing one channel. Scoring is a
-// read-modify-write over that user's quests, duels and groups, so two workers
-// on the same user at the same time would race and silently lose progress.
-// Hashing the user id onto a fixed worker makes each user's activity strictly
-// serial while different users still run in parallel.
 type ActivityQueue struct {
-	svc    *Service
-	shards []chan activityJob
-
+	svc     *Service
+	shards  []chan activityJob
 	wg      sync.WaitGroup
 	started atomic.Bool
-
-	// dropped counts jobs shed under overload. It is reported on an interval
-	// rather than per drop, so a saturated queue cannot also flood the log it
-	// is trying to warn through.
 	dropped atomic.Uint64
 }
 
@@ -51,19 +29,9 @@ type activityJob struct {
 }
 
 const (
-	// Each job is several MongoDB round trips, so the useful worker count is
-	// bounded by what the database can absorb, not by CPU.
-	activityWorkers = 4
-
-	// Per-shard buffer. Deep enough to ride out a burst, shallow enough that a
-	// permanently saturated queue sheds instead of growing until the container
-	// is killed. At roughly 64 bytes a job this is well under a megabyte.
-	shardBuffer = 1024
-
-	// How long a worker gets for one job: well past the p99, short enough that
-	// a stuck job cannot occupy a worker indefinitely.
+	activityWorkers    = 4
+	shardBuffer        = 1024
 	activityJobTimeout = 15 * time.Second
-
 	dropReportInterval = time.Minute
 )
 
@@ -75,8 +43,6 @@ func NewActivityQueue(svc *Service) *ActivityQueue {
 	return &ActivityQueue{svc: svc, shards: shards}
 }
 
-// OnActivity implements progressapp.ActivityListener. It only enqueues, so the
-// caller's request is never blocked by scoring.
 func (q *ActivityQueue) OnActivity(_ context.Context, userID string, source progressapp.ActivitySource, xp int) {
 	if source == progressapp.SourceChallenge || userID == "" {
 		return
@@ -87,10 +53,6 @@ func (q *ActivityQueue) OnActivity(_ context.Context, userID string, source prog
 	select {
 	case q.shards[q.shardFor(userID)] <- job:
 	default:
-		// Shedding here is deliberate. Under sustained overload quest and duel
-		// progress degrades before anything the user is looking at — XP and
-		// streaks are already committed by the time we get here — and blocking
-		// would push the latency back onto the request this queue protects.
 		q.dropped.Add(1)
 	}
 }
@@ -101,9 +63,6 @@ func (q *ActivityQueue) shardFor(userID string) int {
 	return int(h.Sum32() % uint32(len(q.shards)))
 }
 
-// Start launches the workers and blocks until ctx is cancelled. The context
-// given here outlives any single request, which is the point: a job enqueued by
-// a request must not die when that request's connection closes.
 func (q *ActivityQueue) Start(ctx context.Context) {
 	if !q.started.CompareAndSwap(false, true) {
 		return
@@ -176,8 +135,6 @@ func (q *ActivityQueue) reportDrops(ctx context.Context) {
 	}
 }
 
-// Drain waits for the workers to stop after the context Start was given is
-// cancelled, so shutdown does not abandon a job mid-write.
 func (q *ActivityQueue) Drain(timeout time.Duration) {
 	if !q.started.Load() {
 		return

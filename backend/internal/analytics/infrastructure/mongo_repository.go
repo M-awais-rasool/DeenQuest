@@ -23,6 +23,7 @@ type MongoRepository struct {
 	userLevels     *mongo.Collection
 	userDailyTasks *mongo.Collection
 	recitation     *mongo.Collection
+	dailySnapshots *mongo.Collection
 
 	mu       sync.Mutex
 	cached   *domain.AdminAnalytics
@@ -40,6 +41,7 @@ func NewMongoRepository(db *mongo.Database) *MongoRepository {
 		userLevels:     db.Collection("user_levels"),
 		userDailyTasks: db.Collection("user_daily_tasks"),
 		recitation:     db.Collection("recitation_attempts"),
+		dailySnapshots: db.Collection("analytics_daily"),
 		ttl:            30 * time.Second,
 	}
 }
@@ -61,6 +63,7 @@ func (r *MongoRepository) GetAdminAnalytics(ctx context.Context) (*domain.AdminA
 	now := time.Now().UTC()
 	today := now.Format("2006-01-02")
 	weekAgo := now.AddDate(0, 0, -6).Format("2006-01-02")
+	startOfToday := now.Truncate(24 * time.Hour)
 	seriesStart := now.AddDate(0, 0, -(analyticsSeriesDays - 1)).Truncate(24 * time.Hour)
 	seriesStartStr := seriesStart.Format("2006-01-02")
 
@@ -78,10 +81,29 @@ func (r *MongoRepository) GetAdminAnalytics(ctx context.Context) (*domain.AdminA
 	run(func() { out.TotalUsers, _ = r.users.EstimatedDocumentCount(ctx) })
 	run(func() { out.TotalLevels, _ = r.levels.EstimatedDocumentCount(ctx) })
 	run(func() { out.TotalTasks, _ = r.dailyTasks.EstimatedDocumentCount(ctx) })
-	run(func() { out.RecitationAttempts, _ = r.recitation.EstimatedDocumentCount(ctx) })
 
-	run(func() { out.LevelsCompleted, _ = r.userLevels.CountDocuments(ctx, bson.M{"completed": true}) })
-	run(func() { out.TasksCompleted, _ = r.userDailyTasks.CountDocuments(ctx, bson.M{"completed": true}) })
+	// Lifetime counts are the sum of the finished days plus today, which has
+	// not been rolled up yet. Counting the raw collections instead would both
+	// scale with the entire history and start shrinking once the TTL indexes
+	// begin removing the rows those counts were derived from.
+	run(func() {
+		totals, err := r.lifetimeTotals(ctx)
+		if err != nil {
+			return
+		}
+		todayTasks, _ := r.userDailyTasks.CountDocuments(ctx, bson.M{"date": today, "completed": true})
+		todayLevels, _ := r.userLevels.CountDocuments(ctx, bson.M{
+			"completed":    true,
+			"completed_at": bson.M{"$gte": startOfToday},
+		})
+		todayRecitations, _ := r.recitation.CountDocuments(ctx, bson.M{
+			"created_at": bson.M{"$gte": startOfToday},
+		})
+
+		out.TasksCompleted = totals.TaskCompletions + todayTasks
+		out.LevelsCompleted = totals.LevelCompletions + todayLevels
+		out.RecitationAttempts = totals.RecitationAttempts + todayRecitations
+	})
 
 	run(func() {
 		if v, err := r.sumInt(ctx, r.progress, "$total_xp", bson.M{}); err == nil {
@@ -101,7 +123,7 @@ func (r *MongoRepository) GetAdminAnalytics(ctx context.Context) (*domain.AdminA
 		}
 	})
 
-	run(func() { out.Series = r.activitySeries(ctx, seriesStart, seriesStartStr) })
+	run(func() { out.Series = r.activitySeries(ctx, seriesStart, seriesStartStr, today, startOfToday) })
 	run(func() { out.LevelsByDifficulty = r.levelsByDifficulty(ctx) })
 	run(func() { out.TopLevels = r.topLevels(ctx) })
 
@@ -154,51 +176,51 @@ func (r *MongoRepository) streakStats(ctx context.Context) (float64, int) {
 	return rows[0].Avg, rows[0].Max
 }
 
-// activitySeries returns a zero-filled day-by-day series for the window,
-// combining level completions (by completed_at) and task completions (by date).
-func (r *MongoRepository) activitySeries(ctx context.Context, start time.Time, startStr string) []domain.AnalyticsTimePoint {
+// activitySeries returns a zero-filled day-by-day series for the window.
+//
+// Finished days come from their snapshots — one document each, already
+// counted. Only today is still computed from the raw collections, because
+// today is not over. That turns fourteen aggregations over the full history
+// into one indexed range read plus two counts over a single day.
+func (r *MongoRepository) activitySeries(
+	ctx context.Context,
+	start time.Time,
+	startStr string,
+	today string,
+	startOfToday time.Time,
+) []domain.AnalyticsTimePoint {
 	points := make([]domain.AnalyticsTimePoint, analyticsSeriesDays)
 	index := make(map[string]int, analyticsSeriesDays)
 	for i := 0; i < analyticsSeriesDays; i++ {
-		d := start.AddDate(0, 0, i).Format("2006-01-02")
+		d := start.AddDate(0, 0, i).Format(dayLayout)
 		points[i] = domain.AnalyticsTimePoint{Date: d}
 		index[d] = i
 	}
 
-	// Task completions: group by the YYYY-MM-DD `date` string.
-	if cur, err := r.userDailyTasks.Aggregate(ctx, mongo.Pipeline{
-		{{Key: "$match", Value: bson.M{"completed": true, "date": bson.M{"$gte": startStr}}}},
-		{{Key: "$group", Value: bson.M{"_id": "$date", "count": bson.M{"$sum": 1}}}},
-	}); err == nil {
-		var rows []struct {
-			ID    string `bson:"_id"`
-			Count int    `bson:"count"`
-		}
-		_ = cur.All(ctx, &rows)
-		for _, row := range rows {
-			if i, ok := index[row.ID]; ok {
-				points[i].TaskCompletions = row.Count
+	if snaps, err := r.snapshotsSince(ctx, startStr); err == nil {
+		for _, snap := range snaps {
+			i, ok := index[snap.Date]
+			if !ok {
+				continue
 			}
+			points[i].TaskCompletions = snap.TaskCompletions
+			points[i].LevelCompletions = snap.LevelCompletions
 		}
 	}
 
-	// Level completions: derive the day from completed_at.
-	if cur, err := r.userLevels.Aggregate(ctx, mongo.Pipeline{
-		{{Key: "$match", Value: bson.M{"completed": true, "completed_at": bson.M{"$gte": start}}}},
-		{{Key: "$group", Value: bson.M{
-			"_id":   bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d", "date": "$completed_at"}},
-			"count": bson.M{"$sum": 1},
-		}}},
-	}); err == nil {
-		var rows []struct {
-			ID    string `bson:"_id"`
-			Count int    `bson:"count"`
+	// Today has no snapshot yet, so it is counted directly. A day the
+	// scheduler missed stays at zero here rather than being silently wrong;
+	// the next backfill fills it in.
+	if i, ok := index[today]; ok {
+		if n, err := r.userDailyTasks.CountDocuments(ctx,
+			bson.M{"date": today, "completed": true}); err == nil {
+			points[i].TaskCompletions = int(n)
 		}
-		_ = cur.All(ctx, &rows)
-		for _, row := range rows {
-			if i, ok := index[row.ID]; ok {
-				points[i].LevelCompletions = row.Count
-			}
+		if n, err := r.userLevels.CountDocuments(ctx, bson.M{
+			"completed":    true,
+			"completed_at": bson.M{"$gte": startOfToday},
+		}); err == nil {
+			points[i].LevelCompletions = int(n)
 		}
 	}
 

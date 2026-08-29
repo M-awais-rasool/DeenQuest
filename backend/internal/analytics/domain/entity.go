@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type AnalyticsTimePoint struct {
 	Date             string `json:"date"` // YYYY-MM-DD
@@ -30,6 +33,17 @@ type AdminAnalytics struct {
 	TopLevels          []AnalyticsLabelCount `json:"top_levels"`
 }
 
+type DailySnapshot struct {
+	Date               string    `bson:"_id"`
+	TaskCompletions    int       `bson:"task_completions"`
+	LevelCompletions   int       `bson:"level_completions"`
+	RecitationAttempts int       `bson:"recitation_attempts"`
+	ActiveUsers        int       `bson:"active_users"`
+	ComputedAt         time.Time `bson:"computed_at"`
+}
+
 type Repository interface {
 	GetAdminAnalytics(ctx context.Context) (*AdminAnalytics, error)
+	RollUpDay(ctx context.Context, date string) error
+	BackfillMissingDays(ctx context.Context) (int, error)
 }

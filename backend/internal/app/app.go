@@ -41,6 +41,17 @@ func New(cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
+	lifecycleCtx, cancelLifecycle := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancelLifecycle()
+	err = prepareDataLifecycle(lifecycleCtx,
+		modules.AnalyticsRoller.Backfill,
+		func(ctx context.Context) error { return applyRetention(ctx, infra.DB) },
+	)
+	if err != nil {
+		infra.Close()
+		return nil, err
+	}
+
 	return &App{
 		cfg:     cfg,
 		infra:   infra,
@@ -49,8 +60,6 @@ func New(cfg *config.Config) (*App, error) {
 	}, nil
 }
 
-// Run starts the background workers and the HTTP server, then blocks until
-// SIGINT/SIGTERM and shuts everything down gracefully.
 func (a *App) Run() error {
 	defer logger.Sync()
 

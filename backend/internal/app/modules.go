@@ -5,6 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
+	analyticsapp "github.com/chawais/deenquest/backend/internal/analytics/application"
 	analyticsinfra "github.com/chawais/deenquest/backend/internal/analytics/infrastructure"
 	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
 	authapp "github.com/chawais/deenquest/backend/internal/auth/application"
@@ -73,6 +74,7 @@ type Modules struct {
 	RecitationHandler  *recitationhttp.Handler // whisper + coach
 	ContentHandler     *contenthttp.Handler    // authoring registry (/admin/registry)
 	AnalyticsHandler   *analyticshttp.Handler  // admin dashboards (/admin/analytics)
+	AnalyticsRoller    *analyticsapp.Roller    // nightly day-snapshot rollup
 
 	CoachService      *coachapp.Service
 	CoachHandler      *coachhttp.Handler
@@ -129,6 +131,7 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		return nil, fmt.Errorf("init recitation repository: %w", err)
 	}
 	analyticsRepo := analyticsinfra.NewMongoRepository(db)
+	analyticsRoller := analyticsapp.NewRoller(analyticsRepo)
 	tokenRepo, err := notifinfra.NewMongoTokenRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init notification token repository: %w", err)
@@ -235,6 +238,7 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		RecitationHandler:  recitationhttp.NewHandler(recitationService),
 		ContentHandler:     contenthttp.NewHandler(),
 		AnalyticsHandler:   analyticshttp.NewHandler(analyticsRepo),
+		AnalyticsRoller:    analyticsRoller,
 
 		CoachService:      coachService,
 		CoachHandler:      coachHandler,

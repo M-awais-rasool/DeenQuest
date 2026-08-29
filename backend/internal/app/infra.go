@@ -16,23 +16,13 @@ import (
 	"github.com/chawais/deenquest/backend/internal/platform/push"
 )
 
-// Infra holds every external connection the app talks to. It is built once at
-// startup by connectInfra and handed to the modules; nothing else in the
-// codebase opens its own connections.
 type Infra struct {
-	Mongo *mongo.Client
-	DB    *mongo.Database
-
-	// Redis is nil when unavailable — callers must nil-check. The app then runs
-	// without response caching and rate limiting.
-	Redis *cache.RedisClient
-
-	// Gemini is nil when GEMINI_API_KEY is unset. Every AI feature checks for
-	// nil and falls back to its deterministic behavior.
+	Mongo  *mongo.Client
+	DB     *mongo.Database
+	Redis  *cache.RedisClient
 	Gemini *gemini.Client
-
-	Expo *push.ExpoClient
-	JWT  *jwt.JWTManager
+	Expo   *push.ExpoClient
+	JWT    *jwt.JWTManager
 }
 
 func connectInfra(cfg *config.Config) (*Infra, error) {
@@ -72,7 +62,6 @@ func connectInfra(cfg *config.Config) (*Infra, error) {
 	}, nil
 }
 
-// Close releases every connection in reverse dependency order.
 func (i *Infra) Close() {
 	if i.Redis != nil {
 		_ = i.Redis.Close()
