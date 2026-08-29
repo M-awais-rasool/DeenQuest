@@ -17,12 +17,12 @@ import (
 )
 
 type Infra struct {
-	Mongo *mongo.Client
-	DB    *mongo.Database
-	Redis *cache.RedisClient
+	Mongo  *mongo.Client
+	DB     *mongo.Database
+	Redis  *cache.RedisClient
 	Gemini *gemini.Client
-	Expo *push.ExpoClient
-	JWT  *jwt.JWTManager
+	Expo   *push.ExpoClient
+	JWT    *jwt.JWTManager
 }
 
 func connectInfra(cfg *config.Config) (*Infra, error) {

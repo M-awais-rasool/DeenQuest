@@ -15,8 +15,8 @@ import (
 )
 
 type ActivityQueue struct {
-	svc    *Service
-	shards []chan activityJob
+	svc     *Service
+	shards  []chan activityJob
 	wg      sync.WaitGroup
 	started atomic.Bool
 	dropped atomic.Uint64
@@ -29,8 +29,8 @@ type activityJob struct {
 }
 
 const (
-	activityWorkers = 4
-	shardBuffer = 1024
+	activityWorkers    = 4
+	shardBuffer        = 1024
 	activityJobTimeout = 15 * time.Second
 	dropReportInterval = time.Minute
 )
