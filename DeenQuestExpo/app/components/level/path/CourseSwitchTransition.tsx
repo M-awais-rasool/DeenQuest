@@ -12,7 +12,7 @@ import type { LucideIcon } from "lucide-react-native";
 
 import { theme } from "../../../theme/themes";
 import { haptics } from "../../../utils/haptics";
-import { hexToRgba, type SectionColors } from "../map/constants";
+import { hexToRgba, type SectionColors } from "./sectionColors";
 
 const W = Dimensions.get("window").width;
 const H = Math.max(

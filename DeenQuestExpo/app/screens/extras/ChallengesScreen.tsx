@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useTabBarSpace } from "../../navigators/DemoNavigator";
 import {
   Alert,
   RefreshControl,
@@ -44,6 +45,7 @@ function errorMessage(err: unknown, fallback: string): string {
 }
 
 export function ChallengesScreen({ navigation }: Props) {
+  const tabBarSpace = useTabBarSpace();
   const {
     data,
     isLoading,
@@ -189,7 +191,7 @@ export function ChallengesScreen({ navigation }: Props) {
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={s.scroll}
+          contentContainerStyle={[s.scroll, { paddingBottom: tabBarSpace }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl

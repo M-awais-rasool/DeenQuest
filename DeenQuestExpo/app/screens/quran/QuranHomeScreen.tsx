@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTabBarSpace } from "../../navigators/DemoNavigator";
 import {
   FlatList,
   StyleSheet,
@@ -20,6 +21,7 @@ import type { DemoTabScreenProps } from "../../navigators/navigationTypes";
 type Props = DemoTabScreenProps<"QuranScreen">;
 
 export const QuranHomeScreen = ({ navigation }: Props) => {
+  const tabBarSpace = useTabBarSpace();
   const [search, setSearch] = useState("");
   const { data, isLoading, isFetching, refetch } = useGetSurahsQuery();
 
@@ -68,7 +70,7 @@ export const QuranHomeScreen = ({ navigation }: Props) => {
           keyExtractor={(item) => String(item.id)}
           refreshing={isFetching}
           onRefresh={refetch}
-          contentContainerStyle={s.listContent}
+          contentContainerStyle={[s.listContent, { paddingBottom: tabBarSpace }]}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <AnimatedPressable

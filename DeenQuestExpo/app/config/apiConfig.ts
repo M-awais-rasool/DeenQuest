@@ -13,4 +13,4 @@ const api = (Constants.expoConfig?.extra?.api ?? {}) as {
   baseUrl?: string;
 };
 
-export const API_BASE_URL = api.baseUrl ?? "http://localhost:8080";
+export const API_BASE_URL = api.baseUrl ?? "http://192.168.18.27:8080";

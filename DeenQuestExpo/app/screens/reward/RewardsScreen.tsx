@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTabBarSpace } from "../../navigators/DemoNavigator";
 import {
   Animated,
   Easing,
@@ -218,6 +219,7 @@ function BadgeCell({
 }
 
 export function RewardsScreen() {
+  const tabBarSpace = useTabBarSpace();
   const dispatch = useAppDispatch();
   const navigation = useNavigation<Nav>();
   const { width } = useWindowDimensions();
@@ -308,7 +310,7 @@ export function RewardsScreen() {
   return (
     <ScreenWrapper innerStyle={s.wrapper}>
       <ScrollView
-        contentContainerStyle={s.scroll}
+        contentContainerStyle={[s.scroll, { paddingBottom: tabBarSpace }]}
         showsVerticalScrollIndicator={false}
       >
         {/* tier header */}

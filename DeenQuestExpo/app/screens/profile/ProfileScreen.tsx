@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTabBarSpace } from "../../navigators/DemoNavigator";
 import { StyleSheet, View, Text, ScrollView, Share, Pressable, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Flame, Share2, Settings, Check } from "lucide-react-native";
@@ -24,6 +25,7 @@ function rankWord(title?: string): string {
 }
 
 export function ProfileScreen({ navigation }: Props) {
+  const tabBarSpace = useTabBarSpace();
   const { data: profileData, isLoading: profileLoading } = useGetProfileQuery();
   const { data: progressData, isLoading: progressLoading } = useGetProgressQuery();
   const { data: rewardsData, isLoading: rewardsLoading } = useGetRewardsQuery();
@@ -87,7 +89,7 @@ export function ProfileScreen({ navigation }: Props) {
   return (
     <ScreenWrapper innerStyle={styles.wrapper}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: tabBarSpace }]}
         showsVerticalScrollIndicator={false}
       >
         {/* header */}
