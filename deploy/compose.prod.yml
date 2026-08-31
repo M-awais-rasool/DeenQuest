@@ -143,6 +143,21 @@ services:
     cpus: 1.5
     networks: [data]
 
+  whisper-cpp:
+    <<: *hardening
+    profiles: ["whisper-cpp"]
+    build:
+      context: ../backend/whisper-cpp-service
+    image: deenquest-whisper-cpp:local
+    volumes:
+      - whisper_models:/models:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,noexec,nosuid,nodev
+    mem_limit: 512m
+    cpus: 1.5
+    networks: [data]
+
   alloy:
     <<: *hardening
     image: grafana/alloy:v1.4.2

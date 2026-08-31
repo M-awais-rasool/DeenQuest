@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -28,6 +29,30 @@ type whisperResponse struct {
 	Confidence float64 `json:"confidence"`
 }
 
+type WhisperEngine string
+
+const (
+	EngineFasterWhisper WhisperEngine = "faster-whisper"
+	EngineWhisperCPP    WhisperEngine = "whisper-cpp"
+)
+
+type engineDialect struct {
+	path      string
+	fileField string
+	fields    map[string]string
+}
+
+func dialectFor(engine WhisperEngine) engineDialect {
+	if engine == EngineWhisperCPP {
+		return engineDialect{
+			path:      "/inference",
+			fileField: "file",
+			fields:    map[string]string{"language": "ar", "response_format": "json"},
+		}
+	}
+	return engineDialect{path: "/transcribe", fileField: "audio"}
+}
+
 const defaultLessonXP = 25
 
 type RecitationCoach interface {
@@ -47,6 +72,10 @@ type Service struct {
 	httpClient   *http.Client
 	coach        RecitationCoach
 
+	whisperSlots chan struct{}
+	whisperWait  time.Duration
+	dialect      engineDialect
+
 	coachMu    sync.Mutex
 	coachCache map[string]string
 }
@@ -59,10 +88,50 @@ func NewService(repo domain.Repository, whisperURL, whisperToken string, levels 
 		whisperURL:   whisperURL,
 		whisperToken: whisperToken,
 		httpClient:   &http.Client{Timeout: 60 * time.Second},
+		whisperSlots: make(chan struct{}, 1),
+		whisperWait:  defaultTranscribeWait,
+		dialect:      dialectFor(EngineFasterWhisper),
 	}
 }
 
+func (s *Service) SetEngine(engine WhisperEngine) {
+	s.dialect = dialectFor(engine)
+}
+
 func (s *Service) SetCoach(c RecitationCoach) { s.coach = c }
+
+func (s *Service) SetTranscribeLimits(concurrency int, wait time.Duration) {
+	if concurrency < 1 {
+		concurrency = 1
+	}
+	if wait <= 0 {
+		wait = defaultTranscribeWait
+	}
+	s.whisperSlots = make(chan struct{}, concurrency)
+	s.whisperWait = wait
+}
+
+var ErrTranscriberBusy = errors.New("transcription service is busy")
+
+const defaultTranscribeWait = 45 * time.Second
+
+func (s *Service) acquireTranscriber(ctx context.Context) (func(), error) {
+	if s.whisperSlots == nil {
+		return func() {}, nil
+	}
+
+	timer := time.NewTimer(s.whisperWait)
+	defer timer.Stop()
+
+	select {
+	case s.whisperSlots <- struct{}{}:
+		return func() { <-s.whisperSlots }, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-timer.C:
+		return nil, ErrTranscriberBusy
+	}
+}
 
 const recitationPassScore = 60
 
@@ -229,6 +298,26 @@ func (s *Service) GradeAgainstText(
 	}, nil
 }
 
+func (s *Service) ResolveLesson(ctx context.Context, levelID, lessonIndex int) (string, int, error) {
+	lvl, err := s.levels.LevelByID(ctx, levelID)
+	if err != nil {
+		return "", 0, fmt.Errorf("get level %d: %w", levelID, err)
+	}
+	if lvl == nil {
+		return "", 0, fmt.Errorf("level %d not found", levelID)
+	}
+	if lessonIndex < 0 || lessonIndex >= len(lvl.Lessons) {
+		return "", 0, fmt.Errorf("lesson_index %d out of range (level %d has %d lessons)", lessonIndex, levelID, len(lvl.Lessons))
+	}
+	lesson := lvl.Lessons[lessonIndex]
+
+	arabicText, err := extractArabicText(lesson)
+	if err != nil {
+		return "", 0, err
+	}
+	return arabicText, extractLessonXP(lesson), nil
+}
+
 func (s *Service) CheckRecitation(
 	ctx context.Context,
 	userID string,
@@ -237,23 +326,10 @@ func (s *Service) CheckRecitation(
 	audio io.Reader,
 	audioFilename string,
 ) (*domain.RecitationCheckResult, error) {
-	lvl, err := s.levels.LevelByID(ctx, levelID)
-	if err != nil {
-		return nil, fmt.Errorf("get level %d: %w", levelID, err)
-	}
-	if lvl == nil {
-		return nil, fmt.Errorf("level %d not found", levelID)
-	}
-	if lessonIndex < 0 || lessonIndex >= len(lvl.Lessons) {
-		return nil, fmt.Errorf("lesson_index %d out of range (level %d has %d lessons)", lessonIndex, levelID, len(lvl.Lessons))
-	}
-	lesson := lvl.Lessons[lessonIndex]
-
-	arabicText, err := extractArabicText(lesson)
+	arabicText, baseXP, err := s.ResolveLesson(ctx, levelID, lessonIndex)
 	if err != nil {
 		return nil, err
 	}
-	baseXP := extractLessonXP(lesson)
 
 	grade, err := s.GradeAgainstText(ctx, arabicText, audio, audioFilename)
 	if err != nil {
@@ -308,11 +384,28 @@ func (s *Service) callWhisper(
 	audio io.Reader,
 	filename string,
 ) (*whisperResponse, error) {
+	release, err := s.acquireTranscriber(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+
+	dialect := s.dialect
+	if dialect.path == "" {
+		dialect = dialectFor(EngineFasterWhisper)
+	}
+
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 
 	go func() {
-		fw, err := mw.CreateFormFile("audio", filename)
+		for name, value := range dialect.fields {
+			if err := mw.WriteField(name, value); err != nil {
+				_ = pw.CloseWithError(fmt.Errorf("write field %s: %w", name, err))
+				return
+			}
+		}
+		fw, err := mw.CreateFormFile(dialect.fileField, filename)
 		if err != nil {
 			_ = pw.CloseWithError(fmt.Errorf("create form file: %w", err))
 			return
@@ -324,8 +417,9 @@ func (s *Service) callWhisper(
 		_ = pw.CloseWithError(mw.Close())
 	}()
 
-	url := s.whisperURL + "/transcribe"
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, pr)
+	url := s.whisperURL + dialect.path
+	req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, url, pr)
+	err = reqErr
 	if err != nil {
 		return nil, fmt.Errorf("build request: %w", err)
 	}

@@ -8,8 +8,18 @@ WHISPER_DIR := whisper-service
 WHISPER_VENV := $(WHISPER_DIR)/.venv
 WHISPER_CONVERT_VENV := $(WHISPER_DIR)/.venv-convert
 
+WHISPER_CPP_DIR := whisper-cpp-service
+WHISPER_CPP_IMAGE := deenquest-whisper-cpp:local
+WHISPER_CPP_PORT ?= 8002
+
+# The two transcribers the bench compares. Override to point at a box.
+BENCH_BASELINE ?= http://localhost:8001
+BENCH_CANDIDATE ?= http://localhost:$(WHISPER_CPP_PORT)
+BENCH_MANIFEST ?= $(WHISPER_CPP_DIR)/bench/clips.jsonl
+
 .PHONY: help tidy fmt vet test lint content-lint build run \
         whisper-setup whisper-model whisper-run whisper-dev \
+        whisper-cpp-model whisper-cpp-build whisper-cpp-run whisper-bench \
         compose-up compose-down compose-build compose-logs compose-ps compose-restart clean
 
 help:
@@ -28,6 +38,12 @@ help:
 	@echo "  make whisper-model     - Build the Quran-finetuned model (run once)"
 	@echo "  make whisper-run       - Start whisper service (port 8001)"
 	@echo "  make whisper-dev       - Whisper with uvicorn --reload"
+	@echo ""
+	@echo "whisper.cpp (candidate engine — see whisper-cpp-service/README.md):"
+	@echo "  make whisper-cpp-model - Build the GGML model (run once)"
+	@echo "  make whisper-cpp-build - Build the whisper.cpp image"
+	@echo "  make whisper-cpp-run   - Run it on port $(WHISPER_CPP_PORT)"
+	@echo "  make whisper-bench     - Compare both engines and gate the swap"
 	@echo ""
 	@echo "Docker Compose (infrastructure):"
 	@echo "  make compose-up        - Start MongoDB + Redis"
@@ -113,9 +129,34 @@ whisper-dev: $(WHISPER_VENV)
 		--port 8001 \
 		--reload
 
+whisper-cpp-model:
+	$(WHISPER_CPP_DIR)/convert-model.sh
+
+whisper-cpp-build:
+	docker build -t $(WHISPER_CPP_IMAGE) $(WHISPER_CPP_DIR)
+
+whisper-cpp-run: whisper-cpp-build
+	docker run --rm \
+		-p $(WHISPER_CPP_PORT):8001 \
+		-v $(CURDIR)/$(WHISPER_CPP_DIR)/models:/models:ro \
+		$(WHISPER_CPP_IMAGE)
+
+# Both engines must already be running. Exits non-zero when the candidate
+# fails the gate, so CI can depend on it once a clip set exists.
+whisper-bench:
+	@test -f $(BENCH_MANIFEST) || { \
+		echo "No clip set at $(BENCH_MANIFEST)."; \
+		echo "Build one — see $(WHISPER_CPP_DIR)/README.md — starting from"; \
+		echo "$(WHISPER_CPP_DIR)/bench/clips.example.jsonl"; \
+		exit 1; }
+	$(GO) run ./cmd/whisperbench \
+		-manifest $(BENCH_MANIFEST) \
+		-engine faster-whisper=$(BENCH_BASELINE) \
+		-engine whisper-cpp=$(BENCH_CANDIDATE)
+
 $(WHISPER_VENV):
 	@$(MAKE) whisper-setup
 
 clean:
-	rm -rf build/ $(WHISPER_VENV)/ $(WHISPER_CONVERT_VENV)/ tmp/
+	rm -rf build/ $(WHISPER_VENV)/ $(WHISPER_CONVERT_VENV)/ $(WHISPER_CPP_DIR)/.convert/ tmp/
 	$(GO) clean -cache -testcache

@@ -104,11 +104,14 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	levelhttp.RegisterRoutes(authed, m.LevelHandler)
 	dailytaskhttp.RegisterRoutes(authed, m.TaskHandler)
 	rewardhttp.RegisterRoutes(authed, m.RewardHandler)
+	// Submitting a clip is limited hard — each one costs a transcription. The
+	// poll that follows it rides the ordinary authed budget, because a client
+	// waiting in the queue has to ask about once a second.
 	recite := authed.Group("")
 	if infra.Redis != nil {
 		recite.Use(middleware.RateLimitByUser(infra.Redis, 10, time.Minute, "recite"))
 	}
-	recitationhttp.RegisterRoutes(recite, m.RecitationHandler)
+	recitationhttp.RegisterRoutes(recite, authed, m.RecitationHandler)
 	hifzhttp.RegisterRoutes(authed, m.HifzHandler)
 	challengehttp.RegisterRoutes(authed, m.ChallengeHandler)
 	if m.CoachHandler != nil {

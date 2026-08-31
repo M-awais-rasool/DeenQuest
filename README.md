@@ -192,7 +192,8 @@ Base prefix: `/api/v1`
   - `POST /levels/:id/lessons/complete`
   - `POST /levels/:id/complete`
   - `GET /rewards`
-  - `POST /recitation/check`
+  - `POST /recitation/check` — queues a clip, returns 202 + job id
+  - `GET /recitation/jobs/:job_id` — poll for the score
 - Learning Agent
   - `POST /events` — batched client behavior events
   - `GET /learning/state` — the learner's evolving state

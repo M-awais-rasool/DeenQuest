@@ -217,6 +217,7 @@ export const RecitationPanel = React.memo(function RecitationPanel({
   isRecording,
   isProcessing,
   hasResult,
+  queueInfo,
   resultAnim,
   handlePlay,
   handleRecord,
@@ -224,6 +225,19 @@ export const RecitationPanel = React.memo(function RecitationPanel({
   variant = "primary",
 }: RecitationPanelProps) {
   const accent = useMemo(() => getAccent(variant), [variant]);
+
+  const processingText = useMemo(() => {
+    if (!queueInfo || queueInfo.position <= 0) {
+      return "⏳ Analysing your recitation…";
+    }
+    const ahead =
+      queueInfo.position === 1
+        ? "1 recitation ahead of you"
+        : `${queueInfo.position} recitations ahead of you`;
+    return queueInfo.estimatedWaitSeconds > 0
+      ? `⏳ ${ahead} — about ${queueInfo.estimatedWaitSeconds}s`
+      : `⏳ ${ahead}`;
+  }, [queueInfo]);
 
   return (
     <View style={[s.recitationSection, { borderColor: accent.border20 }]}>
@@ -247,7 +261,7 @@ export const RecitationPanel = React.memo(function RecitationPanel({
               {isRecording
                 ? "🎙 Reciting… tap mic to stop"
                 : isProcessing
-                  ? "⏳ Analysing your recitation…"
+                  ? processingText
                   : "👂 Listen first, then tap 🎤 to recite"}
             </Text>
           </View>

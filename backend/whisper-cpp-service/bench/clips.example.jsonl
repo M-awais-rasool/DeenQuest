@@ -1,0 +1,6 @@
+// One clip per line. Paths are relative to this file. Copy to clips.jsonl and
+// point it at your own recordings — see ../README.md for what makes a clip set
+// worth gating on.
+{"audio": "clips/001-fatiha-1.m4a", "reference": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"}
+{"audio": "clips/002-fatiha-2.m4a", "reference": "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ"}
+{"audio": "clips/003-ikhlas-1.m4a", "reference": "قُلْ هُوَ ٱللَّهُ أَحَدٌ"}

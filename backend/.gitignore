@@ -13,3 +13,7 @@ whisper-service/.venv-convert/
 *.pyc
 
 whisper-service/models/
+# whisper.cpp build artifacts: a 155 MB GGML model and the converter's throwaway
+# venv. Both are reproducible from convert-model.sh.
+whisper-cpp-service/models/
+whisper-cpp-service/.convert/
