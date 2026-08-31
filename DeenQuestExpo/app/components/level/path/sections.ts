@@ -1,8 +1,8 @@
 import type { LevelWithStatus, CourseType } from "../../../store/services/api";
-import type { SectionColors } from "../map/constants";
+import type { SectionColors } from "./sectionColors";
 import { colorsForSection } from "./palette";
 import { courseEntry } from "./courseCatalog";
-import type { PathSection, PathLocation, SectionStatus } from "./types";
+import type { PathSection, SectionStatus } from "./types";
 
 export const LEVELS_PER_SECTION = 4;
 
@@ -115,23 +115,4 @@ export function buildSections(
   }
 
   return sections;
-}
-
-export function findActiveLocation(
-  sections: PathSection[],
-): PathLocation | null {
-  let last: PathLocation | null = null;
-
-  for (const section of sections) {
-    for (let itemIndex = 0; itemIndex < section.data.length; itemIndex++) {
-      const loc = { sectionIndex: section.index, itemIndex };
-      last = loc;
-      const status = section.data[itemIndex].status;
-      if (status === "available" || status === "in_progress") {
-        return loc;
-      }
-    }
-  }
-
-  return last;
 }

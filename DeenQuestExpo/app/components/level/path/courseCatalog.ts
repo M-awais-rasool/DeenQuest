@@ -1,7 +1,7 @@
 import { BookOpen, Landmark, type LucideIcon } from "lucide-react-native";
 
 import type { CourseType } from "../../../store/services/api";
-import type { SectionColors } from "../map/constants";
+import type { SectionColors } from "./sectionColors";
 import { QAIDA_PALETTE, NAMAZ_PALETTE } from "./palette";
 
 export interface CourseCatalogEntry {

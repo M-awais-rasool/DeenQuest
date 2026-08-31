@@ -12,7 +12,7 @@ import { Check, ChevronRight } from "lucide-react-native";
 
 import type { CourseType } from "../../../store/services/api";
 import { theme } from "../../../theme/themes";
-import { hexToRgba } from "../map/constants";
+import { hexToRgba } from "./sectionColors";
 import { COURSE_CATALOG } from "./courseCatalog";
 import type { StreakOrigin } from "./StreakPopup";
 

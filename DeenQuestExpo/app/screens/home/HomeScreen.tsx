@@ -1,4 +1,5 @@
 import React from "react";
+import { useTabBarSpace } from "../../navigators/DemoNavigator";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -207,6 +208,7 @@ function CoachCard({
 /* ─────────────────────────── Screen ─────────────────────────── */
 
 export const HomeScreen = () => {
+  const tabBarSpace = useTabBarSpace();
   const { data: tasksData, isLoading: tasksLoading } = useGetDailyTasksQuery();
   const { data: progressData } = useGetProgressQuery();
   const { data: profileData } = useGetProfileQuery();
@@ -341,7 +343,7 @@ export const HomeScreen = () => {
   return (
     <ScreenWrapper innerStyle={styles.wrapper}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: tabBarSpace }]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Greeting ── */}

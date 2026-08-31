@@ -247,12 +247,32 @@ const TabItem = memo(function TabItem({
   );
 });
 
+/**
+ * How much vertical room the floating bar occupies above the safe area.
+ * `ScreenWrapper` reserves this so ordinary screens do not run underneath it.
+ */
+export const TAB_BAR_HEIGHT = 64;
+
+/**
+ * Room a tab screen must leave at the bottom of its scrollable content.
+ *
+ * The bar floats over the screen, so content runs underneath it — that is what
+ * makes it read as a pill on top of the app rather than a slab beside it. The
+ * cost is that the last row of any list would sit behind it, so every tab
+ * screen ends its scroll content with this much space.
+ */
+export function useTabBarSpace() {
+  const insets = useSafeAreaInsets();
+  return TAB_BAR_HEIGHT + Math.max(insets.bottom, 14);
+}
+
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
 
   return (
     <View
-      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 14) }]}
+      pointerEvents="box-none"
+      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom - 10, 14) }]}
     >
       <View style={styles.bar}>
         {state.routes.map((route, index) => {
@@ -290,11 +310,26 @@ export function DemoNavigator() {
   return (
     <Tab.Navigator
       id="demo-tabs"
-      screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}
+      screenOptions={{
+        headerShown: false,
+        tabBarHideOnKeyboard: true,
+        // No bottom padding here on purpose. Padding the scene stops the
+        // screen short of the bar and leaves a flat band under it, which makes
+        // the bar look like a slab on some tabs and a floating pill on others.
+        // Screens run to the bottom edge and reserve the room inside their own
+        // scroll content instead — see useTabBarSpace.
+        sceneStyle: { backgroundColor: theme.colors.background },
+      }}
       tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tab.Screen name="HomeScreen" component={HomeScreen} />
-      <Tab.Screen name="PathScreen" component={LearnPathScreen} />
+      <Tab.Screen
+        name="PathScreen"
+        component={LearnPathScreen}
+        // The learning path paints its own world under the bar and pads its
+        // scroll content itself.
+        options={{ sceneStyle: { backgroundColor: "transparent" } }}
+      />
       <Tab.Screen name="QuranScreen" component={QuranHomeScreen} />
       <Tab.Screen name="RewardsScreen" component={RewardsScreen} />
       <Tab.Screen name="ProfileScreen" component={ProfileScreen} />
@@ -304,7 +339,15 @@ export function DemoNavigator() {
 
 const styles = StyleSheet.create({
   wrapper: {
-    backgroundColor: theme.colors.background,
+    // Floating, not in flow, and transparent: the bar is a pill over the
+    // screen rather than a band beside it. That is what lets a screen paint
+    // its own background all the way to the bottom edge instead of stopping
+    // at a strip of a different colour.
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "transparent",
     paddingHorizontal: 14,
     paddingTop: 6,
   },
