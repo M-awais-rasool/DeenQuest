@@ -49,7 +49,6 @@ func rateLimit(
 
 	return func(c *gin.Context) {
 		// Bound the limiter so a slow/unreachable Redis can never stall the request.
-		// Bound the limiter so a slow/unreachable Redis can never stall the request.
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
 

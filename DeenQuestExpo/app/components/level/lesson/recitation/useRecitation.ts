@@ -3,13 +3,26 @@ import { Animated, Platform, Alert } from "react-native";
 import * as Speech from "expo-speech";
 import * as Haptics from "expo-haptics";
 import { Audio } from "expo-av";
-import { useCheckRecitationMutation } from "../../../../store/services/api";
-import type { RecitationCheckResult } from "../../../../store/services/api";
+import {
+  API,
+  useCheckRecitationMutation,
+  useLazyGetRecitationJobQuery,
+} from "../../../../store/services/api";
+import type {
+  RecitationCheckResult,
+  RecitationJobState,
+} from "../../../../store/services/api";
+import { useAppDispatch } from "../../../../store/hooks";
 import { RECITATION_RECORDING } from "../../../../utils/recitationRecording";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type RecordingState = "idle" | "recording" | "processing" | "result";
+
+export interface RecitationQueueInfo {
+  position: number;
+  estimatedWaitSeconds: number;
+}
 
 export interface UseRecitationReturn {
   result: RecitationCheckResult | null;
@@ -17,11 +30,18 @@ export interface UseRecitationReturn {
   isRecording: boolean;
   isProcessing: boolean;
   hasResult: boolean;
+  queueInfo: RecitationQueueInfo | null;
   resultAnim: Animated.Value;
   handlePlay: () => Promise<void>;
   handleRecord: () => Promise<void>;
   handleRetry: () => void;
 }
+
+const MIN_POLL_MS = 600;
+const MAX_POLL_MS = 5000;
+const MAX_WAIT_MS = 3 * 60 * 1000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -37,10 +57,15 @@ export function useRecitation(
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [result, setResult] = useState<RecitationCheckResult | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [queueInfo, setQueueInfo] = useState<RecitationQueueInfo | null>(null);
   const recordingRef = useRef<Audio.Recording | null>(null);
   const resultAnim = useRef(new Animated.Value(0)).current;
 
+  const pollAbort = useRef(false);
+
+  const dispatch = useAppDispatch();
   const [checkRecitation] = useCheckRecitationMutation();
+  const [fetchJob] = useLazyGetRecitationJobQuery();
 
   // Animate result section in/out
   useEffect(() => {
@@ -59,6 +84,7 @@ export function useRecitation(
   // Cleanup speech + recording on unmount
   useEffect(() => {
     return () => {
+      pollAbort.current = true;
       Speech.stop();
       if (recordingRef.current) {
         try {
@@ -105,11 +131,49 @@ export function useRecitation(
     });
   }, [isPlaying, arabicText]);
 
+  const awaitJob = useCallback(
+    async (jobId: string, firstDelayMs: number): Promise<RecitationJobState> => {
+      const giveUpAt = Date.now() + MAX_WAIT_MS;
+      let delay = firstDelayMs;
+
+      while (!pollAbort.current) {
+        await sleep(Math.min(Math.max(delay, MIN_POLL_MS), MAX_POLL_MS));
+        if (pollAbort.current) break;
+
+        const state = (await fetchJob(jobId).unwrap()).data;
+        if (!state) throw new Error("Recitation status was empty.");
+
+        if (state.status === "done" || state.status === "failed") return state;
+
+        setQueueInfo(
+          state.status === "queued"
+            ? {
+                position: state.position ?? 0,
+                estimatedWaitSeconds: state.estimated_wait_seconds ?? 0,
+              }
+            : null,
+        );
+
+        if (Date.now() > giveUpAt) {
+          throw new Error(
+            "Your recitation is taking longer than usual. Please try again.",
+          );
+        }
+        delay = state.poll_after_ms ?? delay;
+      }
+
+      throw new Error("cancelled");
+    },
+    [fetchJob],
+  );
+
   // ── Stop recording + submit to API ──────────────────────────────────────────
   const handleStopAndSubmit = useCallback(async () => {
     const recording = recordingRef.current;
     if (!recording) return;
     try {
+      pollAbort.current = false;
+      setQueueInfo(null);
       setRecordingState("processing");
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await recording.stopAndUnloadAsync();
@@ -125,32 +189,59 @@ export function useRecitation(
         playsInSilentModeIOS: true,
       });
 
-      const res = await checkRecitation({
-        levelId: levelId!,
-        lessonIndex: lessonIndex!,
-        audioUri: uri,
-        audioMimeType: Platform.OS === "ios" ? "audio/m4a" : "audio/3gp",
-      }).unwrap();
+      // The POST only parks the clip; the score arrives through the polls.
+      const accepted = (
+        await checkRecitation({
+          levelId: levelId!,
+          lessonIndex: lessonIndex!,
+          audioUri: uri,
+          audioMimeType: Platform.OS === "ios" ? "audio/m4a" : "audio/3gp",
+        }).unwrap()
+      ).data;
 
-      if (res.data) {
-        setResult(res.data);
-        setRecordingState("result");
-        if (res.data.score >= 90) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } else {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        }
-      } else {
+      if (!accepted?.job_id) {
         setRecordingState("idle");
+        return;
+      }
+
+      setQueueInfo({
+        position: accepted.position,
+        estimatedWaitSeconds: accepted.estimated_wait_seconds,
+      });
+
+      const finished = await awaitJob(accepted.job_id, accepted.poll_after_ms);
+      if (pollAbort.current) return;
+
+      setQueueInfo(null);
+
+      if (finished.status === "failed" || !finished.result) {
+        setRecordingState("idle");
+        Alert.alert(
+          "Try again",
+          finished.error ?? "We could not check that recitation.",
+        );
+        return;
+      }
+
+      dispatch(API.util.invalidateTags(["Progress", "Leaderboard"]));
+
+      setResult(finished.result);
+      setRecordingState("result");
+      if (finished.result.score >= 90) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       }
     } catch (err: any) {
+      if (pollAbort.current) return;
+      setQueueInfo(null);
       setRecordingState("idle");
       Alert.alert(
         "Error",
         err?.data?.error ?? err?.message ?? "Failed to check recitation.",
       );
     }
-  }, [checkRecitation, levelId, lessonIndex]);
+  }, [awaitJob, checkRecitation, dispatch, levelId, lessonIndex]);
 
   // ── Start / stop recording toggle ───────────────────────────────────────────
   const handleRecord = useCallback(async () => {
@@ -186,7 +277,9 @@ export function useRecitation(
 
   // ── Reset ───────────────────────────────────────────────────────────────────
   const handleRetry = useCallback(() => {
+    pollAbort.current = true;
     setResult(null);
+    setQueueInfo(null);
     setRecordingState("idle");
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
@@ -197,6 +290,7 @@ export function useRecitation(
     isRecording: recordingState === "recording",
     isProcessing: recordingState === "processing",
     hasResult: recordingState === "result" && result !== null,
+    queueInfo,
     resultAnim,
     handlePlay,
     handleRecord,

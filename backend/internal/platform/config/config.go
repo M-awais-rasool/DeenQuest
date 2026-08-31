@@ -36,6 +36,14 @@ type Config struct {
 
 	WhisperURL string
 
+	WhisperEngine string
+
+	WhisperMaxConcurrent int
+	WhisperWait          time.Duration
+
+	RecitationQueueDepth int
+	RecitationWorkers    int
+
 	WhisperInternalToken string
 	TrustedProxies       string
 
@@ -86,6 +94,10 @@ func Load() (*Config, error) {
 		RedisDB:              getInt("REDIS_DB", 0),
 		JWTSecret:            getEnv("JWT_SECRET", "change-me-in-production"),
 		WhisperURL:           getEnv("WHISPER_URL", "http://localhost:8001"),
+		WhisperEngine:        getEnv("WHISPER_ENGINE", "faster-whisper"),
+		WhisperMaxConcurrent: getInt("WHISPER_MAX_CONCURRENT", 1),
+		RecitationQueueDepth: getInt("RECITATION_QUEUE_DEPTH", 120),
+		RecitationWorkers:    getInt("RECITATION_WORKERS", 0),
 		AlQuranBaseURL:       getEnv("ALQURAN_BASE_URL", "https://api.alquran.cloud/v1"),
 		QuranAudioCDNURL:     getEnv("QURAN_AUDIO_CDN_URL", "https://cdn.islamic.network"),
 		QuranAudioEdition:    getEnv("QURAN_AUDIO_EDITION", "ar.alafasy"),
@@ -118,6 +130,21 @@ func Load() (*Config, error) {
 	cfg.RefreshTokenExpiry, err = time.ParseDuration(getEnv("REFRESH_TOKEN_EXPIRY", "1440h"))
 	if err != nil {
 		return nil, fmt.Errorf("invalid REFRESH_TOKEN_EXPIRY: %w", err)
+	}
+
+	cfg.WhisperWait, err = time.ParseDuration(getEnv("WHISPER_WAIT", "45s"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid WHISPER_WAIT: %w", err)
+	}
+
+	switch cfg.WhisperEngine {
+	case "faster-whisper", "whisper-cpp":
+	default:
+		return nil, fmt.Errorf("invalid WHISPER_ENGINE %q: want faster-whisper or whisper-cpp", cfg.WhisperEngine)
+	}
+
+	if cfg.RecitationWorkers < 1 {
+		cfg.RecitationWorkers = cfg.WhisperMaxConcurrent
 	}
 
 	// Unset means "pick the sane default for this environment": sample hard in

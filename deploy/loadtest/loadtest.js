@@ -26,6 +26,9 @@ const readLatency = new Trend('read_latency', true);
 const writeLatency = new Trend('write_latency', true);
 const rateLimited = new Rate('rate_limited');
 
+const reciteSubmitLatency = new Trend('recite_submit_latency', true);
+const reciteShed = new Rate('recite_shed');
+
 export const options = {
   stages: [
     { duration: '1m', target: 50 },   // warm the caches; a cold start is not the thing under test
@@ -40,6 +43,7 @@ export const options = {
   thresholds: {
     'read_latency': ['p(95)<200'],
     'write_latency': ['p(95)<400'],
+    'recite_submit_latency': ['p(95)<600'],
     'http_req_failed': ['rate<0.005'],
     // Real users sharing a carrier NAT address must never be throttled. Any
     // 429 at this level means the limiter is still keyed by something shared.
@@ -51,6 +55,8 @@ const headers = {
   Authorization: `Bearer ${TOKEN}`,
   'Content-Type': 'application/json',
 };
+
+const CLIP = new Uint8Array(256).fill(0x41).buffer;
 
 function track(res, trend, name) {
   trend.add(res.timings.duration);
@@ -95,6 +101,38 @@ export default function () {
       sleep(2);
     });
   }
+
+  if (Math.random() < 0.05) {
+    group('submit a recitation', () => {
+      const res = http.post(`${BASE}/api/v1/recitation/check`, {
+        level_id: '1',
+        lesson_index: '0',
+        audio: http.file(CLIP, 'loadtest.m4a', 'audio/m4a'),
+      }, {
+        headers: { Authorization: `Bearer ${TOKEN}` },
+        responseCallback: http.expectedStatuses(202, 429),
+      });
+
+      reciteSubmitLatency.add(res.timings.duration);
+
+      reciteShed.add(res.status === 429);
+      check(res, {
+        'recitation was accepted or deliberately shed': (r) =>
+          r.status === 202 || r.status === 429,
+      });
+
+      if (res.status === 202) {
+        const jobId = res.json('data.job_id');
+        sleep(1);
+        track(
+          http.get(`${BASE}/api/v1/recitation/jobs/${jobId}`, { headers }),
+          readLatency,
+          'recitation poll',
+        );
+      }
+      sleep(2);
+    });
+  }
 }
 
 export function handleSummary(data) {
@@ -109,6 +147,8 @@ export function handleSummary(data) {
     `writes p95   ${p95('write_latency')} ms   (target < 400)`,
     `failed       ${rate('http_req_failed')} %   (target < 0.5)`,
     `429s         ${rate('rate_limited')} %   (target < 0.1)`,
+    `recite p95   ${p95('recite_submit_latency')} ms   (target < 600)`,
+    `recite shed  ${rate('recite_shed')} %   (queue full — expected under load)`,
     '',
     'Read alongside the Grafana dashboard: MongoDB CPU should stay under 60%',
     'and the Redis hit rate above 80% at this load. Latency inside target with',

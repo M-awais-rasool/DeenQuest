@@ -1,7 +1,10 @@
 package response
 
 import (
+	"math"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,6 +39,10 @@ func Created(c *gin.Context, message string, data interface{}) {
 	Success(c, http.StatusCreated, message, data)
 }
 
+func Accepted(c *gin.Context, message string, data interface{}) {
+	Success(c, http.StatusAccepted, message, data)
+}
+
 func BadRequest(c *gin.Context, message string) {
 	Error(c, http.StatusBadRequest, message)
 }
@@ -60,4 +67,11 @@ func Conflict(c *gin.Context, message string) {
 
 func InternalError(c *gin.Context, message string) {
 	Error(c, http.StatusInternalServerError, message)
+}
+
+func TooManyRequests(c *gin.Context, message string, retryAfter time.Duration) {
+	if retryAfter > 0 {
+		c.Header("Retry-After", strconv.Itoa(int(math.Ceil(retryAfter.Seconds()))))
+	}
+	Error(c, http.StatusTooManyRequests, message)
 }

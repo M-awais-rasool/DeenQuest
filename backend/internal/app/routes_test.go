@@ -25,6 +25,7 @@ import (
 	progressapp "github.com/chawais/deenquest/backend/internal/progress/application"
 	progresshttp "github.com/chawais/deenquest/backend/internal/progress/interfaces/http"
 	recitationapp "github.com/chawais/deenquest/backend/internal/recitation/application"
+	recitationinfra "github.com/chawais/deenquest/backend/internal/recitation/infrastructure"
 	recitationhttp "github.com/chawais/deenquest/backend/internal/recitation/interfaces/http"
 	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
 	rewardhttp "github.com/chawais/deenquest/backend/internal/reward/interfaces/http"
@@ -42,12 +43,15 @@ func TestLearningRoutesRegister(t *testing.T) {
 	levelSvc := levelapp.NewService(nil, progressSvc, rewardSvc)
 	taskSvc := dailytaskapp.NewService(nil, progressSvc)
 	recSvc := recitationapp.NewService(nil, "", "", levelSvc, progressSvc)
+	recQueue := recitationapp.NewJobQueue(recSvc,
+		recitationinfra.NewMemoryJobStore(), recitationinfra.NewMemoryAudioStore(),
+		recitationapp.QueueConfig{})
 
 	progresshttp.RegisterRoutes(v1, authed, progresshttp.NewHandler(progressSvc))
 	levelhttp.RegisterRoutes(authed, levelhttp.NewHandler(levelSvc))
 	dailytaskhttp.RegisterRoutes(authed, dailytaskhttp.NewHandler(taskSvc))
 	rewardhttp.RegisterRoutes(authed, rewardhttp.NewHandler(rewardSvc))
-	recitationhttp.RegisterRoutes(authed, recitationhttp.NewHandler(recSvc))
+	recitationhttp.RegisterRoutes(authed, authed, recitationhttp.NewHandler(recQueue))
 
 	hifzSvc := hifzapp.NewService(nil, nil, recSvc, progressSvc)
 	hifzhttp.RegisterRoutes(authed, hifzhttp.NewHandler(hifzSvc))
@@ -76,6 +80,7 @@ func TestLearningRoutesRegister(t *testing.T) {
 		"POST /api/v1/levels/:id/complete",
 		"GET /api/v1/rewards",
 		"POST /api/v1/recitation/check",
+		"GET /api/v1/recitation/jobs/:job_id",
 		"GET /api/v1/admin/registry",
 		"GET /api/v1/admin/analytics",
 		"GET /api/v1/admin/levels",

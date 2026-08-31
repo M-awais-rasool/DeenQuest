@@ -412,6 +412,26 @@ export interface CheckRecitationRequest {
   audioMimeType?: string;
 }
 
+export type RecitationJobStatus = "queued" | "running" | "done" | "failed";
+
+export interface RecitationJobAccepted {
+  job_id: string;
+  status: RecitationJobStatus;
+  position: number;
+  estimated_wait_seconds: number;
+  poll_after_ms: number;
+}
+
+export interface RecitationJobState {
+  job_id: string;
+  status: RecitationJobStatus;
+  position?: number;
+  estimated_wait_seconds?: number;
+  poll_after_ms?: number;
+  result?: RecitationCheckResult;
+  error?: string;
+}
+
 // ─── Onboarding Types ───
 
 export interface OnboardingRequest {
@@ -1083,7 +1103,7 @@ export const API = createApi({
 
     // ─── Recitation ───
     checkRecitation: builder.mutation<
-      APIResponse<RecitationCheckResult>,
+      APIResponse<RecitationJobAccepted>,
       CheckRecitationRequest
     >({
       queryFn: async (
@@ -1106,7 +1126,14 @@ export const API = createApi({
           body: formData,
         }) as any;
       },
-      invalidatesTags: ["Progress"],
+    }),
+
+    getRecitationJob: builder.query<APIResponse<RecitationJobState>, string>({
+      query: (jobId) => ({
+        url: `/api/v1/recitation/jobs/${jobId}`,
+        method: "GET",
+      }),
+      keepUnusedDataFor: 0,
     }),
 
     // ─── Onboarding ───
@@ -1333,6 +1360,7 @@ export const {
   useCompleteCoachPracticeMutation,
   useGetRewardsQuery,
   useCheckRecitationMutation,
+  useLazyGetRecitationJobQuery,
   useGenerateLearningPathMutation,
   useGetSurahsQuery,
   useGetSurahByIdQuery,

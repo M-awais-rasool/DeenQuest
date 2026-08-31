@@ -20,6 +20,10 @@ func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modu
 		go m.ChallengeActivity.Start(ctx)
 	}
 
+	if m.RecitationQueue != nil {
+		go m.RecitationQueue.Start(ctx)
+	}
+
 	smartScheduler := smartapp.NewScheduler(m.SmartNotifications)
 	go func() {
 		if err := smartScheduler.Start(ctx); err != nil {
@@ -47,6 +51,9 @@ func startWorkers(ctx context.Context, cfg *config.Config, infra *Infra, m *Modu
 	return func() {
 		if m.ChallengeActivity != nil {
 			m.ChallengeActivity.Drain(5 * time.Second)
+		}
+		if m.RecitationQueue != nil {
+			m.RecitationQueue.Drain(15 * time.Second)
 		}
 	}
 }

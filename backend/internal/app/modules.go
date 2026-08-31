@@ -43,6 +43,7 @@ import (
 	quraninfra "github.com/chawais/deenquest/backend/internal/quran/infrastructure"
 	quranhttp "github.com/chawais/deenquest/backend/internal/quran/interfaces/http"
 	recitationapp "github.com/chawais/deenquest/backend/internal/recitation/application"
+	recitationdomain "github.com/chawais/deenquest/backend/internal/recitation/domain"
 	recitationinfra "github.com/chawais/deenquest/backend/internal/recitation/infrastructure"
 	recitationhttp "github.com/chawais/deenquest/backend/internal/recitation/interfaces/http"
 	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
@@ -72,6 +73,7 @@ type Modules struct {
 	RewardHandler      *rewardhttp.Handler
 	RewardAdminHandler *rewardhttp.AdminHandler
 	RecitationHandler  *recitationhttp.Handler // whisper + coach
+	RecitationQueue    *recitationapp.JobQueue // transcription runs off the request path
 	ContentHandler     *contenthttp.Handler    // authoring registry (/admin/registry)
 	AnalyticsHandler   *analyticshttp.Handler  // admin dashboards (/admin/analytics)
 	AnalyticsRoller    *analyticsapp.Roller    // nightly day-snapshot rollup
@@ -162,7 +164,39 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 	taskService := dailytaskapp.NewService(taskRepo, progressService)
 	taskService.SetCache(userCache)
 	recitationService := recitationapp.NewService(recitationRepo, cfg.WhisperURL, cfg.WhisperInternalToken, levelService, progressService)
-	logger.Info("Recitation service initialized", zap.String("whisper_url", cfg.WhisperURL))
+	recitationService.SetTranscribeLimits(cfg.WhisperMaxConcurrent, cfg.WhisperWait)
+	recitationService.SetEngine(recitationapp.WhisperEngine(cfg.WhisperEngine))
+
+	audioSpool, err := recitationinfra.NewMongoAudioStore(db)
+	if err != nil {
+		return nil, fmt.Errorf("init recitation audio spool: %w", err)
+	}
+
+	var recitationJobs recitationdomain.JobStore
+	if infra.Redis != nil {
+		recitationJobs = recitationinfra.NewRedisJobStore(infra.Redis.Client)
+	} else {
+		recitationJobs = recitationinfra.NewMemoryJobStore()
+	}
+
+	recitationQueue := recitationapp.NewJobQueue(recitationService, recitationJobs, audioSpool,
+		recitationapp.QueueConfig{
+			Workers:  cfg.RecitationWorkers,
+			MaxDepth: cfg.RecitationQueueDepth,
+		})
+
+	if cfg.WhisperEngine == string(recitationapp.EngineWhisperCPP) {
+		logger.Warn("whisper.cpp does not verify WHISPER_INTERNAL_TOKEN — " +
+			"the internal network is the only thing restricting access to the transcriber")
+	}
+
+	logger.Info("Recitation service initialized",
+		zap.String("whisper_url", cfg.WhisperURL),
+		zap.String("whisper_engine", cfg.WhisperEngine),
+		zap.Int("transcribe_concurrency", cfg.WhisperMaxConcurrent),
+		zap.Int("queue_workers", cfg.RecitationWorkers),
+		zap.Int("queue_max_depth", cfg.RecitationQueueDepth),
+		zap.Bool("durable_queue", infra.Redis != nil))
 
 	// reward evaluation needs level + progress metrics; wire the adapter that
 	// composes them so the reward package stays decoupled from both.
@@ -235,7 +269,8 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		RewardService:      rewardService,
 		RewardHandler:      rewardhttp.NewHandler(rewardService),
 		RewardAdminHandler: rewardhttp.NewAdminHandler(rewardService),
-		RecitationHandler:  recitationhttp.NewHandler(recitationService),
+		RecitationHandler:  recitationhttp.NewHandler(recitationQueue),
+		RecitationQueue:    recitationQueue,
 		ContentHandler:     contenthttp.NewHandler(),
 		AnalyticsHandler:   analyticshttp.NewHandler(analyticsRepo),
 		AnalyticsRoller:    analyticsRoller,
