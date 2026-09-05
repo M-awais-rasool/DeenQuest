@@ -8,7 +8,7 @@ output "public_ipv4" {
 }
 
 output "vpc_id" {
-  value = vultr_vpc2.prod.id
+  value = vultr_vpc.prod.id
 }
 
 output "firewall_group_id" {

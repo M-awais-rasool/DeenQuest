@@ -136,11 +136,11 @@ runcmd:
   - ufw --force enable
 
   # ── cosign, for host-side image verification ────────────────────────────────
-  - curl -fsSL -o /usr/local/bin/cosign https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
+  - curl -fsSL -o /usr/local/bin/cosign https://github.com/sigstore/cosign/releases/download/v3.1.3/cosign-linux-amd64
   - chmod 0755 /usr/local/bin/cosign
 
   # ── sops + rclone, for secrets and backups ──────────────────────────────────
-  - curl -fsSL -o /usr/local/bin/sops https://github.com/getsops/sops/releases/latest/download/sops-v3.9.1.linux.amd64
+  - curl -fsSL -o /usr/local/bin/sops https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64
   - chmod 0755 /usr/local/bin/sops
   - curl -fsSL https://rclone.org/install.sh | bash
 
@@ -152,6 +152,21 @@ runcmd:
   - chown -R ops:ops /srv/deenquest /var/lib/deenquest
 
   - systemctl enable --now auditd fail2ban unattended-upgrades docker
+
+  # ── every tool actually landed? ─────────────────────────────────────────────
+  # runcmd entries run independently, so a 404 on a download leaves the host
+  # quietly half-provisioned — which is how sops went missing the first time.
+  - |
+    missing=""
+    for t in docker sops rclone cosign tailscale; do
+      command -v "$t" >/dev/null 2>&1 || missing="$missing $t"
+    done
+    if [ -n "$missing" ]; then
+      logger -t deenquest-init "PROVISIONING INCOMPLETE, missing:$missing"
+      echo "PROVISIONING INCOMPLETE, missing:$missing" >> /etc/motd
+    else
+      logger -t deenquest-init "all tools installed"
+    fi
 
   # ── the invariant, asserted ─────────────────────────────────────────────────
   # Anything listening on a routable interface at this point is a bug.
