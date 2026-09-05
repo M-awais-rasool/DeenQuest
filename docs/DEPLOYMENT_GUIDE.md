@@ -263,14 +263,37 @@ scp age.key ops@deenquest-prod:/tmp/age.key
 ssh ops@deenquest-prod 'sudo install -m 0400 -o root -g root /tmp/age.key /etc/deenquest/age.key && shred -u /tmp/age.key'
 ```
 
-### Step 7 — Put the repo and scripts on the server
+### Step 7 — Bootstrap the server
+
+One command does the mechanical half of the remaining setup — repo, scripts,
+secret decryption (plus a boot unit so it re-decrypts after a reboot), MongoDB
+TLS and users, the Whisper model, and the hourly backup timer:
 
 ```bash
 ssh ops@deenquest-prod
-git clone https://github.com/M-awais-rasool/DeenQuest.git /srv/deenquest
-cd /srv/deenquest
-sudo install -m 0755 deploy/scripts/deploy.sh deploy/scripts/smoke.sh deploy/scripts/backup.sh /usr/local/bin/
+sudo git clone https://github.com/M-awais-rasool/DeenQuest.git /srv/deenquest
+sudo /srv/deenquest/deploy/scripts/bootstrap.sh
 ```
+
+It is idempotent — re-run it as often as you like. That matters more than the
+convenience: it is the half of *rebuild the host* that Terraform does not cover,
+and a recovery plan that depends on remembering these steps by hand is not a
+plan. It also refuses to continue on the configuration that fails open, so an
+empty `ADMIN_EMAILS` or a leftover `REPLACE` stops here rather than in
+production.
+
+The script will stop and tell you what to do if a prerequisite is missing. Three
+things it deliberately does not do, because each needs a human holding a secret:
+
+| Prerequisite | Where | Covered by |
+|---|---|---|
+| age private key on the server | Step 6 above | you, once |
+| Cloudflare Tunnel + token | Step 8 below | dashboard |
+| `prod.enc.env` written and pushed | Step 9 below | your laptop, with `sops` |
+| `rclone` remotes `r2:` and `b2:` | run `rclone config` as `ops` | prompted by the script |
+
+Steps 10, 11 and 13 below describe what it does under the hood — read them to
+understand the system, but you do not need to run them by hand.
 
 ### Step 8 — Cloudflare Tunnel
 
@@ -311,6 +334,8 @@ git push
 
 ### Step 10 — MongoDB
 
+> Run by `bootstrap.sh`. Documented here so you know what it did.
+
 ```bash
 ssh ops@deenquest-prod
 cd /srv/deenquest/deploy
@@ -342,6 +367,8 @@ sudo shred -u /srv/deenquest/deploy/mongo/tls/ca.key
 
 ### Step 11 — Whisper model
 
+> Run by `bootstrap.sh`, provided the model is already in R2.
+
 The model is not in the image. Upload it once, then copy it onto the volume:
 
 ```bash
@@ -370,6 +397,8 @@ curl -o /dev/null -w '%{http_code}\n' https://api.deenquest.app/api/v1/users/me 
 ```
 
 ### Step 13 — Backups and monitoring
+
+> The backup timer is installed by `bootstrap.sh`. The monitoring accounts below are still yours to wire up.
 
 On the server, create the backup timer:
 

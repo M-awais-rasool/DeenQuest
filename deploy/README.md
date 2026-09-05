@@ -17,7 +17,7 @@ deploy/
 ├── mongo/                least-privilege users, TLS material
 ├── alloy/                metrics + logs to Grafana Cloud, with a cardinality gate
 ├── secrets/              prod.enc.env — encrypted, committed on purpose
-└── scripts/              deploy, smoke, backup, restore, init-mongo, gen-mongo-tls
+└── scripts/              bootstrap, deploy, smoke, backup, restore, init-mongo, gen-mongo-tls
 ```
 
 The Whisper image is built from `backend/whisper-service/Dockerfile`; its model
@@ -35,7 +35,8 @@ is mounted at runtime, never baked in.
 | Edit a secret | `sops secrets/prod.enc.env`, commit, deploy |
 | Back up now | `sudo systemctl start deenquest-backup` |
 | **Restore drill** | `AGE_KEY_FILE=~/age.key ./scripts/restore.sh r2:deenquest-backups/daily/<file>` |
-| First-time Mongo setup | `sudo ./scripts/gen-mongo-tls.sh && sudo ./scripts/init-mongo.sh` |
+| First-time server setup | `sudo /srv/deenquest/deploy/scripts/bootstrap.sh` — idempotent, re-runnable |
+| First-time Mongo setup only | `sudo ./scripts/gen-mongo-tls.sh && sudo ./scripts/init-mongo.sh` |
 
 ## The invariant
 
