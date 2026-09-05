@@ -164,7 +164,7 @@ Do this **once**. Budget half a day. Every step ends with a check — do not mov
 
 ### What you need before starting
 
-- A domain (examples below use `deenquest.app`)
+- A domain (examples below use `deenquest.online`)
 - A payment method for Vultr (~$24/month; everything else is free)
 - `terraform`, `docker`, `sops`, `age`, and `vultr-cli` installed locally (no GPG — tags are signed with SSH)
 
@@ -176,7 +176,7 @@ Sign up for: **Cloudflare** (move your domain's nameservers here), **Tailscale**
 
 In Cloudflare, create an **R2 bucket** `deenquest-backups` and an API token scoped to it, plus a lifecycle rule to expire old objects. Note that R2's token scopes are coarse — `Object Read & Write` includes delete — so R2 alone does not protect backup history from a compromised server. Create the Backblaze **`deenquest-backups-dr` bucket with Object Lock enabled** for that; Object Lock can only be turned on at bucket creation.
 
-✅ *Check:* `dig NS deenquest.app` returns Cloudflare nameservers.
+✅ *Check:* `dig NS deenquest.online` returns Cloudflare nameservers.
 
 ### Step 2 — Generate keys
 
@@ -299,7 +299,7 @@ understand the system, but you do not need to run them by hand.
 
 In the Cloudflare dashboard: **Zero Trust → Networks → Tunnels → Create a tunnel**. Name it `deenquest-prod`. Copy the token — it goes into the secrets file in the next step.
 
-Add a public hostname: `api.deenquest.app` → `HTTP` → `caddy:80`.
+Add a public hostname: `api.deenquest.online` → `HTTP` → `caddy:80`.
 
 ### Step 9 — Create the production secrets
 
@@ -394,8 +394,8 @@ Then in GitHub → **Actions → Release → Run workflow**, enter `v0.1.0` in *
 ✅ *Check:*
 
 ```bash
-curl https://api.deenquest.app/health
-curl -o /dev/null -w '%{http_code}\n' https://api.deenquest.app/api/v1/users/me   # must be 401
+curl https://api.deenquest.online/health
+curl -o /dev/null -w '%{http_code}\n' https://api.deenquest.online/api/v1/users/me   # must be 401
 ```
 
 ### Step 13 — Backups and monitoring
@@ -426,18 +426,18 @@ sudo systemctl start deenquest-backup   # run one now
 
 ✅ *Check:* the file appears in R2, **and** Healthchecks.io shows a green ping.
 
-Add an UptimeRobot monitor for `https://api.deenquest.app/health`, 5-minute interval.
+Add an UptimeRobot monitor for `https://api.deenquest.online/health`, 5-minute interval.
 
 ### Step 14 — Front ends
 
-Deploy the landing page and admin panel to Cloudflare Pages. For the admin panel set the build variable `VITE_API_BASE_URL=https://api.deenquest.app`, and put **Cloudflare Access** in front of `admin.deenquest.app` so there is an identity check before your application code is even reached.
+Deploy the landing page and admin panel to Cloudflare Pages. For the admin panel set the build variable `VITE_API_BASE_URL=https://api.deenquest.online`, and put **Cloudflare Access** in front of `admin.deenquest.online` so there is an identity check before your application code is even reached.
 
-Make sure `https://admin.deenquest.app` is listed in `CORS_ALLOWED_ORIGINS` in the secrets file.
+Make sure `https://admin.deenquest.online` is listed in `CORS_ALLOWED_ORIGINS` in the secrets file.
 
 ### Final checklist
 
 - [ ] `nmap -Pn -p- <ip>` shows **no open ports**
-- [ ] `https://api.deenquest.app/health` returns 200
+- [ ] `https://api.deenquest.online/health` returns 200
 - [ ] `/api/v1/users/me` without a token returns **401**
 - [ ] Admin panel asks for SSO before loading
 - [ ] Grafana Cloud is receiving metrics and logs
@@ -480,7 +480,7 @@ git push --tags
 Watch the workflow. It takes 2–3 minutes. Then confirm:
 
 ```bash
-curl https://api.deenquest.app/health/ready
+curl https://api.deenquest.online/health/ready
 ```
 
 And watch Grafana for five minutes. Most bad deploys announce themselves inside two.

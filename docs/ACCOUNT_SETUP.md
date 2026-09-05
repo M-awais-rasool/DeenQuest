@@ -150,7 +150,7 @@ Paste straight into the secrets file in Step 9 of the deployment guide. Don't sa
 Add site → enter your domain → Free plan. Cloudflare gives you two nameservers; set them at your registrar (GoDaddy, Namecheap, wherever you bought it). Propagation is usually minutes.
 
 ```bash
-dig NS deenquest.app +short     # should return two *.ns.cloudflare.com
+dig NS deenquest.online +short     # should return two *.ns.cloudflare.com
 ```
 
 Then under **SSL/TLS**: mode **Full (strict)**, minimum TLS version **1.2**, **Always Use HTTPS** on, **HSTS** on.
@@ -174,13 +174,13 @@ Add a **lifecycle rule** on `deenquest-backups` to expire objects after 180 days
 
 Cloudflare shows an install command containing a long token. **Copy the token only** — you don't run that command; the compose file runs `cloudflared` for you.
 
-Under **Public hostnames**, add: hostname `api.deenquest.app` → service `http://caddy:80`.
+Under **Public hostnames**, add: hostname `api.deenquest.online` → service `http://caddy:80`.
 
 Collect: **tunnel token** → `CF_TUNNEL_TOKEN`.
 
 ### B1.4 — Access on the admin panel
 
-**Zero Trust → Access → Applications → Add an application** → Self-hosted → domain `admin.deenquest.app`. Policy: Allow, rule **Emails** = your admin addresses.
+**Zero Trust → Access → Applications → Add an application** → Self-hosted → domain `admin.deenquest.online`. Policy: Allow, rule **Emails** = your admin addresses.
 
 This puts an identity check *in front of* your application code — an auth bug in the admin routes still has to get past Cloudflare first.
 
@@ -191,7 +191,7 @@ This puts an identity check *in front of* your application code — an auth bug 
 | Site | Root directory | Build command | Output | Environment variable |
 |---|---|---|---|---|
 | Landing | `LandingPage` | `npm run build` | `dist` | — |
-| Admin | `admin-panel` | `npm run build` | `dist` | `VITE_API_BASE_URL=https://api.deenquest.app` |
+| Admin | `admin-panel` | `npm run build` | `dist` | `VITE_API_BASE_URL=https://api.deenquest.online` |
 
 ---
 
@@ -268,7 +268,7 @@ Collect: **keyID** and **applicationKey** → `rclone` config on the server.
 
 **Sign up:** https://uptimerobot.com
 
-**Add New Monitor**: HTTP(s), URL `https://api.deenquest.app/health`, interval 5 minutes, alert contact = your email.
+**Add New Monitor**: HTTP(s), URL `https://api.deenquest.online/health`, interval 5 minutes, alert contact = your email.
 
 This probes from outside, through Cloudflare, so it validates the whole path — edge, tunnel, Caddy, container — not just that a process is alive.
 
@@ -296,7 +296,7 @@ https://console.cloud.google.com → APIs & Services → Credentials.
 
 | Client type | Notes | Goes to |
 |---|---|---|
-| Web application | Authorised origins: `https://admin.deenquest.app`, `https://deenquest.app` | `GOOGLE_WEB_CLIENT_ID` |
+| Web application | Authorised origins: `https://admin.deenquest.online`, `https://deenquest.online` | `GOOGLE_WEB_CLIENT_ID` |
 | iOS | Bundle ID `com.awaisrasool.DeenQuestExpo` | `GOOGLE_IOS_CLIENT_ID` |
 | Android | Package name + your **release** SHA-1 | `GOOGLE_ANDROID_CLIENT_ID` |
 
@@ -359,7 +359,7 @@ Note what is *not* here: no database password, no JWT secret, no Cloudflare toke
 | `MONGO_ROOT_PASSWORD`, `MONGO_APP_PASSWORD`, `MONGO_BACKUP_PASSWORD` | A4 |
 | `REDIS_PASSWORD`, `JWT_SECRET`, `WHISPER_INTERNAL_TOKEN` | A4 |
 | `ADMIN_EMAILS` | Your email. **Empty = every signed-in user is an admin; the API refuses to start** |
-| `CORS_ALLOWED_ORIGINS` | `https://admin.deenquest.app,https://deenquest.app` |
+| `CORS_ALLOWED_ORIGINS` | `https://admin.deenquest.online,https://deenquest.online` |
 | `TRUSTED_PROXIES` | `172.16.0.0/12` |
 | `GOOGLE_*_CLIENT_ID`, `APPLE_CLIENT_IDS` | B4 |
 | `CF_TUNNEL_TOKEN` | B1.3 |
