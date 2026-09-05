@@ -794,7 +794,7 @@ flowchart TD
     F --> G["push to GHCR<br/>tag :sha, record digest"]
     G --> H["STOP — no automatic deploy"]
 
-    H -.-> I["git tag -s v1.4.0<br/>GPG-signed"]
+    H -.-> I["git tag -s v1.4.0<br/>SSH-signed"]
     I --> J["Release workflow<br/>workflow_dispatch, typed confirmation"]
     J --> K{"Gate:<br/>tag signed by allowlisted key?<br/>commit on master?<br/>CI green on that commit?"}
     K -->|no| X["abort"]
@@ -832,7 +832,7 @@ Push a malicious image to the registry and the host refuses it. This is the cont
 
 Environment protection rules — required reviewers, wait timers — are not available for private repositories on the Free plan. The substitute is a gate built from three independent conditions, all of which must hold:
 
-1. **Deploys only run from a GPG-signed tag** matching `v*`, signed by a key in an allowlist committed to the repo. Pushing to `master` builds and publishes an image; it deploys nothing.
+1. **Deploys only run from a signed tag** matching `v*`, whose SSH signature verifies against an allowlist committed to the repo. (SSH rather than GPG: git has verified it natively since 2.34, every maintainer already has an SSH key, and it keeps a GPG toolchain out of the release path.) Pushing to `master` builds and publishes an image; it deploys nothing.
 2. **The workflow is `workflow_dispatch` with a typed confirmation input** that must exactly equal the tag being deployed. Not a click — a deliberate act you cannot perform by muscle memory.
 3. **`deploy.sh` independently verifies the image signature** on the host. Even a fully compromised CI pipeline cannot make the host run an unsigned image.
 
@@ -915,7 +915,8 @@ jobs:
         with: { ref: ${{ inputs.tag }}, fetch-depth: 0 }
       - name: Tag must be signed by an allowlisted key
         run: |
-          gpg --import .github/allowed-signers.asc
+          git config gpg.format ssh
+          git config gpg.ssh.allowedSignersFile .github/allowed_signers
           git verify-tag "${{ inputs.tag }}"
       - name: Tag must point at a commit on master
         run: git merge-base --is-ancestor "${{ inputs.tag }}" origin/master
@@ -1245,7 +1246,7 @@ Roughly **six to eight working days** end to end.
 | Prod data never affected by dev | No published database port, no inbound rule, no public listener. Structural, not procedural |
 | Separate DBs, credentials, secrets, config | §5 contract; three MongoDB users with distinct privileges; SOPS-encrypted per-environment config |
 | Secure, reliable CI/CD | Signed tags, forced-command deploy key, cosign-verified images, health-gated blue/green with automatic rollback |
-| Controlled production releases | Three independent gates: GPG-signed tag, typed confirmation, host-side signature verification |
+| Controlled production releases | Three independent gates: SSH-signed tag, typed confirmation, host-side image signature verification |
 | Least privilege | `dq_app` cannot drop a database; `deploy` has no shell; CI holds no production secret; the `data` network has no egress |
 | No secrets in the repo | Encrypted with age in git, decrypted only to tmpfs; `gitleaks` blocks merges; git history verified clean |
 | Strong network security and isolation | **Zero inbound ports.** Cloudflare WAF and DDoS at the edge, three segmented Docker networks, an internal network with no route out |

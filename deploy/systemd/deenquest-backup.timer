@@ -1,0 +1,12 @@
+[Unit]
+Description=Hourly DeenQuest backup
+
+[Timer]
+OnCalendar=hourly
+# Spread the load off the top of the hour, and survive a reboot that spanned a
+# scheduled run rather than silently skipping it.
+RandomizedDelaySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,13 @@
+# Keys allowed to sign release tags. The Release workflow verifies every tag
+# against this file, so adding a key here is granting the ability to ship to
+# production — treat a change to this file as a security review.
+#
+# Format (one per line):
+#   <email> namespaces="git" <ssh-ed25519 AAAA...>
+#
+# Add yours with:
+#   echo "you@example.com namespaces=\"git\" $(cat ~/.ssh/deenquest_sign.pub)" >> .github/allowed_signers
+#
+# The matching private key signs tags and nothing else — it is deliberately not
+# the key that reaches the server, so a compromised ops key cannot forge a
+# release.

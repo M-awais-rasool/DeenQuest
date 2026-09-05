@@ -1,0 +1,18 @@
+[Unit]
+Description=DeenQuest encrypted MongoDB backup to R2 and B2
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# Secrets are read from the tmpfs copy, which only exists after a deploy or a
+# reboot unit has decrypted it. Failing loudly here is correct: a backup that
+# quietly runs without credentials is worse than one that does not run.
+EnvironmentFile=/run/deenquest/prod.env
+ExecStart=/usr/local/bin/backup.sh
+User=root
+# The dump can be slow on a busy box; it must never overlap the next hour's run.
+TimeoutStartSec=45min
+
+[Install]
+WantedBy=multi-user.target

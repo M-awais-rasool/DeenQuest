@@ -68,30 +68,43 @@ Output looks like:
 
 ⚠️ **Lose this key and every backup you hold becomes permanently unreadable.** Put it in the password manager *before* you continue.
 
-## A2. GPG key — signs release tags, which is the production deploy gate
+## A2. Signing key — signs release tags, which is the production deploy gate
+
+Git has verified SSH signatures natively since 2.34, so there is no GPG
+toolchain in this path — which also means nothing to install on a Mac where
+Homebrew no longer ships bottles.
 
 ```bash
-brew install gnupg
-gpg --full-generate-key      # choose: ECC (sign only) → Curve 25519 → 0 (no expiry)
+git --version                 # must be 2.34 or newer
+ssh-keygen -t ed25519 -f ~/.ssh/deenquest_sign -C "release signing" -N ""
 ```
 
-Use the same email as your GitHub account. Then:
+Configure git to use it:
 
 ```bash
-gpg --list-secret-keys --keyid-format=long        # note the key id after "sec ed25519/"
-git config --global user.signingkey <THAT_KEY_ID>
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/deenquest_sign.pub
 git config --global tag.gpgSign true
-
-# The release workflow verifies tags against this file
-gpg --armor --export <THAT_KEY_ID> > .github/allowed-signers.asc
-git add .github/allowed-signers.asc
 ```
 
-Only the **public** export goes in the repo. Test it works:
+Add the public half to the allowlist the release workflow checks against:
 
 ```bash
+echo "$(git config user.email) namespaces=\"git\" $(cat ~/.ssh/deenquest_sign.pub)" \
+  >> .github/allowed_signers
+git add .github/allowed_signers
+```
+
+Verify it end to end — this is the gate, so prove it works before you rely on it:
+
+```bash
+git config gpg.ssh.allowedSignersFile .github/allowed_signers
 git tag -s test-signing -m "test" && git verify-tag test-signing && git tag -d test-signing
 ```
+
+This key signs tags and **nothing else**. It is deliberately not the key that
+reaches the server, so a stolen ops key cannot forge a release, and a stolen
+signing key cannot log in anywhere.
 
 ## A3. Two SSH keypairs — one for you, one for CI
 
