@@ -5,7 +5,7 @@ name: Release
 # GitHub Free private repos have no Environment protection rules, so the gate is
 # built from three independent conditions instead — all of which must hold:
 #
-#   1. A GPG-signed tag, signed by a key committed to this repo.
+#   1. An SSH-signed tag, verified against a key committed to this repo.
 #   2. A typed confirmation that must match the tag exactly. Not a click.
 #   3. Host-side cosign verification in deploy.sh, which this workflow cannot
 #      influence — so even a fully compromised pipeline cannot ship an unsigned
@@ -53,12 +53,22 @@ jobs:
           ref: ${{ inputs.tag }}
           fetch-depth: 0
 
+      # SSH signatures rather than GPG: git has verified them natively since
+      # 2.34, every maintainer already has an SSH key, and it removes a GPG
+      # toolchain from the release path. The property is unchanged — the tag
+      # must carry a signature from a key committed to this repository.
       - name: Tag must be signed by an allowlisted key
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
-          gpg --import .github/allowed-signers.asc
-          git config gpg.program gpg
-          if ! git verify-tag "${{ inputs.tag }}"; then
-            echo "::error::Tag ${{ inputs.tag }} is not signed by an allowlisted key."
+          if grep -qv '^#' .github/allowed_signers 2>/dev/null; then :; else
+            echo "::error::.github/allowed_signers has no keys in it."
+            exit 1
+          fi
+          git config gpg.format ssh
+          git config gpg.ssh.allowedSignersFile .github/allowed_signers
+          if ! git verify-tag "$TAG"; then
+            echo "::error::Tag $TAG is not signed by a key in .github/allowed_signers."
             exit 1
           fi
 

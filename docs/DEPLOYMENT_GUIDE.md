@@ -36,7 +36,7 @@ flowchart TD
 
     F --> G["You decide to release:<br/>git tag -s v1.2.0"]
     G --> H["Run the Release workflow,<br/>typing the tag twice"]
-    H --> I{"Gate 1: tag GPG-signed<br/>by an allowlisted key?"}
+    H --> I{"Gate 1: tag SSH-signed<br/>by an allowlisted key?"}
     I -->|no| X["Aborted"]
     I -->|yes| J{"Gate 2: tag on master,<br/>confirmation matches?"}
     J -->|no| X
@@ -166,7 +166,7 @@ Do this **once**. Budget half a day. Every step ends with a check — do not mov
 
 - A domain (examples below use `deenquest.app`)
 - A payment method for Vultr (~$24/month; everything else is free)
-- `terraform`, `docker`, `sops`, `age`, `gpg`, and `vultr-cli` installed locally
+- `terraform`, `docker`, `sops`, `age`, and `vultr-cli` installed locally (no GPG — tags are signed with SSH)
 
 ### Step 1 — Free accounts
 
@@ -184,7 +184,7 @@ In Cloudflare, create an **R2 bucket** `deenquest-backups` and an API token scop
 age-keygen -o age.key                 # backup encryption + secrets
 ssh-keygen -t ed25519 -f ops_key      # your admin access
 ssh-keygen -t ed25519 -f deploy_key   # CI's access
-gpg --full-generate-key               # for signing release tags
+ssh-keygen -t ed25519 -f ~/.ssh/deenquest_sign -N ""   # signs release tags
 ```
 
 Put the **age private key**, and nothing else, into your password manager along with the passwords you will create later. This is your break-glass envelope.
@@ -192,10 +192,10 @@ Put the **age private key**, and nothing else, into your password manager along 
 Export your GPG public key so the release workflow can verify your tags:
 
 ```bash
-gpg --armor --export you@example.com > .github/allowed-signers.asc
+echo "$(git config user.email) namespaces=\"git\" $(cat ~/.ssh/deenquest_sign.pub)" >> .github/allowed_signers
 ```
 
-✅ *Check:* `age.key` starts with `AGE-SECRET-KEY-`, and `.github/allowed-signers.asc` exists.
+✅ *Check:* `age.key` starts with `AGE-SECRET-KEY-`, and `.github/allowed_signers` contains your public key.
 
 ### Step 3 — Put the age public key in `.sops.yaml`
 
@@ -556,7 +556,7 @@ Edit `deploy/compose.prod.yml`. Two rules: **give it a memory limit** (4 GB tota
 |---|---|---|
 | Deploy fails at "waiting for ready" | Bad config, or MongoDB unreachable | `docker compose logs api-green`. The config validator lists every problem by name |
 | API logs "refusing to start with an unsafe production config" | A required variable is missing | Read the list — it names each one. Fix with `sops`, redeploy |
-| Release workflow: "Tag is not signed" | Tag made without `-s`, or your key is not in `.github/allowed-signers.asc` | `git tag -d v1.2.0 && git tag -s v1.2.0 -m "..."` |
+| Release workflow: "Tag is not signed" | Tag made without `-s`, or your key is not in `.github/allowed_signers` | `git tag -d v1.2.0 && git tag -s v1.2.0 -m "..."` |
 | Release workflow: "No published image" | Build workflow did not run or failed on that commit | Check Actions for that commit; re-run Build |
 | Deploy fails at signature verification | The image was not built by the Build workflow | Never bypass this. Find out why the digest is unexpected |
 | Smoke test fails on 401 check | Authentication is not being enforced — **serious** | Automatic rollback already happened. Investigate before redeploying |
