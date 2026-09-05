@@ -83,7 +83,7 @@ if [[ ! -f "$DEPLOY_DIR/secrets/prod.enc.env" ]]; then
   Create it on your LAPTOP (never on the server), then push:
     cp deploy/secrets/prod.env.example /tmp/prod.env
     \$EDITOR /tmp/prod.env
-    sops -e /tmp/prod.env > deploy/secrets/prod.enc.env
+    sops -e --filename-override deploy/secrets/prod.enc.env /tmp/prod.env > deploy/secrets/prod.enc.env
     shred -u /tmp/prod.env
     git add deploy/secrets/prod.enc.env && git commit && git push
 

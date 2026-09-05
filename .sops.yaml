@@ -10,4 +10,4 @@
 #   sops deploy/secrets/prod.enc.env
 creation_rules:
   - path_regex: deploy/secrets/prod\.enc\.env$
-    age: REPLACE_WITH_AGE_PUBLIC_KEY_age1...
+    age: age19r9ac0nfkx34k4sy86cxupyc849pqvrxy3du2h46swr9ayj4k4xs0yvxzq

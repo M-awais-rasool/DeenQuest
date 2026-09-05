@@ -323,7 +323,9 @@ Do not skip `ADMIN_EMAILS` — if it is empty, **every signed-in user becomes an
 Then encrypt, commit, and destroy the plaintext:
 
 ```bash
-sops -e /tmp/prod.env > deploy/secrets/prod.enc.env
+# --filename-override is required: sops matches .sops.yaml's path_regex against
+# the INPUT path, and the plaintext deliberately lives outside the repo.
+sops -e --filename-override deploy/secrets/prod.enc.env /tmp/prod.env > deploy/secrets/prod.enc.env
 shred -u /tmp/prod.env
 git add deploy/secrets/prod.enc.env
 git commit -m "chore: production secrets"
