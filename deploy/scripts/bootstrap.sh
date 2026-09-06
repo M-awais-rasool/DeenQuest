@@ -123,10 +123,14 @@ if [[ ! -f "$DEPLOY_DIR/secrets/prod.enc.env" ]]; then
   Then re-run this script."
 fi
 
-install -d -m 0700 /run/deenquest
+# Same ownership the boot unit uses: root writes, deploy reads. Anything
+# stricter here silently breaks the next release, because deploy.sh hands this
+# file to docker compose as the unprivileged deploy user.
+install -d -m 0750 -o root -g deploy /run/deenquest
 SOPS_AGE_KEY_FILE="$AGE_KEY" sops -d "$DEPLOY_DIR/secrets/prod.enc.env" > "$RUNTIME_ENV" \
 	|| die "sops could not decrypt. Is $AGE_KEY the key that matches .sops.yaml?"
-chmod 0400 "$RUNTIME_ENV"
+chown root:deploy "$RUNTIME_ENV"
+chmod 0440 "$RUNTIME_ENV"
 ok "decrypted to $RUNTIME_ENV (tmpfs — never touches disk)"
 
 # Refuse to continue on the placeholders that fail *open* in production.
