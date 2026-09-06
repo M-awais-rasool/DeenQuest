@@ -35,13 +35,14 @@ fail() {
 curl -fsS -m 10 "https://hc-ping.com/${HC_UUID}/start" >/dev/null || true
 
 # mongodump reads from a live replica set without locking.
+#
+# --ssl, not --tls: the Database Tools bundled in the mongo:7.0 image are an
+# older build that only knows the --ssl spelling. mongosh uses --tls, so the two
+# tools disagree about the same certificate.
 $COMPOSE exec -T mongo mongodump \
 	--username dq_backup \
 	--password "$MONGO_BACKUP_PASSWORD" \
 	--authenticationDatabase admin \
-	# mongodump/mongorestore in the mongo:7.0 image are an older Database Tools
-	# build that only knows --ssl; --tls is mongosh's spelling and fails here with
-	# "unknown option `tls`".
 	--ssl --sslCAFile /etc/mongo/tls/ca.pem \
 	--db deenquest --archive --gzip \
 	| age -r "$AGE_PUBLIC_KEY" > "$ARCHIVE" \
