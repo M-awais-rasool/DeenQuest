@@ -31,7 +31,7 @@ die()   { printf '\n\033[31m✗ %s\033[0m\n\n' "$*" >&2; exit 1; }
 [[ $EUID -eq 0 ]] || die "Run with sudo."
 
 # ── 0. preconditions ──────────────────────────────────────────────────────────
-step "0/7  Checking preconditions"
+step "0/8  Checking preconditions"
 
 command -v docker >/dev/null || die "Docker is missing — cloud-init did not finish. Check: cloud-init status --long"
 command -v sops   >/dev/null || die "sops is missing — cloud-init did not finish."
@@ -51,7 +51,7 @@ fi
 ok "age key installed"
 
 # ── 1. repo ───────────────────────────────────────────────────────────────────
-step "1/7  Repository at $STACK_DIR"
+step "1/8  Repository at $STACK_DIR"
 
 if [[ -d "$STACK_DIR/.git" ]]; then
 	git -C "$STACK_DIR" fetch --quiet origin
@@ -65,7 +65,7 @@ fi
 chown -R ops:ops "$STACK_DIR"
 
 # ── 2. scripts on PATH ────────────────────────────────────────────────────────
-step "2/7  Installing scripts to /usr/local/bin"
+step "2/8  Installing scripts to /usr/local/bin"
 
 install -m 0755 "$DEPLOY_DIR/scripts/deploy.sh"  /usr/local/bin/deploy.sh
 install -m 0755 "$DEPLOY_DIR/scripts/smoke.sh"   /usr/local/bin/smoke.sh
@@ -108,7 +108,7 @@ verify_deploy_access() {
 	ok "deploy user has exactly the access deploy.sh needs"
 }
 
-step "3/7  Decrypting production config to tmpfs"
+step "3/8  Decrypting production config to tmpfs"
 
 if [[ ! -f "$DEPLOY_DIR/secrets/prod.enc.env" ]]; then
 	die "deploy/secrets/prod.enc.env is missing.
@@ -151,7 +151,7 @@ ok "secrets re-decrypt on boot (deenquest-secrets.service)"
 grant_deploy_access
 verify_deploy_access
 
-step "4/7  MongoDB TLS, replica set and users"
+step "4/8  MongoDB TLS, replica set and users"
 
 # The containers run as their own uids with every capability dropped, so they
 # cannot chown their own data directories the way the stock entrypoints expect.
@@ -179,7 +179,37 @@ ok "TLS material owned by the mongo uid"
 "$DEPLOY_DIR/scripts/init-mongo.sh"
 
 # ── 5. object storage ─────────────────────────────────────────────────────────
-step "5/7  rclone remotes for backups"
+step "5/8  Supporting services"
+
+# deploy.sh only ever swaps the API colour. Everything the API sits behind or
+# talks to — the tunnel, the reverse proxy, the cache, transcription, the
+# metrics agent — is long-running and belongs here. Without this the first
+# release starts an API nobody can reach, because cloudflared is not running and
+# api.<domain> resolves to a tunnel with no connector.
+#
+# Whisper is built locally rather than pulled: its image would be far too large
+# for GHCR's free tier, and the model is mounted from a volume, not baked in.
+log_svc() { printf '   %s %s\n' "$1" "$2"; }
+
+$COMPOSE up -d --build cloudflared caddy redis whisper alloy 2>&1 | grep -E "Created|Started|Building|Error" | sed 's/^/   /' || true
+
+for svc in cloudflared caddy redis whisper alloy mongo; do
+	state=$($COMPOSE ps --format '{{.Service}} {{.State}}' 2>/dev/null | awk -v s="$svc" '$1==s {print $2}')
+	case "$state" in
+		running) log_svc "✅" "$svc" ;;
+		*)       log_svc "⚠️ " "$svc — ${state:-not running}" ;;
+	esac
+done
+
+# The tunnel is what makes the site reachable at all; a stack that is otherwise
+# perfect and has no connector looks like a DNS problem for an hour.
+if $COMPOSE ps --format '{{.Service}} {{.State}}' 2>/dev/null | grep -q '^cloudflared running'; then
+	ok "Cloudflare Tunnel connector is up"
+else
+	warn "cloudflared is not running — api.deenquest.online will not resolve to this host"
+fi
+
+step "6/8  rclone remotes for backups"
 
 if rclone listremotes 2>/dev/null | grep -q '^b2:'; then
 	if rclone listremotes 2>/dev/null | grep -q '^r2:'; then
@@ -211,7 +241,7 @@ fi
 ok "b2: reachable"
 
 # ── 6. whisper model ──────────────────────────────────────────────────────────
-step "6/7  Whisper model"
+step "7/8  Whisper model"
 
 MODEL_DIR=/var/lib/docker/volumes/deploy_whisper_models/_data/quran-base-ct2
 docker volume create deploy_whisper_models >/dev/null
@@ -231,7 +261,7 @@ else
 fi
 
 # ── 7. backups ────────────────────────────────────────────────────────────────
-step "7/7  Hourly backup timer"
+step "8/8  Hourly backup timer"
 
 install -m 0644 "$DEPLOY_DIR/systemd/deenquest-backup.service" /etc/systemd/system/
 install -m 0644 "$DEPLOY_DIR/systemd/deenquest-backup.timer"   /etc/systemd/system/
