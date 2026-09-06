@@ -49,7 +49,30 @@ $COMPOSE exec -T mongo mongodump \
 	|| fail "mongodump failed"
 
 SIZE=$(stat -c%s "$ARCHIVE" 2>/dev/null || stat -f%z "$ARCHIVE")
-[[ "$SIZE" -gt 1024 ]] || fail "archive is only ${SIZE} bytes — refusing to call that a backup"
+
+# Two sanity checks, neither of which needs the age private key — that key is
+# deliberately not on this host, so the archive cannot be decrypted here.
+#
+# The floor is low on purpose. An empty database produces a legitimately tiny
+# archive (~300 bytes), and a guard tuned for a populated database refuses the
+# very first backup of a fresh deployment. This catches a truly empty or
+# truncated file, nothing more.
+[[ "$SIZE" -gt 100 ]] || fail "archive is only ${SIZE} bytes — that is not a backup"
+
+# An age file always begins with this header. If mongodump wrote an error to
+# stdout instead of BSON, or the pipe broke, this is what notices.
+head -c 21 "$ARCHIVE" | grep -q "age-encryption.org" \
+	|| fail "archive is not age-encrypted — the dump or the pipe failed"
+
+# Once there is real data, a sudden shrink is the more interesting signal.
+LAST_SIZE_FILE=/var/lib/deenquest/last-backup-size
+if [[ -f "$LAST_SIZE_FILE" ]]; then
+	LAST=$(cat "$LAST_SIZE_FILE")
+	if [[ "$LAST" -gt 10240 ]] && (( SIZE * 2 < LAST )); then
+		echo "[backup] WARNING: archive is ${SIZE}B, less than half of the previous ${LAST}B" >&2
+	fi
+fi
+echo "$SIZE" > "$LAST_SIZE_FILE"
 
 NAME=$(basename "$ARCHIVE")
 
