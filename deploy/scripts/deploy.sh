@@ -17,7 +17,6 @@ STACK_DIR=/srv/deenquest/deploy
 STATE_DIR=/var/lib/deenquest
 SECRETS_ENC="$STACK_DIR/secrets/prod.enc.env"
 SECRETS_RUNTIME=/run/deenquest/prod.env
-AGE_KEY=/etc/deenquest/age.key
 COMPOSE="docker compose -f $STACK_DIR/compose.prod.yml --env-file $SECRETS_RUNTIME"
 
 GHCR_OWNER="${GHCR_OWNER:-m-awais-rasool}"
@@ -51,10 +50,16 @@ switch_traffic() {
 	$COMPOSE exec -T caddy caddy reload --config /etc/caddy/Caddyfile
 }
 
-decrypt_secrets() {
-	install -d -m 0700 /run/deenquest
-	SOPS_AGE_KEY_FILE="$AGE_KEY" sops -d "$SECRETS_ENC" > "$SECRETS_RUNTIME"
-	chmod 0400 "$SECRETS_RUNTIME"
+# The runtime config is decrypted by deenquest-secrets.service at boot, as root.
+# This script runs as the unprivileged deploy user behind a forced command, and
+# deliberately cannot decrypt anything: it never sees the age key. All it needs
+# is to read what root already wrote.
+require_secrets() {
+	[[ -r "$SECRETS_RUNTIME" ]] || fail "cannot read $SECRETS_RUNTIME.
+
+  It is written at boot by deenquest-secrets.service. Check it on the host:
+    systemctl status deenquest-secrets.service
+    sudo systemctl restart deenquest-secrets.service"
 }
 
 # ── rollback ──────────────────────────────────────────────────────────────────
@@ -89,7 +94,7 @@ CURRENT=$(current_colour)
 IDLE=$(other_colour "$CURRENT")
 log "deploying $TAG to $IDLE (currently serving: $CURRENT)"
 
-decrypt_secrets
+require_secrets
 export API_DIGEST="$DIGEST" GHCR_OWNER
 
 $COMPOSE --profile "$IDLE" pull "api-$IDLE"
