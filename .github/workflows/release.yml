@@ -34,6 +34,10 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
+  # Lower-cased explicitly: container registries reject uppercase repository
+  # names, and github.repository_owner preserves the account's original casing.
+  # build.yml gets away with the raw value because docker/metadata-action
+  # lower-cases for you; a shell command does not.
   IMAGE_NAME: ${{ github.repository_owner }}/deenquest-api
 
 jobs:
@@ -92,7 +96,8 @@ jobs:
           TAG: ${{ inputs.tag }}
         run: |
           SHA=$(git rev-parse "${TAG}^{commit}")
-          REF="${REGISTRY}/${IMAGE_NAME}:sha-${SHA}"
+          IMAGE_LC=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
+          REF="${REGISTRY}/${IMAGE_LC}:sha-${SHA}"
           DIGEST=$(docker buildx imagetools inspect "$REF" --format '{{.Manifest.Digest}}')
           if [ -z "$DIGEST" ]; then
             echo "::error::No published image for $SHA. Did the Build workflow succeed on this commit?"
