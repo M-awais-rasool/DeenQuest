@@ -128,6 +128,13 @@ else
 	warn "Move $DEPLOY_DIR/mongo/tls/ca.key to your password manager, then: shred -u it"
 fi
 
+# Re-assert this every run, not just when the material is generated: step 1
+# chowns the whole repo to ops, which silently takes these files back from the
+# mongo user and leaves mongod unable to read its own certificate.
+chown 999:999 "$DEPLOY_DIR/mongo/tls" "$DEPLOY_DIR/mongo/tls"/*.pem "$DEPLOY_DIR/mongo/tls/keyfile" 2>/dev/null || true
+chmod 0400 "$DEPLOY_DIR/mongo/tls"/*.pem "$DEPLOY_DIR/mongo/tls/keyfile" 2>/dev/null || true
+ok "TLS material owned by the mongo uid"
+
 "$DEPLOY_DIR/scripts/init-mongo.sh"
 
 # ── 5. object storage ─────────────────────────────────────────────────────────

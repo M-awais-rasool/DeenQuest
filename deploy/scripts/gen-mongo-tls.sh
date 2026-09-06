@@ -43,7 +43,12 @@ cat server.crt server.key > server.pem
 openssl rand -base64 756 > keyfile
 
 chmod 0400 server.pem keyfile ca.pem
-chown 999:999 server.pem keyfile ca.pem   # the mongo user inside the container
+# The mongo container runs as 999:999 with every capability dropped. It needs to
+# read these files *and* traverse the directory holding them — a 0700 directory
+# owned by anyone else is enough to make the certificate unreadable, which mongod
+# reports only as a vague "Permission denied".
+chown 999:999 server.pem keyfile ca.pem
+chown 999:999 "$OUT"
 rm -f server.csr server.ext server.crt server.key
 
 echo "TLS material written to $OUT"
