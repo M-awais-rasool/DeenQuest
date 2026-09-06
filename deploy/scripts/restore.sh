@@ -25,7 +25,7 @@ if [[ "$INTO_PROD" == "--into-production" ]]; then
 	[[ "$ok" == "yes, restore production" ]] || { echo "aborted"; exit 1; }
 	TARGET_CMD=(docker compose -f /srv/deenquest/deploy/compose.prod.yml exec -T mongo
 		mongorestore --username "$MONGO_ROOT_USER" --password "$MONGO_ROOT_PASSWORD"
-		--authenticationDatabase admin --tls --tlsCAFile /etc/mongo/tls/ca.pem)
+		--authenticationDatabase admin --ssl --sslCAFile /etc/mongo/tls/ca.pem)
 else
 	echo "[restore] starting a throwaway mongo on :27018"
 	docker rm -f dq-restore-test >/dev/null 2>&1 || true

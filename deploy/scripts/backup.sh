@@ -39,7 +39,10 @@ $COMPOSE exec -T mongo mongodump \
 	--username dq_backup \
 	--password "$MONGO_BACKUP_PASSWORD" \
 	--authenticationDatabase admin \
-	--tls --tlsCAFile /etc/mongo/tls/ca.pem \
+	# mongodump/mongorestore in the mongo:7.0 image are an older Database Tools
+	# build that only knows --ssl; --tls is mongosh's spelling and fails here with
+	# "unknown option `tls`".
+	--ssl --sslCAFile /etc/mongo/tls/ca.pem \
 	--db deenquest --archive --gzip \
 	| age -r "$AGE_PUBLIC_KEY" > "$ARCHIVE" \
 	|| fail "mongodump failed"
