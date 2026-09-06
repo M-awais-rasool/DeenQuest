@@ -26,6 +26,12 @@ x-api: &api
   read_only: true
   tmpfs:
     - /tmp:size=64m,noexec,nosuid,nodev
+  volumes:
+    # MONGO_URI points at this path. A certificate authority certificate is
+    # public by definition — it is what clients verify against — so mounting it
+    # read-only into the API grants nothing. The private half never leaves the
+    # mongo container.
+    - ./mongo/tls/ca.pem:/etc/mongo/tls/ca.pem:ro
   mem_limit: 384m
   cpus: 1.0
   networks: [app, data]

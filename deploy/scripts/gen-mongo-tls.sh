@@ -42,7 +42,13 @@ cat server.crt server.key > server.pem
 # Replica set members authenticate to each other with this shared keyfile.
 openssl rand -base64 756 > keyfile
 
-chmod 0400 server.pem keyfile ca.pem
+# server.pem holds a private key and keyfile is the replica-set shared secret,
+# so both stay 0400. ca.pem is a public certificate — every client has to read
+# it to verify the server, including the API container, which runs as a
+# different uid. Locking it to 0400 makes TLS verification impossible for
+# everyone except mongod itself.
+chmod 0400 server.pem keyfile
+chmod 0444 ca.pem
 # The mongo container runs as 999:999 with every capability dropped. It needs to
 # read these files *and* traverse the directory holding them — a 0700 directory
 # owned by anyone else is enough to make the certificate unreadable, which mongod
