@@ -51,6 +51,10 @@ services:
   caddy:
     <<: *hardening
     image: caddy:2.8-alpine
+    # Binding a port below 1024 needs NET_BIND_SERVICE, and cap_drop: ALL takes
+    # it away even from root. This is the one capability added back anywhere in
+    # the stack.
+    cap_add: ["NET_BIND_SERVICE"]
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/active.conf:/etc/caddy/active.conf:ro
@@ -71,6 +75,11 @@ services:
   mongo:
     <<: *hardening
     image: mongo:7.0
+    # Run as mongodb directly. The image's entrypoint starts as root, chowns
+    # /data/db and su-execs to this user — all of which need CHOWN/SETUID/SETGID,
+    # which cap_drop: ALL removes. Starting as 999:999 skips that path entirely
+    # and keeps every capability dropped.
+    user: "999:999"
     # Single node, but a replica set: that is what gives an oplog (recovery
     # window), change streams, and transactions. Retrofitting it later means
     # downtime; doing it now costs one rs.initiate().
@@ -101,6 +110,8 @@ services:
   redis:
     <<: *hardening
     image: redis:7.4-alpine
+    # Same reasoning as mongo. Note the gid differs from the uid in this image.
+    user: "999:1000"
     # Cache and rate-limit counters only. Persistence off on purpose: nothing
     # here is worth surviving a restart, and the disk I/O is not free on a
     # single shared box.

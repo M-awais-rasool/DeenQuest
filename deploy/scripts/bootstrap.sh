@@ -113,6 +113,13 @@ ok "secrets re-decrypt on boot (deenquest-secrets.service)"
 # ── 4. MongoDB ────────────────────────────────────────────────────────────────
 step "4/7  MongoDB TLS, replica set and users"
 
+# The containers run as their own uids with every capability dropped, so they
+# cannot chown their own data directories the way the stock entrypoints expect.
+# Set the ownership here instead, before anything starts.
+docker volume create deploy_mongo_data >/dev/null
+chown -R 999:999 /var/lib/docker/volumes/deploy_mongo_data/_data
+ok "mongo data volume owned by 999:999"
+
 if [[ -f "$DEPLOY_DIR/mongo/tls/server.pem" ]]; then
 	skip "TLS material already present"
 else
