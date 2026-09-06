@@ -75,6 +75,39 @@ install -d -m 0755 /var/lib/deenquest
 ok "deploy.sh, smoke.sh, backup.sh installed"
 
 # ── 3. secrets → tmpfs ────────────────────────────────────────────────────────
+# ── what the deploy user needs, granted in one place ─────────────────────────
+# deploy.sh runs as the unprivileged deploy user behind a forced command. It
+# needs write access to exactly two things — the Caddy upstream file it flips to
+# switch colours, and the file recording which colour is live — and read access
+# to the decrypted config. Everything else it only reads.
+#
+# Granting these one at a time as each deploy failed is how this took four
+# attempts to get right, so they are set together and asserted below.
+grant_deploy_access() {
+	install -d -m 0775 -o root -g deploy /var/lib/deenquest
+	[[ -f /var/lib/deenquest/colour ]] || echo blue > /var/lib/deenquest/colour
+	chown root:deploy /var/lib/deenquest/colour
+	chmod 0664 /var/lib/deenquest/colour
+
+	chown root:deploy "$DEPLOY_DIR/caddy"
+	chmod 0775 "$DEPLOY_DIR/caddy"
+	[[ -f "$DEPLOY_DIR/caddy/active.conf" ]] || echo "reverse_proxy api-blue:8080" > "$DEPLOY_DIR/caddy/active.conf"
+	chown root:deploy "$DEPLOY_DIR/caddy/active.conf"
+	chmod 0664 "$DEPLOY_DIR/caddy/active.conf"
+}
+
+# Assert it, rather than trusting that the chowns above stayed put — step 1's
+# recursive chown to ops has silently undone this kind of thing before.
+verify_deploy_access() {
+	local bad=0
+	sudo -u deploy test -w /var/lib/deenquest/colour            || { warn "deploy cannot write /var/lib/deenquest/colour"; bad=1; }
+	sudo -u deploy test -w "$DEPLOY_DIR/caddy/active.conf"      || { warn "deploy cannot write caddy/active.conf"; bad=1; }
+	sudo -u deploy test -r "$RUNTIME_ENV"                       || { warn "deploy cannot read $RUNTIME_ENV"; bad=1; }
+	sudo -u deploy docker ps >/dev/null 2>&1                    || { warn "deploy cannot talk to docker"; bad=1; }
+	[[ "$bad" -eq 0 ]] || die "the deploy user cannot do what deploy.sh needs — a release would fail at the traffic switch"
+	ok "deploy user has exactly the access deploy.sh needs"
+}
+
 step "3/7  Decrypting production config to tmpfs"
 
 if [[ ! -f "$DEPLOY_DIR/secrets/prod.enc.env" ]]; then
@@ -111,6 +144,9 @@ systemctl enable --quiet deenquest-secrets.service
 ok "secrets re-decrypt on boot (deenquest-secrets.service)"
 
 # ── 4. MongoDB ────────────────────────────────────────────────────────────────
+grant_deploy_access
+verify_deploy_access
+
 step "4/7  MongoDB TLS, replica set and users"
 
 # The containers run as their own uids with every capability dropped, so they
