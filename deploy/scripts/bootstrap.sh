@@ -92,7 +92,12 @@ grant_deploy_access() {
 
 	chown root:deploy "$DEPLOY_DIR/caddy"
 	chmod 0775 "$DEPLOY_DIR/caddy"
-	[[ -f "$DEPLOY_DIR/caddy/active.conf" ]] || echo "reverse_proxy api-blue:8080" > "$DEPLOY_DIR/caddy/active.conf"
+	# Not tracked in git — see deploy/caddy/.gitignore. Created here so that a
+	# fresh clone has it before compose tries to bind-mount it (Docker would
+	# otherwise create a directory with that name and Caddy would fail to start).
+	if [[ ! -f "$DEPLOY_DIR/caddy/active.conf" ]]; then
+		printf 'reverse_proxy api-blue:8080 {\n\thealth_uri /health/ready\n\thealth_interval 10s\n\thealth_timeout 3s\n\tlb_try_duration 5s\n}\n' > "$DEPLOY_DIR/caddy/active.conf"
+	fi
 	chown root:deploy "$DEPLOY_DIR/caddy/active.conf"
 	chmod 0664 "$DEPLOY_DIR/caddy/active.conf"
 }

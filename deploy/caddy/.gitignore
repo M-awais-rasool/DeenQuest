@@ -1,0 +1,6 @@
+# active.conf is runtime state, not source: it records which colour is live and
+# deploy.sh rewrites it on every release. Tracking it meant every `git pull` or
+# `git reset --hard` on the server restored it from the repo — resetting its
+# ownership to root and silently revoking the deploy user's write access, so the
+# next release died at the traffic switch. bootstrap.sh creates it.
+active.conf
