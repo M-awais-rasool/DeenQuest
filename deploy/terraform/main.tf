@@ -14,7 +14,9 @@ provider "vultr" {
   retry_limit = 3
 }
 
-resource "vultr_vpc2" "prod" {
+# vultr_vpc, not vultr_vpc2: VPC 2.0 has been retired — vultr-cli 3.11 has no
+# vpc2 command at all — so the v2 resource fails at apply time.
+resource "vultr_vpc" "prod" {
   region      = var.region
   description = "deenquest-prod"
 }
@@ -31,7 +33,7 @@ resource "vultr_instance" "prod" {
   os_id       = var.os_id
   enable_ipv6 = true
 
-  vpc2_ids          = [vultr_vpc2.prod.id]
+  vpc_ids           = [vultr_vpc.prod.id]
   firewall_group_id = vultr_firewall_group.prod.id
 
   user_data = templatefile("${path.module}/../cloud-init.yaml", {

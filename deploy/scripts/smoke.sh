@@ -4,7 +4,7 @@
 # path: Cloudflare, the tunnel, Caddy, and the new container.
 set -euo pipefail
 
-BASE="${SMOKE_BASE_URL:-https://api.deenquest.app}"
+BASE="${SMOKE_BASE_URL:-https://api.deenquest.online}"
 fail() { echo "[smoke] FAIL: $*" >&2; exit 1; }
 
 code() { curl -fsS -o /dev/null -w '%{http_code}' --max-time 10 "$@" 2>/dev/null || echo 000; }

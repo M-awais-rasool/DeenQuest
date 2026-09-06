@@ -9,7 +9,8 @@
 #      before its retention expires — by anyone, with any credential. R2's token
 #      scopes are coarse (Object Read & Write includes delete), so R2 is the
 #      convenient copy and B2 is the one that survives a compromised host.
-#   3. Two providers. A Vultr account suspension does not touch the data.
+#   3. The destination is not Vultr, so a Vultr account problem cannot touch it.
+#      A second provider (R2) is supported but optional.
 #   4. The Healthchecks ping is the dead-man's switch. Silent backup failure is
 #      how data loss actually happens.
 set -euo pipefail
@@ -47,9 +48,19 @@ SIZE=$(stat -c%s "$ARCHIVE" 2>/dev/null || stat -f%z "$ARCHIVE")
 [[ "$SIZE" -gt 1024 ]] || fail "archive is only ${SIZE} bytes — refusing to call that a backup"
 
 NAME=$(basename "$ARCHIVE")
-rclone copyto "$ARCHIVE" "r2:deenquest-backups/hourly/$NAME" || fail "upload to R2 failed"
-rclone copyto "$ARCHIVE" "b2:deenquest-backups-dr/hourly/$NAME" \
-	|| echo "[backup] WARNING: secondary (B2) upload failed; primary succeeded" >&2
+
+# B2 is the required destination: its bucket has Object Lock, so this copy
+# cannot be deleted before retention expires by anyone holding any credential —
+# including someone who has taken this host. A backup run that cannot write it
+# has not produced a backup worth the name, so this failure is fatal.
+rclone copyto "$ARCHIVE" "b2:deenquest-backups-dr/hourly/$NAME" || fail "upload to B2 failed"
+
+# R2 is an optional convenience copy. Configure an r2: remote and it gets used;
+# leave it out and backups still work, with one provider instead of two.
+if rclone listremotes 2>/dev/null | grep -q '^r2:'; then
+	rclone copyto "$ARCHIVE" "r2:deenquest-backups/hourly/$NAME" \
+		|| echo "[backup] WARNING: optional R2 copy failed; B2 copy succeeded" >&2
+fi
 
 curl -fsS -m 10 --retry 3 "https://hc-ping.com/${HC_UUID}" >/dev/null || true
 echo "[backup] ok $NAME ($((SIZE / 1024)) KiB)"

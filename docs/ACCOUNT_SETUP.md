@@ -150,15 +150,16 @@ Paste straight into the secrets file in Step 9 of the deployment guide. Don't sa
 Add site → enter your domain → Free plan. Cloudflare gives you two nameservers; set them at your registrar (GoDaddy, Namecheap, wherever you bought it). Propagation is usually minutes.
 
 ```bash
-dig NS deenquest.app +short     # should return two *.ns.cloudflare.com
+dig NS deenquest.online +short     # should return two *.ns.cloudflare.com
 ```
 
 Then under **SSL/TLS**: mode **Full (strict)**, minimum TLS version **1.2**, **Always Use HTTPS** on, **HSTS** on.
 
-### B1.2 — R2 bucket
+### B1.2 — R2 bucket (optional)
 
-**R2 → Create bucket** → name `deenquest-backups`, location closest to Mumbai.
-Create a second bucket `deenquest-assets` — the Whisper model lives there.
+**R2 is optional.** Backblaze B2 (B3.2) is the required backup destination — it is the copy with Object Lock, and it also holds the Whisper model. R2 adds a second copy on a second provider, which is worth having but is not needed to launch, and enabling R2 asks for a card even inside the free tier.
+
+If you want it: **R2 → Create bucket** → `deenquest-backups`, location closest to Mumbai.
 
 **R2 → Manage API Tokens → Create token**, permission **Object Read & Write**, scoped to those buckets.
 
@@ -174,13 +175,13 @@ Add a **lifecycle rule** on `deenquest-backups` to expire objects after 180 days
 
 Cloudflare shows an install command containing a long token. **Copy the token only** — you don't run that command; the compose file runs `cloudflared` for you.
 
-Under **Public hostnames**, add: hostname `api.deenquest.app` → service `http://caddy:80`.
+Under **Public hostnames**, add: hostname `api.deenquest.online` → service `http://caddy:80`.
 
 Collect: **tunnel token** → `CF_TUNNEL_TOKEN`.
 
 ### B1.4 — Access on the admin panel
 
-**Zero Trust → Access → Applications → Add an application** → Self-hosted → domain `admin.deenquest.app`. Policy: Allow, rule **Emails** = your admin addresses.
+**Zero Trust → Access → Applications → Add an application** → Self-hosted → domain `admin.deenquest.online`. Policy: Allow, rule **Emails** = your admin addresses.
 
 This puts an identity check *in front of* your application code — an auth bug in the admin routes still has to get past Cloudflare first.
 
@@ -191,7 +192,7 @@ This puts an identity check *in front of* your application code — an auth bug 
 | Site | Root directory | Build command | Output | Environment variable |
 |---|---|---|---|---|
 | Landing | `LandingPage` | `npm run build` | `dist` | — |
-| Admin | `admin-panel` | `npm run build` | `dist` | `VITE_API_BASE_URL=https://api.deenquest.app` |
+| Admin | `admin-panel` | `npm run build` | `dist` | `VITE_API_BASE_URL=https://api.deenquest.online` |
 
 ---
 
@@ -252,11 +253,13 @@ Then **Security → Access Policies → Create access policy**, scopes `metrics:
 
 > The allowlist in `deploy/alloy/config.alloy` exists to keep you inside the free series limit. Adding metrics without extending that allowlist thoughtfully is how people blow through it in a day and get throttled mid-incident.
 
-### B3.2 — Backblaze B2 (free 10 GB) — the copy that survives a compromise
+### B3.2 — Backblaze B2 (free 10 GB) — the required backup destination
 
 **Sign up:** https://www.backblaze.com/sign-up/cloud-storage
 
 **Buckets → Create a Bucket**: name `deenquest-backups-dr`, **Private**, and turn **Object Lock ON**. Object Lock can only be enabled at creation — you cannot add it later.
+
+Create a **second** bucket `deenquest-assets`, **Private**, **without** Object Lock. The Whisper model lives there, and a locked bucket would stop you replacing it for the retention period.
 
 Set a default retention of 30 days. Locked objects cannot be deleted before that expires, by anyone, with any credential — including someone holding root on your server.
 
@@ -268,7 +271,7 @@ Collect: **keyID** and **applicationKey** → `rclone` config on the server.
 
 **Sign up:** https://uptimerobot.com
 
-**Add New Monitor**: HTTP(s), URL `https://api.deenquest.app/health`, interval 5 minutes, alert contact = your email.
+**Add New Monitor**: HTTP(s), URL `https://api.deenquest.online/health`, interval 5 minutes, alert contact = your email.
 
 This probes from outside, through Cloudflare, so it validates the whole path — edge, tunnel, Caddy, container — not just that a process is alive.
 
@@ -296,7 +299,7 @@ https://console.cloud.google.com → APIs & Services → Credentials.
 
 | Client type | Notes | Goes to |
 |---|---|---|
-| Web application | Authorised origins: `https://admin.deenquest.app`, `https://deenquest.app` | `GOOGLE_WEB_CLIENT_ID` |
+| Web application | Authorised origins: `https://admin.deenquest.online`, `https://deenquest.online` | `GOOGLE_WEB_CLIENT_ID` |
 | iOS | Bundle ID `com.awaisrasool.DeenQuestExpo` | `GOOGLE_IOS_CLIENT_ID` |
 | Android | Package name + your **release** SHA-1 | `GOOGLE_ANDROID_CLIENT_ID` |
 
@@ -359,7 +362,7 @@ Note what is *not* here: no database password, no JWT secret, no Cloudflare toke
 | `MONGO_ROOT_PASSWORD`, `MONGO_APP_PASSWORD`, `MONGO_BACKUP_PASSWORD` | A4 |
 | `REDIS_PASSWORD`, `JWT_SECRET`, `WHISPER_INTERNAL_TOKEN` | A4 |
 | `ADMIN_EMAILS` | Your email. **Empty = every signed-in user is an admin; the API refuses to start** |
-| `CORS_ALLOWED_ORIGINS` | `https://admin.deenquest.app,https://deenquest.app` |
+| `CORS_ALLOWED_ORIGINS` | `https://admin.deenquest.online,https://deenquest.online` |
 | `TRUSTED_PROXIES` | `172.16.0.0/12` |
 | `GOOGLE_*_CLIENT_ID`, `APPLE_CLIENT_IDS` | B4 |
 | `CF_TUNNEL_TOKEN` | B1.3 |

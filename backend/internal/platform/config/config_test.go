@@ -8,8 +8,8 @@ func validProduction() *Config {
 	return &Config{
 		AppEnv:             "production",
 		JWTSecret:          "test-fixture-not-a-real-secret-0000000000",
-		AdminEmails:        "ops@deenquest.app",
-		CORSAllowedOrigins: "https://admin.deenquest.app",
+		AdminEmails:        "ops@deenquest.online",
+		CORSAllowedOrigins: "https://admin.deenquest.online",
 		MongoURI:           "mongodb://dq_app:test-fixture@mongo:27017/deenquest",
 		GoogleWebClientID:  "123.apps.googleusercontent.com",
 
@@ -35,7 +35,7 @@ func TestValidateProductionRejects(t *testing.T) {
 		{"empty JWT secret", func(c *Config) { c.JWTSecret = "" }},
 		{"short JWT secret", func(c *Config) { c.JWTSecret = "tooshort" }},
 		{"wildcard CORS origin", func(c *Config) { c.CORSAllowedOrigins = "*" }},
-		{"localhost CORS origin", func(c *Config) { c.CORSAllowedOrigins = "https://admin.deenquest.app,http://localhost:5173" }},
+		{"localhost CORS origin", func(c *Config) { c.CORSAllowedOrigins = "https://admin.deenquest.online,http://localhost:5173" }},
 		{"loopback CORS origin", func(c *Config) { c.CORSAllowedOrigins = "http://127.0.0.1:3000" }},
 		{"empty CORS origins", func(c *Config) { c.CORSAllowedOrigins = "" }},
 		{"MongoDB without credentials", func(c *Config) { c.MongoURI = "mongodb://mongo:27017" }},

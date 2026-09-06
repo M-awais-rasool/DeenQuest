@@ -14,13 +14,13 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "API_BASE_URL": "https://api.deenquest.app"
+        "API_BASE_URL": "https://api.deenquest.online"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "API_BASE_URL": "https://api.deenquest.app"
+        "API_BASE_URL": "https://api.deenquest.online"
       }
     }
   },

@@ -157,7 +157,7 @@ Skip **Vultr Object Storage (~$5/mo)** — Cloudflare R2's free 10 GB with zero 
 |---|---|---|---|
 | Cloudflare DNS + Proxy | Free plan | Authoritative DNS, TLS termination, L7 DDoS, managed WAF rules, Bot Fight Mode | Free plan allows roughly one custom rate-limiting rule |
 | Cloudflare Tunnel | Free | Ingress with zero open ports | — |
-| Cloudflare Access | Free for a small number of users | SSO + MFA gate in front of `admin.deenquest.app` | Seat cap on the free Zero Trust plan |
+| Cloudflare Access | Free for a small number of users | SSO + MFA gate in front of `admin.deenquest.online` | Seat cap on the free Zero Trust plan |
 | Cloudflare Pages | Free | Hosts the landing page and admin panel — keeps both entirely off the paid box | Build minutes cap |
 | Cloudflare R2 | 10 GB storage, no egress fees | Primary backup target | 10 GB ceiling — the GFS policy in §14 stays well inside it |
 | Backblaze B2 | 10 GB | Second-provider backup copy | — |
@@ -193,7 +193,7 @@ You chose local-only development with production exclusively on Vultr. That's th
 | Google / Apple OAuth | A **separate** dev OAuth client | A **separate** prod OAuth client |
 | `ADMIN_EMAILS` | Your address | Explicit allowlist; **boot fails if empty** |
 | `CORS_ALLOWED_ORIGINS` | `localhost:*` | Exact production origins; boot fails if it contains `localhost` |
-| Expo client | `development` EAS profile → local API | `production` EAS profile → `https://api.deenquest.app` |
+| Expo client | `development` EAS profile → local API | `production` EAS profile → `https://api.deenquest.online` |
 | Data | Disposable, seeded, fake users | Real users |
 | How code reaches it | Not applicable | Signed tag → CI → forced-command SSH → verified image |
 
@@ -227,8 +227,8 @@ export default ({ config }) => ({
 {
   "build": {
     "development": { "env": { "API_BASE_URL": "http://192.168.18.12:8080" } },
-    "preview":     { "env": { "API_BASE_URL": "https://api.deenquest.app" } },
-    "production":  { "env": { "API_BASE_URL": "https://api.deenquest.app" } }
+    "preview":     { "env": { "API_BASE_URL": "https://api.deenquest.online" } },
+    "production":  { "env": { "API_BASE_URL": "https://api.deenquest.online" } }
   }
 }
 ```
@@ -304,9 +304,9 @@ The CI key cannot open a shell, cannot forward a port, cannot read a file. It ca
 
 | Hostname | Points to | Protected by |
 |---|---|---|
-| `deenquest.app` | Cloudflare Pages (landing) | Cloudflare edge |
-| `admin.deenquest.app` | Cloudflare Pages (admin panel SPA) | **Cloudflare Access** — SSO + MFA before the app even loads |
-| `api.deenquest.app` | Cloudflare Tunnel → Caddy → API | Cloudflare WAF + app auth |
+| `deenquest.online` | Cloudflare Pages (landing) | Cloudflare edge |
+| `admin.deenquest.online` | Cloudflare Pages (admin panel SPA) | **Cloudflare Access** — SSO + MFA before the app even loads |
+| `api.deenquest.online` | Cloudflare Tunnel → Caddy → API | Cloudflare WAF + app auth |
 
 Putting the landing page and admin panel on Cloudflare Pages is not just cost savings — it removes two attack surfaces from the production box entirely, and the admin panel gains an identity gate that sits *in front of* your application code. An attacker who finds an authentication bug in the admin routes still has to get past Cloudflare Access first.
 
@@ -319,7 +319,7 @@ const api = axios.create({
 });
 ```
 
-and `https://admin.deenquest.app` must be listed in `CORS_ALLOWED_ORIGINS`.
+and `https://admin.deenquest.online` must be listed in `CORS_ALLOWED_ORIGINS`.
 
 ### Operator access is auditable
 
@@ -1211,7 +1211,7 @@ The architecture is designed so none of these are rewrites. The VPC exists from 
 
 **Phase 5 — observability and backups (1 day).** Alloy with the metric allowlist. The three dashboards. The alert rules, each one tested by deliberately breaking the thing it watches — stop Redis and confirm the alert fires. Backup timer, both destinations, Healthchecks ping. **Then run a full restore drill and record the real number.**
 
-**Phase 6 — front ends and launch (half a day).** Landing page and admin panel to Cloudflare Pages. Cloudflare Access on `admin.deenquest.app`. Production OAuth clients registered with the production origins. Production EAS build pointing at `api.deenquest.app`. Final check against §11 P0, then launch.
+**Phase 6 — front ends and launch (half a day).** Landing page and admin panel to Cloudflare Pages. Cloudflare Access on `admin.deenquest.online`. Production OAuth clients registered with the production origins. Production EAS build pointing at `api.deenquest.online`. Final check against §11 P0, then launch.
 
 **Phase 7 — first week.** Work through §11 P1: `/metrics`, per-route rate limits, fail-closed auth limiting, the Kafka flag, body size limits, request IDs. Tune alert thresholds against real traffic instead of guesses.
 
@@ -1250,7 +1250,7 @@ Roughly **six to eight working days** end to end.
 | Least privilege | `dq_app` cannot drop a database; `deploy` has no shell; CI holds no production secret; the `data` network has no egress |
 | No secrets in the repo | Encrypted with age in git, decrypted only to tmpfs; `gitleaks` blocks merges; git history verified clean |
 | Strong network security and isolation | **Zero inbound ports.** Cloudflare WAF and DDoS at the edge, three segmented Docker networks, an internal network with no route out |
-| No direct public access to services or DBs | Only `api.deenquest.app` is reachable, and only through the tunnel. MongoDB, Redis, and Whisper have no published ports |
+| No direct public access to services or DBs | Only `api.deenquest.online` is reachable, and only through the tunnel. MongoDB, Redis, and Whisper have no published ports |
 | AuthN/AuthZ and service-to-service security | Existing JWT with rotating, reuse-detecting refresh tokens; admin allowlist that fails closed; Cloudflare Access on the admin panel; a shared secret on the Whisper call |
 | Monitoring, logging, alerting, backups, DR — free | Grafana Cloud, UptimeRobot, Healthchecks, R2 and B2. $0 |
 | Encrypted at rest and in transit | In transit: everywhere. At rest: backups and secrets yes; MongoDB data files **no** — stated plainly in §10 with the triggers to revisit |
