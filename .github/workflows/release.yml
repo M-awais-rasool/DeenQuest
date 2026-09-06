@@ -112,9 +112,15 @@ jobs:
       - name: Join the tailnet
         uses: tailscale/github-action@v2
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:ci
+          # An auth key rather than an OAuth client. Both produce the same
+          # thing — an ephemeral node tagged tag:ci, which the tailnet ACL
+          # confines to TCP 22 on the production host. The auth key is simply
+          # fewer moving parts: no scope to get wrong.
+          #
+          # The trade-off: auth keys expire after at most 90 days, an OAuth
+          # client does not. When a deploy suddenly fails to join the tailnet,
+          # this is the first thing to check.
+          authkey: ${{ secrets.TS_AUTHKEY }}
 
       - name: Deploy
         env:

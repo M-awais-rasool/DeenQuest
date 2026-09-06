@@ -210,11 +210,17 @@ Install it on your laptop too, or you will not be able to reach the server.
 
 Collect: `tskey-auth-…` → `tailscale_auth_key` in `prod.tfvars`. Used once, at first boot.
 
-### B2.2 — OAuth client for CI
+### B2.2 — Auth key for CI
 
-**Settings → OAuth clients → Generate OAuth client**, scope **Devices: write**, tag `tag:ci`.
+**Settings → Keys → Generate auth key**: Reusable **on**, Ephemeral **on**,
+Tags `tag:ci`, expiry 90 days.
 
-Collect: **Client ID** → GitHub secret `TS_OAUTH_CLIENT_ID`, **Client secret** → `TS_OAUTH_SECRET`.
+Collect: `tskey-auth-…` → GitHub secret `TS_AUTHKEY`.
+
+An OAuth client would avoid the expiry, but its scope has to be exactly
+`devices:core:write` *and* carry the tag; getting either wrong produces a bare
+403 that names neither. The auth key has one setting to get right. **Put the
+expiry date in your calendar** — when it lapses, deploys stop.
 
 ### B2.3 — ACL: CI reaches SSH and nothing else
 
