@@ -150,7 +150,9 @@ else
 	warn "the required rclone remote 'b2' is not configured."
 	cat <<-'HINT'
 
-	   Run this as the ops user, not root:
+	   Run these with sudo. The backup timer runs as root, so the remote has to
+	   exist in root's rclone config — configuring it as ops leaves the hourly
+	   backup silently unable to find it:
 
 	     rclone config create b2 b2 account <KEY_ID> key <APPLICATION_KEY>
 
