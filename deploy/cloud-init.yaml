@@ -52,6 +52,23 @@ write_files:
       ClientAliveInterval 300
       ClientAliveCountMax 2
 
+  # sshd binds to the Tailscale address only, which means it cannot start until
+  # tailscaled has actually brought that address up. Without this ordering the
+  # two race at boot, and the loser is sshd — which fails to bind and leaves the
+  # host unreachable, with no console and no other way in. It survived the first
+  # reboot by luck; unattended-upgrades reboots at 04:00 and would eventually
+  # not be lucky.
+  - path: /etc/systemd/system/ssh.service.d/10-wait-for-tailscale.conf
+    content: |
+      [Unit]
+      After=tailscaled.service network-online.target
+      Wants=tailscaled.service network-online.target
+
+      [Service]
+      ExecStartPre=/usr/bin/timeout 60 sh -c 'until ip -4 addr show tailscale0 2>/dev/null | grep -q "inet "; do sleep 1; done'
+      Restart=on-failure
+      RestartSec=5s
+
   - path: /etc/docker/daemon.json
     content: |
       {
@@ -151,6 +168,7 @@ runcmd:
   - echo blue > /var/lib/deenquest/colour
   - chown -R ops:ops /srv/deenquest /var/lib/deenquest
 
+  - systemctl daemon-reload
   - systemctl enable --now auditd fail2ban unattended-upgrades docker
 
   # ── every tool actually landed? ─────────────────────────────────────────────
