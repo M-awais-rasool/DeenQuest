@@ -155,10 +155,11 @@ dig NS deenquest.online +short     # should return two *.ns.cloudflare.com
 
 Then under **SSL/TLS**: mode **Full (strict)**, minimum TLS version **1.2**, **Always Use HTTPS** on, **HSTS** on.
 
-### B1.2 — R2 bucket
+### B1.2 — R2 bucket (optional)
 
-**R2 → Create bucket** → name `deenquest-backups`, location closest to Mumbai.
-Create a second bucket `deenquest-assets` — the Whisper model lives there.
+**R2 is optional.** Backblaze B2 (B3.2) is the required backup destination — it is the copy with Object Lock, and it also holds the Whisper model. R2 adds a second copy on a second provider, which is worth having but is not needed to launch, and enabling R2 asks for a card even inside the free tier.
+
+If you want it: **R2 → Create bucket** → `deenquest-backups`, location closest to Mumbai.
 
 **R2 → Manage API Tokens → Create token**, permission **Object Read & Write**, scoped to those buckets.
 
@@ -252,11 +253,13 @@ Then **Security → Access Policies → Create access policy**, scopes `metrics:
 
 > The allowlist in `deploy/alloy/config.alloy` exists to keep you inside the free series limit. Adding metrics without extending that allowlist thoughtfully is how people blow through it in a day and get throttled mid-incident.
 
-### B3.2 — Backblaze B2 (free 10 GB) — the copy that survives a compromise
+### B3.2 — Backblaze B2 (free 10 GB) — the required backup destination
 
 **Sign up:** https://www.backblaze.com/sign-up/cloud-storage
 
 **Buckets → Create a Bucket**: name `deenquest-backups-dr`, **Private**, and turn **Object Lock ON**. Object Lock can only be enabled at creation — you cannot add it later.
+
+Create a **second** bucket `deenquest-assets`, **Private**, **without** Object Lock. The Whisper model lives there, and a locked bucket would stop you replacing it for the retention period.
 
 Set a default retention of 30 days. Locked objects cannot be deleted before that expires, by anyone, with any credential — including someone holding root on your server.
 

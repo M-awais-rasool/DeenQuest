@@ -126,29 +126,32 @@ fi
 # ── 5. object storage ─────────────────────────────────────────────────────────
 step "5/7  rclone remotes for backups"
 
-if rclone listremotes 2>/dev/null | grep -q '^r2:' && rclone listremotes 2>/dev/null | grep -q '^b2:'; then
-	skip "r2: and b2: already configured"
+if rclone listremotes 2>/dev/null | grep -q '^b2:'; then
+	if rclone listremotes 2>/dev/null | grep -q '^r2:'; then
+		skip "b2: and optional r2: configured"
+	else
+		skip "b2: configured (r2: is optional and not set up)"
+	fi
 else
-	warn "rclone remotes 'r2' and 'b2' are not configured."
+	warn "the required rclone remote 'b2' is not configured."
 	cat <<-'HINT'
 
 	   Run this as the ops user, not root:
 
-	     rclone config
-	       name: r2   type: s3   provider: Cloudflare
-	       access_key_id / secret_access_key from Cloudflare → R2 → API Tokens
-	       endpoint: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+	     rclone config create b2 b2 account <KEY_ID> key <APPLICATION_KEY>
 
-	     rclone config
-	       name: b2   type: b2
-	       account / key from Backblaze → App Keys
+	   Cloudflare R2 is optional — a second copy on a second provider. To add it:
+
+	     rclone config create r2 s3 provider Cloudflare \
+	       access_key_id <ID> secret_access_key <SECRET> \
+	       endpoint https://<ACCOUNT_ID>.r2.cloudflarestorage.com
 
 	   Then re-run this script.
 
 	HINT
 	die "rclone not configured"
 fi
-ok "r2: and b2: reachable"
+ok "b2: reachable"
 
 # ── 6. whisper model ──────────────────────────────────────────────────────────
 step "6/7  Whisper model"
@@ -159,9 +162,14 @@ docker volume create deploy_whisper_models >/dev/null
 if [[ -f "$MODEL_DIR/model.bin" ]]; then
 	skip "model already on the volume"
 else
-	rclone copy r2:deenquest-assets/quran-base-ct2 "$MODEL_DIR" --progress \
-		|| die "Model not in R2 yet. From your laptop:
-    rclone copy backend/whisper-service/models/quran-base-ct2 r2:deenquest-assets/quran-base-ct2"
+	rclone copy b2:deenquest-assets/quran-base-ct2 "$MODEL_DIR" --progress \
+		|| die "Model is not in object storage yet. From your laptop, either:
+    rclone copy backend/whisper-service/models/quran-base-ct2 b2:deenquest-assets/quran-base-ct2
+  or, since it is only ~79 MB and Tailscale is already up, copy it straight over:
+    rsync -av --progress -e 'ssh -i ~/.ssh/deenquest_ops' \\
+      backend/whisper-service/models/quran-base-ct2/ \\
+      ops@deenquest-prod:/tmp/quran-base-ct2/
+    ssh ops@deenquest-prod 'sudo mkdir -p $MODEL_DIR && sudo cp -r /tmp/quran-base-ct2/. $MODEL_DIR/'"
 	ok "model downloaded ($(du -sh "$MODEL_DIR" | cut -f1))"
 fi
 

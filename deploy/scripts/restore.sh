@@ -6,7 +6,7 @@
 # prints is your actual RTO — replace the estimate in the architecture doc with
 # whatever this says.
 #
-#   ./restore.sh r2:deenquest-backups/hourly/deenquest-20260826T090000Z.archive.gz.age
+#   ./restore.sh b2:deenquest-backups-dr/hourly/deenquest-20260826T090000Z.archive.gz.age
 set -euo pipefail
 
 SOURCE="${1:?usage: restore.sh <rclone-path> [--into-production]}"
