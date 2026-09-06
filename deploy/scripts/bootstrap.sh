@@ -21,6 +21,7 @@ STACK_DIR=/srv/deenquest
 DEPLOY_DIR="$STACK_DIR/deploy"
 AGE_KEY=/etc/deenquest/age.key
 RUNTIME_ENV=/run/deenquest/prod.env
+COMPOSE="docker compose -f $DEPLOY_DIR/compose.prod.yml --env-file $RUNTIME_ENV"
 
 step()  { printf '\n\033[1m── %s\033[0m\n' "$*"; }
 ok()    { printf '   ✅ %s\n' "$*"; }
