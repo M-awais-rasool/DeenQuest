@@ -48,6 +48,25 @@ switch_traffic() {
 	}
 	CADDY
 	$COMPOSE exec -T caddy caddy reload --config /etc/caddy/Caddyfile
+	verify_live_upstream "$colour"
+}
+
+# `caddy reload` exiting 0 means "the config I read was valid and applied" — it
+# says nothing about whether that config was the one we just wrote. When the
+# container was reading a stale active.conf, reload kept returning 0 while
+# changing nothing, the smoke tests passed against the colour that was still
+# serving, and the deploy logged result=ok. The site went down a minute later.
+#
+# So ask Caddy what it is actually proxying to. This is the only check in the
+# deploy that can tell a real switch from a no-op.
+verify_live_upstream() {
+	local colour="$1" running
+	running=$($COMPOSE exec -T caddy wget -qO- http://localhost:2019/config/ 2>/dev/null) \
+		|| fail "cannot read Caddy's running config — the traffic switch is unverifiable"
+	case "$running" in
+		*"api-${colour}:8080"*) ;;
+		*) fail "Caddy reloaded but is not proxying to api-${colour}; the switch did not take effect" ;;
+	esac
 }
 
 # The runtime config is decrypted by deenquest-secrets.service at boot, as root.

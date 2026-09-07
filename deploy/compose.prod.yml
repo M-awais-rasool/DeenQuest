@@ -62,8 +62,13 @@ services:
     # the stack.
     cap_add: ["NET_BIND_SERVICE"]
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./caddy/active.conf:/etc/caddy/active.conf:ro
+      # The whole directory, not the two files. A single-file bind mount pins an
+      # inode: replace active.conf on the host — a git checkout, a delete and
+      # recreate — and the container keeps reading the old inode forever. That
+      # made `caddy reload` a silent no-op, so a deploy switched colours on the
+      # host, verified nothing, reported success, and 503'd sixty seconds later
+      # when the colour Caddy was still using got stopped.
+      - ./caddy:/etc/caddy:ro
     mem_limit: 64m
     cpus: 0.2
     networks: [edge, app]
