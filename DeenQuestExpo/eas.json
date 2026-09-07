@@ -8,19 +8,25 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "API_BASE_URL": "http://192.168.18.12:8080"
+        "API_BASE_URL": "http://192.168.18.12:8080",
+        "GOOGLE_WEB_CLIENT_ID": "527735813222-ibu6nu9bj3n64js3i9b5n6d4hcfmin9i.apps.googleusercontent.com",
+        "GOOGLE_IOS_CLIENT_ID": "527735813222-3l90e351n76jp450o5l75lcbri9pipkk.apps.googleusercontent.com"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "API_BASE_URL": "https://api.deenquest.online"
+        "API_BASE_URL": "https://api.deenquest.online",
+        "GOOGLE_WEB_CLIENT_ID": "527735813222-ibu6nu9bj3n64js3i9b5n6d4hcfmin9i.apps.googleusercontent.com",
+        "GOOGLE_IOS_CLIENT_ID": "527735813222-3l90e351n76jp450o5l75lcbri9pipkk.apps.googleusercontent.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "API_BASE_URL": "https://api.deenquest.online"
+        "API_BASE_URL": "https://api.deenquest.online",
+        "GOOGLE_WEB_CLIENT_ID": "527735813222-ibu6nu9bj3n64js3i9b5n6d4hcfmin9i.apps.googleusercontent.com",
+        "GOOGLE_IOS_CLIENT_ID": "527735813222-3l90e351n76jp450o5l75lcbri9pipkk.apps.googleusercontent.com"
       }
     }
   },
