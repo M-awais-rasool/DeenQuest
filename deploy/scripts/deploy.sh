@@ -61,7 +61,9 @@ switch_traffic() {
 # deploy that can tell a real switch from a no-op.
 verify_live_upstream() {
 	local colour="$1" running
-	running=$($COMPOSE exec -T caddy wget -qO- http://localhost:2019/config/ 2>/dev/null) \
+	# 127.0.0.1, not localhost: the admin endpoint binds IPv4 only, and wget
+	# inside the container resolves localhost to ::1 first and is refused.
+	running=$($COMPOSE exec -T caddy wget -qO- http://127.0.0.1:2019/config/ 2>/dev/null) \
 		|| fail "cannot read Caddy's running config — the traffic switch is unverifiable"
 	case "$running" in
 		*"api-${colour}:8080"*) ;;
