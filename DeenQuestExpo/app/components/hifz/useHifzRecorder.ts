@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { Audio } from "expo-av";
 import { haptics } from "../../utils/haptics";
-import { RECITATION_RECORDING } from "../../utils/recitationRecording";
+import {
+  RECITATION_RECORDING,
+  waitForForeground,
+} from "../../utils/recitationRecording";
 import {
   useSubmitHifzRecitationMutation,
   type HifzReciteResult,
@@ -50,6 +53,10 @@ export function useHifzRecorder(sessionId: string) {
         );
         return;
       }
+      // The permission alert leaves the app inactive for a beat; iOS will not
+      // activate an audio session until it is foreground again.
+      await waitForForeground();
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,

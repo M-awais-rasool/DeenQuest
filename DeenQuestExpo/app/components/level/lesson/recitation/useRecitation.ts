@@ -13,7 +13,10 @@ import type {
   RecitationJobState,
 } from "../../../../store/services/api";
 import { useAppDispatch } from "../../../../store/hooks";
-import { RECITATION_RECORDING } from "../../../../utils/recitationRecording";
+import {
+  RECITATION_RECORDING,
+  waitForForeground,
+} from "../../../../utils/recitationRecording";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -259,6 +262,10 @@ export function useRecitation(
         );
         return;
       }
+      // The permission alert leaves the app inactive for a beat; iOS will not
+      // activate an audio session until it is foreground again.
+      await waitForForeground();
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
