@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
 	analyticshttp "github.com/chawais/deenquest/backend/internal/analytics/interfaces/http"
@@ -43,6 +44,7 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	}
 
 	r.Use(middleware.Recovery())
+	r.Use(middleware.Metrics())
 	r.Use(middleware.RequestLogger(cfg.AccessLogSampleEvery))
 	r.Use(middleware.CORS(cfg.AllowedOrigins()))
 
@@ -53,6 +55,11 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	if infra.Redis != nil {
 		r.Use(middleware.RateLimitByIP(infra.Redis, 1000, time.Minute, "global"))
 	}
+
+	// Scraped by Grafana Alloy over the internal Docker network, straight at the
+	// container. Caddy returns 404 for this path from the public side: route
+	// templates and status codes hand an attacker a map of the API.
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "deenquest-api"})

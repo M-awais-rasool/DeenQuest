@@ -16,6 +16,12 @@
 }
 
 :80 {
+	# /metrics is for Alloy, which scrapes the container directly over the internal
+	# Docker network. From the public side it is a map of every route template and
+	# status code the API serves, so it is not served here at all.
+	@metrics path /metrics
+	respond @metrics 404
+
 	# The blue/green switch. deploy.sh rewrites this one file and reloads.
 	import /etc/caddy/active.conf
 
