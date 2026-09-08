@@ -23,6 +23,7 @@ import { LevelNode } from "../map";
 
 import { PathTopBar } from "./PathTopBar";
 import { ActiveSectionBanner } from "./ActiveSectionBanner";
+import { CourseHeader } from "./CourseHeader";
 import { SectionDivider } from "./SectionDivider";
 import { COURSE_CATALOG, courseEntry } from "./courseCatalog";
 import { StreakPopup, type StreakOrigin } from "./StreakPopup";
@@ -51,8 +52,12 @@ export function LearningPathContent() {
   const { data: progressRes } = useGetProgressQuery();
 
   const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
-  // Which section the user is currently scrolled into — drives the pinned banner.
-  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+  // Which section the user is currently scrolled into — drives the pinned
+  // banner and the course name in the header. Tracked by key, not by index:
+  // `index` counts sections within one course, so with every course on the
+  // list it is 0…n for Qaida and 0…n again for Namaz, and looking it up in the
+  // concatenated array would name a Qaida section while the reader is in Namaz.
+  const [activeSectionKey, setActiveSectionKey] = useState<string | null>(null);
   // Streak popup state (origin = the chip it grows from).
   const [streakOpen, setStreakOpen] = useState(false);
   const [streakOrigin, setStreakOrigin] = useState<StreakOrigin | null>(null);
@@ -86,9 +91,9 @@ export function LearningPathContent() {
   }, []);
 
   const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: Array<{ section?: { index?: number } }> }) => {
-      const topIndex = viewableItems[0]?.section?.index;
-      if (typeof topIndex === "number") setActiveSectionIndex(topIndex);
+    ({ viewableItems }: { viewableItems: Array<{ section?: { key?: string } }> }) => {
+      const topKey = viewableItems[0]?.section?.key;
+      if (typeof topKey === "string") setActiveSectionKey(topKey);
     },
   ).current;
 
@@ -151,7 +156,17 @@ export function LearningPathContent() {
       [selectedLevelId, handleNodePress, handleStart],
     );
 
-  const renderSectionHeader = useCallback(() => <View style={s.sectionGap} />, []);
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: PathSection }) =>
+      // A course's first section carries the band that names it; the rest just
+      // need the gap.
+      section.index === 0 ? (
+        <CourseHeader section={section} />
+      ) : (
+        <View style={s.sectionGap} />
+      ),
+    [],
+  );
 
   const renderSectionFooter = useCallback(
     ({ section }: { section: PathSection }) => (
@@ -165,7 +180,8 @@ export function LearningPathContent() {
     [],
   );
 
-  const activeSection = sections[activeSectionIndex] ?? sections[0];
+  const activeSection =
+    sections.find((section) => section.key === activeSectionKey) ?? sections[0];
   // The header names whichever course the reader has scrolled into.
   const course = courseEntry(activeSection?.courseType ?? qaidaEntry.courseType);
 

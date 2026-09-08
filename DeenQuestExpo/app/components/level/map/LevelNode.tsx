@@ -210,7 +210,10 @@ export const LevelNode = memo(function LevelNode({
         {level.status === "in_progress" && (
           <View style={s.progressPill}>
             <Text style={s.progressText}>
-              {level.lessons_complete}/{level.lessons.length}
+              {/* lesson_count, not lessons.length: the list endpoint sends
+                  the levels with `lessons` emptied and the count in its own
+                  field, so this pill read "4/0" for every level in progress. */}
+              {level.lessons_complete}/{level.lesson_count}
             </Text>
           </View>
         )}
