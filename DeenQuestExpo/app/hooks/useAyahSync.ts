@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useActiveTrack } from "react-native-track-player";
 import {
   getAyahNumberFromTrack,
   isQuranQueueTrack,
@@ -14,6 +13,7 @@ import {
   TRACK_PLAYER_PROGRESS_UPDATE_INTERVAL_MS,
   useTrackPlayerProgress,
 } from "./useTrackPlayerProgress";
+import { useActiveTrackPolled } from "./useTrackPlayerPolled";
 
 const DEFAULT_DEBUG_LOG_INTERVAL_MS = 1000;
 
@@ -27,7 +27,7 @@ export const useAyahSync = ({
   debugLogIntervalMs = DEFAULT_DEBUG_LOG_INTERVAL_MS,
   onHighlightChange,
 }: UseAyahSyncOptions): UseAyahSyncReturn => {
-  const activeTrack = useActiveTrack();
+  const activeTrack = useActiveTrackPolled(progressUpdateIntervalMs);
   const progress = useTrackPlayerProgress(progressUpdateIntervalMs);
   const lastHighlightRef = useRef<number | null>(null);
   const lastDebugLogRef = useRef({

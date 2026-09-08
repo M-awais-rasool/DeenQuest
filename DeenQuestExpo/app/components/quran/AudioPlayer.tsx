@@ -10,11 +10,7 @@ import {
 } from "react-native";
 import { AnimatedPressable, TactilePressable } from "../ui";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react-native";
-import TrackPlayer, {
-  State,
-  usePlaybackState,
-  type Progress,
-} from "react-native-track-player";
+import TrackPlayer, { State, type Progress } from "react-native-track-player";
 import { theme } from "../../theme/themes";
 import type {
   QuranAyah,
@@ -23,6 +19,17 @@ import type {
 } from "../../store/services/api";
 import { setupQuranPlayer } from "../../services/trackPlayer";
 import { buildQuranAyahTracks } from "./quranTrack";
+import { usePlaybackStatePolled } from "../../hooks/useTrackPlayerPolled";
+import { TRACK_PLAYER_PROGRESS_UPDATE_INTERVAL_MS } from "../../hooks/useTrackPlayerProgress";
+
+const describeAudioError = (err: unknown, verb: "start" | "seek") => {
+  const e = err as { code?: string; message?: string };
+  const detail = e?.message ?? (typeof err === "string" ? err : "");
+  if (!detail) return `Audio could not ${verb}.`;
+  return e?.code
+    ? `Audio could not ${verb} (${e.code}): ${detail}`
+    : `Audio could not ${verb}: ${detail}`;
+};
 
 interface Props {
   surah: QuranSurahDetail;
@@ -42,13 +49,6 @@ const formatTime = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
-const getPlaybackStateValue = (state: unknown) => {
-  if (state && typeof state === "object" && "state" in state) {
-    return (state as { state?: State }).state;
-  }
-  return state as State | undefined;
-};
-
 export const AudioPlayer = ({
   surah,
   ayahs,
@@ -62,7 +62,9 @@ export const AudioPlayer = ({
   const [error, setError] = useState<string | null>(null);
   const [isPreparing, setIsPreparing] = useState(false);
   const [progressTrackWidth, setProgressTrackWidth] = useState(0);
-  const playbackState = getPlaybackStateValue(usePlaybackState());
+  const playbackState = usePlaybackStatePolled(
+    TRACK_PLAYER_PROGRESS_UPDATE_INTERVAL_MS,
+  );
   const isCurrentRef = useRef(false);
   const prevQueueIdRef = useRef(queueId);
 
@@ -113,8 +115,9 @@ export const AudioPlayer = ({
         await TrackPlayer.add(ayahTracks);
       }
       await TrackPlayer.play();
-    } catch {
-      setError("Audio could not start.");
+    } catch (err) {
+      console.error("[quran audio] playback failed", err);
+      setError(describeAudioError(err, "start"));
     } finally {
       setIsPreparing(false);
     }
@@ -137,8 +140,9 @@ export const AudioPlayer = ({
       try {
         setError(null);
         await TrackPlayer.seekTo(nextPosition);
-      } catch {
-        setError("Audio could not seek.");
+      } catch (err) {
+        console.error("[quran audio] seek failed", err);
+        setError(describeAudioError(err, "seek"));
       }
     },
     [canSeek, progress.duration, progressTrackWidth],

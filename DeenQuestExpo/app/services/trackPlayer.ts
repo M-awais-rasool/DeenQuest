@@ -20,6 +20,9 @@ export const setupQuranPlayer = async () => {
         await TrackPlayer.setupPlayer({
           autoHandleInterruptions: true,
           minBuffer: 15,
+          maxBuffer: 50,
+          playBuffer: 2.5,
+          backBuffer: 0,
         });
       } catch (error) {
         if (!isAlreadySetupError(error)) {
