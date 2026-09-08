@@ -61,21 +61,33 @@ export function LearningPathContent() {
   const [streakOpen, setStreakOpen] = useState(false);
   const [streakOrigin, setStreakOrigin] = useState<StreakOrigin | null>(null);
 
-  const sections = useMemo(
-    () => [
-      ...buildSections(
-        qaidaLevels.data?.data ?? [],
-        qaidaEntry.courseType,
-        qaidaEntry.palette,
-      ),
-      ...buildSections(
-        namazLevels.data?.data ?? [],
-        namazEntry.courseType,
-        namazEntry.palette,
-      ),
-    ],
-    [qaidaLevels.data, namazLevels.data, qaidaEntry, namazEntry],
-  );
+  const sections = useMemo(() => {
+    // The path is one sequence, so it unlocks like one. The API scopes levels
+    // to a course and opens each course's first level, which is right for a
+    // course on its own but wrong here: with the courses laid end to end it
+    // put an open Namaz level next to a Qaida level the reader had not reached
+    // yet. A course stays shut until the one before it is finished, and only
+    // the screen that chains them can decide that.
+    const chained = [qaidaEntry, namazEntry].map((entry, i) => {
+      const levels = (i === 0 ? qaidaLevels : namazLevels).data?.data ?? [];
+      return { entry, levels };
+    });
+
+    let previousFinished = true;
+    return chained.flatMap(({ entry, levels }) => {
+      const gated = previousFinished
+        ? levels
+        : levels.map((level) => ({ ...level, status: "locked" as const }));
+
+      // Judged on what the API actually said, not on the locks just applied.
+      previousFinished =
+        previousFinished &&
+        levels.length > 0 &&
+        levels.every((level) => level.status === "completed");
+
+      return buildSections(gated, entry.courseType, entry.palette);
+    });
+  }, [qaidaLevels.data, namazLevels.data, qaidaEntry, namazEntry]);
 
   const xp = progressRes?.data?.xp ?? 0;
   const streak = progressRes?.data?.current_streak ?? 0;

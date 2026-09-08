@@ -93,6 +93,14 @@ export const s = StyleSheet.create({
     alignItems: "center",
     width: NODE_SIZE + 100,
   },
+  nodeStack: {
+    // Holds the glow and the animated face on top of each other. Sized to the
+    // glow, which is the widest of the two.
+    width: NODE_SIZE + 20,
+    height: NODE_SIZE + NODE_DEPTH + 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   touchableArea: {
     // Sized to the widest layer inside it, not to the node face. The glow
     // (NODE_SIZE + 20) and the progress ring (NODE_SIZE + 12) are both larger

@@ -140,20 +140,28 @@ export const LevelNode = memo(function LevelNode({
       ]}
     >
       <View style={[s.nodeWrapper, { transform: [{ translateX: offset }] }]}>
-        <Animated.View
-          style={{
-            transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }],
-          }}
-        >
-          <TouchableOpacity
-            onPress={onPress}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            disabled={isLocked}
-            activeOpacity={1}
-            style={s.touchableArea}
+        {/* The glow sits outside the animated view on purpose. Android loses a
+            view's rounded background when an ancestor carries a natively
+            driven transform, and the pulse below is exactly that — so the glow
+            drew as a hard-edged square, on the one status that pulses and no
+            other. Out here it keeps its circle, and the face still pulses over
+            it. */}
+        <View style={s.nodeStack}>
+          <View style={[s.nodeBase, { backgroundColor: config.baseColor }]} />
+
+          <Animated.View
+            style={{
+              transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }],
+            }}
           >
-            <View style={[s.nodeBase, { backgroundColor: config.baseColor }]} />
+            <TouchableOpacity
+              onPress={onPress}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              disabled={isLocked}
+              activeOpacity={1}
+              style={s.touchableArea}
+            >
 
             <View
               style={[s.nodeBottom, { backgroundColor: config.bottomBg }]}
@@ -195,10 +203,11 @@ export const LevelNode = memo(function LevelNode({
                 />
               )}
             </Animated.View>
-          </TouchableOpacity>
+            </TouchableOpacity>
 
-          <TreasureBadge courseLevel={level.course_level || level.id} />
-        </Animated.View>
+            <TreasureBadge courseLevel={level.course_level || level.id} />
+          </Animated.View>
+        </View>
 
         <Text
           style={[s.nodeLabel, isLocked && s.nodeLabelLocked]}
