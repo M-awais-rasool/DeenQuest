@@ -108,7 +108,12 @@ export const SectionHeader = memo(function SectionHeader({
 
 const s = StyleSheet.create({
   wrap: {
-    backgroundColor: theme.colors.background,
+    // Transparent on purpose. This band used to be painted in the page colour,
+    // which cost nothing while the page was flat — but with a backdrop behind
+    // it, it cut a bare rectangle across the screen exactly where the card
+    // sits. The banner is a sibling above the list, not a layer over it, so
+    // nothing ever scrolls underneath and it has no need of a ground.
+    backgroundColor: "transparent",
     paddingTop: 8,
     paddingBottom: 6,
     paddingHorizontal: 16,
