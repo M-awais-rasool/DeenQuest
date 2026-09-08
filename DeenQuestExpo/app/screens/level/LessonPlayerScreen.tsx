@@ -165,14 +165,9 @@ export function LessonPlayerScreen() {
           coachInsightId,
         });
       } else {
+        // Only ask for the next lesson here. The fade back in waits for React
+        // to have rendered it — see the effect below.
         setCurrentIndex((prev) => prev + 1);
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }).start(() => {
-          advancingRef.current = false;
-        });
       }
     });
   }, [
@@ -185,6 +180,25 @@ export function LessonPlayerScreen() {
     navigation,
     fadeAnim,
   ]);
+
+  // Fade in only once the next lesson is on screen. Starting it in the same
+  // tick as setCurrentIndex ran the animation against content React had not
+  // committed yet: while consecutive lessons shared a component that went
+  // unnoticed, because React updated it in place — but as soon as the type
+  // changed, the old component unmounted and the new one mounted at its own
+  // height, with its own entrance animation, in the middle of the fade. That
+  // is the blink. Here the new lesson is laid out while the view is still
+  // transparent, and only then revealed.
+  useEffect(() => {
+    if (!advancingRef.current) return;
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      advancingRef.current = false;
+    });
+  }, [currentIndex, fadeAnim]);
 
   const handleClose = useCallback(() => {
     navigation.goBack();
