@@ -94,8 +94,16 @@ export const s = StyleSheet.create({
     width: NODE_SIZE + 100,
   },
   touchableArea: {
-    width: NODE_SIZE,
-    height: NODE_SIZE + NODE_DEPTH,
+    // Sized to the widest layer inside it, not to the node face. The glow
+    // (NODE_SIZE + 20) and the progress ring (NODE_SIZE + 12) are both larger
+    // than the face, and a child that spills outside its parent gets clipped
+    // on Android the moment that parent is promoted to its own layer — which
+    // is exactly what the appear and pulse animations do. Clipping a circle to
+    // a smaller box leaves straight edges, so the glow rendered as a rectangle
+    // on some nodes and a circle on others, with nothing in the styles to
+    // explain it. Leave the extra room and nothing is ever cut.
+    width: NODE_SIZE + 20,
+    height: NODE_SIZE + NODE_DEPTH + 20,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -110,14 +118,21 @@ export const s = StyleSheet.create({
     width: NODE_SIZE,
     height: NODE_SIZE,
     borderRadius: NODE_SIZE / 2,
-    top: NODE_DEPTH,
+    // The face is centred in a container that grew by 20, so it now sits 10
+    // lower; the depth face follows it to keep the same overlap.
+    top: NODE_DEPTH + 10,
   },
   progressArcContainer: {
     position: "absolute",
     width: NODE_SIZE + 12,
     height: NODE_SIZE + 12,
     borderRadius: (NODE_SIZE + 12) / 2,
-    overflow: "hidden",
+    // No `overflow: "hidden"`. The ring inside is exactly this size, so there
+    // is nothing to clip — and on Android a rounded box that clips its
+    // children falls back to clipping against the bounding rectangle, which
+    // painted the ring's fill as a hard-edged square behind the node. It only
+    // showed on levels that were part-finished, which is the one state that
+    // draws this ring, so it looked random.
   },
   progressArc: {
     position: "absolute",

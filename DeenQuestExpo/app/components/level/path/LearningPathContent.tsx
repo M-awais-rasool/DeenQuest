@@ -23,7 +23,6 @@ import { LevelNode } from "../map";
 
 import { PathTopBar } from "./PathTopBar";
 import { ActiveSectionBanner } from "./ActiveSectionBanner";
-import { CourseHeader } from "./CourseHeader";
 import { SectionDivider } from "./SectionDivider";
 import { COURSE_CATALOG, courseEntry } from "./courseCatalog";
 import { StreakPopup, type StreakOrigin } from "./StreakPopup";
@@ -156,17 +155,7 @@ export function LearningPathContent() {
       [selectedLevelId, handleNodePress, handleStart],
     );
 
-  const renderSectionHeader = useCallback(
-    ({ section }: { section: PathSection }) =>
-      // A course's first section carries the band that names it; the rest just
-      // need the gap.
-      section.index === 0 ? (
-        <CourseHeader section={section} />
-      ) : (
-        <View style={s.sectionGap} />
-      ),
-    [],
-  );
+  const renderSectionHeader = useCallback(() => <View style={s.sectionGap} />, []);
 
   const renderSectionFooter = useCallback(
     ({ section }: { section: PathSection }) => (
