@@ -1,15 +1,14 @@
 import type { LevelWithStatus, CourseType } from "../../../store/services/api";
-import type { SectionColors } from "./sectionColors";
+import type { SectionColors } from "../map/constants";
 
 /** Roll-up status of a whole section, derived from its levels. */
 export type SectionStatus = "locked" | "active" | "completed";
 
 /**
- * A contiguous run of levels (10 by default) under one banner.
- *
- * The path itself no longer groups levels this way — it is one continuous
- * road — but the rewards and certificates screens still present progress in
- * sections, so the model outlived the list it was shaped for.
+ * One section of the learning path: a contiguous run of levels (10 by
+ * default) presented under a single banner. The shape matches what
+ * `SectionList` expects (`data` holds the rows), with extra metadata used by
+ * the header, checkpoint and node coloring.
  */
 export interface PathSection {
   /** Stable list key. */
@@ -28,6 +27,12 @@ export interface PathSection {
   total: number;
   completed: number;
   courseType: CourseType;
-  /** The levels in this section. */
+  /** The levels in this section — `SectionList` renders these as rows. */
   data: LevelWithStatus[];
+}
+
+/** A position inside the sectioned list (used for auto-scroll). */
+export interface PathLocation {
+  sectionIndex: number;
+  itemIndex: number;
 }

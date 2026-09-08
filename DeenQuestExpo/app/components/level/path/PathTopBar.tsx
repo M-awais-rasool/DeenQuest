@@ -1,36 +1,24 @@
 import React, { memo, useRef } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ChevronDown, Flame } from "lucide-react-native";
-
-import { WORLD, type WorldFamily } from "./worldTheme";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Flame, Zap } from "lucide-react-native";
+import { theme } from "../../../theme/themes";
 import type { StreakOrigin } from "./StreakPopup";
 
-/**
- * Menu button, the course the learner is inside, and the streak.
- *
- * The course chip is centred rather than left-aligned because it is the one
- * control here that changes what the whole screen shows — the mockup gives it
- * the middle of the bar and a badge, and treats the streak as a counter off to
- * the side rather than a peer.
- */
+interface PathTopBarProps {
+  /** Title of the course the reader is currently scrolled into. */
+  title: string;
+  streak: number;
+  xp: number;
+  onStreakPress?: (origin: StreakOrigin) => void;
+}
+
 export const PathTopBar = memo(function PathTopBar({
   title,
-  badge,
   streak,
-  family,
+  xp,
   onStreakPress,
-  onCoursesPress,
-}: {
-  title: string;
-  /** Single letter in the chip's badge. */
-  badge: string;
-  streak: number;
-  family: WorldFamily;
-  onStreakPress?: (origin: StreakOrigin) => void;
-  onCoursesPress?: (origin: StreakOrigin) => void;
-}) {
+}: PathTopBarProps) {
   const streakRef = useRef<View>(null);
-  const coursesRef = useRef<View>(null);
 
   const measureThen = (
     ref: React.RefObject<View | null>,
@@ -43,104 +31,114 @@ export const PathTopBar = memo(function PathTopBar({
   };
 
   return (
-    <View style={s.row}>
-      {/* The mockup opens with a hamburger. There is no drawer behind it in
-          this app, so the chip takes the full width instead of sitting next to
-          a control that does nothing. */}
-      <View style={s.chipHost}>
-        <Pressable
-          ref={coursesRef}
-          onPress={() => measureThen(coursesRef, onCoursesPress)}
-          style={({ pressed }) => [
-            s.chip,
-            { borderColor: family.chipBorder },
-            pressed && s.pressed,
-          ]}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={`Course: ${title}. Tap to switch.`}
-        >
-          <View style={[s.badge, { backgroundColor: family.chipBadge }]}>
-            <Text style={[s.badgeText, { color: family.chipBadgeInk }]}>{badge}</Text>
-          </View>
-          <Text style={s.chipTitle} numberOfLines={1}>
+    <View style={s.wrap}>
+      <View style={s.row}>
+        <View style={s.titleBlock}>
+          <Text style={s.label}>LEARNING PATH</Text>
+          <Text style={s.title} numberOfLines={1}>
             {title}
           </Text>
-          <ChevronDown size={14} color={family.chipBadge} strokeWidth={2.5} />
-        </Pressable>
-      </View>
+        </View>
 
-      <Pressable
-        ref={streakRef}
-        onPress={() => measureThen(streakRef, onStreakPress)}
-        style={({ pressed }) => [s.streak, pressed && s.pressed]}
-        hitSlop={6}
-        accessibilityRole="button"
-        accessibilityLabel={`${streak} day streak`}
-      >
-        <Flame size={14} color={WORLD.gold} fill={WORLD.gold} />
-        <Text style={s.streakValue}>{streak}</Text>
-      </Pressable>
+        <View style={s.stats}>
+          <Pressable
+            ref={streakRef}
+            onPress={() => measureThen(streakRef, onStreakPress)}
+            style={({ pressed }) => [s.stat, s.streakChip, pressed && s.statPressed]}
+            hitSlop={6}
+          >
+            <Flame
+              size={15}
+              color={theme.colors.secondary}
+              fill={theme.colors.secondary}
+            />
+            <Text style={[s.statValue, s.streakValue]}>{streak}</Text>
+          </Pressable>
+          <Stat
+            icon={
+              <Zap
+                size={15}
+                color={theme.colors.secondary}
+                fill={theme.colors.secondary}
+              />
+            }
+            value={xp}
+          />
+        </View>
+      </View>
     </View>
   );
 });
 
+function Stat({ icon, value }: { icon: React.ReactNode; value: number }) {
+  return (
+    <View style={s.stat}>
+      {icon}
+      <Text style={s.statValue}>{value}</Text>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
+  wrap: {
+    paddingHorizontal: 18,
+    paddingTop: 8,
+    paddingBottom: 12,
+    backgroundColor: theme.colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outline + "40",
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 18,
-    paddingTop: 8,
+    justifyContent: "space-between",
   },
-  chipHost: {
+  titleBlock: {
     flex: 1,
-    alignItems: "flex-start",
+    marginRight: 12,
   },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: WORLD.panel,
-    borderWidth: 1.5,
-    borderRadius: 16,
-    paddingVertical: 7,
-    paddingHorizontal: 13,
-  },
-  badge: {
-    width: 20,
-    height: 20,
-    borderRadius: 7,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: {
+  label: {
+    color: theme.colors.primary,
     fontSize: 10,
     fontFamily: "Nunito_900Black",
-    includeFontPadding: false,
+    letterSpacing: 2,
   },
-  chipTitle: {
-    color: WORLD.text,
-    fontSize: 16,
+  title: {
+    color: theme.colors.text,
+    fontSize: 22,
     fontFamily: "Nunito_900Black",
+    letterSpacing: 0.2,
+    marginTop: 2,
   },
-  streak: {
+  stats: {
+    flexDirection: "row",
+    gap: 7,
+  },
+  stat: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: WORLD.panel,
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: "rgba(239,182,90,0.4)",
-    borderRadius: 14,
-    paddingVertical: 8,
-    paddingHorizontal: 11,
+    borderColor: theme.colors.outline,
   },
-  streakValue: {
-    color: WORLD.gold,
-    fontSize: 13,
+  streakChip: {
+    backgroundColor: "#3A2F16",
+    borderWidth: 1.5,
+    borderColor: theme.colors.secondary,
+  },
+  statPressed: {
+    opacity: 0.6,
+  },
+  statValue: {
+    color: theme.colors.text,
+    fontSize: 14,
     fontFamily: "Nunito_900Black",
   },
-  pressed: {
-    opacity: 0.65,
+  streakValue: {
+    color: theme.colors.secondary,
   },
 });

@@ -1,4 +1,4 @@
-import type { SectionColors } from "./sectionColors";
+import type { SectionColors } from "../map/constants";
 
 export const QAIDA_PALETTE: SectionColors[] = [
   {

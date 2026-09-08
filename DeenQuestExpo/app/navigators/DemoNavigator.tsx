@@ -323,13 +323,7 @@ export function DemoNavigator() {
       tabBar={(props) => <CustomTabBar {...props} />}
     >
       <Tab.Screen name="HomeScreen" component={HomeScreen} />
-      <Tab.Screen
-        name="PathScreen"
-        component={LearnPathScreen}
-        // The learning path paints its own world under the bar and pads its
-        // scroll content itself.
-        options={{ sceneStyle: { backgroundColor: "transparent" } }}
-      />
+      <Tab.Screen name="PathScreen" component={LearnPathScreen} />
       <Tab.Screen name="QuranScreen" component={QuranHomeScreen} />
       <Tab.Screen name="RewardsScreen" component={RewardsScreen} />
       <Tab.Screen name="ProfileScreen" component={ProfileScreen} />
