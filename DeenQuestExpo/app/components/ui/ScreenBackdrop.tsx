@@ -47,6 +47,21 @@ const SPARKS: { x: string; y: string; r: number; o: number }[] = [
   { x: "74%", y: "86%", r: 1.7, o: 0.32 },
 ];
 
+/** The extra scatter the night sky gets, on top of SPARKS. */
+const STARS: { x: string; y: string; r: number; o: number }[] = [
+  { x: "24%", y: "6%", r: 1.3, o: 0.55 },
+  { x: "58%", y: "4%", r: 0.9, o: 0.4 },
+  { x: "38%", y: "17%", r: 1.5, o: 0.5 },
+  { x: "88%", y: "21%", r: 1.1, o: 0.45 },
+  { x: "13%", y: "26%", r: 0.9, o: 0.35 },
+  { x: "51%", y: "35%", r: 1.2, o: 0.3 },
+  { x: "79%", y: "43%", r: 0.9, o: 0.28 },
+  { x: "34%", y: "52%", r: 1.4, o: 0.3 },
+  { x: "63%", y: "64%", r: 1, o: 0.26 },
+  { x: "17%", y: "80%", r: 1.3, o: 0.28 },
+  { x: "86%", y: "76%", r: 0.9, o: 0.24 },
+];
+
 /**
  * One tile of the lattice: the eight-pointed star, drawn as two squares turned
  * against each other, with the small diamond that sits where four tiles meet.
@@ -61,16 +76,53 @@ const KHATIM = (() => {
   return { square, turned };
 })();
 
+/**
+ * A real crescent, as one shape: the outer arc, then an inner arc swung back
+ * across it. Cutting one disc out of another looked like a smudge here,
+ * because the disc doing the cutting had to be painted in the page colour and
+ * the ground behind it is not flat.
+ */
+const CRESCENT = (() => {
+  const R = 26;
+  const dx = 11;
+  const r = Math.sqrt(dx * dx + R * R);
+  return `M 0 ${-R} A ${R} ${R} 0 1 0 0 ${R} A ${r} ${r} 0 1 1 0 ${-R} Z`;
+})();
+
 export const ScreenBackdrop = memo(function ScreenBackdrop({
   /** Dial the whole thing up or down without touching the layers. */
   intensity = 1,
+  /**
+   * "quiet" is the ground under a screen that is being read.
+   * "night" adds the sky the app already draws elsewhere — a crescent and a
+   *  scatter of stars — for a screen that is looked at rather than read.
+   */
+  variant = "quiet",
 }: {
   intensity?: number;
+  variant?: "quiet" | "night";
 }) {
   const k = Math.max(0, Math.min(intensity, 2));
+  const night = variant === "night";
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {night && (
+        // Placed as its own layer so it can be positioned in percentages
+        // while the path inside it stays in plain coordinates. It sits left of
+        // the nodes and below the header — the one band nothing else crosses.
+        <View style={s.moon} pointerEvents="none">
+          <Svg width={70} height={70} viewBox="-35 -35 70 70">
+            <Path
+              d={CRESCENT}
+              fill={GLOW_WARM}
+              opacity={0.16 * k}
+              transform="rotate(-24)"
+            />
+          </Svg>
+        </View>
+      )}
+
       <Svg width="100%" height="100%">
         <Defs>
           <Pattern
@@ -137,6 +189,23 @@ export const ScreenBackdrop = memo(function ScreenBackdrop({
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#cool)" />
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#warm)" />
 
+        {night && (
+          <>
+            {/* A crescent, drawn the way the app icon draws one: a disc with a
+                second disc taken out of it, so the horns come to a point. */}
+            {STARS.map((p, i) => (
+              <Circle
+                key={`star-${i}`}
+                cx={p.x}
+                cy={p.y}
+                r={p.r}
+                fill={i % 4 === 0 ? GLOW_WARM : STAR}
+                opacity={p.o * 0.55 * k}
+              />
+            ))}
+          </>
+        )}
+
         {SPARKS.map((p, i) => (
           <Circle
             key={i}
@@ -150,6 +219,10 @@ export const ScreenBackdrop = memo(function ScreenBackdrop({
       </Svg>
     </View>
   );
+});
+
+const s = StyleSheet.create({
+  moon: { position: "absolute", left: "11%", top: "26%" },
 });
 
 export default ScreenBackdrop;

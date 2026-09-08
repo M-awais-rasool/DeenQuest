@@ -19,6 +19,7 @@ import type { LevelWithStatus } from "../../../store/services/api";
 import type { AppStackParamList } from "../../../navigators/navigationTypes";
 import { theme } from "../../../theme/themes";
 import { Loader } from "../../Loader";
+import { ScreenBackdrop } from "../../ui";
 import { LevelNode } from "../map";
 
 import { PathTopBar } from "./PathTopBar";
@@ -190,6 +191,9 @@ export function LearningPathContent() {
 
   return (
     <View style={s.container}>
+      {/* Behind the path, taking no layout and no touches. */}
+      <ScreenBackdrop variant="night" intensity={1.25} />
+
       <PathTopBar
         title={course.title}
         streak={streak}
