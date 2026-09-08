@@ -63,17 +63,37 @@ const STARS: { x: string; y: string; r: number; o: number }[] = [
 ];
 
 /**
- * One tile of the lattice: the eight-pointed star, drawn as two squares turned
- * against each other, with the small diamond that sits where four tiles meet.
+ * One tile of the lattice.
+ *
+ * The eight-pointed star itself, as a single outline — points at one radius,
+ * valleys at another, closed. Drawing it as a square with a diamond laid over
+ * it is the same figure on paper, but on screen at 3% you read two shapes
+ * rather than one star, and it comes out looking like a grid of boxes.
+ *
+ * The small diamonds sit where four tiles meet, so the field reads as one
+ * lattice instead of a row of separate badges.
  */
 const KHATIM = (() => {
   const c = TILE / 2;
-  const r = TILE * 0.27;
-  const square = `M ${c - r} ${c - r} H ${c + r} V ${c + r} H ${c - r} Z`;
-  const turned = `M ${c} ${c - r * 1.32} L ${c + r * 1.32} ${c} L ${c} ${
-    c + r * 1.32
-  } L ${c - r * 1.32} ${c} Z`;
-  return { square, turned };
+  const R = TILE * 0.29;
+  const r = R * 0.545;
+
+  let star = "";
+  for (let i = 0; i < 16; i++) {
+    const rad = i % 2 === 0 ? R : r;
+    const a = (Math.PI / 8) * i - Math.PI / 2;
+    const x = (c + Math.cos(a) * rad).toFixed(2);
+    const y = (c + Math.sin(a) * rad).toFixed(2);
+    star += `${i === 0 ? "M" : "L"} ${x} ${y} `;
+  }
+  star += "Z";
+
+  const j = TILE * 0.055;
+  const joint = (x: number, y: number) =>
+    `M ${x} ${y - j} L ${x + j} ${y} L ${x} ${y + j} L ${x - j} ${y} Z`;
+  const joints = [joint(0, 0), joint(TILE, 0), joint(0, TILE), joint(TILE, TILE)].join(" ");
+
+  return { star, joints };
 })();
 
 /**
@@ -112,11 +132,18 @@ export const ScreenBackdrop = memo(function ScreenBackdrop({
         // while the path inside it stays in plain coordinates. It sits left of
         // the nodes and below the header — the one band nothing else crosses.
         <View style={s.moon} pointerEvents="none">
-          <Svg width={70} height={70} viewBox="-35 -35 70 70">
+          <Svg width={96} height={96} viewBox="-48 -48 96 96">
+            <Defs>
+              <RadialGradient id="moonHalo" cx="50%" cy="50%" r="50%">
+                <Stop offset="0" stopColor={GLOW_WARM} stopOpacity={0.09} />
+                <Stop offset="1" stopColor={GLOW_WARM} stopOpacity={0} />
+              </RadialGradient>
+            </Defs>
+            <Circle cx={0} cy={0} r={44} fill="url(#moonHalo)" opacity={k} />
             <Path
               d={CRESCENT}
               fill={GLOW_WARM}
-              opacity={0.16 * k}
+              opacity={0.26 * k}
               transform="rotate(-24)"
             />
           </Svg>
@@ -133,9 +160,9 @@ export const ScreenBackdrop = memo(function ScreenBackdrop({
             height={TILE}
             patternUnits="userSpaceOnUse"
           >
-            <G stroke={STAR} strokeWidth={1} fill="none">
-              <Path d={KHATIM.square} opacity={0.032 * k} />
-              <Path d={KHATIM.turned} opacity={0.032 * k} />
+            <G stroke={STAR} fill="none">
+              <Path d={KHATIM.star} strokeWidth={1} opacity={0.042 * k} />
+              <Path d={KHATIM.joints} strokeWidth={0.9} opacity={0.03 * k} />
             </G>
             <Circle
               cx={TILE / 2}
@@ -145,25 +172,6 @@ export const ScreenBackdrop = memo(function ScreenBackdrop({
               opacity={0.05 * k}
             />
           </Pattern>
-
-          {/* The lattice is held back where the reading happens. It comes in
-              below the title and stays quietly under the body. */}
-          <LinearGradient id="latticeFade" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#fff" stopOpacity={0} />
-            <Stop offset="0.22" stopColor="#fff" stopOpacity={0.55} />
-            <Stop offset="0.55" stopColor="#fff" stopOpacity={1} />
-            <Stop offset="1" stopColor="#fff" stopOpacity={0.7} />
-          </LinearGradient>
-
-          <Mask id="latticeMask">
-            <Rect
-              x="0"
-              y="0"
-              width="100%"
-              height="100%"
-              fill="url(#latticeFade)"
-            />
-          </Mask>
 
           <RadialGradient id="cool" cx="78%" cy="6%" r="82%">
             <Stop offset="0" stopColor={STAR} stopOpacity={0.1 * k} />
@@ -184,7 +192,6 @@ export const ScreenBackdrop = memo(function ScreenBackdrop({
           width="100%"
           height="100%"
           fill="url(#khatim)"
-          mask="url(#latticeMask)"
         />
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#cool)" />
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#warm)" />
@@ -222,7 +229,7 @@ export const ScreenBackdrop = memo(function ScreenBackdrop({
 });
 
 const s = StyleSheet.create({
-  moon: { position: "absolute", left: "11%", top: "26%" },
+  moon: { position: "absolute", left: "9%", top: "25%" },
 });
 
 export default ScreenBackdrop;
