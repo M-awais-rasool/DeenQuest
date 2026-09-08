@@ -1,6 +1,10 @@
 import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import { View, Text, StyleSheet, ScrollView, Animated } from "react-native";
-import { AnimatedPressable, TactilePressable } from "../../components/ui";
+import {
+  AnimatedPressable,
+  ScreenBackdrop,
+  TactilePressable,
+} from "../../components/ui";
 import { X, ChevronRight } from "lucide-react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -217,6 +221,10 @@ export function LessonPlayerScreen() {
   return (
     <ScreenWrapper innerStyle={{ flex: 1 }}>
       <View style={s.container}>
+        {/* Sits behind everything and takes no layout or touches, so the
+            lesson above it is untouched. */}
+        <ScreenBackdrop />
+
         {/* Top bar */}
         <View style={s.topBar}>
           <AnimatedPressable
