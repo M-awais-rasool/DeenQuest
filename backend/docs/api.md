@@ -117,6 +117,25 @@ Notes:
 - Jobs survive a redeploy when Redis is configured. Without Redis the queue is
   in-process and is lost on restart.
 
+## Closed testing (admin)
+
+Answers "who has actually opened the app, and when" during a Play Store closed
+test — without shipping a new build. Every authenticated request the installed
+app already makes is counted, at most one write per user per five minutes.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/v1/admin/testers?days=14` | Admin | Day-by-day grid, one row per tester (1–90 days, default 14) |
+| GET | `/api/v1/admin/testers/roster` | Admin | The invited tester list |
+| POST | `/api/v1/admin/testers/roster` | Admin | Add addresses — `{"emails": ["a@x.com, b@x.com"], "replace": true}` |
+| DELETE | `/api/v1/admin/testers/roster/:email` | Admin | Drop one tester |
+
+- `emails` is split on commas, spaces and newlines, so the Play Console list can
+  be pasted in as-is; `replace: true` makes the posted list authoritative.
+- A tester on the roster with no account has never signed in — the app was
+  installed but never opened, or opened with a different Google account.
+- Days are bucketed in `TESTER_TIMEZONE` (default UTC), not the viewer's zone.
+
 ## Notes
 
 - JWT token is sent as `Authorization: Bearer <token>` header

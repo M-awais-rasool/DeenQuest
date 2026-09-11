@@ -68,6 +68,12 @@ type Config struct {
 
 	CORSAllowedOrigins string
 
+	// TesterTimezone is the IANA zone the closed-testing report buckets days
+	// in. Google Play's fourteen-day window is judged in your own day, not
+	// UTC, so a tester who opens the app at 2am Karachi time should land on
+	// that day's column rather than the one before it.
+	TesterTimezone string
+
 	// AdminEmails is a comma-separated allowlist of user emails permitted to
 	// access the /admin endpoints, and the only path to the ADMIN role: whoever
 	// signs in with a listed address through any provider is granted it, and
@@ -111,6 +117,7 @@ func Load() (*Config, error) {
 		CoachLLMEnabled:      getBool("COACH_LLM_ENABLED", false),
 		CORSAllowedOrigins:   getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
 		AdminEmails:          getEnv("ADMIN_EMAILS", ""),
+		TesterTimezone:       getEnv("TESTER_TIMEZONE", "UTC"),
 
 		GoogleWebClientID:     getEnv("GOOGLE_WEB_CLIENT_ID", ""),
 		GoogleIOSClientID:     getEnv("GOOGLE_IOS_CLIENT_ID", ""),
@@ -249,6 +256,21 @@ func (c *Config) AdminEmailList() []string {
 		emails = append(emails, v)
 	}
 	return emails
+}
+
+// TesterLocation resolves TESTER_TIMEZONE. An unknown zone is reported rather
+// than fatal: the tester report is a reporting convenience, and UTC days are a
+// perfectly usable fallback for it.
+func (c *Config) TesterLocation() (*time.Location, error) {
+	name := strings.TrimSpace(c.TesterTimezone)
+	if name == "" {
+		return time.UTC, nil
+	}
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		return time.UTC, fmt.Errorf("invalid TESTER_TIMEZONE %q: %w", name, err)
+	}
+	return loc, nil
 }
 
 func (c *Config) GoogleClientIDs() []string {

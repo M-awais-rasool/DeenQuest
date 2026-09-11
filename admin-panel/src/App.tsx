@@ -13,6 +13,7 @@ import SettingsPage from "./pages/SettingsPage";
 import LearningAgentPage from "./pages/LearningAgentPage";
 import HifzPlansPage from "./pages/HifzPlansPage";
 import HifzSettingsPage from "./pages/HifzSettingsPage";
+import TestersPage from "./pages/TestersPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -72,6 +73,7 @@ export default function App() {
                 <Route path="/learning-agent" element={<LearningAgentPage />} />
                 <Route path="/themes" element={<ThemesPage />} />
                 <Route path="/rewards" element={<RewardsPage />} />
+                <Route path="/testers" element={<TestersPage />} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/audit-logs" element={<AuditLogPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

@@ -66,6 +66,7 @@ func TestRetentionRulesAreWellFormed(t *testing.T) {
 		"duels":               true,
 		"group_challenges":    true,
 		"coach_events":        true,
+		"user_activity_days":  true,
 	}
 
 	seen := map[string]bool{}

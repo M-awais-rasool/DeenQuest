@@ -394,3 +394,57 @@ export interface HifzChallengeCatalogEntry {
   description: string;
   config: HifzChallengeConfig;
 }
+
+/* ── Closed testing ───────────────────────────────────────────────────────── */
+
+export interface TesterDay {
+  date: string;
+  active: boolean;
+  requests: number;
+  first_seen?: string;
+  last_seen?: string;
+}
+
+export interface TesterRow {
+  email: string;
+  name: string;
+  user_id?: string;
+  in_roster: boolean;
+  has_account: boolean;
+  note?: string;
+  client?: string;
+  joined_at?: string;
+  first_seen?: string;
+  last_seen?: string;
+  active_today: boolean;
+  /** -1 when the tester has never opened the app. */
+  days_since_seen: number;
+  days_active: number;
+  current_streak: number;
+  total_requests: number;
+  days: TesterDay[];
+}
+
+export interface TesterSummary {
+  roster: number;
+  signed_in: number;
+  never_opened: number;
+  active_today: number;
+  missing_today: number;
+  perfect_window: number;
+}
+
+export interface TesterReport {
+  timezone: string;
+  today: string;
+  days: string[];
+  summary: TesterSummary;
+  testers: TesterRow[];
+}
+
+export interface TesterRosterEntry {
+  email: string;
+  name?: string;
+  note?: string;
+  added_at: string;
+}

@@ -3,6 +3,10 @@ package main
 import (
 	"log"
 
+	// The report buckets days in TESTER_TIMEZONE, and the distroless runtime
+	// image is not guaranteed to carry a zoneinfo database.
+	_ "time/tzdata"
+
 	"github.com/chawais/deenquest/backend/internal/app"
 	"github.com/chawais/deenquest/backend/internal/platform/config"
 )
