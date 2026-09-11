@@ -7,6 +7,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "deenquest-admin",
   "compatibility_date": "2026-09-01",
+  // The API's CORS allowlist names this origin and nothing else, so the panel
+  // only works from here — the workers.dev URL is for build checks, not use.
+  "routes": [
+    { "pattern": "admin.deenquest.online", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./dist",
     // Every route below / is React Router's, not a file on disk. Without this,
