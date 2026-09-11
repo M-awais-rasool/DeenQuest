@@ -189,10 +189,17 @@ This puts an identity check *in front of* your application code — an auth bug 
 
 **Workers & Pages → Create → Pages → Connect to Git.**
 
-| Site | Root directory | Build command | Output | Environment variable |
+| Site | Root directory | Build command | Output | Environment variables |
 |---|---|---|---|---|
 | Landing | `LandingPage` | `npm run build` | `dist` | — |
-| Admin | `admin-panel` | `npm run build` | `dist` | `VITE_API_BASE_URL=https://api.deenquest.online` |
+| Admin | `admin-panel` | `npm run build` | `dist` | `VITE_API_BASE_URL=https://api.deenquest.online` and `VITE_GOOGLE_CLIENT_ID` (the same Web client ID the API lists in `GOOGLE_WEB_CLIENT_ID`) |
+
+Both are needed. `admin-panel/.env` is not committed, so a build without
+`VITE_GOOGLE_CLIENT_ID` renders a sign-in button that cannot sign anyone in.
+
+Then add `https://admin.deenquest.online` to that Web client's **Authorized
+JavaScript origins** in the Google Cloud console, or Google will refuse the
+sign-in from the deployed panel.
 
 ---
 
