@@ -42,8 +42,10 @@ async function refreshSession(): Promise<string | null> {
 
   try {
     // A bare axios call: going through `api` would recurse into this
-    // interceptor on failure.
-    const res = await axios.post("/api/v1/auth/refresh", {
+    // interceptor on failure. It still needs the API origin spelled out — a
+    // relative path resolves against the Pages domain, where nothing answers,
+    // so every deployed reload dropped the session and asked for a new login.
+    const res = await axios.post(`${API_ORIGIN}/api/v1/auth/refresh`, {
       refresh_token: refreshToken,
     });
 
