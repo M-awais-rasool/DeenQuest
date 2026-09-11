@@ -1,0 +1,17 @@
+// Cloudflare Workers Builds reads this when it runs `wrangler deploy`.
+//
+// There is no Worker script here — only `assets`, which is how Cloudflare
+// serves a static site now that new Git-connected projects are Workers rather
+// than Pages. The panel is a plain Vite SPA; nothing runs at the edge.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "deenquest-admin",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // Every route below / is React Router's, not a file on disk. Without this,
+    // opening https://admin.deenquest.online/testers directly — or reloading
+    // on it — returns Cloudflare's 404 instead of the app.
+    "not_found_handling": "single-page-application"
+  }
+}
