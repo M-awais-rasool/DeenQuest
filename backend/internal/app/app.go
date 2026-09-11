@@ -108,6 +108,10 @@ func (a *App) Run() error {
 		return fmt.Errorf("server forced to shutdown: %w", err)
 	}
 
+	// Requests held back by the activity recorder's write window, written now
+	// that no more are arriving.
+	a.modules.TesterRecorder.Flush(shutdownCtx)
+
 	logger.Info("DeenQuest API stopped")
 	return nil
 }

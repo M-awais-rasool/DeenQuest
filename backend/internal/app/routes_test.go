@@ -29,6 +29,8 @@ import (
 	recitationhttp "github.com/chawais/deenquest/backend/internal/recitation/interfaces/http"
 	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
 	rewardhttp "github.com/chawais/deenquest/backend/internal/reward/interfaces/http"
+	testerapp "github.com/chawais/deenquest/backend/internal/tester/application"
+	testerhttp "github.com/chawais/deenquest/backend/internal/tester/interfaces/http"
 )
 
 func TestLearningRoutesRegister(t *testing.T) {
@@ -64,6 +66,7 @@ func TestLearningRoutesRegister(t *testing.T) {
 	rewardhttp.RegisterAdminRoutes(admin, rewardhttp.NewAdminHandler(rewardSvc))
 	contenthttp.RegisterAdminRoutes(admin, contenthttp.NewHandler())
 	analyticshttp.RegisterAdminRoutes(admin, analyticshttp.NewHandler(nil))
+	testerhttp.RegisterAdminRoutes(admin, testerhttp.NewAdminHandler(testerapp.NewService(nil, nil)))
 	coachhttp.RegisterAdminRoutes(admin, coachhttp.NewAdminHandler(coachapp.NewAdminService(nil)))
 	hifzhttp.RegisterAdminRoutes(admin, hifzhttp.NewAdminHandler(
 		hifzapp.NewAdminService(nil, nil, hifzSvc)))
@@ -98,6 +101,10 @@ func TestLearningRoutesRegister(t *testing.T) {
 		"GET /api/v1/admin/rewards/:id",
 		"PUT /api/v1/admin/rewards/:id",
 		"DELETE /api/v1/admin/rewards/:id",
+		"GET /api/v1/admin/testers",
+		"GET /api/v1/admin/testers/roster",
+		"POST /api/v1/admin/testers/roster",
+		"DELETE /api/v1/admin/testers/roster/:email",
 		"GET /api/v1/admin/learning/stats",
 		"GET /api/v1/admin/learning/curriculum",
 

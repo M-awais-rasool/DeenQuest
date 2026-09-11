@@ -23,6 +23,10 @@ x-api: &api
   env_file: [/run/deenquest/prod.env]
   environment:
     GOMAXPROCS: "1"
+    # Which day a tester's session lands on in /admin/testers. Not a secret, so
+    # it lives here rather than in the sops env; override it there if the
+    # testing group ever stops being in Pakistan.
+    TESTER_TIMEZONE: ${TESTER_TIMEZONE:-Asia/Karachi}
   read_only: true
   tmpfs:
     - /tmp:size=64m,noexec,nosuid,nodev

@@ -49,6 +49,9 @@ import (
 	rewardapp "github.com/chawais/deenquest/backend/internal/reward/application"
 	rewardinfra "github.com/chawais/deenquest/backend/internal/reward/infrastructure"
 	rewardhttp "github.com/chawais/deenquest/backend/internal/reward/interfaces/http"
+	testerapp "github.com/chawais/deenquest/backend/internal/tester/application"
+	testerinfra "github.com/chawais/deenquest/backend/internal/tester/infrastructure"
+	testerhttp "github.com/chawais/deenquest/backend/internal/tester/interfaces/http"
 	userapp "github.com/chawais/deenquest/backend/internal/user/application"
 	userinfra "github.com/chawais/deenquest/backend/internal/user/infrastructure"
 	userhttp "github.com/chawais/deenquest/backend/internal/user/interfaces/http"
@@ -97,6 +100,12 @@ type Modules struct {
 	HifzHandler      *hifzhttp.Handler
 	HifzAdminHandler *hifzhttp.AdminHandler
 
+	// tester — who is actually opening the build that is in closed testing.
+	// The recorder rides every authenticated request; nothing in the app had to
+	// change to feed it.
+	TesterRecorder     *testerapp.Recorder
+	TesterAdminHandler *testerhttp.AdminHandler
+
 	// notification — push tokens, Expo delivery, job log, smart rules engine.
 	NotificationService *notifapp.Service
 	NotificationHandler *notifhttp.Handler
@@ -139,6 +148,10 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		return nil, fmt.Errorf("init notification token repository: %w", err)
 	}
 	jobRepo := notifinfra.NewJobLogRepository(db)
+	testerRepo, err := testerinfra.NewMongoRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("init tester repository: %w", err)
+	}
 	refreshRepo, err := authinfra.NewMongoRefreshTokenRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("init refresh token repository: %w", err)
@@ -248,6 +261,13 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 			zap.Bool("llm_enabled", cfg.CoachLLMEnabled && infra.Gemini != nil))
 	}
 
+	testerLoc, err := cfg.TesterLocation()
+	if err != nil {
+		logger.Warn("tester report falling back to UTC days", zap.Error(err))
+	}
+	testerService := testerapp.NewService(testerRepo, testerLoc)
+	testerRecorder := testerapp.NewRecorder(testerRepo, testerLoc, 0)
+
 	// --- optional Gemini wiring (features also work without it) ---
 	if infra.Gemini != nil {
 		recitationService.SetCoach(infra.Gemini) // pronunciation/tajweed coach
@@ -289,6 +309,9 @@ func buildModules(cfg *config.Config, infra *Infra) (*Modules, error) {
 		HifzAdminService: hifzAdminService,
 		HifzHandler:      hifzhttp.NewHandler(hifzService),
 		HifzAdminHandler: hifzhttp.NewAdminHandler(hifzAdminService),
+
+		TesterRecorder:     testerRecorder,
+		TesterAdminHandler: testerhttp.NewAdminHandler(testerService),
 
 		NotificationService: notificationService,
 		NotificationHandler: notifhttp.NewHandler(notificationService),

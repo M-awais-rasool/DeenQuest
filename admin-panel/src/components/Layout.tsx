@@ -15,6 +15,7 @@ import {
   CpuChipIcon,
   BookOpenIcon,
   AdjustmentsHorizontalIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { type ReactNode, useState } from "react";
 
@@ -48,6 +49,7 @@ const navGroups: {
   {
     heading: "System",
     items: [
+      { label: "Play Testers", path: "/testers", icon: UserGroupIcon },
       { label: "Events", path: "/events", icon: CalendarDaysIcon },
       {
         label: "Audit Logs",

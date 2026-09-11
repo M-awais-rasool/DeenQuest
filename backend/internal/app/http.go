@@ -25,6 +25,7 @@ import (
 	quranhttp "github.com/chawais/deenquest/backend/internal/quran/interfaces/http"
 	recitationhttp "github.com/chawais/deenquest/backend/internal/recitation/interfaces/http"
 	rewardhttp "github.com/chawais/deenquest/backend/internal/reward/interfaces/http"
+	testerhttp "github.com/chawais/deenquest/backend/internal/tester/interfaces/http"
 	userhttp "github.com/chawais/deenquest/backend/internal/user/interfaces/http"
 )
 
@@ -95,6 +96,10 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	if infra.Redis != nil {
 		authed.Use(middleware.RateLimitByUser(infra.Redis, 300, time.Minute, "api"))
 	}
+	// Last in the chain, so a request that never reached a handler never counts
+	// as someone opening the app. This is what makes the closed-testing report
+	// work against builds that are already in the store.
+	authed.Use(testerhttp.Track(m.TesterRecorder))
 
 	admin := v1.Group("/admin")
 	admin.Use(middleware.JWTAuth(infra.JWT), middleware.AdminOnly(cfg.AdminEmailList()))
@@ -130,6 +135,7 @@ func buildRouter(cfg *config.Config, infra *Infra, m *Modules) *gin.Engine {
 	rewardhttp.RegisterAdminRoutes(admin, m.RewardAdminHandler)
 	contenthttp.RegisterAdminRoutes(admin, m.ContentHandler)
 	analyticshttp.RegisterAdminRoutes(admin, m.AnalyticsHandler)
+	testerhttp.RegisterAdminRoutes(admin, m.TesterAdminHandler)
 	hifzhttp.RegisterAdminRoutes(admin, m.HifzAdminHandler)
 	if m.CoachAdminHandler != nil {
 		coachhttp.RegisterAdminRoutes(admin, m.CoachAdminHandler)

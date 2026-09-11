@@ -41,6 +41,12 @@ var retentionRules = []retentionRule{
 		why:        "each row carries a full transcript; nothing reads them after the attempt is scored",
 	},
 	{
+		collection: "user_activity_days",
+		field:      "created_at",
+		keep:       180 * 24 * time.Hour,
+		why:        "one row per user per day, read only by the closed-testing report and its 90-day ceiling",
+	},
+	{
 		collection: "user_quests",
 		field:      "created_at",
 		keep:       60 * 24 * time.Hour,
