@@ -34,7 +34,7 @@
           "image": "./assets/logo/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#0B1517"
+          "backgroundColor": "#011E23"
         }
       ],
       "expo-secure-store"

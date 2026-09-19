@@ -102,11 +102,11 @@ export function FeedbackBanner({
         <View
           style={[
             s.bannerIcon,
-            { backgroundColor: isCorrect ? "#2CC9B5" : "#F0838C" },
+            { backgroundColor: isCorrect ? "#2FE3D0" : "#F0838C" },
           ]}
         >
           {isCorrect ? (
-            <CheckCircle2 size={22} color="#06302B" />
+            <CheckCircle2 size={22} color="#04262B" />
           ) : (
             <XCircle size={22} color="#3A1024" />
           )}
@@ -183,8 +183,8 @@ const s = StyleSheet.create({
     borderWidth: 1,
   },
   bannerCorrect: {
-    backgroundColor: "#123B34",
-    borderColor: "#2CC9B5",
+    backgroundColor: "#0C3F46",
+    borderColor: "#2FE3D0",
   },
   bannerWrong: {
     backgroundColor: "#3A1E24",

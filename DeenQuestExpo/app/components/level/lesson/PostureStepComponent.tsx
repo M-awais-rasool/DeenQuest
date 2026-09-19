@@ -207,7 +207,7 @@ const s = StyleSheet.create({
   },
   rowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: "#1E3238",
+    borderBottomColor: "#123840",
   },
   rowCurrent: {
     backgroundColor: BLUE_TINT,

@@ -27,7 +27,7 @@ export function DuaCardComponent({
       {/* ── Dua card ─────────────────────────────────────────────────────── */}
       <FadeInView>
         <LinearGradient
-          colors={["#241E10", "#16272B"]}
+          colors={["#241E10", "#03222C"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0.4, y: 1 }}
           style={s.card}

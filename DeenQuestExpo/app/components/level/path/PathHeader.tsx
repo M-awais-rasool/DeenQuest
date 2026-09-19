@@ -91,7 +91,7 @@ const s = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: "rgba(58, 45, 20, 0.62)",
     borderWidth: 1.5,
-    borderColor: "rgba(239, 182, 90, 0.55)",
+    borderColor: "rgba(242, 195, 107, 0.55)",
   },
   pressed: {
     opacity: 0.65,

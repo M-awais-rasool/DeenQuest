@@ -14,7 +14,7 @@ import { useAppSelector } from "../../../store/hooks";
 const T = CERT_TIMELINE;
 
 const CONFETTI = [
-  { top: 96, right: 60, w: 8, h: 12, rotate: "-28deg", color: "#2CC9B5" },
+  { top: 96, right: 60, w: 8, h: 12, rotate: "-28deg", color: "#2FE3D0" },
   { top: 210, right: 36, w: 8, h: 8, round: true, color: "#F27FB2" },
   { top: 250, left: 30, w: 9, h: 13, rotate: "40deg", color: "#A78BFA" },
 ] as const;

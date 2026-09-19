@@ -51,17 +51,18 @@ export function getNodeOffset(index: number): number {
   return direction * SWAY_AMPLITUDE * SWAY[index % SWAY.length];
 }
 
-export const PATH_CYAN = "#2FE3D0";
+export const PATH_CYAN = theme.colors.primary;
 export const PATH_CYAN_BRIGHT = "#8FFFF3";
 export const PATH_CYAN_DEEP = "#04343A";
-export const PATH_NIGHT = "#011E23";
+/** The night the scene sits on — the app's own, shared with every screen. */
+export const PATH_NIGHT = theme.colors.background;
 export const PATH_GOLD = "#F2E273";
 
-export const LEVEL_GREEN = "#2CC9B5"; // Main popup bg, node border
-export const LEVEL_GREEN_LIGHT = "#2CC9B5"; // 3D node top
-export const LEVEL_GREEN_DARK = "#1B9484"; // 3D node bottom shadow
-export const LEVEL_GREEN_DEEP = "#06302B"; // Button text on white
-export const LEVEL_GREEN_GLOW = "rgba(44, 201, 181, 0.15)"; // Subtle node glow
+export const LEVEL_GREEN = theme.colors.primary; // Main popup bg, node border
+export const LEVEL_GREEN_LIGHT = theme.colors.primary; // node top
+export const LEVEL_GREEN_DARK = theme.colors.shadowGreen; // node bottom shadow
+export const LEVEL_GREEN_DEEP = theme.colors.onPrimary; // Button text on white
+export const LEVEL_GREEN_GLOW = theme.colors.primary15; // Subtle node glow
 
 export interface SectionColors {
   accent: string;
