@@ -1,13 +1,14 @@
+import { theme } from "../../../theme/themes";
 import type { SectionColors } from "../map/constants";
 
 export const QAIDA_PALETTE: SectionColors[] = [
   {
-    accent: "#2CC9B5",
-    light: "#2CC9B5",
-    base: "#2CC9B5",
-    dark: "#1B9484",
-    deep: "#06302B",
-    glow: "rgba(44, 201, 181, 0.15)",
+    accent: theme.colors.primary,
+    light: theme.colors.primary,
+    base: theme.colors.primary,
+    dark: theme.colors.shadowGreen,
+    deep: theme.colors.onPrimary,
+    glow: theme.colors.primary15,
   },
   // Sky
   {
@@ -58,12 +59,12 @@ export const QAIDA_PALETTE: SectionColors[] = [
 
 export const NAMAZ_PALETTE: SectionColors[] = [
   {
-    accent: "#EFB65A",
-    light: "#EFB65A",
-    base: "#EFB65A",
-    dark: "#C98F35",
-    deep: "#3A2A08",
-    glow: "rgba(239, 182, 90, 0.15)",
+    accent: theme.colors.secondary,
+    light: theme.colors.secondary,
+    base: theme.colors.secondary,
+    dark: theme.colors.goldDark,
+    deep: theme.colors.onSecondary,
+    glow: theme.colors.secondary15,
   },
   // Saffron
   {

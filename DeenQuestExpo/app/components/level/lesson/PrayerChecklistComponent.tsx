@@ -140,7 +140,7 @@ const s = StyleSheet.create({
   },
   rowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: "#1E3238",
+    borderBottomColor: "#123840",
   },
   rowCurrent: {
     backgroundColor: BLUE_TINT,
@@ -166,7 +166,7 @@ const s = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: "#2C464C",
+    borderColor: "#14545E",
     alignItems: "center",
     justifyContent: "center",
   },

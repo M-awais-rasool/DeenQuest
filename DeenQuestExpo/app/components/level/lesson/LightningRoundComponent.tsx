@@ -337,7 +337,7 @@ const s = StyleSheet.create({
   },
   dotPending: {
     borderWidth: 2,
-    borderColor: "#2C464C",
+    borderColor: "#14545E",
   },
 });
 

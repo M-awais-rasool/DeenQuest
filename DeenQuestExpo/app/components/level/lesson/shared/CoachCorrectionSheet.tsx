@@ -138,7 +138,7 @@ export function CoachCorrectionSheet({
           end={{ x: 0.7, y: 1 }}
           style={s.coachIcon}
         >
-          <Sparkles size={21} color="#06302B" strokeWidth={2} />
+          <Sparkles size={21} color="#04262B" strokeWidth={2} />
         </LinearGradient>
         <View style={{ flex: 1 }}>
           <View style={s.titleRow}>
@@ -219,7 +219,7 @@ const s = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "#0F2A2C",
+    backgroundColor: "#03222C",
     borderTopWidth: 2,
     borderTopColor: theme.colors.primary,
     borderTopLeftRadius: 34,
@@ -236,7 +236,7 @@ const s = StyleSheet.create({
     width: 130,
     height: 5,
     borderRadius: 3,
-    backgroundColor: "#1B9484",
+    backgroundColor: "#14A69B",
     alignSelf: "center",
     marginTop: 16,
   },
