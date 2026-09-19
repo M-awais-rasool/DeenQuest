@@ -1,13 +1,7 @@
-/**
- * The learning-path screen composition: one course at a time, rendered as a
- * section-based journey on top of the `../map` node primitives, with a course
- * selector and an animated course-switch transition.
- */
 export { LearningPathContent } from "./LearningPathContent";
-export { PathTopBar } from "./PathTopBar";
-export { SectionHeader } from "./SectionHeader";
-export { ActiveSectionBanner } from "./ActiveSectionBanner";
-export { SectionDivider } from "./SectionDivider";
+export { PathHeader } from "./PathHeader";
+export { CourseCard } from "./CourseCard";
+export { PathBackdrop } from "./PathBackdrop";
 export { StreakPopup, type StreakOrigin } from "./StreakPopup";
 export {
   buildSections,

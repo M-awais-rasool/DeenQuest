@@ -1,203 +1,182 @@
 import { StyleSheet } from "react-native";
-import { theme } from "../../../theme/themes";
-import { NODE_SIZE, NODE_DEPTH } from "./constants";
+import {
+  ACTIVE_NODE_SIZE,
+  BLOCK_H,
+  CIRCLE_CY,
+  CIRCLE_TOUCH,
+  ISLAND_H,
+  ISLAND_TOP,
+  ISLAND_W,
+  NODE_SIZE,
+  PATH_CYAN,
+  PILL_H,
+  PILL_TOP,
+  ROW_PITCH,
+  TROPHY_H,
+  TROPHY_TOP,
+  TROPHY_W,
+} from "./constants";
 
 export const s = StyleSheet.create({
-  scrollContent: {
-    backgroundColor: theme.colors.background,
-    paddingBottom: 40,
-  },
-  backBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginBottom: 14,
-    alignSelf: "flex-start",
-  },
-  backBtnText: {
-    color: theme.colors.primary,
-    fontSize: 15,
-    fontFamily: "Nunito_700Bold",
-  },
-  phaseHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 16,
-  },
-  phaseRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  phaseTitle: {
-    color: theme.colors.text,
-    fontSize: 20,
-    fontFamily: "Nunito_900Black",
-    letterSpacing: 0.3,
-  },
-  phaseSubtitle: {
-    color: theme.colors.textMuted,
-    fontSize: 13,
-    marginTop: 4,
-  },
-  summaryCard: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
-  summaryItem: { alignItems: "center" },
-  summaryValue: {
-    color: theme.colors.text,
-    fontSize: 18,
-    fontFamily: "Nunito_900Black",
-  },
-  summaryLabel: {
-    color: theme.colors.textMuted,
-    fontSize: 11,
-    marginTop: 2,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  summaryDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: theme.colors.outline,
-  },
-  summaryBar: {
-    height: 6,
-    backgroundColor: theme.colors.surfaceHigh,
-    borderRadius: 3,
-    marginTop: 14,
-    overflow: "hidden",
-  },
-  summaryBarFill: {
-    height: "100%",
-    backgroundColor: theme.colors.primary,
-    borderRadius: 3,
-  },
   nodeRow: {
     width: "100%",
     alignItems: "center",
-    paddingVertical: 20,
+    height: BLOCK_H,
+    // The islands are taller than the walk between them, so each one tucks a
+    // little under the one above — the same overlap the mockup has.
+    marginBottom: ROW_PITCH - BLOCK_H,
   },
-  nodeWrapper: {
+  block: {
+    width: ISLAND_W,
+    height: BLOCK_H,
     alignItems: "center",
-    width: NODE_SIZE + 100,
   },
-  nodeStack: {
-    // Holds the glow and the animated face on top of each other. Sized to the
-    // glow, which is the widest of the two.
-    width: NODE_SIZE + 20,
-    height: NODE_SIZE + NODE_DEPTH + 20,
+  island: {
+    position: "absolute",
+    top: ISLAND_TOP,
+    left: 0,
+    width: ISLAND_W,
+    height: ISLAND_H,
+  },
+  islandLocked: {
+    // The stretch of path you have not reached is lit less than where you are.
+    opacity: 0.82,
+  },
+  circleHolder: {
+    position: "absolute",
+    top: CIRCLE_CY - CIRCLE_TOUCH / 2,
+  },
+  circleTouch: {
+    // Sized to the halo rather than to the circle: a child that spills outside
+    // its parent is clipped the moment that parent is promoted to its own
+    // layer, which is exactly what the entrance and pulse animations do.
+    width: CIRCLE_TOUCH,
+    height: CIRCLE_TOUCH,
     alignItems: "center",
     justifyContent: "center",
   },
-  touchableArea: {
-    // Sized to the widest layer inside it, not to the node face. The glow
-    // (NODE_SIZE + 20) and the progress ring (NODE_SIZE + 12) are both larger
-    // than the face, and a child that spills outside its parent gets clipped
-    // on Android the moment that parent is promoted to its own layer — which
-    // is exactly what the appear and pulse animations do. Clipping a circle to
-    // a smaller box leaves straight edges, so the glow rendered as a rectangle
-    // on some nodes and a circle on others, with nothing in the styles to
-    // explain it. Leave the extra room and nothing is ever cut.
-    width: NODE_SIZE + 20,
-    height: NODE_SIZE + NODE_DEPTH + 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  nodeBase: {
-    position: "absolute",
-    width: NODE_SIZE + 20,
-    height: NODE_SIZE + 20,
-    borderRadius: (NODE_SIZE + 20) / 2,
-  },
-  nodeBottom: {
-    position: "absolute",
+  circle: {
     width: NODE_SIZE,
     height: NODE_SIZE,
     borderRadius: NODE_SIZE / 2,
-    // The face is centred in a container that grew by 20, so it now sits 10
-    // lower; the depth face follows it to keep the same overlap.
-    top: NODE_DEPTH + 10,
-  },
-  progressArcContainer: {
-    position: "absolute",
-    width: NODE_SIZE + 12,
-    height: NODE_SIZE + 12,
-    borderRadius: (NODE_SIZE + 12) / 2,
-    // No `overflow: "hidden"`. The ring inside is exactly this size, so there
-    // is nothing to clip — and on Android a rounded box that clips its
-    // children falls back to clipping against the bounding rectangle, which
-    // painted the ring's fill as a hard-edged square behind the node. It only
-    // showed on levels that were part-finished, which is the one state that
-    // draws this ring, so it looked random.
-  },
-  progressArc: {
-    position: "absolute",
-    width: NODE_SIZE + 12,
-    height: NODE_SIZE + 12,
-    borderRadius: (NODE_SIZE + 12) / 2,
-    borderWidth: 5,
-    borderColor: "transparent",
-    borderTopColor: theme.colors.secondary,
-    borderRightColor: theme.colors.secondary,
-    transform: [{ rotate: "-45deg" }],
-  },
-  nodeTop: {
-    width: NODE_SIZE,
-    height: NODE_SIZE,
-    borderRadius: NODE_SIZE / 2,
-    borderWidth: 3,
-    justifyContent: "center",
     alignItems: "center",
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
+    justifyContent: "center",
   },
-  nodeLabel: {
-    color: theme.colors.text,
+  circleActive: {
+    width: ACTIVE_NODE_SIZE,
+    height: ACTIVE_NODE_SIZE,
+    borderRadius: ACTIVE_NODE_SIZE / 2,
+    shadowColor: PATH_CYAN,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 14,
+    elevation: 12,
+  },
+  face: {
+    // Rounded rather than clipped by the circle: `overflow: "hidden"` on the
+    // circle would also cut off the glow it casts.
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 999,
+  },
+  haloLayer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  halo: {
+    position: "absolute",
+    borderRadius: 999,
+  },
+  trophyIsland: {
+    position: "absolute",
+    top: TROPHY_TOP,
+    width: TROPHY_W,
+    height: TROPHY_H,
+  },
+  trophyLocked: {
+    opacity: 0.55,
+  },
+  label: {
+    position: "absolute",
+    top: PILL_TOP,
+    minWidth: ISLAND_W * 0.58,
+    height: PILL_H,
+    borderRadius: PILL_H / 2,
+    borderWidth: 1.5,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  labelActive: {
+    shadowColor: PATH_CYAN,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  labelText: {
+    fontSize: 14,
+    fontFamily: "Nunito_800ExtraBold",
+    letterSpacing: 0.2,
+  },
+  bubble: {
+    position: "absolute",
+    top: -32,
+    alignItems: "center",
+  },
+  bubbleHigh: {
+    // The cup is taller than a circle, so its flag has to clear it.
+    top: -48,
+  },
+  bubbleBody: {
+    backgroundColor: PATH_CYAN,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    shadowColor: PATH_CYAN,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  bubbleText: {
+    color: "#04343A",
     fontSize: 12,
-    fontFamily: "Nunito_700Bold",
-    marginTop: 8,
-    textAlign: "center",
-    maxWidth: NODE_SIZE + 60,
+    fontFamily: "Nunito_900Black",
+    letterSpacing: 1,
   },
-  nodeLabelLocked: {
-    color: theme.colors.textMuted,
-    opacity: 0.5,
+  bubbleTail: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 7,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderTopColor: PATH_CYAN,
+  },
+  connector: StyleSheet.absoluteFillObject,
+  dot: {
+    position: "absolute",
+    backgroundColor: PATH_CYAN,
+    shadowColor: PATH_CYAN,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 5,
   },
   progressPill: {
-    backgroundColor: theme.colors.primary18,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    position: "absolute",
+    top: PILL_TOP + PILL_H + 6,
+    backgroundColor: "rgba(47, 227, 208, 0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(47, 227, 208, 0.4)",
+    paddingHorizontal: 9,
+    paddingVertical: 2,
     borderRadius: 999,
-    marginTop: 5,
   },
   progressText: {
-    color: theme.colors.primary,
+    color: PATH_CYAN,
     fontSize: 11,
     fontFamily: "Nunito_800ExtraBold",
-  },
-  treasureBadge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    backgroundColor: theme.colors.secondary20,
-    padding: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors.secondary35,
   },
 });

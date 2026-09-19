@@ -85,14 +85,8 @@ const TAB_CONFIG: {
 const INACTIVE_FG = "#5F7E7C";
 const TRANSPARENT = "rgba(0,0,0,0)";
 
-/** Room the label needs when the pill is expanded ("Rewards" is widest). */
 const LABEL_MAX_WIDTH = 64;
 
-/**
- * One animated tab. Two animation channels that never share a node:
- *  - `focus`   (JS driver)     → pill colours, label reveal (width/opacity/x)
- *  - `bounce*` (native driver) → icon scale-pop + little hop on activation
- */
 const TabItem = memo(function TabItem({
   conf,
   isFocused,
@@ -111,7 +105,6 @@ const TabItem = memo(function TabItem({
   const mounted = useRef(false);
 
   useEffect(() => {
-    // Pill expand/collapse + colour fade (layout props → JS driver).
     Animated.timing(focus, {
       toValue: isFocused ? 1 : 0,
       duration: 260,
@@ -119,8 +112,6 @@ const TabItem = memo(function TabItem({
       useNativeDriver: false,
     }).start();
 
-    // Icon celebration on activation only (skip the initial mount so the
-    // restored tab doesn't pop on app start).
     if (isFocused && mounted.current) {
       bounceScale.setValue(1);
       bounceY.setValue(0);
@@ -247,20 +238,8 @@ const TabItem = memo(function TabItem({
   );
 });
 
-/**
- * How much vertical room the floating bar occupies above the safe area.
- * `ScreenWrapper` reserves this so ordinary screens do not run underneath it.
- */
 export const TAB_BAR_HEIGHT = 64;
 
-/**
- * Room a tab screen must leave at the bottom of its scrollable content.
- *
- * The bar floats over the screen, so content runs underneath it — that is what
- * makes it read as a pill on top of the app rather than a slab beside it. The
- * cost is that the last row of any list would sit behind it, so every tab
- * screen ends its scroll content with this much space.
- */
 export function useTabBarSpace() {
   const insets = useSafeAreaInsets();
   return TAB_BAR_HEIGHT + Math.max(insets.bottom, 14);
@@ -313,11 +292,6 @@ export function DemoNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,
-        // No bottom padding here on purpose. Padding the scene stops the
-        // screen short of the bar and leaves a flat band under it, which makes
-        // the bar look like a slab on some tabs and a floating pill on others.
-        // Screens run to the bottom edge and reserve the room inside their own
-        // scroll content instead — see useTabBarSpace.
         sceneStyle: { backgroundColor: theme.colors.background },
       }}
       tabBar={(props) => <CustomTabBar {...props} />}
@@ -333,10 +307,6 @@ export function DemoNavigator() {
 
 const styles = StyleSheet.create({
   wrapper: {
-    // Floating, not in flow, and transparent: the bar is a pill over the
-    // screen rather than a band beside it. That is what lets a screen paint
-    // its own background all the way to the bottom edge instead of stopping
-    // at a strip of a different colour.
     position: "absolute",
     left: 0,
     right: 0,
@@ -349,16 +319,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "rgba(16,29,32,0.96)",
+    backgroundColor: "#07242A",
     borderWidth: 1,
-    borderColor: theme.colors.outline,
+    borderColor: "rgba(74, 134, 142, 0.45)",
     borderRadius: 26,
     paddingVertical: 9,
     paddingHorizontal: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.5,
-    shadowRadius: 34,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.55,
+    shadowRadius: 26,
     elevation: 12,
   },
   tab: {

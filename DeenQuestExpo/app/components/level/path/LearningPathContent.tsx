@@ -17,14 +17,14 @@ import {
 } from "../../../store/services/api";
 import type { LevelWithStatus } from "../../../store/services/api";
 import type { AppStackParamList } from "../../../navigators/navigationTypes";
+import { useTabBarSpace } from "../../../navigators/DemoNavigator";
 import { theme } from "../../../theme/themes";
 import { Loader } from "../../Loader";
-import { ScreenBackdrop } from "../../ui";
-import { LevelNode } from "../map";
+import { LevelNode, PATH_CYAN, PATH_NIGHT } from "../map";
 
-import { PathTopBar } from "./PathTopBar";
-import { ActiveSectionBanner } from "./ActiveSectionBanner";
-import { SectionDivider } from "./SectionDivider";
+import { PathBackdrop } from "./PathBackdrop";
+import { PathHeader } from "./PathHeader";
+import { CourseCard } from "./CourseCard";
 import { COURSE_CATALOG, courseEntry } from "./courseCatalog";
 import { StreakPopup, type StreakOrigin } from "./StreakPopup";
 import { buildSections, findActiveLocation } from "./sections";
@@ -38,12 +38,8 @@ const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
 export function LearningPathContent() {
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const tabBarSpace = useTabBarSpace();
 
-  // Every course lives on this one screen, one after the other. The levels
-  // endpoint is scoped to a single course — omitting course_type returns the
-  // default rather than all of them — so each course is fetched on its own and
-  // the sections are laid end to end. COURSE_CATALOG is a module constant, so
-  // this is a fixed number of hooks on every render.
   const [qaidaEntry, namazEntry] = COURSE_CATALOG;
   const qaidaLevels = useGetLevelsQuery({ courseType: qaidaEntry.courseType });
   const namazLevels = useGetLevelsQuery({ courseType: namazEntry.courseType });
@@ -52,23 +48,12 @@ export function LearningPathContent() {
   const { data: progressRes } = useGetProgressQuery();
 
   const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
-  // Which section the user is currently scrolled into — drives the pinned
-  // banner and the course name in the header. Tracked by key, not by index:
-  // `index` counts sections within one course, so with every course on the
-  // list it is 0…n for Qaida and 0…n again for Namaz, and looking it up in the
-  // concatenated array would name a Qaida section while the reader is in Namaz.
   const [activeSectionKey, setActiveSectionKey] = useState<string | null>(null);
   // Streak popup state (origin = the chip it grows from).
   const [streakOpen, setStreakOpen] = useState(false);
   const [streakOrigin, setStreakOrigin] = useState<StreakOrigin | null>(null);
 
   const sections = useMemo(() => {
-    // The path is one sequence, so it unlocks like one. The API scopes levels
-    // to a course and opens each course's first level, which is right for a
-    // course on its own but wrong here: with the courses laid end to end it
-    // put an open Namaz level next to a Qaida level the reader had not reached
-    // yet. A course stays shut until the one before it is finished, and only
-    // the screen that chains them can decide that.
     const chained = [qaidaEntry, namazEntry].map((entry, i) => {
       const levels = (i === 0 ? qaidaLevels : namazLevels).data?.data ?? [];
       return { entry, levels };
@@ -90,6 +75,20 @@ export function LearningPathContent() {
     });
   }, [qaidaLevels.data, namazLevels.data, qaidaEntry, namazEntry]);
 
+  const walk = useMemo(() => {
+    let start = 0;
+    return sections.map((section) => {
+      const placed = { section, startIndex: start };
+      start += section.data.length;
+      return placed;
+    });
+  }, [sections]);
+
+  const startIndexOf = useCallback(
+    (key: string) => walk.find((w) => w.section.key === key)?.startIndex ?? 0,
+    [walk],
+  );
+
   const xp = progressRes?.data?.xp ?? 0;
   const streak = progressRes?.data?.current_streak ?? 0;
   const weekly = useMemo(
@@ -103,7 +102,11 @@ export function LearningPathContent() {
   }, []);
 
   const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: Array<{ section?: { key?: string } }> }) => {
+    ({
+      viewableItems,
+    }: {
+      viewableItems: Array<{ section?: { key?: string } }>;
+    }) => {
       const topKey = viewableItems[0]?.section?.key;
       if (typeof topKey === "string") setActiveSectionKey(topKey);
     },
@@ -111,6 +114,22 @@ export function LearningPathContent() {
 
   const listRef = useRef<SectionList<LevelWithStatus, PathSection>>(null);
   const didAutoScroll = useRef(false);
+
+  const scrollToActive = useCallback(
+    (animated: boolean) => {
+      const target = findActiveLocation(sections);
+      if (!target) return;
+      try {
+        listRef.current?.scrollToLocation({
+          sectionIndex: target.sectionIndex,
+          itemIndex: target.itemIndex,
+          viewPosition: 0.4,
+          animated,
+        });
+      } catch {}
+    },
+    [sections],
+  );
 
   useEffect(() => {
     if (didAutoScroll.current || sections.length === 0) return;
@@ -122,19 +141,9 @@ export function LearningPathContent() {
     didAutoScroll.current = true;
     // Smoothly scroll to where the user left off instead of snapping there —
     // the list briefly shows the top, then glides down to the active section.
-    const handle = setTimeout(() => {
-      try {
-        listRef.current?.scrollToLocation({
-          sectionIndex: target.sectionIndex,
-          itemIndex: target.itemIndex,
-          viewPosition: 0.4,
-          animated: true,
-        });
-      } catch {
-      }
-    }, 300);
+    const handle = setTimeout(() => scrollToActive(true), 300);
     return () => clearTimeout(handle);
-  }, [sections]);
+  }, [sections, scrollToActive]);
 
   const handleNodePress = useCallback((level: LevelWithStatus) => {
     if (level.status === "locked") return;
@@ -152,30 +161,34 @@ export function LearningPathContent() {
     [navigation],
   );
 
+  const lastSectionKey = sections[sections.length - 1]?.key;
+
   const renderItem: SectionListRenderItem<LevelWithStatus, PathSection> =
     useCallback(
-      ({ item, index, section }) => (
-        <LevelNode
-          level={item}
-          offsetIndex={section.startIndex + index}
-          appearIndex={Math.min(index, APPEAR_STAGGER_CAP)}
-          isSelected={selectedLevelId === item.id}
-          onPress={() => handleNodePress(item)}
-          onStart={() => handleStart(item)}
-          colors={section.colors}
-        />
-      ),
-      [selectedLevelId, handleNodePress, handleStart],
+      ({ item, index, section }) => {
+        const isSectionEnd = index === section.data.length - 1;
+        return (
+          <LevelNode
+            level={item}
+            offsetIndex={startIndexOf(section.key) + index}
+            appearIndex={Math.min(index, APPEAR_STAGGER_CAP)}
+            isSelected={selectedLevelId === item.id}
+            isLast={isSectionEnd && section.key === lastSectionKey}
+            isSectionEnd={isSectionEnd}
+            onPress={() => handleNodePress(item)}
+            onStart={() => handleStart(item)}
+            colors={section.colors}
+          />
+        );
+      },
+      [
+        selectedLevelId,
+        handleNodePress,
+        handleStart,
+        lastSectionKey,
+        startIndexOf,
+      ],
     );
-
-  const renderSectionHeader = useCallback(() => <View style={s.sectionGap} />, []);
-
-  const renderSectionFooter = useCallback(
-    ({ section }: { section: PathSection }) => (
-      <SectionDivider section={section} />
-    ),
-    [],
-  );
 
   const keyExtractor = useCallback(
     (item: LevelWithStatus) => String(item.id),
@@ -184,40 +197,38 @@ export function LearningPathContent() {
 
   const activeSection =
     sections.find((section) => section.key === activeSectionKey) ?? sections[0];
-  // The header names whichever course the reader has scrolled into.
-  const course = courseEntry(activeSection?.courseType ?? qaidaEntry.courseType);
+  const course = courseEntry(
+    activeSection?.courseType ?? qaidaEntry.courseType,
+  );
 
   if (isLoading) return <Loader fullScreen />;
 
   return (
     <View style={s.container}>
-      {/* Behind the path, taking no layout and no touches. */}
-      <ScreenBackdrop variant="night" intensity={1.25} />
+      <PathBackdrop bottomInset={tabBarSpace} />
 
-      <PathTopBar
+      <PathHeader streak={streak} onStreakPress={handleStreakPress} />
+
+      <CourseCard
         title={course.title}
-        streak={streak}
+        section={activeSection}
         xp={xp}
-        onStreakPress={handleStreakPress}
+        onPress={() => scrollToActive(true)}
       />
-
-      {activeSection && <ActiveSectionBanner section={activeSection} />}
 
       <SectionList
         ref={listRef}
         sections={sections}
         renderItem={renderItem}
-        renderSectionHeader={renderSectionHeader}
-        renderSectionFooter={renderSectionFooter}
         keyExtractor={keyExtractor}
         stickySectionHeadersEnabled={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={VIEWABILITY_CONFIG}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.content}
+        contentContainerStyle={[s.content, { paddingBottom: tabBarSpace + 20 }]}
         ListFooterComponent={PathFooter}
         ListEmptyComponent={ListEmpty}
-        removeClippedSubviews
+        removeClippedSubviews={false}
         initialNumToRender={12}
         maxToRenderPerBatch={10}
         windowSize={9}
@@ -230,7 +241,6 @@ export function LearningPathContent() {
         weekly={weekly}
         origin={streakOrigin}
       />
-
     </View>
   );
 }
@@ -238,7 +248,7 @@ export function LearningPathContent() {
 function PathFooter() {
   return (
     <View style={s.footer}>
-      <Sparkles size={16} color={theme.colors.primary} />
+      <Sparkles size={16} color={PATH_CYAN} />
       <Text style={s.footerText}>More levels are on the way</Text>
     </View>
   );
@@ -255,25 +265,21 @@ function ListEmpty() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: PATH_NIGHT,
   },
   content: {
-    paddingBottom: 48,
-  },
-  modalHost: {
-    flex: 1,
-  },
-  sectionGap: {
-    height: 16,
+    // Room at the top for the START flag above the first node. The bottom is
+    // set from the tab bar's own height, since the bar floats over the path.
+    paddingTop: 42,
   },
   footer: {
     alignItems: "center",
     gap: 8,
-    paddingTop: 20,
+    paddingTop: 28,
     paddingBottom: 12,
   },
   footerText: {
-    color: theme.colors.textMuted,
+    color: "#8FA8AE",
     fontSize: 12.5,
     fontFamily: "Nunito_700Bold",
   },

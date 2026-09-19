@@ -4,13 +4,58 @@ import type { LevelStatus } from "../../../store/services/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const NODE_SIZE = 72;
-export const NODE_DEPTH = 8;
+const ISLAND_ASPECT = 152 / 204;
+const CIRCLE_OF_ISLAND_W = 0.4706;
+const CIRCLE_CY_OF_ISLAND_H = 0.1842;
+const PILL_TOP_OF_ISLAND_H = 0.5066;
+
+export const NODE_SIZE = 58;
+export const ACTIVE_NODE_SIZE = 62;
+export const ISLAND_W = Math.round(NODE_SIZE / CIRCLE_OF_ISLAND_W);
+export const ISLAND_H = Math.round(ISLAND_W * ISLAND_ASPECT);
+export const CIRCLE_CY = Math.round(ACTIVE_NODE_SIZE / 2);
+export const ISLAND_TOP = Math.round(
+  CIRCLE_CY - CIRCLE_CY_OF_ISLAND_H * ISLAND_H,
+);
+export const BLOCK_H = ISLAND_TOP + ISLAND_H;
+export const PILL_TOP = Math.round(
+  ISLAND_TOP + PILL_TOP_OF_ISLAND_H * ISLAND_H,
+);
+export const PILL_H = 29;
+
+const TROPHY_ART = {
+  w: 192,
+  h: 180,
+  islandOfW: 178 / 192,
+  islandTopOfH: 52 / 180,
+};
+const ISLAND_OF_W = 184 / 204;
+const ISLAND_TOP_OF_H = 8 / 152;
+
+export const TROPHY_W = Math.round(
+  (ISLAND_W * ISLAND_OF_W) / TROPHY_ART.islandOfW,
+);
+export const TROPHY_H = Math.round(TROPHY_W * (TROPHY_ART.h / TROPHY_ART.w));
+export const TROPHY_TOP = Math.round(
+  ISLAND_TOP + ISLAND_TOP_OF_H * ISLAND_H - TROPHY_ART.islandTopOfH * TROPHY_H,
+);
+
+export const CIRCLE_TOUCH = ACTIVE_NODE_SIZE + 30;
+export const ROW_PITCH = 98;
+
+const SWAY_AMPLITUDE = SCREEN_WIDTH * 0.205;
+const SWAY = [0.62, 1, 1.06, 1, 0.98, 0.7];
 
 export function getNodeOffset(index: number): number {
-  const amplitude = SCREEN_WIDTH * 0.22;
-  return Math.sin((index * Math.PI) / 3) * amplitude;
+  const direction = index % 2 === 0 ? -1 : 1;
+  return direction * SWAY_AMPLITUDE * SWAY[index % SWAY.length];
 }
+
+export const PATH_CYAN = "#2FE3D0";
+export const PATH_CYAN_BRIGHT = "#8FFFF3";
+export const PATH_CYAN_DEEP = "#04343A";
+export const PATH_NIGHT = "#011E23";
+export const PATH_GOLD = "#F2E273";
 
 export const LEVEL_GREEN = "#2CC9B5"; // Main popup bg, node border
 export const LEVEL_GREEN_LIGHT = "#2CC9B5"; // 3D node top
@@ -18,24 +63,12 @@ export const LEVEL_GREEN_DARK = "#1B9484"; // 3D node bottom shadow
 export const LEVEL_GREEN_DEEP = "#06302B"; // Button text on white
 export const LEVEL_GREEN_GLOW = "rgba(44, 201, 181, 0.15)"; // Subtle node glow
 
-/**
- * A full shade set that gives one section its own color identity. Every
- * section on the learning path picks one of these from the palette, and the
- * node primitives derive their 3-D faces, borders and glow from it so a whole
- * section reads as a single colored stretch of the journey (Duolingo-style).
- */
 export interface SectionColors {
-  /** Banner / accent ring color. */
   accent: string;
-  /** Lighter shade — the raised top face of a 3-D node. */
   light: string;
-  /** Mid shade — node border and popup background. */
   base: string;
-  /** Darker shade — the node's bottom (depth) face. */
   dark: string;
-  /** Deepest shade — high-contrast text on white (button labels). */
   deep: string;
-  /** Translucent halo painted behind an active node. */
   glow: string;
 }
 
@@ -50,53 +83,56 @@ export const DEFAULT_SECTION_COLORS: SectionColors = {
 };
 
 export interface NodeVisual {
-  topBg: string;
-  bottomBg: string;
+  face: [string, string];
   borderColor: string;
+  borderWidth: number;
   iconColor: string;
-  baseColor: string;
-  progressColor: string;
+  halo: string | null;
+  labelFill: string;
+  labelBorder: string;
+  labelText: string;
 }
 
-/** Locked nodes are always neutral grey regardless of their section color. */
-const LOCKED_VISUAL: NodeVisual = {
-  topBg: theme.colors.surfaceHigh,
-  bottomBg: theme.colors.surfaceLow,
-  borderColor: theme.colors.outline,
-  iconColor: theme.colors.textMuted,
-  baseColor: "transparent",
-  progressColor: "transparent",
-};
-
-/**
- * Resolve the 3-D node appearance for a level given its status and the color
- * identity of the section it belongs to. Unlocked states share one tinted
- * look so progress within a section feels continuous.
- */
 export function nodeVisual(
   status: LevelStatus,
   colors: SectionColors = DEFAULT_SECTION_COLORS,
 ): NodeVisual {
-  if (status === "locked") return LOCKED_VISUAL;
-  // The active node is always gold with a pulsing glow (mockup C1), no matter
-  // which section hue surrounds it — it's the "you are here" marker.
-  if (status === "in_progress") {
+  if (status === "locked") {
     return {
-      topBg: "#EFB65A",
-      bottomBg: "#C98F35",
-      borderColor: "#EFB65A",
-      iconColor: "#3A2A08",
-      baseColor: "rgba(239, 182, 90, 0.2)",
-      progressColor: theme.colors.secondary,
+      face: ["#16353F", "#05101A"],
+      borderColor: "rgba(139, 183, 196, 0.30)",
+      borderWidth: 1.5,
+      iconColor: "#9FB3BE",
+      halo: null,
+      labelFill: "rgba(9, 24, 34, 0.74)",
+      labelBorder: "rgba(130, 168, 182, 0.32)",
+      labelText: "#C4D5DE",
     };
   }
+
+  if (status === "completed") {
+    return {
+      face: [hexToRgba(colors.dark, 0.95), hexToRgba(colors.deep, 0.95)],
+      borderColor: hexToRgba(colors.accent, 0.6),
+      borderWidth: 2,
+      iconColor: colors.accent,
+      // No halo: only the stop you are on gets to glow.
+      halo: null,
+      labelFill: "rgba(6, 34, 36, 0.8)",
+      labelBorder: hexToRgba(colors.accent, 0.5),
+      labelText: "#DDF3EF",
+    };
+  }
+
   return {
-    topBg: colors.light,
-    bottomBg: colors.dark,
-    borderColor: colors.base,
-    iconColor: colors.deep,
-    baseColor: colors.glow,
-    progressColor: theme.colors.secondary,
+    face: ["#4BF0DE", "#0E8F92"],
+    borderColor: PATH_CYAN_BRIGHT,
+    borderWidth: 4,
+    iconColor: theme.colors.white,
+    halo: "rgba(47, 227, 208, 0.18)",
+    labelFill: "rgba(4, 42, 46, 0.88)",
+    labelBorder: PATH_CYAN,
+    labelText: theme.colors.white,
   };
 }
 
