@@ -322,7 +322,7 @@ export function CertificateFrame({
 
 const s = StyleSheet.create({
   frameOuter: {
-    backgroundColor: "#0F1D20",
+    backgroundColor: "#02171D",
     borderRadius: 8,
     padding: FRAME_PADDING,
   },

@@ -34,8 +34,8 @@ const SEVERITY_STYLE: Record<
   { label: string; bg: string; fg: string }
 > = {
   high: { label: "HIGH", bg: "#3A1E24", fg: "#F0838C" },
-  med: { label: "MED", bg: "#3A2F16", fg: "#EFB65A" },
-  low: { label: "LOW", bg: "#123B34", fg: "#5EE0CE" },
+  med: { label: "MED", bg: "#3A2F16", fg: "#F2C36B" },
+  low: { label: "LOW", bg: "#0C3F46", fg: "#5EE0CE" },
 };
 
 function AnimatedBar({
@@ -236,14 +236,14 @@ export function CoachInsightsScreen({ navigation }: Props) {
                       <View style={[s.barFill, s.barNoData]} />
                     ) : isBest ? (
                       <LinearGradient
-                        colors={["#5EE0CE", "#2CC9B5"]}
+                        colors={["#5EE0CE", "#2FE3D0"]}
                         style={s.barFill}
                       />
                     ) : (
                       <View
                         style={[
                           s.barFill,
-                          { backgroundColor: strong ? "#2CC9B5" : "#1E4A44" },
+                          { backgroundColor: strong ? "#2FE3D0" : "#1E4A44" },
                         ]}
                       />
                     )}
@@ -278,7 +278,7 @@ export function CoachInsightsScreen({ navigation }: Props) {
         {hasWin && (
           <FadeInView delay={300 + coach.insights.length * 110 + 120}>
             <LinearGradient
-              colors={["#26301C", "#16272B"]}
+              colors={["#26301C", "#03222C"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 0.7, y: 1 }}
               style={s.winCard}
@@ -384,10 +384,10 @@ const s = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   barNoData: {
-    backgroundColor: "#1B3036",
+    backgroundColor: "#0A3A42",
     borderWidth: 1,
     borderStyle: "dashed",
-    borderColor: "#2C464C",
+    borderColor: "#14545E",
   },
   chartLabel: {
     fontSize: 10,

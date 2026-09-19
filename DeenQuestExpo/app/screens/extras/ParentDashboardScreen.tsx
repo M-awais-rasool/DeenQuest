@@ -121,7 +121,7 @@ export function ParentDashboardScreen({ navigation }: Props) {
                 <View
                   style={[
                     s.streakPill,
-                    { backgroundColor: inactive ? "#1E3238" : dq.goldTint },
+                    { backgroundColor: inactive ? "#123840" : dq.goldTint },
                   ]}
                 >
                   <Flame
@@ -308,7 +308,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "rgba(44,201,181,0.06)",
+    backgroundColor: "rgba(47,227,208,0.06)",
     borderWidth: 1,
     borderColor: "#1E4A44",
     borderRadius: 14,
@@ -361,7 +361,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   toggleOn: { backgroundColor: dq.green },
-  toggleOff: { backgroundColor: "#2C464C" },
+  toggleOff: { backgroundColor: "#14545E" },
   knob: {
     width: 18,
     height: 18,

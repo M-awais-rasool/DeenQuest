@@ -35,7 +35,7 @@ export function Toggle({
 const s = StyleSheet.create({
   toggle: { width: 46, height: 27, borderRadius: 14, justifyContent: "center" },
   toggleOn: { backgroundColor: dq.green },
-  toggleOff: { backgroundColor: "#2C464C" },
+  toggleOff: { backgroundColor: "#14545E" },
   knob: { width: 21, height: 21, borderRadius: 11, backgroundColor: dq.text },
   knobOn: { alignSelf: "flex-end", marginRight: 3 },
   knobOff: { alignSelf: "flex-start", marginLeft: 3 },

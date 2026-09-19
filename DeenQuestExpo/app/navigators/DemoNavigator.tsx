@@ -44,8 +44,8 @@ const TAB_CONFIG: {
     name: "HomeScreen",
     label: "Home",
     icon: Home,
-    activeBg: "#123B34",
-    activeBorder: "#2CC9B5",
+    activeBg: "#0C3F46",
+    activeBorder: "#2FE3D0",
     activeFg: "#5EE0CE",
   },
   {
@@ -69,7 +69,7 @@ const TAB_CONFIG: {
     label: "Rewards",
     icon: Trophy,
     activeBg: "#3A2F16",
-    activeBorder: "#EFB65A",
+    activeBorder: "#F2C36B",
     activeFg: "#F5CE8A",
   },
   {
