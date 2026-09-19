@@ -35,15 +35,35 @@ const baseQueryWithAuth = fetchBaseQuery({
   },
 });
 
-let refreshInFlight: Promise<string | null> | null = null;
+/**
+ * A refresh that never reached the server is not a refusal.
+ *
+ * The old version returned a token or null, so "the server says this session
+ * is over" and "the phone lost signal for a second" ended the same way: signed
+ * out. On a mobile network that is the difference between an app that rides
+ * out a tunnel and one that logs you out in it.
+ */
+type RefreshOutcome =
+  | { status: "ok"; token: string }
+  | { status: "refused" }
+  | { status: "unreachable" };
+
+let refreshInFlight: Promise<RefreshOutcome> | null = null;
 
 async function refreshSession(
   api: Parameters<BaseQueryFn>[1],
-): Promise<string | null> {
-  const refreshToken = await readRefreshToken();
-  if (!refreshToken) return null;
+): Promise<RefreshOutcome> {
+  let refreshToken: string | null = null;
+  try {
+    refreshToken = await readRefreshToken();
+  } catch {
+    // Storage itself failed. Nothing proves the session is over, and throwing
+    // here would escape the base query as an unhandled rejection.
+    return { status: "unreachable" };
+  }
+  if (!refreshToken) return { status: "refused" };
 
-  const deviceId = await getDeviceId();
+  const deviceId = await getDeviceId().catch(() => undefined);
 
   const result = await baseQueryWithAuth(
     {
@@ -55,15 +75,24 @@ async function refreshSession(
     {},
   );
 
+  if (result.error) {
+    // A numeric status means the server answered. 4xx is its verdict on the
+    // token; 5xx is its own trouble, and the string statuses RTK Query uses
+    // (FETCH_ERROR, TIMEOUT_ERROR, PARSING_ERROR) mean no verdict at all.
+    const status = result.error.status;
+    const refused = typeof status === "number" && status >= 400 && status < 500;
+    return { status: refused ? "refused" : "unreachable" };
+  }
+
   const session = (result.data as APIResponse<AuthResponse> | undefined)?.data;
-  if (!session?.access_token) return null;
+  if (!session?.access_token) return { status: "refused" };
 
   const { applySession } = require("../authActions") as {
     applySession: (s: AuthResponse) => (dispatch: unknown) => void;
   };
   api.dispatch(applySession(session) as never);
 
-  return session.access_token;
+  return { status: "ok", token: session.access_token };
 }
 
 const baseQueryWithReauth: BaseQueryFn<
@@ -84,16 +113,31 @@ const baseQueryWithReauth: BaseQueryFn<
     });
   }
 
-  const newToken = await refreshInFlight;
-  if (!newToken) {
-    const { signOut } = require("../authActions") as {
-      signOut: () => (dispatch: unknown) => void;
-    };
-    api.dispatch(signOut() as never);
-    return result;
+  const outcome = await refreshInFlight;
+
+  if (outcome.status === "ok") {
+    return baseQueryWithAuth(args, api, extraOptions);
   }
 
-  return baseQueryWithAuth(args, api, extraOptions);
+  // Sign out only for the refusal that ends a real session, and only once.
+  // Signing out again while already signed out is what turned one expired
+  // token into a permanent request storm: signOut clears the query cache,
+  // every mounted query refetches the moment its data disappears, each of
+  // those 401s because there is still no token, and each one signs out again.
+  // One device ran that circle three times a second for a week — four
+  // endpoints, sixty thousand rejected requests — while its owner saw an app
+  // that would not load.
+  if (outcome.status === "refused") {
+    const state = api.getState() as { main?: { isAuthenticated?: boolean } };
+    if (state?.main?.isAuthenticated) {
+      const { signOut } = require("../authActions") as {
+        signOut: () => (dispatch: unknown) => void;
+      };
+      api.dispatch(signOut() as never);
+    }
+  }
+
+  return result;
 };
 
 // Auth DTOs
