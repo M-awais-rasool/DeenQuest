@@ -78,7 +78,7 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 15,
   },
-  cardDone: { borderColor: dq.green, backgroundColor: "rgba(44,201,181,0.06)" },
+  cardDone: { borderColor: dq.green, backgroundColor: "rgba(47,227,208,0.06)" },
   tile: {
     width: 40,
     height: 40,

@@ -25,27 +25,27 @@ import type { HifzStage } from "../../store/services/api";
 // ─────────────────────────────────────────────
 
 export const hz = {
-  screen: "#0B1517",
-  card: "#16272B",
-  cardBorder: "#24393E",
-  rowBorder: "#1E3238",
-  track: "#1B3036",
-  well: "#101D20", // sunken slots / hidden text
-  wellDash: "#2C464C",
-  inset: "#0B1517", // stat tiles inside cards
+  screen: "#011E23",
+  card: "#03222C",
+  cardBorder: "#1E4A54",
+  rowBorder: "#123840",
+  track: "#0A3A42",
+  well: "#02171D", // sunken slots / hidden text
+  wellDash: "#14545E",
+  inset: "#011E23", // stat tiles inside cards
 
   text: "#EDF5F4",
-  muted: "#8DA5A3",
+  muted: "#8FB0B8",
   faint: "#5F7E7C",
 
   // teal — primary / correct / open recite
-  teal: "#2CC9B5",
+  teal: "#2FE3D0",
   tealBright: "#5EE0CE",
-  tealTint: "#123B34",
+  tealTint: "#0C3F46",
   tealEdge: "#1F5148",
-  tealShadow: "#1B9484",
-  onTeal: "#06302B",
-  tealDeep: "#0D2C28",
+  tealShadow: "#14A69B",
+  onTeal: "#04262B",
+  tealDeep: "#0C3F46",
 
   // sky — listen & repeat stages
   sky: "#6EC1E8",
@@ -68,7 +68,7 @@ export const hz = {
   onViolet: "#241A45",
 
   // gold — blind recite / streaks / medium
-  gold: "#EFB65A",
+  gold: "#F2C36B",
   goldBright: "#F5CE8A",
   goldTint: "#3A2F16",
   goldEdge: "#4A3E28",

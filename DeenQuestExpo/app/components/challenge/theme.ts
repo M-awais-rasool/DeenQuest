@@ -19,14 +19,14 @@ export function accentOf(name: string) {
 }
 
 export const AVATAR_GRADIENTS: [string, string][] = [
-  ["#2CC9B5", "#EFB65A"],
+  ["#2FE3D0", "#F2C36B"],
   ["#6EC1E8", "#A78BFA"],
   ["#F79A59", "#F27FB2"],
   ["#5EE0CE", "#4FA8D8"],
-  ["#EFB65A", "#F27FB2"],
+  ["#F2C36B", "#F27FB2"],
 ];
 
-export const AVATAR_FOREGROUNDS = ["#06302B", "#0E2A3A", "#3A1024", "#06302B", "#3A2A08"];
+export const AVATAR_FOREGROUNDS = ["#04262B", "#0E2A3A", "#3A1024", "#04262B", "#3A2A08"];
 
 export function formatCountdown(seconds: number): string {
   if (seconds <= 0) return "ending soon";

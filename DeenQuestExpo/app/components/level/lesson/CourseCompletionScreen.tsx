@@ -46,23 +46,23 @@ const CONFETTI: {
   round?: boolean;
   color: string;
 }[] = [
-  { top: 120, left: 52, w: 10, h: 14, rotate: "24deg", color: "#EFB65A" },
-  { top: 88, right: 74, w: 9, h: 13, rotate: "-18deg", color: "#2CC9B5" },
+  { top: 120, left: 52, w: 10, h: 14, rotate: "24deg", color: "#F2C36B" },
+  { top: 88, right: 74, w: 9, h: 13, rotate: "-18deg", color: "#2FE3D0" },
   { top: 190, left: 98, w: 8, h: 8, round: true, color: "#F27FB2" },
   { top: 160, right: 44, w: 9, h: 13, rotate: "40deg", color: "#A78BFA" },
   { top: 260, left: 38, w: 9, h: 13, rotate: "-32deg", color: "#6EC1E8" },
-  { top: 236, right: 96, w: 8, h: 8, round: true, color: "#EFB65A" },
+  { top: 236, right: 96, w: 8, h: 8, round: true, color: "#F2C36B" },
   { top: 330, left: 120, w: 7, h: 11, rotate: "12deg", color: "#F27FB2" },
-  { top: 308, right: 52, w: 9, h: 13, rotate: "-45deg", color: "#2CC9B5" },
+  { top: 308, right: 52, w: 9, h: 13, rotate: "-45deg", color: "#2FE3D0" },
 ];
 
 // Gold / purple / teal medallion themes for the "new rewards" cards.
 type Medal = { from: string; to: string; border: string; on: string; pillBg: string; pillText: string };
 const MEDALS: Record<string, Medal> = {
-  legendary: { from: dq.badgeGoldFrom, to: dq.badgeGoldTo, border: "rgba(239,182,90,0.5)", on: dq.onBadgeGold, pillBg: "rgba(239,182,90,0.12)", pillText: dq.gold },
-  rare: { from: dq.badgeGoldFrom, to: dq.badgeGoldTo, border: "rgba(239,182,90,0.5)", on: dq.onBadgeGold, pillBg: "rgba(239,182,90,0.12)", pillText: dq.gold },
+  legendary: { from: dq.badgeGoldFrom, to: dq.badgeGoldTo, border: "rgba(242,195,107,0.5)", on: dq.onBadgeGold, pillBg: "rgba(242,195,107,0.12)", pillText: dq.gold },
+  rare: { from: dq.badgeGoldFrom, to: dq.badgeGoldTo, border: "rgba(242,195,107,0.5)", on: dq.onBadgeGold, pillBg: "rgba(242,195,107,0.12)", pillText: dq.gold },
   epic: { from: "#C4B2FF", to: "#7B5BD6", border: "rgba(167,139,250,0.5)", on: "#241A45", pillBg: "rgba(167,139,250,0.14)", pillText: "#A78BFA" },
-  common: { from: "#5EE0CE", to: "#1B9484", border: "rgba(44,201,181,0.5)", on: dq.onGreen, pillBg: "rgba(44,201,181,0.12)", pillText: dq.green },
+  common: { from: "#5EE0CE", to: "#14A69B", border: "rgba(47,227,208,0.5)", on: dq.onGreen, pillBg: "rgba(47,227,208,0.12)", pillText: dq.green },
 };
 const medalFor = (rarity: string): Medal => MEDALS[rarity] ?? MEDALS.rare;
 
@@ -380,7 +380,7 @@ export default function CourseCompletionScreen({
         ]}
       >
         <TactilePressable
-          edgeColor="#1B9484"
+          edgeColor="#14A69B"
           faceUnderlayColor={dq.green}
           depth={4}
           radius={16}

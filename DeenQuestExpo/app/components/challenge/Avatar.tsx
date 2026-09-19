@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   text: { fontFamily: "Nunito_900Black" },
   stack: { flexDirection: "row", alignItems: "center" },
   extra: {
-    backgroundColor: "#1E3238",
+    backgroundColor: "#123840",
     borderWidth: 2,
     borderColor: dq.card,
     alignItems: "center",

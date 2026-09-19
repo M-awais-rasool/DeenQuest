@@ -9,8 +9,8 @@ export function ProgressRing({
   size = 96,
   stroke = 11,
   from = "#F9DDA0",
-  to = "#EFB65A",
-  track = "#1B3036",
+  to = "#F2C36B",
+  track = "#0A3A42",
   children,
 }: {
   pct: number;

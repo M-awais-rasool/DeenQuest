@@ -52,7 +52,7 @@ export function DuelCard({
 function DuelShell({ children }: { children: React.ReactNode }) {
   return (
     <LinearGradient
-      colors={[PURPLE_DARK, "#16272B"]}
+      colors={[PURPLE_DARK, "#03222C"]}
       locations={[0, 0.7]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0.8, y: 1 }}

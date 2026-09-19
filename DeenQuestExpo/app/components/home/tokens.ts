@@ -1,21 +1,25 @@
+import { theme } from "../../theme/themes";
+
+const c = theme.colors;
+
 export const home = {
-  night: "#011E23",
-  card: "#03222C",
-  ridgeCard: "#0A3A42",
+  night: c.background,
+  card: c.surface,
+  ridgeCard: c.surfaceHigh,
   cardBorder: "rgba(45, 110, 124, 0.45)",
   well: "rgba(4, 22, 28, 0.75)",
   wellBorder: "rgba(255, 255, 255, 0.06)",
   divider: "rgba(255, 255, 255, 0.11)",
 
-  teal: "#2FE3D0",
+  teal: c.primary,
   tealBright: "#5EF3E6",
-  tealDeep: "#0C3F46",
-  gold: "#F2C36B",
+  tealDeep: c.primaryContainer,
+  gold: c.secondary,
   goldBright: "#F8F0B1",
 
-  text: "#FFFFFF",
+  text: c.white,
   soft: "#C7DDE3",
-  muted: "#8FB0B8",
+  muted: c.textMuted,
 
   track: "rgba(2, 24, 30, 0.7)",
 
