@@ -217,7 +217,7 @@ export function CertificateDetail({
 }
 
 const s = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(5,14,16,0.82)" },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(1,15,19,0.82)" },
   sheet: {
     position: "absolute",
     left: 0,
@@ -277,7 +277,7 @@ const s = StyleSheet.create({
     borderRadius: 27,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#2C464C",
+    borderColor: "#14545E",
     alignItems: "center",
     justifyContent: "center",
   },

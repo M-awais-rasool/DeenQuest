@@ -141,7 +141,7 @@ export function UnlockModal({
           haptic="light"
           onPress={onClose}
         >
-          <X size={17} color="#8DA5A3" />
+          <X size={17} color="#8FB0B8" />
         </TactilePressable>
 
         {/* content */}
@@ -149,7 +149,7 @@ export function UnlockModal({
           <Animated.View style={[s.medallion, { transform: [{ scale: popAnim }] }]}>
             <View style={s.dashedRing} />
             <LinearGradient
-              colors={["#F9DDA0", "#EFB65A", "#C98F35"]}
+              colors={["#F9DDA0", "#F2C36B", "#C98F35"]}
               start={{ x: 0.34, y: 0.28 }}
               end={{ x: 1, y: 1 }}
               style={s.medallionCore}
@@ -174,7 +174,7 @@ export function UnlockModal({
         <View style={s.actions}>
           <TactilePressable
             faceStyle={s.claimBtn}
-            edgeColor="#1B9484"
+            edgeColor="#14A69B"
             faceUnderlayColor={dq.green}
             radius={16}
             depth={4}
@@ -294,7 +294,7 @@ const s = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Nunito_600SemiBold",
     lineHeight: 21,
-    color: "#8DA5A3",
+    color: "#8FB0B8",
     textAlign: "center",
     marginTop: 12,
     maxWidth: 260,

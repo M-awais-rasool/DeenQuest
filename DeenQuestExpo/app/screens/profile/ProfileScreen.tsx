@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   },
   dayDotDone: { backgroundColor: dq.greenTint },
   dayDotToday: { borderWidth: 2, borderColor: dq.gold },
-  dayDotEmpty: { borderWidth: 2, borderColor: "#2C464C" },
+  dayDotEmpty: { borderWidth: 2, borderColor: "#14545E" },
   todayDotMark: {
     fontSize: 11,
     fontFamily: "Nunito_900Black",
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     backgroundColor: dq.card,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#2C464C",
+    borderColor: "#14545E",
     alignItems: "center",
     justifyContent: "center",
   },

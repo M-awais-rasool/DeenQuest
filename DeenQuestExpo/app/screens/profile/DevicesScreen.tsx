@@ -99,7 +99,7 @@ export function DevicesScreen({ navigation }: Props) {
         {sessions.map((session) => (
           <View key={session.id} style={styles.card}>
             <View style={styles.iconTile}>
-              <Smartphone color="#2CC9B5" size={16} strokeWidth={2.2} />
+              <Smartphone color="#2FE3D0" size={16} strokeWidth={2.2} />
             </View>
 
             <View style={styles.cardBody}>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#123B34",
+    backgroundColor: "#0C3F46",
   },
   cardBody: {
     flex: 1,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     fontFamily: "Nunito_800ExtraBold",
     letterSpacing: 1,
-    color: "#2CC9B5",
+    color: "#2FE3D0",
   },
   revokeButton: {
     paddingHorizontal: 12,

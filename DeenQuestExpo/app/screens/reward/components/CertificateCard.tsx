@@ -54,7 +54,7 @@ export function CertificateCard({
       >
         <LinearGradient
           colors={
-            entry.earned ? ["#1B3B33", "#12262B"] : [dq.lockFill, dq.lockFill]
+            entry.earned ? ["#0C4A48", "#03222C"] : [dq.lockFill, dq.lockFill]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -120,7 +120,7 @@ const s = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#2C464C",
+    borderColor: "#14545E",
     alignItems: "center",
     justifyContent: "center",
   },

@@ -43,8 +43,8 @@ function HeroMosque() {
       <Defs>
         <RadialGradient id="m1bg" cx="0.5" cy="0.16" r="1">
           <Stop offset="0" stopColor="#1B4E42" />
-          <Stop offset="0.55" stopColor="#0E2327" />
-          <Stop offset="1" stopColor="#0A171A" />
+          <Stop offset="0.55" stopColor="#03222C" />
+          <Stop offset="1" stopColor="#011E23" />
         </RadialGradient>
         <LinearGradient id="m1g" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#FBE3A8" />
@@ -56,7 +56,7 @@ function HeroMosque() {
         </RadialGradient>
         <LinearGradient id="m1m" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#1F5F4E" />
-          <Stop offset="1" stopColor="#0C2925" />
+          <Stop offset="1" stopColor="#0C3F46" />
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="342" height="360" fill="url(#m1bg)" />
@@ -77,7 +77,7 @@ function HeroMosque() {
         <Circle cx="304" cy="254" r="20" />
         <Rect x="322" y="222" width="7" height="36" rx="3.5" />
       </G>
-      <Ellipse cx="171" cy="354" rx="230" ry="30" fill="#0B1E1D" />
+      <Ellipse cx="171" cy="354" rx="230" ry="30" fill="#02171D" />
       <Circle cx="171" cy="300" r="42" fill="url(#m1w)" />
       <G fill="url(#m1m)">
         <Rect x="70" y="158" width="16" height="122" rx="7" />
@@ -120,8 +120,8 @@ function HeroShield() {
           <Stop offset="1" stopColor="#E8892E" />
         </LinearGradient>
         <RadialGradient id="s2glow" cx="0.5" cy="0.5" r="0.5">
-          <Stop offset="0" stopColor="#EFB65A" stopOpacity="0.4" />
-          <Stop offset="1" stopColor="#EFB65A" stopOpacity="0" />
+          <Stop offset="0" stopColor="#F2C36B" stopOpacity="0.4" />
+          <Stop offset="1" stopColor="#F2C36B" stopOpacity="0" />
         </RadialGradient>
         <LinearGradient id="s2ring" x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor="#C4B2FF" />
@@ -135,8 +135,8 @@ function HeroShield() {
       <Rect x="0" y="0" width="342" height="360" fill="url(#s2bg)" />
       <Circle cx="171" cy="176" r="120" stroke="#3B2F6B" strokeWidth="2" strokeDasharray="3 13" />
       <Circle cx="171" cy="176" r="112" fill="url(#s2glow)" />
-      <Circle cx="171" cy="56" r="14" fill="#2CC9B5" />
-      <Path d="M165 56l4.5 4.5 8-8" stroke="#06302B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx="171" cy="56" r="14" fill="#2FE3D0" />
+      <Path d="M165 56l4.5 4.5 8-8" stroke="#04262B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       <Circle cx="63" cy="235" r="11" fill="#F27FB2" />
       <Path d="M63 229l1.8 4.2 4.2 1.8-4.2 1.8-1.8 4.2-1.8-4.2-4.2-1.8 4.2-1.8z" fill="#3A1024" />
       <Circle cx="284" cy="228" r="11" fill="#6EC1E8" />
@@ -158,13 +158,13 @@ function HeroShield() {
       />
       <Path d="M171 224 l2.4 5.2 5.2 2.4-5.2 2.4-2.4 5.2-2.4-5.2-5.2-2.4 5.2-2.4z" fill="#F9DDA0" opacity="0.9" />
       <G transform="rotate(-7 278 104)">
-        <Rect x="238" y="86" width="80" height="36" rx="18" fill="#3A2F16" stroke="#EFB65A" strokeWidth="2" />
+        <Rect x="238" y="86" width="80" height="36" rx="18" fill="#3A2F16" stroke="#F2C36B" strokeWidth="2" />
         <SvgText x="278" y="110" textAnchor="middle" fontFamily="Nunito_900Black" fontSize="15" fill="#F9DDA0">
           +20 XP
         </SvgText>
       </G>
       <G transform="rotate(7 56 116)">
-        <Rect x="24" y="98" width="64" height="36" rx="18" fill="#123B34" stroke="#2CC9B5" strokeWidth="2" />
+        <Rect x="24" y="98" width="64" height="36" rx="18" fill="#0C3F46" stroke="#2FE3D0" strokeWidth="2" />
         <SvgText x="56" y="122" textAnchor="middle" fontFamily="Nunito_900Black" fontSize="15" fill="#5EE0CE">
           ✓ 12
         </SvgText>
@@ -199,7 +199,7 @@ function HeroPath() {
         </RadialGradient>
         <LinearGradient id="s3teal" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#3BE3CB" />
-          <Stop offset="1" stopColor="#1B9484" />
+          <Stop offset="1" stopColor="#14A69B" />
         </LinearGradient>
         <LinearGradient id="s3hill1" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#2E2412" />
@@ -229,12 +229,12 @@ function HeroPath() {
       />
       <Circle cx="74" cy="322" r="26" fill="url(#s3teal)" />
       <Circle cx="74" cy="322" r="26" stroke="#5EE0CE" strokeWidth="2" opacity="0.5" />
-      <Path d="M63 322l8 8 14-14" stroke="#06302B" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M63 322l8 8 14-14" stroke="#04262B" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
       <Circle cx="244" cy="214" r="26" fill="url(#s3teal)" />
       <Circle cx="244" cy="214" r="26" stroke="#5EE0CE" strokeWidth="2" opacity="0.5" />
-      <Path d="M233 214l8 8 14-14" stroke="#06302B" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M233 214l8 8 14-14" stroke="#04262B" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
       <Circle cx="110" cy="126" r="58" fill="url(#s3glow)" />
-      <Circle cx="110" cy="126" r="44" stroke="#EFB65A" strokeWidth="2" strokeDasharray="3 10" opacity="0.6" />
+      <Circle cx="110" cy="126" r="44" stroke="#F2C36B" strokeWidth="2" strokeDasharray="3 10" opacity="0.6" />
       <Circle cx="110" cy="126" r="32" fill="url(#s3gold)" />
       <Circle cx="110" cy="126" r="32" stroke="#FDF6E3" strokeWidth="2" opacity="0.5" />
       <Path d="M110 108 l5 13 13 5-13 5-5 13-5-13-13-5 13-5z" fill="#3A2A08" />
@@ -265,7 +265,7 @@ const SLIDES = [
     Hero: HeroMosque,
     titleTop: "Begin Your",
     titleAccent: "Sacred Journey",
-    accentColor: "#EFB65A",
+    accentColor: "#F2C36B",
     body: "Learn to read the Qur'an from the very first letter — five minutes a day.",
   },
   {
@@ -279,7 +279,7 @@ const SLIDES = [
     Hero: HeroPath,
     titleTop: "Your Personalized",
     titleAccent: "Path",
-    accentColor: "#EFB65A",
+    accentColor: "#F2C36B",
     body: "A guided journey from the alphabet to fluent recitation, built around your pace.",
   },
 ] as const;
@@ -412,9 +412,9 @@ const s = StyleSheet.create({
     height: 360,
     borderRadius: 26,
     borderWidth: 1,
-    borderColor: "#1E3238",
+    borderColor: "#123840",
     overflow: "hidden",
-    backgroundColor: "#0E2327",
+    backgroundColor: theme.colors.surface,
   },
   copy: {
     paddingTop: 34,
@@ -449,7 +449,7 @@ const s = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "#2C464C",
+    backgroundColor: "#14545E",
   },
   dotActive: {
     width: 22,

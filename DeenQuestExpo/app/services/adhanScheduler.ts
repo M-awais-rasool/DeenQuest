@@ -31,7 +31,7 @@ export async function ensureAdhanChannelAsync(): Promise<void> {
         ? ADHAN_NOTIFICATION_SOUND
         : undefined,
     vibrationPattern: [0, 400, 200, 400],
-    lightColor: "#2CC9B5",
+    lightColor: "#2FE3D0",
   });
 }
 

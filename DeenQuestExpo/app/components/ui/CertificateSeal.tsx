@@ -33,7 +33,7 @@ export function CertificateSeal({
 
       {/* wax disc */}
       <Circle cx="40" cy="40" r="36" fill={gold} />
-      <Circle cx="40" cy="40" r="30" fill="#0F1D20" />
+      <Circle cx="40" cy="40" r="30" fill="#02171D" />
 
       {/* the open mushaf: two leaves meeting at the spine */}
       <Path

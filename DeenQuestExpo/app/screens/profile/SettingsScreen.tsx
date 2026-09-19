@@ -130,8 +130,8 @@ export function SettingsScreen({ navigation }: Props) {
             style={[styles.row, styles.rowBorder]}
             onPress={() => navigation.navigate("EditProfile")}
           >
-            <IconTile bg="#123B34">
-              <User color="#2CC9B5" size={15} strokeWidth={2.2} />
+            <IconTile bg="#0C3F46">
+              <User color="#2FE3D0" size={15} strokeWidth={2.2} />
             </IconTile>
             <Text style={styles.rowLabel}>Edit Profile</Text>
             <Text style={styles.chevron}>›</Text>
@@ -153,7 +153,7 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.sectionCard}>
           <View style={[styles.row, styles.rowBorder]}>
             <IconTile bg="#3A2F16">
-              <Moon color="#EFB65A" size={15} strokeWidth={2.2} />
+              <Moon color="#F2C36B" size={15} strokeWidth={2.2} />
             </IconTile>
             <Text style={styles.rowLabel}>Theme</Text>
             <Text style={styles.rowValue}>Dark</Text>
@@ -172,7 +172,7 @@ export function SettingsScreen({ navigation }: Props) {
         <Text style={[styles.sectionTitle, styles.sectionGap]}>ABOUT</Text>
         <View style={styles.sectionCard}>
           <View style={styles.row}>
-            <IconTile bg="#1E3238">
+            <IconTile bg="#123840">
               <Text style={styles.infoIcon}>i</Text>
             </IconTile>
             <Text style={styles.rowLabel}>App Version</Text>
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   rowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: "#1E3238",
+    borderBottomColor: "#123840",
   },
   iconTile: {
     width: 34,
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
   },
   toggleOff: {
-    backgroundColor: "#2C464C",
+    backgroundColor: "#14545E",
   },
   toggleKnob: {
     width: 20,

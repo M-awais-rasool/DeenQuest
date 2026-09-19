@@ -103,9 +103,9 @@ const s = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: "rgba(239, 182, 90, 0.12)",
+    backgroundColor: "rgba(242, 195, 107, 0.12)",
     borderWidth: 1,
-    borderColor: "rgba(239, 182, 90, 0.3)",
+    borderColor: "rgba(242, 195, 107, 0.3)",
   },
   xpText: {
     color: theme.colors.secondary,

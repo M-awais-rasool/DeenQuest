@@ -21,19 +21,19 @@ import { theme } from "../../theme/themes";
 
 /** Avatar gradient pairs cycled per rank (from the F3 mock). */
 const AVATAR_GRADIENTS: [string, string][] = [
-  ["#EFB65A", "#F27FB2"],
-  ["#6EC1E8", "#2CC9B5"],
+  ["#F2C36B", "#F27FB2"],
+  ["#6EC1E8", "#2FE3D0"],
   ["#A78BFA", "#F27FB2"],
-  ["#2CC9B5", "#6EC1E8"],
+  ["#2FE3D0", "#6EC1E8"],
   ["#F79A59", "#F27FB2"],
-  ["#2CC9B5", "#EFB65A"],
+  ["#2FE3D0", "#F2C36B"],
 ];
 
 /** Podium plinth look for ranks 1..3. */
 const PODIUM = [
-  { height: 100, colors: ["#3A2F16", "#16272B"] as [string, string], border: "#4A3E28", rankColor: "#EFB65A" },
-  { height: 74, colors: ["#1E3238", "#16272B"] as [string, string], border: "#24393E", rankColor: "#C9D4D9" },
-  { height: 56, colors: ["#2E2318", "#16272B"] as [string, string], border: "#3D2A14", rankColor: "#D9A06B" },
+  { height: 100, colors: ["#3A2F16", "#03222C"] as [string, string], border: "#4A3E28", rankColor: "#F2C36B" },
+  { height: 74, colors: ["#123840", "#03222C"] as [string, string], border: "#1E4A54", rankColor: "#C9D4D9" },
+  { height: 56, colors: ["#2E2318", "#03222C"] as [string, string], border: "#3D2A14", rankColor: "#D9A06B" },
 ];
 
 function formatXP(xp: number): string {
@@ -91,7 +91,7 @@ function Avatar({
         style={{
           fontSize: size * 0.38,
           fontFamily: "Nunito_900Black",
-          color: "#06302B",
+          color: "#04262B",
         }}
       >
         {name.charAt(0).toUpperCase()}

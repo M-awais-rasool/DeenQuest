@@ -84,7 +84,7 @@ function CertificatesBanner({
         style={({ pressed }) => [pressed && { opacity: 0.9 }]}
       >
         <LinearGradient
-          colors={["#2A2416", "#1A2B2A"]}
+          colors={["#2A2416", "#0A3A42"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={s.certBanner}
@@ -125,7 +125,7 @@ const TIERS = [
     min: 18,
     gradient: ["#F9DDA0", "#C98F35"] as [string, string],
     iconColor: "#3A2A08",
-    glow: "rgba(239,182,90,0.22)",
+    glow: "rgba(242,195,107,0.22)",
   },
   {
     name: "Platinum",
@@ -536,7 +536,7 @@ const s = StyleSheet.create({
     backgroundColor: dq.card,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#2C464C",
+    borderColor: "#14545E",
     alignItems: "center",
     justifyContent: "center",
   },

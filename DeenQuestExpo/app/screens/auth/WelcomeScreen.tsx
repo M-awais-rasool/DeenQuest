@@ -87,12 +87,12 @@ function AmbientGlows() {
       <Svg width="100%" height="100%">
         <Defs>
           <RadialGradient id="wg1" cx="0.5" cy="0.5" r="0.5">
-            <Stop offset="0" stopColor="#2CC9B5" stopOpacity="0.14" />
-            <Stop offset="1" stopColor="#2CC9B5" stopOpacity="0" />
+            <Stop offset="0" stopColor="#2FE3D0" stopOpacity="0.14" />
+            <Stop offset="1" stopColor="#2FE3D0" stopOpacity="0" />
           </RadialGradient>
           <RadialGradient id="wg2" cx="0.5" cy="0.5" r="0.5">
-            <Stop offset="0" stopColor="#EFB65A" stopOpacity="0.08" />
-            <Stop offset="1" stopColor="#EFB65A" stopOpacity="0" />
+            <Stop offset="0" stopColor="#F2C36B" stopOpacity="0.08" />
+            <Stop offset="1" stopColor="#F2C36B" stopOpacity="0" />
           </RadialGradient>
         </Defs>
         <Circle cx="50%" cy="8%" r="280" fill="url(#wg1)" />
@@ -288,7 +288,7 @@ const s = StyleSheet.create({
   },
   logoShadow: {
     borderRadius: 30,
-    shadowColor: "#EFB65A",
+    shadowColor: "#F2C36B",
     shadowOpacity: 0.2,
     shadowRadius: 30,
     shadowOffset: { width: 0, height: 18 },

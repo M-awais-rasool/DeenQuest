@@ -1,9 +1,3 @@
-/**
- * Prayer-feature palette + per-prayer glyphs.
- *
- * Extends the app "Teal Night" tokens (`dq`) with the night-sky blues used by
- * the prayer design mockups (`prayer-design/*.html`).
- */
 import type { PrayerName } from "../types/prayer";
 
 export const prayerColors = {
@@ -13,11 +7,11 @@ export const prayerColors = {
   blueEdge: "#3E8AB3", // tactile edge under the blue button
   tileBlue: "#16303E", // hero icon tile, pills, next-row background
   nextTile: "#1D4152", // next-row icon tile
-  dimTile: "#0F1D20", // past / future icon tile
+  dimTile: "#02171D", // past / future icon tile
   border: "#24505F", // hero + accent border
   heroFrom: "#153841", // next-prayer hero gradient start
-  heroTo: "#16272B", // next-prayer hero gradient end
-  emptyRing: "#2C464C", // future-row empty circle border
+  heroTo: "#03222C", // next-prayer hero gradient end
+  emptyRing: "#14545E", // future-row empty circle border
 } as const;
 
 /** Icon glyph per prayer. Colour is decided by row state, not the prayer. */

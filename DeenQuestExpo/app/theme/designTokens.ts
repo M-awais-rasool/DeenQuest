@@ -1,52 +1,48 @@
-/**
- * Design tokens for the "Teal Night" redesign (home / rewards / profile /
- * unlock and friends).
- *
- * These are the exact literal colours from the approved HTML mockups in
- * /screens. They live here (rather than in `theme.colors`) so screens built
- * against the mockups can match them pixel-for-pixel.
- */
+import { theme } from "./themes";
+
+const c = theme.colors;
+
 export const dq = {
   // Surfaces
-  screen: "#0B1517",
-  card: "#16272B",
-  cardBorder: "#24393E",
-  rowBorder: "#1E3238",
-  trackGreenTint: "rgba(44,201,181,0.14)",
-  lockFill: "#101D20",
-  lockBorder: "#1E3238",
-  lockBadge: "#0F1D20",
+  screen: c.background,
+  card: c.surface,
+  cardBorder: c.outline,
+  rowBorder: "#123840",
+  trackGreenTint: c.primary14,
+  lockFill: c.surfaceLow,
+  lockBorder: "#123840",
+  lockBadge: "#02181E",
 
   // Brand (teal keeps the legacy "green" token names so call-sites don't churn)
-  green: "#2CC9B5",
-  greenBright: "#5EE0CE",
-  greenDark: "#1B9484",
-  onGreen: "#06302B",
-  onGreenAlt: "#123B34",
-  greenTint: "#123B34",
-  gold: "#EFB65A",
-  goldBright: "#F9DDA0",
-  goldDark: "#C98F35",
-  onGold: "#3A2A08",
+  green: c.primary,
+  greenBright: "#5EF3E6",
+  greenDark: c.shadowGreen,
+  onGreen: c.onPrimary,
+  onGreenAlt: c.primaryContainer,
+  greenTint: c.primaryContainer,
+  gold: c.secondary,
+  goldBright: "#F8F0B1",
+  goldDark: c.goldDark,
+  onGold: c.onSecondary,
   goldTint: "#3A2F16",
   goldBorder: "#4A3E28",
-  gold12: "rgba(239,182,90,0.12)",
-  gold18: "rgba(239,182,90,0.18)",
-  gold25: "rgba(239,182,90,0.25)",
-  gold55: "rgba(239,182,90,0.55)",
+  gold12: c.secondary12,
+  gold18: "rgba(242,195,107,0.18)",
+  gold25: c.secondary25,
+  gold55: "rgba(242,195,107,0.55)",
 
   // Gold medallion gradient
-  badgeGoldFrom: "#F9DDA0",
-  badgeGoldTo: "#C98F35",
-  onBadgeGold: "#3A2A08",
+  badgeGoldFrom: "#F8F0B1",
+  badgeGoldTo: c.goldDark,
+  onBadgeGold: c.onSecondary,
 
   // Text
-  white: "#FFFFFF",
-  text: "#EDF5F4",
-  muted: "#8DA5A3",
-  faint: "#5F7E7C",
-  chevron: "#4E6A68",
-  lockIcon: "#5F7E7C",
+  white: c.white,
+  text: c.text,
+  muted: c.textMuted,
+  faint: "#5F8189",
+  chevron: "#4E7078",
+  lockIcon: "#5F8189",
 
   // Progress tracks
   trackWhite06: "rgba(237,245,244,0.06)",

@@ -133,7 +133,7 @@ export function HifzResultScreen({ navigation, route }: Props) {
               stroke={13}
               from={ringColor}
               to={ringColor}
-              track="#12241F"
+              track="#02171D"
             >
               <Text style={s.ringPct}>{result.accuracy_pct}%</Text>
               <Text style={[s.ringLabel, { color: passed ? hz.tealBright : hz.gold }]}>

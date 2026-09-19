@@ -164,7 +164,7 @@ export function AdhanScreen({ route, navigation }: Props) {
   return (
     <View style={s.root}>
       <LinearGradient
-        colors={["#0A1A2A", "#0D2433", "#0F2E2B", "#08201C"]}
+        colors={["#021B26", "#05303A", "#073A3E", "#011E23"]}
         locations={[0, 0.44, 0.76, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -177,8 +177,8 @@ export function AdhanScreen({ route, navigation }: Props) {
       >
         <Defs>
           <RadialGradient id="glow" cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor="#EFB65A" stopOpacity={0.2} />
-            <Stop offset="0.58" stopColor="#EFB65A" stopOpacity={0} />
+            <Stop offset="0" stopColor="#F2C36B" stopOpacity={0.2} />
+            <Stop offset="0.58" stopColor="#F2C36B" stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Rect width={GLOW} height={GLOW} fill="url(#glow)" />
@@ -302,7 +302,7 @@ function MosqueSkyline() {
       preserveAspectRatio="xMidYMax slice"
       style={{ marginBottom: -1 }}
     >
-      <G fill="#04101A">
+      <G fill="#010F13">
         <Rect x={0} y={156} width={390} height={60} />
         <Path d="M195 64 C240 90 254 122 254 156 H136 C136 122 150 90 195 64 Z" />
         <Rect x={193} y={46} width={4} height={20} rx={2} />
@@ -316,7 +316,7 @@ function MosqueSkyline() {
         <Path d="M349.5 50 L359 76 H340 Z" />
         <Circle cx={349.5} cy={45} r={3.2} />
       </G>
-      <G fill="#EFB65A">
+      <G fill="#F2C36B">
         <Path d="M188 156 v-17 a7 7 0 0 1 14 0 v17 z" opacity={0.85} />
         <Path d="M106 158 v-12 a6 6 0 0 1 12 0 v12 z" opacity={0.55} />
         <Path d="M272 158 v-12 a6 6 0 0 1 12 0 v12 z" opacity={0.55} />
@@ -328,7 +328,7 @@ function MosqueSkyline() {
 export default AdhanScreen;
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#08201C", overflow: "hidden" },
+  root: { flex: 1, backgroundColor: dq.screen, overflow: "hidden" },
   star: { position: "absolute", opacity: 0.65 },
   dotStar: {
     position: "absolute",
@@ -344,15 +344,15 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 9,
-    backgroundColor: "rgba(239,182,90,0.10)",
+    backgroundColor: "rgba(242,195,107,0.10)",
     borderWidth: 1,
-    borderColor: "rgba(239,182,90,0.40)",
+    borderColor: "rgba(242,195,107,0.40)",
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 18,
     marginTop: 4,
   },
-  pillDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#EFB65A" },
+  pillDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#F2C36B" },
   pillText: {
     fontSize: 12,
     fontFamily: "Nunito_900Black",
@@ -368,7 +368,7 @@ const s = StyleSheet.create({
     height: 176,
     borderRadius: 88,
     borderWidth: 1.5,
-    borderColor: "rgba(239,182,90,0.28)",
+    borderColor: "rgba(242,195,107,0.28)",
   },
   ringInner: {
     position: "absolute",
@@ -376,7 +376,7 @@ const s = StyleSheet.create({
     height: 176,
     borderRadius: 88,
     borderWidth: 1.5,
-    borderColor: "rgba(239,182,90,0.28)",
+    borderColor: "rgba(242,195,107,0.28)",
   },
   ringOuter: {
     position: "absolute",
@@ -384,14 +384,14 @@ const s = StyleSheet.create({
     height: 214,
     borderRadius: 107,
     borderWidth: 1,
-    borderColor: "rgba(239,182,90,0.12)",
+    borderColor: "rgba(242,195,107,0.12)",
   },
   arabicBig: {
     fontSize: 33,
     fontFamily: "Amiri_700Bold",
     color: "#F5CE8A",
     marginTop: 40,
-    textShadowColor: "rgba(239,182,90,0.55)",
+    textShadowColor: "rgba(242,195,107,0.55)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 22,
   },
@@ -423,7 +423,7 @@ const s = StyleSheet.create({
   },
 
   footer: {
-    backgroundColor: "#04101A",
+    backgroundColor: "#010F13",
     paddingHorizontal: 28,
     paddingTop: 16,
     gap: 12,

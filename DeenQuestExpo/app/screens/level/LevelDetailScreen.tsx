@@ -47,10 +47,10 @@ type Route = RouteProp<AppStackParamList, "LevelDetail">;
 type TypeMeta = { label: string; color: string; tint: string; onColor: string; Icon: LucideIcon };
 
 const LESSON_TYPE_META: Record<LessonType, TypeMeta> = {
-  qaida: { label: "LETTERS", color: "#5EE0CE", tint: "#123B34", onColor: "#06302B", Icon: BookOpen },
+  qaida: { label: "LETTERS", color: "#5EE0CE", tint: "#0C3F46", onColor: "#04262B", Icon: BookOpen },
   pronunciation: { label: "PRONUNCIATION", color: "#F79A59", tint: "#3D2A14", onColor: "#3A2A08", Icon: AudioLines },
-  hadith: { label: "HADITH", color: "#EFB65A", tint: "#3A2F16", onColor: "#3A2A08", Icon: ScrollText },
-  dua: { label: "DUA", color: "#2CC9B5", tint: "#123B34", onColor: "#06302B", Icon: MoonStar },
+  hadith: { label: "HADITH", color: "#F2C36B", tint: "#3A2F16", onColor: "#3A2A08", Icon: ScrollText },
+  dua: { label: "DUA", color: "#2FE3D0", tint: "#0C3F46", onColor: "#04262B", Icon: MoonStar },
   quiz: { label: "QUIZ", color: "#C4B2FF", tint: "#2A2440", onColor: "#241A45", Icon: ListChecks },
   manners: { label: "MANNERS", color: "#F27FB2", tint: "#3A2030", onColor: "#3A1024", Icon: Heart },
   revision: { label: "REVISION", color: "#6EC1E8", tint: "#16303E", onColor: "#0E2A3A", Icon: RotateCw },
@@ -169,7 +169,7 @@ export function LevelDetailScreen() {
 
           {/* ── Hero ─────────────────────────────────────────────── */}
           <LinearGradient
-            colors={["#123B34", "#16272B"]}
+            colors={["#0C3F46", "#03222C"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0.8, y: 1 }}
             style={s.hero}
@@ -311,7 +311,7 @@ export function LevelDetailScreen() {
                     </LinearGradient>
 
                     <LinearGradient
-                      colors={["#1C1636", "#16272B"]}
+                      colors={["#1C1636", "#03222C"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={[s.card, s.cardGame]}
@@ -412,9 +412,9 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#123B34",
+    backgroundColor: "#0C3F46",
     borderWidth: 1,
-    borderColor: "#2CC9B5",
+    borderColor: "#2FE3D0",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
