@@ -104,3 +104,23 @@ jobs:
         run: |
           npm ci
           npm run build
+
+  mobile:
+    name: Mobile typecheck
+    runs-on: ubuntu-latest
+    # The app is the only thing here that reaches users through a store, where
+    # a mistake costs a review cycle to undo — and it was the one tree nothing
+    # checked. A broken auth path shipped that way once and spent a week
+    # hammering the API from a tester's phone.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: DeenQuestExpo/package-lock.json
+      - name: Typecheck the Expo app
+        working-directory: DeenQuestExpo
+        run: |
+          npm ci
+          ./node_modules/.bin/tsc --noEmit
